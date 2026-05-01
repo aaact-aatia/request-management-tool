@@ -1,0 +1,16 @@
+{
+  "app": {
+    "name": {
+      "en": "Request Management Tool (RMT)",
+      "fr": "Outil de gestion des demandes (OGD)"
+    },
+    "organization": {
+      "en": "Accessibility, Accommodation and Adaptive Computer Technology (AAACT)",
+      "fr": "Accessibilité, adaptation et technologie informatique adaptée (AATIA)"
+    },
+    "organization_url": {
+      "en": "https://www.canada.ca/en/shared-services/services/employees-accessibility/aaact-program.html",
+      "fr": "https://www.canada.ca/fr/services-partages/services/employes-accessibilite/programme-aatia.html"
+    }
+  }
+}

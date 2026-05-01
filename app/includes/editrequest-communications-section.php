@@ -1,0 +1,38 @@
+<?php
+/**
+ * Edit Request - Communications Section
+ * Displays communication logs and allows adding new entries
+ */
+?>
+
+<h2><?php echo $t['communications_heading']; ?></h2>
+
+<?php
+$x = 1;
+// Grab existing communication logs
+$result2 = mysqli_query($link, "SELECT ID, notes FROM tblcommlog WHERE triageid = '$requestuid'");
+while ($row2 = mysqli_fetch_assoc($result2)) {
+    $ocommlogid = $row2['ID'];
+    $ocommlog = $row2['notes'];
+?>
+<div class="form-group">
+    <label for="commlog<?php echo $x; ?>"><span class="field-name"><?php echo $t['edit_original_commlog']; ?>:</span></label>
+    <textarea class="form-control" id="commlog<?php echo $x; ?>" name="commlog<?php echo $x; ?>" 
+              cols="50" rows="10" <?php echo isReadOnly() ? 'readonly' : ''; ?>><?php echo htmlspecialchars($ocommlog, ENT_QUOTES, 'UTF-8'); ?></textarea>
+    <input type="hidden" id="commlogid<?php echo $x; ?>" name="commlogid<?php echo $x; ?>" value="<?php echo $ocommlogid; ?>" />
+</div>
+<?php
+    $x++;
+}
+?>
+
+<div class="form-group">
+    <a class="wb-lbx btn btn-primary" href="includes/ecomms<?php echo $langSuffix; ?>.php?id=<?php echo $row['id']; ?>">
+        <?php echo $t['view_existing_comms']; ?>
+    </a>
+</div>
+
+<div class="form-group">
+    <label for="adminnotes"><span class="field-name"><?php echo $t['add_new_commlog']; ?>:</span></label>
+    <textarea class="form-control" id="adminnotes" name="adminnotes" cols="50" rows="10"></textarea>
+</div>

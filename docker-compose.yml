@@ -1,0 +1,30 @@
+services:
+  web:
+    build: .
+    container_name: aaact-web
+    ports:
+      - "${PORT}:80"
+    depends_on:
+      - db
+    volumes:
+      - ./app:/var/www/html
+      - .env:/var/www/html/.env
+    environment:
+      TZ: ${TZ}
+
+  db:
+    image: mysql:5.7
+    container_name: aaact-rmt-db
+    platform: linux/amd64
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_HOST: ${DB_HOST}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASS}
+    volumes:
+      - dbdata:/var/lib/mysql
+      - ./database/seed.sql:/docker-entrypoint-initdb.d/seed.sql
+
+volumes:
+  dbdata:
