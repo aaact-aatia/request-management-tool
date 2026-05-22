@@ -1,5 +1,8 @@
 <?php
 require_once('sql.php');
+require_once('BlobStorage.php');
+
+/** @var mysqli $link */
 
 if (session_status() != PHP_SESSION_ACTIVE) {
     session_start();
@@ -26,8 +29,14 @@ if (isset($_GET['code'])) {
 
         $sanitizedFileName = sanitizeFileName($originalFileName); // Sanitize the file name
 
-        // Construct the file path (update this with your file storage directory)
-        $filePath = "https://itaormtsa.blob.core.windows.net/rmtdatastorage/{$fileCode}?sv=2022-11-02&ss=b&srt=o&sp=r&se=2025-10-10T21:25:09Z&st=2025-03-03T14:25:09Z&spr=https&sig=xp2Xl9dpyiJxAYPlQNpcMNUFUiMGfMDIpMy68UdCmTE%3D";
+        $blobStorage = new AzureBlobStorageManager();
+        $filePath = $blobStorage->getFileUrl($fileCode);
+
+        if ($filePath === '') {
+            error_log("File download requested, but no file storage backend is configured.");
+            http_response_code(404);
+            exit;
+        }
 
         // Set headers to prompt a file download
         header('Content-Type: application/octet-stream');

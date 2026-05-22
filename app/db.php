@@ -10,8 +10,6 @@ $dbuser = $_ENV['DB_USER'] ?? 'root';
 $dbpass = $_ENV['DB_PASS'] ?? '';
 $dbname = $_ENV['DB_NAME'] ?? 'test';
 
-// $link = mysqli_connect("aaact-rmt-db", "aaactuser", "secret", "aaact");// Check connection
-
 // Report errors (remove or tweak for production)
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 

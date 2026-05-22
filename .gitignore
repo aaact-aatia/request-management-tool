@@ -89,6 +89,8 @@ app/VMF/*.sql
 
 # Docker environment/config
 .env
+.env.*
+!.env.example
 dbdata/
 
 # Zipped files
@@ -102,9 +104,6 @@ app/.well-known/acme-challenge/
 
 # Composer artifacts (exclude from Git, handled by Docker)
 app/composer.lock
-
-# Docker build context cleanup
-.dockerignore
 
 # Composer dependencies
 app/vendor/
