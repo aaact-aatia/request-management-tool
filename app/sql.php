@@ -12,16 +12,14 @@ ini_set('log_errors', '1');
 if (file_exists('/proc/self/fd/2')) {
 	ini_set('error_log', '/proc/self/fd/2');
 }
-ini_set('session.gc_maxlifetime', '86400');
-session_set_cookie_params(86400);
 date_default_timezone_set(app_env('TZ', 'America/New_York'));
 
-if (session_status() === PHP_SESSION_ACTIVE)
-{
-	session_abort();
+// Configure and start session only when a session is not already active.
+if (session_status() !== PHP_SESSION_ACTIVE) {
+	ini_set('session.gc_maxlifetime', '86400');
+	session_set_cookie_params(86400);
+	session_start();
 }
-
-session_start();
 
 
 

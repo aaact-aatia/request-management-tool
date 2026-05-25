@@ -9,11 +9,6 @@
  * @since 2.1.0
  */
 
-// Start session
-if (session_status() != PHP_SESSION_ACTIVE) {
-    session_start();
-}
-
 // Grab MySQL connection
 require('../sql.php');
 

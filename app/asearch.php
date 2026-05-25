@@ -575,7 +575,11 @@ include 'includes/template/head.php';
 					} else {
 						$datereceived = $slatimer;
 					}
-					$ndatereceived = date('Y-m-d H:i:s', strtotime($datereceived . ' +1 day'));
+					if (!empty($datereceived) && strtotime($datereceived) !== false) {
+						$ndatereceived = date('Y-m-d H:i:s', strtotime($datereceived . ' +1 day'));
+					} else {
+						$ndatereceived = date('Y-m-d H:i:s');
+					}
 					
 					// Check if request is resolved and calculate from that day
 					// Grab the status id
@@ -583,10 +587,15 @@ include 'includes/template/head.php';
 					if ($statusid=='2') {
 						// Get the date resolved
 						$dateresolved = $row['dateresolved'];
-						$ndateresolved = date('Y-m-d H:i:s', strtotime($dateresolved));
-						// Calculate the business days (request completed)
-						//$cBdays = getWorkingDays($ndatereceived,$ndateresolved,$holidays);
-						$cBdays = calculateSLA($link, $row['requestid'], $ndatereceived,$ndateresolved);
+						if (!empty($dateresolved) && strtotime($dateresolved) !== false) {
+							$ndateresolved = date('Y-m-d H:i:s', strtotime($dateresolved));
+							// Calculate the business days (request completed)
+							//$cBdays = getWorkingDays($ndatereceived,$ndateresolved,$holidays);
+							$cBdays = calculateSLA($link, $row['requestid'], $ndatereceived,$ndateresolved);
+						} else {
+							// Missing resolve date: fall back to open-request SLA calculation.
+							$cBdays = calculateSLA($link, $row['requestid'], $ndatereceived);
+						}
 
 					} else {
 						// Calculate the business days (request still open)
