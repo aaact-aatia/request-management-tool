@@ -1,6 +1,6 @@
 # Request Management Tool
 Version: 2.0.0  
-Last updated: 2026-05-01  
+Last updated: 2026-05-25  
 Author: Muna Adan
 Editor: Shawn Thompson
 
@@ -148,14 +148,17 @@ The `docker-compose.yml` defines two services:
 
 ### Database Connection
 
-The application uses `vlucas/phpdotenv` to load environment variables. Database connections are handled through:
-- `sql.php` - Sets up session management, CORS, and includes `db.php`
-- `db.php` - Establishes mysqli connection using environment variables
+Database connections are handled through:
+- `sql.php` — Sets up session management, CORS, and includes `db.php`
+- `db.php` — Establishes mysqli connection using `app_env_required()` for DB credentials
+- `env.php` — Runtime environment helpers (`app_env()`, `app_env_required()`, `app_is_production()`)
 
 All PHP files requiring database access should include:
 ```php
 require('sql.php');  // This gives you access to $link
 ```
+
+In local development, set credentials in your `.env` file and Docker Compose injects them as environment variables. In production (Azure App Service), credentials come from Application Settings — no `.env` file is used.
 
 ## Data Model
 
@@ -278,7 +281,38 @@ This includes:
 
 ### 5. Deployment
 
-CI/CD deployment via GitHub Actions is planned but not yet configured. Deployment details will be documented here once the Azure environment is set up.
+The application is deployed as a custom container on **Azure App Service** (Linux). The CI/CD pipeline builds and publishes the Docker image to the GitHub Container Registry (GHCR) automatically on push:
+
+- Pushing to `main` → builds and pushes `ghcr.io/aaact-aatia/request-management-tool:prod`
+- Pushing to `dev` → builds and pushes `ghcr.io/aaact-aatia/request-management-tool:dev`
+
+#### Azure App Service — Required Application Settings
+
+Configure the following under **Settings → Environment variables** in the Azure Portal (or via Azure CLI `az webapp config appsettings set`):
+
+| Setting | Example value | Notes |
+|---|---|---|
+| `APP_ENV` | `production` | Controls error display and env-missing behaviour |
+| `DB_HOST` | `your-server.mysql.database.azure.com` | Azure Database for MySQL Flexible Server hostname |
+| `DB_PORT` | `3306` | Default; omit to accept the default |
+| `DB_USER` | `rmtuser` | MySQL login |
+| `DB_PASS` | *(secret)* | MySQL password |
+| `DB_NAME` | `aaact` | Database name |
+| `DB_SSL_MODE` | `REQUIRED` | Use `REQUIRED` for Azure MySQL |
+| `DB_SSL_CA` | *(path or empty)* | Optional CA bundle path for TLS trust |
+| `TZ` | `America/New_York` | Timezone for SLA calculations |
+| `CORS_ALLOWED_ORIGINS` | `https://your-app.azurewebsites.net` | Comma-separated allowed origins |
+
+Also configure the container registry under **Deployment Center** → **Registry settings**:
+- Registry: `ghcr.io`
+- Image: `aaact-aatia/request-management-tool`
+- Tag: `prod` (or `dev` for staging)
+- Authentication: use a GitHub Personal Access Token (PAT) with `read:packages` scope as the registry password.
+
+#### Known limitations
+
+- **File storage**: File upload/download is stubbed (`BlobStorage.php` is a no-op). Uploaded files are not persisted. See `docs/future/007-local-file-storage.md`.
+- **Sessions**: Default PHP file-based sessions do not share state across multiple App Service instances. Enable sticky sessions (ARR Affinity) in the Azure Portal or switch to a shared session store before scaling out.
 
 ### Details About RMT
     Project Structure:
