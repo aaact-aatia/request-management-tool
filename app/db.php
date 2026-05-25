@@ -1,26 +1,48 @@
 <?php
 require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/env.php';
 
-// Load environment variables
-Dotenv\Dotenv::createImmutable(__DIR__)->safeLoad();
+$dbhost = app_env_required('DB_HOST');
+$dbuser = app_env_required('DB_USER');
+$dbpass = app_env_required('DB_PASS');
+$dbname = app_env_required('DB_NAME');
+$dbport = (int) app_env('DB_PORT', '3306');
+$dbsslca = app_env('DB_SSL_CA');
+$dbsslmode = strtoupper((string) app_env('DB_SSL_MODE', $dbsslca ? 'REQUIRED' : 'DISABLED'));
 
-// Extract DB credentials
-$dbhost = $_ENV['DB_HOST'] ?? 'localhost';
-$dbuser = $_ENV['DB_USER'] ?? 'root';
-$dbpass = $_ENV['DB_PASS'] ?? '';
-$dbname = $_ENV['DB_NAME'] ?? 'test';
-
-// $link = mysqli_connect("aaact-rmt-db", "aaactuser", "secret", "aaact");// Check connection
-
-// Report errors (remove or tweak for production)
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-// Connect
-$link = mysqli_connect($dbhost, $dbuser, $dbpass, $dbname);
-if (!$link) {
-    die("ERROR: Could not connect. " . mysqli_connect_error());
+$link = mysqli_init();
+if ($link === false) {
+    error_log('Failed to initialize MySQL connection.');
+    http_response_code(500);
+    exit('Database connection failed.');
 }
 
-// Set encoding
+mysqli_options($link, MYSQLI_OPT_CONNECT_TIMEOUT, 10);
+
+$clientFlags = 0;
+if ($dbsslmode !== 'DISABLED') {
+    if (!empty($dbsslca)) {
+        mysqli_ssl_set($link, null, null, $dbsslca, null, null);
+    }
+
+    $clientFlags = MYSQLI_CLIENT_SSL;
+}
+
+try {
+    $connected = mysqli_real_connect($link, $dbhost, $dbuser, $dbpass, $dbname, $dbport, null, $clientFlags);
+} catch (mysqli_sql_exception $exception) {
+    error_log('Database connection failed: ' . $exception->getMessage());
+    http_response_code(500);
+    exit('Database connection failed.');
+}
+
+if (!$connected) {
+    error_log('Database connection failed: ' . mysqli_connect_error());
+    http_response_code(500);
+    exit('Database connection failed.');
+}
+
 $link->set_charset("utf8mb4");
 ?>

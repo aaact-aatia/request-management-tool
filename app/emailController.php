@@ -1,4 +1,5 @@
 <?php 
+	require_once __DIR__ . '/env.php';
 
     function sendEmail($emailAddress, $templateId, $personalisation){
 		
@@ -20,7 +21,7 @@
 				}',
 	    CURLOPT_HTTPHEADER => array(
 				  'Content-Type: application/json',
-				  'Authorization: ApiKey-v1 ' . $_ENV['GCNOTIFY_API_KEY']
+					  'Authorization: ApiKey-v1 ' . app_env('GCNOTIFY_API_KEY', '')
 				),
 			));
 	

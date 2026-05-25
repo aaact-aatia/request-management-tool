@@ -1,7 +1,11 @@
 <?php
 
-$allowed_origins = !empty($_ENV['CORS_ALLOWED_ORIGINS'])
-    ? array_map('trim', explode(',', $_ENV['CORS_ALLOWED_ORIGINS']))
+require_once __DIR__ . '/env.php';
+
+$allowedOrigins = app_env('CORS_ALLOWED_ORIGINS', '');
+
+$allowed_origins = $allowedOrigins !== ''
+    ? array_map('trim', explode(',', $allowedOrigins))
     : [];
 
 if (isset($_SERVER['HTTP_ORIGIN']) && in_array($_SERVER['HTTP_ORIGIN'], $allowed_origins)) {

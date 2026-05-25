@@ -8,9 +8,18 @@ services:
       - db
     volumes:
       - ./app:/var/www/html
-      - .env:/var/www/html/.env
     environment:
+      APP_ENV: ${APP_ENV:-development}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-3306}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      DB_NAME: ${DB_NAME}
       TZ: ${TZ}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-}
+      GCNOTIFY_API_KEY: ${GCNOTIFY_API_KEY:-}
+      GCNOTIFY_TEMPLATE_ID: ${GCNOTIFY_TEMPLATE_ID:-}
+      GCNOTIFY_TEST_EMAIL: ${GCNOTIFY_TEST_EMAIL:-}
 
   db:
     image: mysql:5.7
