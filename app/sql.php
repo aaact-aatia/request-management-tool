@@ -1,25 +1,27 @@
 <?php
 // Set global variables
 
+require_once __DIR__ . '/env.php';
+
 require('cors.php');
 
-if (session_status() != PHP_SESSION_ACTIVE)
-{
-	ini_set('display_errors', 1);
-	ini_set('session.gc_maxlifetime', 86400);
-	session_set_cookie_params(86400);
-	date_default_timezone_set('America/New_York');
-	session_start();
-} 
-else
+$displayErrors = app_is_production() ? '0' : '1';
+ini_set('display_errors', $displayErrors);
+ini_set('display_startup_errors', $displayErrors);
+ini_set('log_errors', '1');
+if (file_exists('/proc/self/fd/2')) {
+	ini_set('error_log', '/proc/self/fd/2');
+}
+ini_set('session.gc_maxlifetime', '86400');
+session_set_cookie_params(86400);
+date_default_timezone_set(app_env('TZ', 'America/New_York'));
+
+if (session_status() === PHP_SESSION_ACTIVE)
 {
 	session_abort();
-	ini_set('display_errors', 1);
-	ini_set('session.gc_maxlifetime', 86400);
-	session_set_cookie_params(86400);
-	date_default_timezone_set('America/New_York');
-	session_start();
 }
+
+session_start();
 
 
 
@@ -38,6 +40,8 @@ if (!isset($_SESSION["pid"]))
 }
 
 require_once 'db.php';
+
+/** @var mysqli $link */
 
 // Check which environment is being used
 // Grab logged in user
@@ -63,7 +67,4 @@ if (isset($_SESSION['pid'])){
 	// 	}
 	// }
 }
-
-// Set UTF-8
-mysqli_query($link, "SET NAMES utf8mb4");
 ?>

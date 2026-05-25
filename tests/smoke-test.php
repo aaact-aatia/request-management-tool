@@ -7,7 +7,9 @@
 echo "🔥 RMT Smoke Tests\n";
 echo "==================\n\n";
 
-$baseUrl = "http://localhost:" . ($_ENV['PORT'] ?? '8080');
+require_once __DIR__ . '/../app/env.php';
+
+$baseUrl = "http://localhost:" . app_env('PORT', '8080');
 $passed = 0;
 $failed = 0;
 

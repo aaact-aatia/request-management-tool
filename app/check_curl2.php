@@ -2,7 +2,7 @@
 /**
  * GC Notify API test script
  * Tests connectivity to the GC Notify email API.
- * Requires GCNOTIFY_API_KEY, GCNOTIFY_TEMPLATE_ID, and GCNOTIFY_TEST_EMAIL in .env
+ * Requires GCNOTIFY_API_KEY, GCNOTIFY_TEMPLATE_ID, and GCNOTIFY_TEST_EMAIL in the runtime environment.
  * See docs/future/006-gcnotify-integration.md
  */
 
@@ -21,20 +21,20 @@ curl_setopt_array($curl, array(
     CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
     CURLOPT_CUSTOMREQUEST => 'POST',
     CURLOPT_POSTFIELDS => json_encode([
-        'email_address' => $_ENV['GCNOTIFY_TEST_EMAIL'],
-        'template_id'   => $_ENV['GCNOTIFY_TEMPLATE_ID'],
+        'email_address' => app_env('GCNOTIFY_TEST_EMAIL', ''),
+        'template_id'   => app_env('GCNOTIFY_TEMPLATE_ID', ''),
         'personalisation' => [
             'requestid'      => 1,
             'nrequestid'     => 1,
             'teamname'       => 'Test Team',
             'requesttitle'   => 'Test Request',
             'nrequestemailid' => 1,
-            'nrequestemail'  => $_ENV['GCNOTIFY_TEST_EMAIL'],
+            'nrequestemail'  => app_env('GCNOTIFY_TEST_EMAIL', ''),
         ],
     ]),
     CURLOPT_HTTPHEADER => array(
         'Content-Type: application/json',
-        'Authorization: ApiKey-v1 ' . $_ENV['GCNOTIFY_API_KEY'],
+        'Authorization: ApiKey-v1 ' . app_env('GCNOTIFY_API_KEY', ''),
     ),
 ));
 

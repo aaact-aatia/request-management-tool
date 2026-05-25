@@ -6,7 +6,7 @@ $requestid = 200303;
 $nrequestid = 11;
 $teamname = "Super Team";
 $requesttitle = "This is my last resort";
-$nrequestemail = $_ENV['GCNOTIFY_TEST_EMAIL'];
+$nrequestemail = app_env('GCNOTIFY_TEST_EMAIL', '');
 $nrequestemailid = "MTE0MTg=";
 $baseurl = "https://api.notification.canada.ca/v2/notifications/email";
 
@@ -25,7 +25,7 @@ curl_setopt_array($curl, array(
   CURLOPT_CUSTOMREQUEST => 'POST',
   CURLOPT_POSTFIELDS =>'{
     "email_address":"'.$nrequestemail.'",
-    "template_id":"{$_ENV['GCNOTIFY_TEMPLATE_ID']}",
+    "template_id":"'.app_env('GCNOTIFY_TEMPLATE_ID', '').'",
     "personalisation":{
         "requestid":"'.$requestid.'",
         "nrequestid":"'.$nrequestid.'",
@@ -37,20 +37,22 @@ curl_setopt_array($curl, array(
 }',
   CURLOPT_HTTPHEADER => array(
     'Content-Type: application/json',
-    'Authorization: ApiKey-v1 ' . $_ENV['GCNOTIFY_API_KEY']
+    'Authorization: ApiKey-v1 ' . app_env('GCNOTIFY_API_KEY', '')
   ),
 ));
 
 $response = curl_exec($curl);
+$error = curl_error($curl);
 
 curl_close($curl);
-echo $response;
-$curl = curl_init();
+
+if ($error !== '') {
+    error_log('GC Notify test request failed: ' . $error);
+}
 
 ?>
 <p><?php echo 'PHP VERSION: ' . phpversion(); ?></p>
-<p><?php echo 'CURL ERROR: ' . curl_error($curl) . "."; ?></p>
-<p><?php echo 'This is the response from curl: '. $response . "."; ?></p> 
+<p><?php echo 'CURL STATUS: ' . htmlspecialchars($error === '' ? 'none' : (app_is_production() ? 'request failed' : $error)) . '.'; ?></p>
+<p><?php echo 'This is the response from curl: ' . htmlspecialchars((string) $response) . '.'; ?></p> 
 <?php 
-curl_close($curl);
 ?>

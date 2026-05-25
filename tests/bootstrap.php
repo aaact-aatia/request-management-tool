@@ -19,9 +19,8 @@ $_SERVER['REQUEST_METHOD'] = 'GET';
 $_SERVER['HTTP_HOST'] = 'localhost';
 $_SERVER['REQUEST_URI'] = '/';
 
-// Load environment variables
-require_once __DIR__ . '/../app/vendor/autoload.php';
-Dotenv\Dotenv::createImmutable(__DIR__ . '/../app')->safeLoad();
+// Load shared environment helpers
+require_once __DIR__ . '/../app/env.php';
 
 // Load helpers (but don't connect to DB yet)
 require_once __DIR__ . '/../app/includes/helpers.php';

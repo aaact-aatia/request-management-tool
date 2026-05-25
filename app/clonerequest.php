@@ -20,6 +20,8 @@ require('includes/httpscheck.php');
 // Grab MySQL connection
 require('sql.php');
 
+/** @var mysqli $link */
+
 // Handle language from query string or session
 if (isset($_GET['lang']) && in_array($_GET['lang'], ['en', 'fr'])) {
 	$_SESSION['lang'] = $_GET['lang'];
@@ -115,17 +117,18 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
     WHERE id = '$requestid';
     ";
     if (mysqli_query($link, $sql_insert)) {
-        echo "Request cloned successfully!";
         if($toclose == "1" || $toclose == 1){
             $sql_update = "UPDATE tbltriage SET statusid = 2 where id = '$requestid'";
             mysqli_query($link,$sql_update);
         }     
 		$indexPage = ($_SESSION['lang'] === 'fr') ? 'index-fr.php' : 'index-en.php';
-        header("location:/$indexPage"); 
+		header("location:/$indexPage");
+		exit();
     } else {
-        echo "Error: " . mysqli_error($link);
+		error_log('Request clone failed: ' . mysqli_error($link));
 		$newrequestPage = ($_SESSION['lang'] === 'fr') ? 'newrequest-fr.php' : 'newrequest-en.php';
-        header("location:/$newrequestPage?status=accessdenied"); 
+		header("location:/$newrequestPage?status=accessdenied");
+		exit();
     }
 
 
