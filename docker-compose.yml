@@ -33,7 +33,9 @@ services:
       MYSQL_PASSWORD: ${DB_PASS}
     volumes:
       - dbdata:/var/lib/mysql
-      - ./database/seed.sql:/docker-entrypoint-initdb.d/seed.sql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./database/reference.sql:/docker-entrypoint-initdb.d/02-reference.sql
+      - ./database/sample-dev.sql:/docker-entrypoint-initdb.d/03-sample-dev.sql
 
 volumes:
   dbdata:
