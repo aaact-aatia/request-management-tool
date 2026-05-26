@@ -8,6 +8,17 @@ require('includes/sla-calculator.php');
 // Grab MySQL connection
 require('sql.php');
 
+// Route guests to the public new request page.
+if (empty($_SESSION['pid'])) {
+	$lang = isset($_GET['lang']) && in_array($_GET['lang'], ['en', 'fr'])
+		? $_GET['lang']
+		: (isset($_SESSION['lang']) && in_array($_SESSION['lang'], ['en', 'fr']) ? $_SESSION['lang'] : 'en');
+
+	$_SESSION['lang'] = $lang;
+	header("location:openrequest.php?lang={$lang}");
+	exit();
+}
+
 // Language detection
 $lang = isset($_GET['lang']) ? $_GET['lang'] : (isset($_SESSION['lang']) ? $_SESSION['lang'] : 'en');
 $_SESSION['lang'] = $lang;
