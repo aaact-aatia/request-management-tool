@@ -75,38 +75,66 @@ The application is containerized using Docker for consistent development environ
 
 1. **Start the application:**
    ```bash
-   docker-compose up -d
+docker compose up -d
    ```
 
    This command will:
    - Build the PHP 8.2 Apache container
    - Start a MySQL 5.7 database container
-   - Install Composer dependencies automatically
+    - Run the app on the `PORT` value from `.env` (default `8080`)
    - Mount your local `app/` directory for live code updates
+    - Initialize MySQL from split SQL files (first run only):
+      - `database/schema.sql`
+      - `database/reference.sql`
+      - `database/sample-dev.sql`
 
 2. **Access the application:**
-   - Open your browser to `http://localhost:8080` (or the PORT you specified in `.env`)
+    - Open your browser to `http://localhost:${PORT}`.
+    - Example local URL: `http://localhost:8080`
 
 3. **View logs:**
    ```bash
-   docker-compose logs -f
+docker compose logs -f
    ```
 
 4. **Stop the application:**
    ```bash
-   docker-compose down
+docker compose down
    ```
 
 5. **Rebuild containers (after Dockerfile changes):**
    ```bash
-5. **Rebuild containers (after Dockerfile changes):**
-   ```bash
-   docker-compose up -d --build
+docker compose up -d --build
    ```
 
-### Database Seed Data
+### Database Bootstrap Files
 
-The application includes a database seed file (`database/seed.sql`) that automatically loads when the database container is first created. This provides:
+The repository contains database bootstrap files with distinct responsibilities:
+
+- `database/schema.sql`: database structure only (`CREATE TABLE`, indexes, and constraints)
+- `database/reference.sql`: production-safe lookup and configuration data required by the app
+- `database/sample-dev.sql`: local/development sample data only (non-production)
+- `database/seed.sql`: legacy combined seed retained for compatibility
+
+### Local Initialization Behavior
+
+On first MySQL container initialization in local Docker, the split files are imported in this order:
+
+1. `database/schema.sql`
+2. `database/reference.sql`
+3. `database/sample-dev.sql`
+
+Important: MySQL init files run only when the `dbdata` volume is created. If the volume already exists, `docker compose up` will not re-run imports.
+
+To force re-initialization and re-import bootstrap SQL files:
+
+```bash
+docker compose down -v && docker compose up -d --build
+```
+
+The `-v` flag removes the `dbdata` volume.
+
+### Sample Local Users
 
 #### Test Users (all passwords: `password`)
 
@@ -118,26 +146,6 @@ The application includes a database seed file (`database/seed.sql`) that automat
 | tl@example.com | Team Lead (4) | Can edit team requests |
 | employee@example.com | Employee (5) | Regular employee access |
 | external@example.com | External (6) | External user access |
-
-#### Sample Data Included
-
-- 6 account types (Super Admin through External)
-- 6 status values (New, In Progress, Pending, Resolved, Closed, Cancelled)
-- 10 catalogue items (matching the "New Request" dropdown options)
-- 14 services across various catalogues
-- 13 subservices
-- 1 sample request for testing
-
-**Note:** The "New Request" dropdowns are currently hardcoded in PHP files (`addrequest2-ajax*.php`), not database-driven. The catalogue/services tables exist for future use but aren't yet connected to the dropdown logic (see IMPROVEMENTS.md).
-
-**Important:** The seed only runs when the `dbdata` volume is first created (i.e. when it doesn't exist yet). If the volume already exists, `docker compose up` will **not** re-seed — the existing data is preserved. This means changes to `seed.sql` won't take effect until the volume is destroyed.
-
-To reload the database with fresh seed data:
-```bash
-docker compose down -v && docker compose up -d
-```
-
-The `-v` flag removes the `dbdata` volume, forcing MySQL to re-import `seed.sql` on next startup.
 
 ### Docker Services
 
@@ -281,10 +289,32 @@ This includes:
 
 ### 5. Deployment
 
-The application is deployed as a custom container on **Azure App Service** (Linux). The CI/CD pipeline builds and publishes the Docker image to the GitHub Container Registry (GHCR) automatically on push:
+The application is deployed as a custom container on **Azure App Service** (Linux).
+
+The CI/CD model is:
+
+- GitHub Actions builds Docker images.
+- GitHub Actions publishes images to GitHub Container Registry (GHCR).
+- GitHub Actions does not deploy directly to Azure App Service.
+- Azure App Service pulls the selected image from GHCR.
+
+Branch-to-image mapping:
 
 - Pushing to `main` → builds and pushes `ghcr.io/aaact-aatia/request-management-tool:prod`
 - Pushing to `dev` → builds and pushes `ghcr.io/aaact-aatia/request-management-tool:dev`
+
+### Database Import Order by Environment
+
+Production database bootstrap order:
+
+1. `database/schema.sql`
+2. `database/reference.sql`
+
+Development database bootstrap order:
+
+1. `database/schema.sql`
+2. `database/reference.sql`
+3. `database/sample-dev.sql`
 
 #### Azure App Service — Required Application Settings
 
@@ -300,7 +330,8 @@ Configure the following under **Settings → Environment variables** in the Azur
 | `DB_NAME` | `aaact` | Database name |
 | `DB_SSL_MODE` | `REQUIRED` | Use `REQUIRED` for Azure MySQL |
 | `DB_SSL_CA` | *(path or empty)* | Optional CA bundle path for TLS trust |
-| `TZ` | `America/New_York` | Timezone for SLA calculations |
+| `TZ` | `America/Toronto` | Timezone for SLA calculations |
+| `WEBSITES_PORT` | `80` | Required for Azure App Service custom container port mapping |
 | `CORS_ALLOWED_ORIGINS` | `https://your-app.azurewebsites.net` | Comma-separated allowed origins |
 
 Also configure the container registry under **Deployment Center** → **Registry settings**:
@@ -313,6 +344,7 @@ Also configure the container registry under **Deployment Center** → **Registry
 
 - **File storage**: File upload/download is stubbed (`BlobStorage.php` is a no-op). Uploaded files are not persisted. See `docs/future/007-local-file-storage.md`.
 - **Sessions**: Default PHP file-based sessions do not share state across multiple App Service instances. Enable sticky sessions (ARR Affinity) in the Azure Portal or switch to a shared session store before scaling out.
+- **Current Azure blocker as of setup**: Existing Azure App Services must be configured or recreated as Linux Web App for Containers so the GHCR image runs as the main application container. The current sidecar-only container option is not sufficient for this deployment model.
 
 ### Details About RMT
     Project Structure:
