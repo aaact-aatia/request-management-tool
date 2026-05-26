@@ -120,6 +120,28 @@ docker compose up -d
 
 The database is seeded automatically on first start from [database/seed.sql](../database/seed.sql).
 
+### Docker-First PHP Validation (Required)
+Agents must use Docker for PHP validation and must not assume PHP is installed on the host machine.
+
+Use these commands from the repository root:
+
+```bash
+# Ensure containers are running
+docker compose up -d
+
+# Lint a single PHP file in app/
+docker compose exec web php -l /var/www/html/index.php
+
+# Lint multiple changed files
+docker compose exec web php -l /var/www/html/openrequest.php
+docker compose exec web php -l /var/www/html/signin.php
+
+# Lint all PHP files under app/
+docker compose exec web sh -lc "find /var/www/html -name '*.php' -print0 | xargs -0 -n1 php -l"
+```
+
+When reporting validation, include the command used and whether syntax errors were detected.
+
 ### Deployment
 CI/CD via GitHub Actions is planned but not yet configured. See README for current deployment approach.
 

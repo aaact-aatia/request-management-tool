@@ -31,6 +31,12 @@ if (!isset($_SESSION['lang']) || !in_array($_SESSION['lang'], ['en', 'fr'])) {
 	$_SESSION['lang'] = 'en';
 }
 
+// Signed-in users should go to the request list.
+if (!empty($_SESSION['pid'])) {
+	header("location:index.php?lang={$_SESSION['lang']}");
+	exit();
+}
+
 // Load language file
 $lang = require("lang/{$_SESSION['lang']}.php");
 
