@@ -1,0 +1,13 @@
+/* =============================================================================
+   RMT Application Styles
+   Overrides and additions to WET4 / GCWeb defaults
+   ============================================================================= */
+
+/* Panel heading contrast fix
+   panel-danger (#f2dede bg) and panel-warning (#fcf8e3 bg) default text colours
+   (#a94442 and #8a6d3b) only barely pass WCAG AA (≈4.5:1).
+   Black text achieves 16:1 and 20:1 respectively. */
+.panel-danger > .panel-heading,
+.panel-warning > .panel-heading {
+	color: #000;
+}

@@ -62,6 +62,15 @@ $lang = $_SESSION['lang'];
 // Extract values for current language
 $pageTitle = $page['title'][$lang];
 $pageDescription = $page['description'][$lang];
+$extraStyles = '
+	.wb-eqht-grd .panel.hght-inhrt {
+		display: flex;
+		flex-direction: column;
+	}
+	.wb-eqht-grd .panel.hght-inhrt .panel-body {
+		flex: 1 1 auto;
+	}
+';
 
 // Include template head
 include 'includes/template/head.php';
@@ -77,19 +86,32 @@ include 'includes/template/head.php';
 			//List it
 			if(mysqli_num_rows($result)>0){
 			?>
-			<table class="wb-tables table table-striped table-hover table-sm" data-wb-tables='{"paging": false, "columnDefs": [{ "type": "html-num", "targets": 0 }]}'>
-				<thead>
-				<tr>
-					<th><?= htmlspecialchars($langFile['indexonly_col_request']) ?></th>
-					<th><?= htmlspecialchars($langFile['indexonly_col_title']) ?></th>
-					<th><?= htmlspecialchars($langFile['indexonly_col_client']) ?></th>
-					<th><?= htmlspecialchars($langFile['indexonly_col_service']) ?></th>
-					<th><?= htmlspecialchars($langFile['indexonly_col_status']) ?></th>
-					<th><?= htmlspecialchars($langFile['indexonly_col_actions']) ?></th>
-				</tr>
-				</thead>
-				<tbody>
+			<section class="provisional wb-tagfilter wb-filter" data-wb-filter='{"selector": "[data-wb-tags]", "section": ".wb-tagfilter-items", "uiTemplate": "#indexonly-filter-ui"}'>
+				<h2 class="wb-inv"><?= ($_SESSION['lang'] === 'fr') ? 'Options de filtrage' : 'Filter options' ?></h2>
+				<div id="indexonly-filter-ui" class="row">
+					<div class="col-md-12">
+						<div class="form-group">
+							<div class="input-group">
+								<label for="indexonly-search" class="input-group-addon"><?= ($_SESSION['lang'] === 'fr') ? 'Filtrer' : 'Filter' ?></label>
+								<input type="search" class="form-control" id="indexonly-search">
+							</div>
+						</div>
+					</div>
+					<div class="col-md-12">
+						<div class="form-group">
+							<fieldset>
+								<legend class="mrgn-bttm-0"><span class="field-name"><?= htmlspecialchars($langFile['indexonly_col_status']) ?></span></legend>
+								<ul class="list-unstyled list-inline">
+									<li class="checkbox"><label><input type="checkbox" name="priority-filter" class="wb-tagfilter-ctrl" value="sla-escalation"> <?= htmlspecialchars($langFile['indexonly_escalation_required']) ?></label></li>
+									<li class="checkbox"><label><input type="checkbox" name="priority-filter" class="wb-tagfilter-ctrl" value="sla-close"> <?= htmlspecialchars($langFile['indexonly_request_close_sla']) ?></label></li>
+								</ul>
+							</fieldset>
+						</div>
+					</div>
+				</div>
+				<div class="row wb-eqht-grd wb-tagfilter-items">
 				<?php
+				$hasVisibleRows = false;
 				while($row = mysqli_fetch_array($result)){
 					// Check if clientlname or clientfname is not empty
 					$clientfname = $row['clientfname'];
@@ -190,60 +212,123 @@ include 'includes/template/head.php';
 					}
 					$tarray = explode(",",$teams);
 					if(in_array($tarraycontactid, $tarray) OR $userid == $row['workerid']) {
-				?>
-				<tr <?php if ($doverdue) { ?> style="background-color: #e87d88;"<?php } elseif($overdue) { ?> style="background-color: #f5c6cb;"<?php } elseif ($closedue) { ?> style="background-color: #ffeeba;"<?php } ?>>
-					<td>
-						<a href="viewrequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?php echo base64_encode($row['id']);?>">a11y-<?php echo $row['requestid'];?> <span class="glyphicon glyphicon-eye-open"></span><span class="wb-inv"><?= htmlspecialchars($langFile['indexonly_details']) ?></span></a>
-					<?php if (!empty($row['nsd']) && !empty($_SESSION['pid']) && !in_array($row['nsd'], ['Yes I have', 'No I do not have', 'Oui j\'ai', 'Non je n\'ai pas'])) { ?>
-							<br />
-							<?php if(preg_match('/^[0-9]+$/', $row['nsd'])){?>
-								<a href="http://arweb.prv/SRMIS.htm?Ticket=<?php echo $row['nsd'];?>" target="_blank"># NSD<?php echo $row['nsd'];?><span class="glyphicon glyphicon-new-window"></span><span class="wb-inv"><?= htmlspecialchars($langFile['indexonly_details_new_window']) ?></span></a>
-							<?php }else{?>
-								<a href="https://smartitesdc.service.gc.ca/smartit/app/#/search/<?php echo $row['nsd'];?>" target="_blank"># Smart IT <?php echo $row['nsd'];?><span class="glyphicon glyphicon-eye-open"></span><span class="wb-inv"><?= htmlspecialchars($langFile['indexonly_details_new_window']) ?></span></a>
-							<?php } ?>
-							<?php }?>
-					</td>
-					<td><?php echo htmlspecialchars($row['title']);?></td>
-					<td><?php echo $clientname;?></td>
-					<td><?php echo $cataloguename; ?><?php echo " / " . $servicename; ?><?php if (!empty($subservicename)) { echo " / " . $subservicename; } ?><?php if (!empty($row['bdm'])) { ?> - <span class="badge">BDM <span class="glyphicon glyphicon-tag"></span></span><?php } ?></td>					
-					<td>
-					<?php 
-					// Grab the status id
-					$statusid = $row['statusid'];
-					$result2 = mysqli_query($link, "SELECT $nameColumn FROM tblstatus WHERE id = '$statusid'");
-					$row2 = mysqli_fetch_array($result2);
-					$statusname = $row2[0];
-					?>
-						<?php echo $statusname; ?>
-						<?php
-						// Check if a user is logged in 
-						if (!empty($_SESSION['pid'])) {
-							$workerid = $row['workerid'];
-							if (!empty($workerid)) {
-								// Check the name
-								$result2 = mysqli_query($link, "SELECT lastname,firstname FROM tblusers WHERE id = '$workerid'");
-								$row2 = mysqli_fetch_array($result2);
-								$ulastname = $row2[0];
-								$ufirstname = $row2[1];
-						?>
-						<br /><?php echo $ulastname ?>, <?php echo $ufirstname ?>
-						<?php
+						$hasVisibleRows = true;
+
+						// Build tags for client-side filter
+						$cardTags = 'status-' . (int)$statusid;
+						if ($doverdue || $overdue) {
+							$cardTags .= ' sla-escalation';
+						} elseif ($closedue) {
+							$cardTags .= ' sla-close';
+						}
+
+						if ($doverdue || $overdue) {
+							$panelClass = 'panel-danger';
+							$slaLabel = htmlspecialchars($langFile['indexonly_escalation_required']);
+						} elseif ($closedue) {
+							$panelClass = 'panel-warning';
+							$slaLabel = htmlspecialchars($langFile['indexonly_request_close_sla']);
+						} else {
+							$panelClass = 'panel-default';
+							$slaLabel = '';
+						}
+
+						// Status label style
+						$statusLabelClasses = [
+							1  => 'label-primary',
+							2  => 'label-info',
+							3  => 'label-warning',
+							5  => 'label-success',
+							6  => 'label-default',
+							7  => 'label-warning',
+							10 => 'label-default',
+							11 => 'label-default',
+							12 => 'label-default',
+						];
+						$statusLabelClass = $statusLabelClasses[(int)$statusid] ?? 'label-default';
+
+						$workerName = '';
+						if (!empty($row['workerid'])) {
+							$result2 = mysqli_query($link, "SELECT lastname,firstname FROM tblusers WHERE id = '" . $row['workerid'] . "'");
+							$row2 = mysqli_fetch_array($result2);
+							if (!empty($row2)) {
+								$workerName = htmlspecialchars($row2[0] . ', ' . $row2[1]);
 							}
 						}
-						?>
-						<?php if ($doverdue) { ?><br /><span class="glyphicon glyphicon-warning-sign"></span> <?= htmlspecialchars($langFile['indexonly_escalation_required']) ?><?php } elseif ($overdue) { ?><br /><span class="glyphicon glyphicon-warning-sign"></span> <?= htmlspecialchars($langFile['indexonly_request_past_sla']) ?><?php } elseif ($closedue) { ?><br /><span class="glyphicon glyphicon-warning-sign"></span> <?= htmlspecialchars($langFile['indexonly_request_close_sla']) ?><?php } ?>
-					</td>
-					<td>
-						<a class="btn btn-primary btn-block" href="editrequest.php?erid=<?php echo base64_encode($row['id']);?>"><?= htmlspecialchars($langFile['indexonly_edit']) ?> &nbsp;<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> <?= htmlspecialchars($langFile['indexonly_request']) ?></span></a><?php if ($_SESSION['atype']==1) { ?> <a class="wb-lbx btn btn-primary btn-block" href="includes/delete-request.php?id=<?php echo $row['id'];?>"><?= htmlspecialchars($langFile['indexonly_delete']) ?>&nbsp;<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> <?= htmlspecialchars($langFile['indexonly_request']) ?></span></a><?php } ?>
-						<?php if(in_array('1', $_SESSION['team'])){?><a class="btn btn-primary btn-block" href="clonerequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?php echo base64_encode($row['id']);?>&toClose=2"><?= htmlspecialchars($langFile['indexonly_clone']) ?> &nbsp;<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> <?= htmlspecialchars($langFile['indexonly_request']) ?></span></a>
-						<a class="btn btn-primary btn-block" href="clonerequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?php echo base64_encode($row['id']);?>&toClose=1"><?= htmlspecialchars($langFile['indexonly_clone_close']) ?> &nbsp;<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> <?= htmlspecialchars($langFile['indexonly_request']) ?></span></a><?php } ?>
-					</td>
-				</tr>
+				?>
+					<?php
+					$result2 = mysqli_query($link, "SELECT $nameColumn FROM tblstatus WHERE id = '$statusid'");
+					$row2 = mysqli_fetch_array($result2);
+					$statusname = $row2[0] ?? '';
+
+					ob_start();
+					?>
+					<dl>
+						<dt><?= htmlspecialchars($langFile['indexonly_col_client']) ?>:</dt>
+						<dd><?= htmlspecialchars($clientname) ?></dd>
+						<dt><?= htmlspecialchars($langFile['indexonly_col_service']) ?>:</dt>
+						<dd><?= htmlspecialchars($cataloguename) ?> / <?= htmlspecialchars($servicename) ?><?php if (!empty($subservicename)) { echo ' / ' . htmlspecialchars($subservicename); } ?><?php if (!empty($row['bdm'])) { ?> <span class="label label-default">BDM</span><?php } ?></dd>
+						<?php if (!empty($row['nsd']) && !in_array($row['nsd'], ['Yes I have', 'No I do not have', 'Oui j\'ai', 'Non je n\'ai pas'])): ?>
+							<dt>NSD:</dt>
+							<dd>
+								<?php if (preg_match('/^[0-9]+$/', $row['nsd'])): ?>
+									<a href="http://arweb.prv/SRMIS.htm?Ticket=<?= htmlspecialchars($row['nsd']) ?>"># NSD<?= htmlspecialchars($row['nsd']) ?></a>
+								<?php else: ?>
+									<a href="https://smartitesdc.service.gc.ca/smartit/app/#/search/<?= htmlspecialchars($row['nsd']) ?>"># Smart IT <?= htmlspecialchars($row['nsd']) ?></a>
+								<?php endif; ?>
+							</dd>
+						<?php endif; ?>
+						<dt><?= ($_SESSION['lang'] === 'fr') ? 'Date de soumission' : 'Submitted date' ?>:</dt>
+						<dd><?= date('Y-m-d', strtotime($row['datereceived'])) ?></dd>
+						<?php if (!empty($workerName)): ?>
+							<dt><?= ($_SESSION['lang'] === 'fr') ? 'Attribué à' : 'Assigned to' ?>:</dt>
+							<dd><?= $workerName ?></dd>
+						<?php endif; ?>
+					</dl>
+					<?php
+					$cardBodyHtml = ob_get_clean();
+
+					ob_start();
+					?>
+					<a class="btn btn-primary btn-block" href="editrequest.php?erid=<?= base64_encode($row['id']) ?>"><?= htmlspecialchars($langFile['indexonly_edit']) ?> <span class="wb-inv">a11y-<?= htmlspecialchars($row['requestid']) ?> <?= htmlspecialchars($langFile['indexonly_request']) ?></span></a>
+					<?php if ($_SESSION['atype']==1) { ?>
+						<a class="wb-lbx btn btn-primary btn-block" href="includes/delete-request.php?id=<?= $row['id'] ?>"><?= htmlspecialchars($langFile['indexonly_delete']) ?> <span class="wb-inv">a11y-<?= htmlspecialchars($row['requestid']) ?> <?= htmlspecialchars($langFile['indexonly_request']) ?></span></a>
+					<?php } ?>
+					<?php if(in_array('1', $_SESSION['team'])){?>
+						<a class="btn btn-primary btn-block" href="clonerequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?= base64_encode($row['id']) ?>&toClose=2"><?= htmlspecialchars($langFile['indexonly_clone']) ?> <span class="wb-inv">a11y-<?= htmlspecialchars($row['requestid']) ?> <?= htmlspecialchars($langFile['indexonly_request']) ?></span></a>
+						<a class="btn btn-primary btn-block" href="clonerequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?= base64_encode($row['id']) ?>&toClose=1"><?= htmlspecialchars($langFile['indexonly_clone_close']) ?> <span class="wb-inv">a11y-<?= htmlspecialchars($row['requestid']) ?> <?= htmlspecialchars($langFile['indexonly_request']) ?></span></a>
+					<?php } ?>
+					<?php
+					$cardFooterHtml = ob_get_clean();
+
+					$requestCard = [
+						'tags' => $cardTags,
+						'panelClass' => $panelClass,
+						'requestUrl' => 'viewrequest.php?lang=' . $_SESSION['lang'] . '&erid=' . base64_encode($row['id']),
+						'requestCode' => 'a11y-' . ($row['requestid'] ?? ''),
+						'title' => !empty($row['title']) ? $row['title'] : '[No title entered]',
+						'statusPrefix' => $langFile['indexonly_col_status'],
+						'statusText' => $statusname,
+						'statusLabelClass' => $statusLabelClass,
+						'slaLabel' => $slaLabel,
+						'slaAlertClass' => ($panelClass === 'panel-danger') ? 'alert-danger' : 'alert-warning',
+						'bodyHtml' => $cardBodyHtml,
+						'footerHtml' => $cardFooterHtml,
+					];
+					include 'includes/template/request-card.php';
+					?>
 			<?php
 					}
 				} ?>
-				</tbody>
-			</table>
+				</div>
+				<?php if ($hasVisibleRows): ?>
+				<div class="wb-tagfilter-noresult">
+					<p><?= ($_SESSION['lang'] === 'fr') ? 'Aucune demande ne correspond au filtre sélectionné.' : 'No requests match the selected filter.' ?></p>
+				</div>
+				<?php else: ?>
+				<p><strong><?= htmlspecialchars($langFile['indexonly_no_requests']) ?></strong></p>
+				<?php endif; ?>
+			</section>
 			
 			<?php } else { ?>
 			<p><strong><?= htmlspecialchars($langFile['indexonly_no_requests']) ?></strong></p>
