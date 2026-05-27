@@ -80,11 +80,23 @@ include 'includes/template/head.php';
 		<main role="main" property="mainContentOfPage" class="container">
 			<h1 property="name" id="wb-cont"><?= htmlspecialchars($langFile['indexresolved_heading']) ?></h1>
 			<?php
+			$sort = isset($_GET['sort']) ? $_GET['sort'] : 'closed_desc';
+			$sortOptions = [
+				'closed_desc' => "COALESCE(NULLIF(dateresolved, '0000-00-00'), NULLIF(dateupdated, '0000-00-00'), datereceived) DESC, id DESC",
+				'closed_asc' => "COALESCE(NULLIF(dateresolved, '0000-00-00'), NULLIF(dateupdated, '0000-00-00'), datereceived) ASC, id ASC",
+				'updated_desc' => "COALESCE(NULLIF(dateupdated, '0000-00-00'), datereceived) DESC, id DESC",
+				'updated_asc' => "COALESCE(NULLIF(dateupdated, '0000-00-00'), datereceived) ASC, id ASC",
+			];
+			if (!isset($sortOptions[$sort])) {
+				$sort = 'closed_desc';
+			}
+			$sortSql = $sortOptions[$sort];
+
 			// Grab resolved, closed, and cancelled requests from the triage table with a limit
 			$statusFilterIds = [4, 5, 6];
 			$statusFilterList = implode(',', array_map('intval', $statusFilterIds));
 			$limit = 1000;
-			$sql = "SELECT * FROM tbltriage WHERE status = '1' AND statusid IN ($statusFilterList) ORDER BY requestid DESC LIMIT $limit";
+			$sql = "SELECT * FROM tbltriage WHERE status = '1' AND statusid IN ($statusFilterList) ORDER BY $sortSql LIMIT $limit";
 			
 			$result = mysqli_query($link,$sql);
 
@@ -142,6 +154,21 @@ include 'includes/template/head.php';
 								<input type="search" class="form-control" id="indexresolved-search">
 							</div>
 						</div>
+					</div>
+				</div>
+				<div class="row mrgn-tp-md mrgn-bttm-md">
+					<div class="col-md-5 col-sm-7">
+						<form method="get" action="indexresolved.php" class="form-inline">
+							<input type="hidden" name="lang" value="<?= htmlspecialchars($_SESSION['lang']) ?>">
+							<label for="indexresolved-sort" class="mrgn-rght-sm"><?= htmlspecialchars($langFile['indexresolved_sort_by']) ?>:</label>
+							<select id="indexresolved-sort" name="sort" class="form-control" onchange="this.form.submit()">
+								<option value="closed_desc" <?= $sort === 'closed_desc' ? 'selected' : '' ?>><?= htmlspecialchars($langFile['indexresolved_sort_closed_newest']) ?></option>
+								<option value="closed_asc" <?= $sort === 'closed_asc' ? 'selected' : '' ?>><?= htmlspecialchars($langFile['indexresolved_sort_closed_oldest']) ?></option>
+								<option value="updated_desc" <?= $sort === 'updated_desc' ? 'selected' : '' ?>><?= htmlspecialchars($langFile['indexresolved_sort_updated_newest']) ?></option>
+								<option value="updated_asc" <?= $sort === 'updated_asc' ? 'selected' : '' ?>><?= htmlspecialchars($langFile['indexresolved_sort_updated_oldest']) ?></option>
+							</select>
+							<noscript><button type="submit" class="btn btn-default mrgn-lft-sm">OK</button></noscript>
+						</form>
 					</div>
 				</div>
 				<div class="row wb-eqht-grd wb-tagfilter-items">

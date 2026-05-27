@@ -55,6 +55,11 @@ $translations = [
 		'filter_status_label' => 'Status',
 		'filter_catalogue_label' => 'Service type',
 		'filter_priority_label' => 'Priority',
+		'sort_by' => 'Sort by',
+		'sort_submitted_newest' => 'Submitted date: newest first',
+		'sort_submitted_oldest' => 'Submitted date: oldest first',
+		'sort_updated_newest' => 'Last updated: newest first',
+		'sort_updated_oldest' => 'Last updated: oldest first',
 		'submitted_date' => 'Submitted date',
 		'last_updated' => 'Last updated by',
 		'no_title' => '[No title entered]',
@@ -95,6 +100,11 @@ $translations = [
 		'filter_status_label' => 'Statut',
 		'filter_catalogue_label' => 'Type de service',
 		'filter_priority_label' => 'Priorité',
+		'sort_by' => 'Trier par',
+		'sort_submitted_newest' => 'Date de soumission : plus recentes',
+		'sort_submitted_oldest' => 'Date de soumission : plus anciennes',
+		'sort_updated_newest' => 'Derniere mise a jour : plus recentes',
+		'sort_updated_oldest' => 'Derniere mise a jour : plus anciennes',
 		'submitted_date' => 'Date de soumission',
 		'last_updated' => 'Derniere mise a jour par',
 		'no_title' => '[Aucun titre saisi]',
@@ -230,8 +240,20 @@ include 'includes/template/head.php';
 			?>
 
 			<?php
+			$sort = isset($_GET['sort']) ? $_GET['sort'] : 'submitted_desc';
+			$sortOptions = [
+				'submitted_desc' => 'datereceived DESC, id DESC',
+				'submitted_asc' => 'datereceived ASC, id ASC',
+				'updated_desc' => "COALESCE(NULLIF(dateupdated, '0000-00-00'), datereceived) DESC, id DESC",
+				'updated_asc' => "COALESCE(NULLIF(dateupdated, '0000-00-00'), datereceived) ASC, id ASC",
+			];
+			if (!isset($sortOptions[$sort])) {
+				$sort = 'submitted_desc';
+			}
+			$sortSql = $sortOptions[$sort];
+
 			// Construct SQL statement
-			$sql = "SELECT * FROM tbltriage WHERE status = 1 AND (statusid=1 OR statusid=2 OR statusid=3 OR statusid=7 OR statusid=10 OR statusid='11' OR statusid='12') ORDER BY requestid DESC";
+			$sql = "SELECT * FROM tbltriage WHERE status = 1 AND (statusid=1 OR statusid=2 OR statusid=3 OR statusid=7 OR statusid=10 OR statusid='11' OR statusid='12') ORDER BY $sortSql";
 			//echo $sql;
 			
 	$result = mysqli_query($link, $sql);
@@ -302,6 +324,21 @@ include 'includes/template/head.php';
 						</div>
 					</div>
 				</div>			</div>
+			<div class="row mrgn-tp-md mrgn-bttm-md">
+				<div class="col-md-5 col-sm-7">
+					<form method="get" action="index.php" class="form-inline">
+						<input type="hidden" name="lang" value="<?= htmlspecialchars($lang) ?>">
+						<label for="overview-sort" class="mrgn-rght-sm"><?= $t['sort_by'] ?>:</label>
+						<select id="overview-sort" name="sort" class="form-control" onchange="this.form.submit()">
+							<option value="submitted_desc" <?= $sort === 'submitted_desc' ? 'selected' : '' ?>><?= $t['sort_submitted_newest'] ?></option>
+							<option value="submitted_asc" <?= $sort === 'submitted_asc' ? 'selected' : '' ?>><?= $t['sort_submitted_oldest'] ?></option>
+							<option value="updated_desc" <?= $sort === 'updated_desc' ? 'selected' : '' ?>><?= $t['sort_updated_newest'] ?></option>
+							<option value="updated_asc" <?= $sort === 'updated_asc' ? 'selected' : '' ?>><?= $t['sort_updated_oldest'] ?></option>
+						</select>
+						<noscript><button type="submit" class="btn btn-default mrgn-lft-sm">OK</button></noscript>
+					</form>
+				</div>
+			</div>
 			<div class="row wb-eqht-grd wb-tagfilter-items">
 				<?php
 				while ($row = mysqli_fetch_array($result)) {
