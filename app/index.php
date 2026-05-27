@@ -56,6 +56,7 @@ $translations = [
 		'filter_catalogue_label' => 'Service type',
 		'filter_priority_label' => 'Priority',
 		'submitted_date' => 'Submitted date',
+		'last_updated' => 'Last updated by',
 		'no_title' => '[No title entered]',
 		'no_results_filter' => 'No requests match the selected filters.',
 		'delete_request_title' => 'Delete this request',
@@ -95,6 +96,7 @@ $translations = [
 		'filter_catalogue_label' => 'Type de service',
 		'filter_priority_label' => 'Priorité',
 		'submitted_date' => 'Date de soumission',
+		'last_updated' => 'Derniere mise a jour par',
 		'no_title' => '[Aucun titre saisi]',
 		'no_results_filter' => 'Aucune demande ne correspond aux filtres sélectionnés.',
 		'delete_request_title' => 'Supprimer cette demande',
@@ -237,7 +239,7 @@ include 'includes/template/head.php';
 	// Pre-fetch filter options for tag filter controls
 	$nameField = $lang == 'fr' ? 'namefr' : 'nameen';
 	$statusOptions = [];
-	$statusOptResult = mysqli_query($link, "SELECT id, `$nameField` FROM tblstatus WHERE status = 1 ORDER BY id");
+	$statusOptResult = mysqli_query($link, "SELECT id, `$nameField` FROM tblstatus WHERE status = 1 AND id NOT IN (4,5,6) ORDER BY id");
 	while ($sr = mysqli_fetch_assoc($statusOptResult)) {
 		$statusOptions[] = $sr;
 	}
@@ -436,6 +438,16 @@ include 'includes/template/head.php';
 							}
 						}
 									}
+
+
+					$lastUpdatedByName = '';
+					if (!empty($row['updaterid'])) {
+						$result2 = mysqli_query($link, "SELECT lastname, firstname FROM tblusers WHERE id = '" . $row['updaterid'] . "'");
+						$row2 = mysqli_fetch_array($result2);
+						if (!empty($row2)) {
+							$lastUpdatedByName = htmlspecialchars($row2[0] . ', ' . $row2[1]);
+						}
+					}
 							?>
 					<?php
 					ob_start();
@@ -462,6 +474,10 @@ include 'includes/template/head.php';
 						<?php if (!empty($workerName)): ?>
 							<dt><?= $t['assigned_to'] ?>:</dt>
 							<dd><?= $workerName ?></dd>
+						<?php endif; ?>
+						<?php if (!empty($lastUpdatedByName)): ?>
+							<dt><?= $t['last_updated'] ?>:</dt>
+							<dd><?= $lastUpdatedByName ?></dd>
 						<?php endif; ?>
 					</dl>
 					<?php

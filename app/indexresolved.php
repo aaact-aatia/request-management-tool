@@ -48,12 +48,12 @@ $nameColumn = ($_SESSION['lang'] === 'fr') ? 'namefr' : 'nameen';
 // =============================================================================
 $page = [
 	'title' => [
-		'en' => 'Resolved requests',
-		'fr' => 'Demandes résolues'
+		'en' => 'Closed requests',
+		'fr' => 'Demandes fermées'
 	],
 	'description' => [
-		'en' => 'View resolved accessibility requests',
-		'fr' => 'Voir les demandes d\'accessibilité résolues'
+		'en' => 'View closed accessibility requests',
+		'fr' => 'Voir les demandes d\'accessibilité fermées'
 	]
 ];
 
@@ -80,13 +80,25 @@ include 'includes/template/head.php';
 		<main role="main" property="mainContentOfPage" class="container">
 			<h1 property="name" id="wb-cont"><?= htmlspecialchars($langFile['indexresolved_heading']) ?></h1>
 			<?php
-			// Grab all the resolved Requests from the Triage table with a limit
-			// Status ID 4 = "Resolved" in both English and French
-			$statusFilter = '4';
+			// Grab resolved, closed, and cancelled requests from the triage table with a limit
+			$statusFilterIds = [4, 5, 6];
+			$statusFilterList = implode(',', array_map('intval', $statusFilterIds));
 			$limit = 1000;
-			$sql = "SELECT * FROM tbltriage WHERE status = '1' AND statusid = '$statusFilter' ORDER BY requestid DESC LIMIT $limit";
+			$sql = "SELECT * FROM tbltriage WHERE status = '1' AND statusid IN ($statusFilterList) ORDER BY requestid DESC LIMIT $limit";
 			
 			$result = mysqli_query($link,$sql);
+
+			$statusOptions = [];
+			$statusOptResult = mysqli_query($link, "SELECT id, $nameColumn FROM tblstatus WHERE status = 1 AND id IN ($statusFilterList) ORDER BY id");
+			while ($sr = mysqli_fetch_assoc($statusOptResult)) {
+				$statusOptions[] = $sr;
+			}
+
+			$catalogueOptions = [];
+			$catOptResult = mysqli_query($link, "SELECT id, $nameColumn FROM tblcatalogue WHERE status = 1 ORDER BY $nameColumn");
+			while ($cr = mysqli_fetch_assoc($catOptResult)) {
+				$catalogueOptions[] = $cr;
+			}
 			
 			//List it
 			if(mysqli_num_rows($result)>0){
@@ -94,6 +106,35 @@ include 'includes/template/head.php';
 			<section class="provisional wb-tagfilter wb-filter" data-wb-filter='{"selector": "[data-wb-tags]", "section": ".wb-tagfilter-items", "uiTemplate": "#indexresolved-filter-ui"}'>
 				<h2 class="wb-inv"><?= ($_SESSION['lang'] === 'fr') ? 'Options de filtrage' : 'Filter options' ?></h2>
 				<div id="indexresolved-filter-ui" class="row">
+					<div class="col-sm-12">
+						<p class="wb-fltr-info mrgn-bttm-sm"><span data-nbitem></span> <?= ($_SESSION['lang'] === 'fr') ? 'resultats sur' : 'results out of' ?> <span data-total></span></p>
+					</div>
+					<div class="col-md-4">
+						<div class="form-group">
+							<fieldset>
+								<legend class="mrgn-bttm-0"><label for="indexresolved-status-filter" class="fnt-nrml"><?= ($_SESSION['lang'] === 'fr') ? 'Statut' : 'Status' ?></label></legend>
+								<select id="indexresolved-status-filter" name="status-filter" class="full-width wb-tagfilter-ctrl form-control">
+									<option value=""><?= ($_SESSION['lang'] === 'fr') ? 'Tous' : 'All' ?></option>
+									<?php foreach ($statusOptions as $so): ?>
+										<option value="status-<?= (int)$so['id'] ?>"><?= htmlspecialchars($so[$nameColumn]) ?></option>
+									<?php endforeach; ?>
+								</select>
+							</fieldset>
+						</div>
+					</div>
+					<div class="col-md-4">
+						<div class="form-group">
+							<fieldset>
+								<legend class="mrgn-bttm-0"><label for="indexresolved-catalogue-filter" class="fnt-nrml"><?= ($_SESSION['lang'] === 'fr') ? 'Type de service' : 'Service type' ?></label></legend>
+								<select id="indexresolved-catalogue-filter" name="catalogue-filter" class="full-width wb-tagfilter-ctrl form-control">
+									<option value=""><?= ($_SESSION['lang'] === 'fr') ? 'Tous' : 'All' ?></option>
+									<?php foreach ($catalogueOptions as $co): ?>
+										<option value="cat-<?= (int)$co['id'] ?>"><?= htmlspecialchars($co[$nameColumn]) ?></option>
+									<?php endforeach; ?>
+								</select>
+							</fieldset>
+						</div>
+					</div>
 					<div class="col-md-12">
 						<div class="form-group">
 							<div class="input-group">
@@ -221,7 +262,7 @@ include 'includes/template/head.php';
 						$hasVisibleRows = true;
 						$suppressSlaWarning = in_array((int)$statusid, [4, 5, 6], true);
 
-						$cardTags = 'status-' . (int)$statusFilter;
+						$cardTags = 'status-' . (int)$statusid . ' cat-' . (int)$catalogueid;
 						if (!$suppressSlaWarning && ($doverdue || $overdue)) {
 							$cardTags .= ' sla-escalation';
 						} elseif (!$suppressSlaWarning && $closedue) {
@@ -239,11 +280,32 @@ include 'includes/template/head.php';
 							$slaLabel = '';
 						}
 
-						$statusLabelClass = 'label-success';
+						$statusLabelClasses = [
+							4 => 'label-success',
+							5 => 'label-default',
+							6 => 'label-danger',
+						];
+						$statusLabelClass = $statusLabelClasses[(int)$statusid] ?? 'label-default';
 
 						$result2 = mysqli_query($link, "SELECT $nameColumn FROM tblstatus WHERE id = '$statusid'");
 						$row2 = mysqli_fetch_array($result2);
 						$statusname = $row2[0] ?? '';
+
+						$closedDate = '';
+						if (!empty($row['dateresolved']) && $row['dateresolved'] !== '0000-00-00') {
+							$closedDate = date('Y-m-d', strtotime($row['dateresolved']));
+						} elseif (!empty($row['dateupdated']) && $row['dateupdated'] !== '0000-00-00') {
+							$closedDate = date('Y-m-d', strtotime($row['dateupdated']));
+						}
+
+						$lastUpdatedByName = '';
+						if (!empty($row['updaterid'])) {
+							$result2 = mysqli_query($link, "SELECT lastname,firstname FROM tblusers WHERE id = '" . $row['updaterid'] . "'");
+							$row2 = mysqli_fetch_array($result2);
+							if (!empty($row2)) {
+								$lastUpdatedByName = htmlspecialchars($row2[0] . ', ' . $row2[1]);
+							}
+						}
 
 						$workerName = '';
 						if (!empty($row['workerid'])) {
@@ -273,9 +335,17 @@ include 'includes/template/head.php';
 							<?php endif; ?>
 							<dt><?= ($_SESSION['lang'] === 'fr') ? 'Date de soumission' : 'Submitted date' ?>:</dt>
 							<dd><?= date('Y-m-d', strtotime($row['datereceived'])) ?></dd>
+							<?php if (!empty($closedDate)): ?>
+								<dt><?= htmlspecialchars($langFile['indexresolved_closed_date']) ?>:</dt>
+								<dd><?= htmlspecialchars($closedDate) ?></dd>
+							<?php endif; ?>
 							<?php if (!empty($workerName)): ?>
 								<dt><?= ($_SESSION['lang'] === 'fr') ? 'Attribue a' : 'Assigned to' ?>:</dt>
 								<dd><?= $workerName ?></dd>
+							<?php endif; ?>
+							<?php if (!empty($lastUpdatedByName)): ?>
+								<dt><?= htmlspecialchars($langFile['indexresolved_last_updated']) ?>:</dt>
+								<dd><?= $lastUpdatedByName ?></dd>
 							<?php endif; ?>
 						</dl>
 						<?php
@@ -316,7 +386,7 @@ include 'includes/template/head.php';
 				</div>
 				<?php if ($hasVisibleRows): ?>
 				<div class="wb-tagfilter-noresult">
-					<p><?= ($_SESSION['lang'] === 'fr') ? 'Aucune demande ne correspond au filtre selectionne.' : 'No requests match the selected filter.' ?></p>
+					<p><?= ($_SESSION['lang'] === 'fr') ? 'Aucune demande ne correspond aux filtres selectionnes.' : 'No requests match the selected filters.' ?></p>
 				</div>
 				<?php else: ?>
 				<p><strong><?= htmlspecialchars($langFile['indexresolved_no_requests']) ?></strong></p>

@@ -171,7 +171,7 @@ return [
     
     // Index Resolved page (indexresolved.php) - Resolved requests dashboard
     'indexresolved_page_title' => 'Outil de gestion des demandes - Bureau de l\'accessibilité de la TI',
-    'indexresolved_heading' => 'Dernières demandes résolues',
+    'indexresolved_heading' => 'Dernières demandes fermées',
     'indexresolved_col_request' => '# de la demande',
     'indexresolved_col_title' => 'Titre',
     'indexresolved_col_client' => 'Client',
@@ -184,6 +184,8 @@ return [
     'indexresolved_delete' => 'Supprimer',
     'indexresolved_request' => 'demande',
     'indexresolved_clone' => 'Clone',
+    'indexresolved_closed_date' => 'Date de fermeture',
+    'indexresolved_last_updated' => 'Derniere mise a jour par',
     'indexresolved_no_requests' => 'Aucune demande disponible!',
     
     // Customer Satisfaction Survey page (css.php)
