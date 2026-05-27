@@ -186,6 +186,11 @@ return [
     'indexresolved_clone' => 'Clone',
     'indexresolved_closed_date' => 'Closed date',
     'indexresolved_last_updated' => 'Last updated by',
+    'indexresolved_sort_by' => 'Sort by',
+    'indexresolved_sort_closed_newest' => 'Closed date: newest first',
+    'indexresolved_sort_closed_oldest' => 'Closed date: oldest first',
+    'indexresolved_sort_updated_newest' => 'Last updated: newest first',
+    'indexresolved_sort_updated_oldest' => 'Last updated: oldest first',
     'indexresolved_no_requests' => 'No requests available!',
     
     // Customer Satisfaction Survey page (css.php)
