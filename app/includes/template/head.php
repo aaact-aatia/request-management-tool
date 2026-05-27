@@ -6,6 +6,7 @@
  * Expected variables from page:
  * - $pageTitle: The page title (will be appended with app name and org)
  * - $pageDescription (optional): Meta description for the page
+ * - $extraStyles (optional): Page-level CSS injected as an inline style block
  */
 require_once(__DIR__ . '/../config.php');
 
@@ -39,6 +40,13 @@ $fullPageTitle = $pageTitle . ' - ' . $appName . ' - ' . $orgName;
 		<!-- Temporary: Will be removing these CDTS stylesheets later -->
 		<link rel="stylesheet" href="https://www.canada.ca/etc/designs/canada/cdts/gcweb/v5_0_2/cdts/cdtsfixes.css">
 		<link rel="stylesheet" href="https://www.canada.ca/etc/designs/canada/cdts/gcweb/v5_0_2/cdts/cdtsapps.css">
+		<link rel="stylesheet" href="includes/template/app.css">
+
+		<?php if (!empty($extraStyles)): ?>
+		<style>
+		<?= $extraStyles ?>
+		</style>
+		<?php endif; ?>
 
 		<!-- Dublin Core Metadata -->
 		<meta name="dcterms.title" content="<?= htmlspecialchars($fullPageTitle) ?>" />
