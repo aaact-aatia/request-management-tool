@@ -171,7 +171,7 @@ return [
     
     // Index Resolved page (indexresolved.php) - Resolved requests dashboard
     'indexresolved_page_title' => 'Request Management Tool - IT Accessibility Office',
-    'indexresolved_heading' => 'Latest resolved requests',
+    'indexresolved_heading' => 'Latest closed requests',
     'indexresolved_col_request' => 'Request #',
     'indexresolved_col_title' => 'Title',
     'indexresolved_col_client' => 'Client',
@@ -184,6 +184,8 @@ return [
     'indexresolved_delete' => 'Delete',
     'indexresolved_request' => 'request',
     'indexresolved_clone' => 'Clone',
+    'indexresolved_closed_date' => 'Closed date',
+    'indexresolved_last_updated' => 'Last updated by',
     'indexresolved_no_requests' => 'No requests available!',
     
     // Customer Satisfaction Survey page (css.php)
