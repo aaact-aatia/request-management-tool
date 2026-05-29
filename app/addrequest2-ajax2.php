@@ -141,14 +141,6 @@ $translations = [
 		'en' => 'Websites / web applications',
 		'fr' => 'Site web / application'
 	],
-	'sams_info_label' => [
-		'en' => 'Do you have all the following information to share with the audit team before requesting an accessibility audit? <strong>(required)</strong>',
-		'fr' => 'Avez-vous toutes les informations suivantes à partager avec l\'équipe de vérification avant de demander une vérification d\'accessibilité? <strong>(requis)</strong>'
-	],
-	'sams_info_note' => [
-		'en' => 'Note : The audit team is not responsible for finding the solution (web/software) or for what is necessary for the solution to work properly.',
-		'fr' => 'Remarque: L\'équipe de vérification n\'est pas responsable de trouver la solution (web / logiciel) ou de ce qui est nécessaire pour que la solution fonctionne correctement.'
-	],
 	'epmo_checklist' => [
 		'en' => 'Have you completed the <a href="https://bati-itao.github.io/ict/ict-en.html" target="blank">EPMO accessibility checklist</a>? <strong>(required)</strong>',
 		'fr' => 'Avez-vous rempli la <a href="https://bati-itao.github.io/ict/ict-fr.html" target="blank">liste de contrôle d\'accessibilité du Bureau de gestion des projets de l\'entreprise (BGPE)</a>? <strong>(requis)</strong>'
@@ -206,22 +198,6 @@ $alerts = [
 	'3:2' => [
 		'en' => 'Please consult the <a href="https://a11y.canada.ca/en/best-practices-for-accessible-virtual-events/">Best practices for accessible virtual events - Digital Accessibility Toolkit </a>before opening a new request, the answer you are seeking is probably there! If this does not answer your question, select the continue button that follows to submit a new request.',
 		'fr' => 'Veuillez consulter le <a href="https://a11y.canada.ca/fr/bonnes-pratiques-pour-les-evenements-virtuels-accessibles/index.html">Bonnes pratiques pour les événements virtuels accessibles - Boîte à outils de l\'accessibilité numérique</a> avant d\'ouvrir une nouvelle demande. La réponse que vous cherchez s\'y trouve probablement! Sinon, sélectionnez le bouton continuer qui suit pour soumettre une nouvelle demande.'
-	]
-];
-
-// SAMS info list items
-$sams_items = [
-	'en' => [
-		'If applicable, any executable file "*.MSI" or "*.EXE" from USB, C/DVD, link, shared drive, etc.',
-		'Any user account credentials or login information required for this purpose.',
-		'Any pre-requisites (i.e.: server or database login information, redistributable package files or other dependencies).',
-		'If applicable, a testing environment (usually the URL where the product can be tested, either internally or externally).'
-	],
-	'fr' => [
-		'Si applicable, tout fichiers exécutable "*.MSI" ou "*.EXE" à partir d\'une clé USB, d\'un disque optique, d\'un lien, d\'un disque partagé, etc.',
-		'Tout identifiants de compte utilisateur ou d\'ouverture de session requise.',
-		'Tout prérequis (c.- à – d. : identifiants d\'ouverture de session sur serveur ou base de données, fichiers de package redistribuable et tous autres dépendances).',
-		'Si applicable, un environnement de mise à l\'essai (habituellement, c\'est un lien URL où on peut vérifier le produit, soit à l\'interne ou à l\'externe).'
 	]
 ];
 
@@ -403,26 +379,6 @@ elseif ($serviceid=="1:1" || $serviceid=="2:6" || $serviceid=="3:3" || $servicei
     <option value=""><?php echo $translations['select_placeholder'][$lang]; ?></option>
     <option value="8:4:1"><?php echo $translations['software_apps'][$lang]; ?></option>
     <option value="8:4:2"><?php echo $translations['websites'][$lang]; ?></option>
-</select>
-<?php
-} elseif ($serviceid=='8:3') {
-?>
-<label for="subserviceid"><span class="field-name"><?php echo $translations['sams_info_label'][$lang]; ?></span></label>
-<div id="itaminfo">
-    <p>
-    <ul>
-        <?php foreach ($sams_items[$lang] as $item): ?>
-        <li><?php echo $item; ?></li>
-        <?php endforeach; ?>
-    </ul>
-    </p>
-    <p><strong><?php echo $translations['sams_info_note'][$lang]; ?></strong></p>
-</div>
-<select class="form-control" id="subserviceid" name="subserviceid" onchange="ajax3(this.value)"
-    aria-describedby="itaminfo itaminfo2" required>
-    <option value=""><?php echo $translations['select_placeholder'][$lang]; ?></option>
-    <option value="8:3:1"><?php echo $translations['yes'][$lang]; ?></option>
-    <option value="8:3:2"><?php echo $translations['no'][$lang]; ?></option>
 </select>
 <?php
 }

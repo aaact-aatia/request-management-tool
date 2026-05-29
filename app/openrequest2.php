@@ -197,12 +197,6 @@ if ($subserviceid2 == '8:1:1:1' || $subserviceid2 == '8:1:2:1') {
     $catalogueid = 8;
     $serviceid = 66;
     $subserviceid = 0;
-    
-} elseif ($subserviceid == '8:3:1' || $subserviceid == '8:3:2') {
-    // SAMS/OCMC
-    $catalogueid = 8;
-    $serviceid = 54;
-    $subserviceid = 0;
 }
 
 // ============================================================================
