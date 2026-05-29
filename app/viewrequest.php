@@ -878,13 +878,19 @@ $blobStorage = new AzureBlobStorageManager();
 			$result2 = mysqli_query($link,$sql2);
 			//List it
 			if(mysqli_num_rows($result2)>0) {
+			$hasVisibleClientComms = false;
 			?>
 			<dl>
 				<?php
 				while($row2 = mysqli_fetch_array($result2)){
 					// Check if clientlname or clientfname is not empty
 					$dateadded = $row2['dateadded'];
-					$notes = $row2['notes'];
+					$notes = preg_replace('/^\s*(Department\/agency|Ministère\/organisme):\s*.*(?:\R|$)/miu', '', (string)$row2['notes']);
+					$notes = trim((string)$notes);
+					if ($notes === '') {
+						continue;
+					}
+					$hasVisibleClientComms = true;
 					$nnotes = nl2br(htmlspecialchars($notes));
 				?>
 				
@@ -892,6 +898,9 @@ $blobStorage = new AzureBlobStorageManager();
 				<dd><?php echo $nnotes ?></dd>
 				<?php } ?>
 			</dl>
+			<?php if (!$hasVisibleClientComms) { ?>
+			<p>No communications available!</p>
+			<?php } ?>
 			<?php } else { ?>
 			<p>No communications available!</p>
 			<?php } } ?>

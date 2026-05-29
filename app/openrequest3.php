@@ -35,6 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $clientlname = getPostValue('clientlname');
     $clientfname = getPostValue('clientfname');
     $clientemail = getPostValue('clientemail');
+    $departmentagency = getPostValue('departmentagency');
     $clientphone = getPostValue('clientphone');
     $nsd = getPostValue('nsd', 0);
     $bdm = getPostValue('bdm', 0);
@@ -62,6 +63,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Auto-generated values
     if ($afterfact == "Y") {
         $statusid = 2;
+    }
+
+    $departmentCommsNote = '';
+    if (hasValue($departmentagency)) {
+        $departmentPrefix = $isFrench ? "Ministère/organisme: " : "Department/agency: ";
+        $departmentCommsNote = $departmentPrefix . $departmentagency;
     }
     $status = 1;
     
@@ -139,6 +146,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (hasValue($clientnotes)) {
         $sql = "INSERT INTO tblcommlog(`triageid`, `dateadded`, `notes`, `creatorid`, `status`) 
                 VALUES ('$latestid', '$datereceived', '$clientnotes', '$creatorid', '$status')";
+        mysqli_query($link, $sql);
+    }
+
+    if (hasValue($departmentCommsNote)) {
+        $sql = "INSERT INTO tblcommlog(`triageid`, `dateadded`, `notes`, `creatorid`, `status`) 
+                VALUES ('$latestid', '$datereceived', '$departmentCommsNote', '$creatorid', '$status')";
         mysqli_query($link, $sql);
     }
     

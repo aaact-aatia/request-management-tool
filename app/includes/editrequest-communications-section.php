@@ -13,7 +13,11 @@ $x = 1;
 $result2 = mysqli_query($link, "SELECT ID, notes FROM tblcommlog WHERE triageid = '$requestuid'");
 while ($row2 = mysqli_fetch_assoc($result2)) {
     $ocommlogid = $row2['ID'];
-    $ocommlog = $row2['notes'];
+    $ocommlog = preg_replace('/^\s*(Department\/agency|Ministère\/organisme):\s*.*(?:\R|$)/miu', '', (string)$row2['notes']);
+    $ocommlog = trim((string)$ocommlog);
+    if ($ocommlog === '') {
+        continue;
+    }
 ?>
 <div class="form-group">
     <label for="commlog<?php echo $x; ?>"><span class="field-name"><?php echo $t['edit_original_commlog']; ?>:</span></label>
