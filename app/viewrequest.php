@@ -27,6 +27,7 @@ $translations = [
 		'first_name' => 'First name',
 		'client_email' => 'Client email',
 		'send_email' => 'Send email',
+		'department_agency' => 'Department/agency',
 		'client_phone' => 'Client phone number',
 		'source' => 'Source',
 		'sprint_start' => 'Sprint Start Date',
@@ -110,6 +111,7 @@ $translations = [
 		'first_name' => 'Prénom',
 		'client_email' => 'Courriel du client',
 		'send_email' => 'Envoyer un courriel',
+		'department_agency' => 'Ministère/organisme',
 		'client_phone' => 'Numéro de téléphone client',
 		'source' => 'Source',
 		'sprint_start' => 'Date de début du sprint',
@@ -245,6 +247,7 @@ if(mysqli_num_rows($result)>0){
 		$subservicename = '';
 		$servicename = '';
 		$cataloguename = '';
+		$departmentAgency = '';
 		
 		if ($subserviceid!=0) {
 			// Sub-service is not empty so grab the name
@@ -296,6 +299,16 @@ if(mysqli_num_rows($result)>0){
 		
 		if ($statusid==10) { 
 			$uReview = true;
+		}
+
+		$deptResult = mysqli_query($link, "SELECT notes FROM tblcommlog WHERE triageid = '$triageid' AND status = '1' ORDER BY id ASC");
+		if ($deptResult && mysqli_num_rows($deptResult) > 0) {
+			while ($deptRow = mysqli_fetch_assoc($deptResult)) {
+				if (preg_match('/^(Department\/agency|Ministère\/organisme):\s*(.+)$/miu', (string)$deptRow['notes'], $matches)) {
+					$departmentAgency = trim($matches[2]);
+					break;
+				}
+			}
 		}
 		
 		// Grab the date it was received
@@ -465,6 +478,12 @@ if(mysqli_num_rows($result)>0){
 				<div style="break-inside: avoid;">
 				<dt><?= $t['client_phone'] ?></dt>
 				<dd><?php echo htmlspecialchars ($row['clientphone']) ?></dd>
+				</div>
+				<?php } ?>
+				<?php if ($departmentAgency!="") { ?>
+				<div style="break-inside: avoid;">
+				<dt><?= $t['department_agency'] ?></dt>
+				<dd><?php echo htmlspecialchars($departmentAgency, ENT_QUOTES, 'UTF-8'); ?></dd>
 				</div>
 				<?php } } ?>
 				<?php

@@ -56,6 +56,7 @@ $translations = [
         'client_lastname' => 'Client last name',
         'client_firstname' => 'Client first name',
         'client_email' => 'Client email',
+        'department_agency' => 'Department/agency',
         'client_phone' => 'Client phone #',
         'request_source' => 'Request source',
         'select_source' => 'Select a request source',
@@ -123,6 +124,7 @@ $translations = [
         'client_lastname' => 'Nom du client',
         'client_firstname' => 'Prénom du client',
         'client_email' => 'Courriel du client',
+        'department_agency' => 'Ministère/organisme',
         'client_phone' => 'Numéro de téléphone client',
         'request_source' => 'Source de la demande',
         'select_source' => 'Sélectionnez une source pour la demande',
@@ -232,6 +234,19 @@ $requestid = $row['requestid'];
         
         if (mysqli_num_rows($result) > 0) {
             $row = mysqli_fetch_assoc($result);
+
+            $departmentAgency = '';
+            $departmentAgencyCommlogId = 0;
+            $deptPrefixRegex = '/^(Department\/agency|Ministère\/organisme):\s*(.+)$/miu';
+
+            $deptResult = mysqli_query($link, "SELECT id, notes FROM tblcommlog WHERE triageid = '$requestuid' AND status = '1' ORDER BY id ASC");
+            while ($deptRow = mysqli_fetch_assoc($deptResult)) {
+                if (preg_match($deptPrefixRegex, (string)$deptRow['notes'], $matches)) {
+                    $departmentAgency = trim($matches[2]);
+                    $departmentAgencyCommlogId = (int)$deptRow['id'];
+                    break;
+                }
+            }
         ?>
         
         <form method="POST" enctype="multipart/form-data" action="editrequest.php?lang=<?php echo $lang; ?>&id=<?php echo $row['id']; ?>">
@@ -256,7 +271,9 @@ $requestid = $row['requestid'];
             echo renderTextInput('clientlname', $t['client_lastname'], $row['clientlname']);
             echo renderTextInput('clientfname', $t['client_firstname'], $row['clientfname']);
             echo renderTextInput('clientemail', $t['client_email'], $row['clientemail'], false, false, 'email');
+            echo renderTextInput('departmentagency', $t['department_agency'], $departmentAgency);
             echo renderTextInput('clientphone', $t['client_phone'], $row['clientphone'], false, false, 'tel', 'data-rule-phoneUS="true"');
+            echo '<input type="hidden" name="departmentagency_commlogid" value="' . $departmentAgencyCommlogId . '">';
             
             // Request Source - only for adaptive technology requests (catalogue 4)
             $serviceid = $row['serviceid'];
