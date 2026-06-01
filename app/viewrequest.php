@@ -443,7 +443,7 @@ if(mysqli_num_rows($result)>0){
 			<div class="alert alert-warning">
 			   <p><?= $t['close_to_sla'] ?></p>
 			</div>
-			<?php } elseif ($uReview) { ?>
+			<?php } elseif ($uReview && !empty($_SESSION['pid'])) { ?>
 			<div class="alert alert-info">
 			   <p><?= $t['urgent_review'] ?></p>
 			</div>

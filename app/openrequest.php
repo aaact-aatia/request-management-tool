@@ -47,6 +47,20 @@ if (!empty($_GET['status'])){
 else{
 	$status = "";
 }
+
+$isFr = $_SESSION['lang'] === 'fr';
+
+$routerCatalogues = [];
+$routerCatalogueQuery = mysqli_query(
+	$link,
+	"SELECT id, nameen, namefr FROM tblcatalogue WHERE status = 1 AND id IN (3, 6, 8) ORDER BY FIELD(id, 3, 8, 6)"
+);
+
+if ($routerCatalogueQuery) {
+	while ($row = mysqli_fetch_assoc($routerCatalogueQuery)) {
+		$routerCatalogues[] = $row;
+	}
+}
 ?>
 
 <!DOCTYPE html>
@@ -69,7 +83,7 @@ else{
 		<script>
 			var defTop = document.getElementById("def-top");
 			defTop.outerHTML = wet.builder.appTop({
-				"appName": [{"text": "<?= $_SESSION['lang'] == 'fr' ? 'Outil de gestion des demandes (OGD)' : 'Request Management Tool (RMT)' ?>", "href": "/openrequest.php"}],
+				"appName": [{"text": "<?= $_SESSION['lang'] == 'fr' ? 'Outil de gestion des demandes (OGD)' : 'Request Management Tool (RMT)' ?>", "href": "/openrequest.php?lang=<?= $_SESSION['lang'] ?>"}],
 				<?php if(empty($_SESSION['pid'])){ ?>
 				"signIn": [{"href": "/signin.php?lang=<?= $_SESSION['lang'] ?>"}],
 				<?php } else { ?>
@@ -83,7 +97,7 @@ else{
 					"href": "http://iservice.prv/accessibility"
 				}, {
 					"title": "<?= $_SESSION['lang'] == 'fr' ? 'Outil de gestion des demandes' : 'Request Management Tool' ?>",
-					"href": "/openrequest.php"
+					"href": "/openrequest.php?lang=<?= $_SESSION['lang'] ?>"
 				}]
 			});
 		</script>
@@ -112,39 +126,63 @@ else{
 				?>
 			
 			<form method="post" action="/openrequest2.php?lang=<?= $_SESSION['lang'] ?>">
+				<input type="hidden" id="catalogueid" name="catalogueid" value="">
+
 				<div class="form-group">
-					<label for="catalogueid"><span class="field-name"><?= htmlspecialchars($lang['catalogue_label']) ?> <strong>(<?= htmlspecialchars($lang['required']) ?>)</strong></span></label>
-					<select class="form-control" id="catalogueid" name="catalogueid" onchange="ajax1(this.value)" required>
-						<option value=""><?= htmlspecialchars($lang['select_placeholder']) ?></option>
-						<?php if ($_SESSION['lang'] == 'fr') { ?>
-						<!-- French order -->
-						<option value="10"><?= htmlspecialchars($lang['catalogue_procurement']) ?></option>
-						<option value="7"><?= htmlspecialchars($lang['catalogue_epmo']) ?></option>
-						<option value="3"><?= htmlspecialchars($lang['catalogue_advice']) ?></option>
-						<option value="5"><?= htmlspecialchars($lang['catalogue_needs_assessment']) ?></option>
-						<option value="11"><?= htmlspecialchars($lang['catalogue_testing_tools']) ?></option>
-						<!-- <option value="1">Projet de conformité d'accessibilité (PCA)</option> -->
-						<option value="2"><?= htmlspecialchars($lang['catalogue_accessibility_coaching']) ?></option>
-						<option value="9"><?= htmlspecialchars($lang['catalogue_loan_bank']) ?></option>
-						<option value="4"><?= htmlspecialchars($lang['catalogue_adaptive_technology']) ?></option>
-						<option value="6"><?= htmlspecialchars($lang['catalogue_document_audits']) ?></option>
-						<option value="8"><?= htmlspecialchars($lang['catalogue_accessibility_audit']) ?></option>
-						<?php } else { ?>
-						<!-- English order -->
-						<!-- <option value="1">Accessibility Compliance Project (ACP)</option> -->
-						<option value="2"><?= htmlspecialchars($lang['catalogue_accessibility_coaching']) ?></option>
-						<option value="11"><?= htmlspecialchars($lang['catalogue_testing_tools']) ?></option>
-						<option value="4"><?= htmlspecialchars($lang['catalogue_adaptive_technology']) ?></option>
-						<option value="3"><?= htmlspecialchars($lang['catalogue_advice']) ?></option>
-						<option value="5"><?= htmlspecialchars($lang['catalogue_needs_assessment']) ?></option>
-						<option value="6"><?= htmlspecialchars($lang['catalogue_document_audits']) ?></option>
-						<option value="7"><?= htmlspecialchars($lang['catalogue_epmo']) ?></option>
-						<option value="8"><?= htmlspecialchars($lang['catalogue_accessibility_audit']) ?></option>
-						<option value="9"><?= htmlspecialchars($lang['catalogue_loan_bank']) ?></option>
-						<option value="10"><?= htmlspecialchars($lang['catalogue_procurement']) ?></option>
+					<p id="router-instruction" class="small text-muted">
+						<?= $isFr
+							? 'Le formulaire affichera la prochaine étape lorsque vous sélectionnerez une option.'
+							: 'The form will display the next step after you select an option.' ?>
+					</p>
+					<label for="service_stream">
+						<span class="field-name">
+							<?= $isFr ? 'Type de service' : 'Service type' ?>
+							<strong>(<?= htmlspecialchars($lang['required']) ?>)</strong>
+						</span>
+					</label>
+					<select id="service_stream" name="service_stream" class="form-control" required>
+						<option value="" selected disabled><?= htmlspecialchars($lang['select_placeholder']) ?></option>
+						<option value="guidance_workshops"><?= $isFr ? 'Ateliers et sessions d\'apprentissage (orientation seulement)' : 'Workshops and learning sessions (guidance only)' ?></option>
+						<?php foreach ($routerCatalogues as $cat) { ?>
+						<option value="catalogue_<?= (int) $cat['id'] ?>">
+							<?= htmlspecialchars($isFr ? $cat['namefr'] : $cat['nameen']) ?>
+						</option>
 						<?php } ?>
 					</select>
 				</div>
+
+				<div id="informational-options" class="form-group" style="display:none;">
+					<label for="informational_kind"><?= $isFr ? 'Quel type de service informationnel recherchez-vous?' : 'What kind of informational service are you looking for?' ?></label>
+					<select id="informational_kind" name="informational_kind" class="form-control">
+						<option value="" selected disabled><?= htmlspecialchars($lang['select_placeholder']) ?></option>
+						<option value="workshops"><?= $isFr ? 'Ateliers et sessions d\'apprentissage' : 'Workshops and learning sessions' ?></option>
+						<option value="advice"><?= $isFr ? 'Conseils et orientation' : 'Advice and guidance' ?></option>
+					</select>
+				</div>
+
+				<div id="software-options" class="form-group" style="display:none;">
+					<label for="software_kind"><?= $isFr ? 'Quel type de test logiciel avez-vous besoin?' : 'What kind of software testing do you need?' ?></label>
+					<select id="software_kind" name="software_kind" class="form-control">
+						<option value="" selected disabled><?= htmlspecialchars($lang['select_placeholder']) ?></option>
+						<option value="usability"><?= $isFr ? 'Tests utilisateurs (ergonomie)' : 'User testing (usability)' ?></option>
+						<option value="conformance"><?= $isFr ? 'Tests de conformité d\'accessibilité' : 'Accessibility conformance testing' ?></option>
+					</select>
+				</div>
+
+				<div id="documents-options" class="form-group" style="display:none;">
+					<label for="documents_ssc"><?= $isFr ? 'Êtes-vous membre de Services partagés Canada (SPC)?' : 'Are you a member of Shared Services Canada (SSC)?' ?></label>
+					<select id="documents_ssc" name="documents_ssc" class="form-control">
+						<option value="" selected disabled><?= htmlspecialchars($lang['select_placeholder']) ?></option>
+						<option value="yes"><?= $isFr ? 'Oui' : 'Yes' ?></option>
+						<option value="no"><?= $isFr ? 'Non' : 'No' ?></option>
+					</select>
+				</div>
+
+				<section id="guidance-only" class="alert alert-info" style="display:none;" role="status" aria-live="polite" aria-atomic="true" tabindex="-1">
+					<h2 class="h4"><?= $isFr ? 'Orientation' : 'Guidance' ?></h2>
+					<div id="guidance-only-content"></div>
+				</section>
+
 				<div class="form-group divservice">
 				</div>
 				<div class="form-group divsubservice">
@@ -164,6 +202,120 @@ else{
 		<?php include 'includes/appFooter.php';?>
 	</body>
 	<script>
+	// Phase 1 policy: workshops/learning is guidance-only.
+	// Future option: convert this branch to a lightweight tracked request.
+	const guidanceWorkshop = `<?= $isFr
+		? "<p>Ce parcours est informatif seulement pour le moment. Consultez les ressources de formation, puis contactez-nous pour toute question supplémentaire.</p><ul><li><a href='https://www.gcpedia.gc.ca/wiki/GC_Accessibility_Training_and_Events_/_Formation_et_%C3%A9v%C3%A9nements_du_GC_sur_l%27accessibilit%C3%A9' target='_blank' rel='noopener noreferrer'>Ressources de formation en accessibilité du GC (ouvre dans un nouvel onglet)</a></li><li><a href='mailto:AAACT-AATIA@ssc-spc.gc.ca'>AAACT-AATIA@ssc-spc.gc.ca</a></li></ul>"
+		: "<p>This path is guidance-only for now. Review learning resources and contact us if you still need help.</p><ul><li><a href='https://www.gcpedia.gc.ca/wiki/GC_Accessibility_Training_and_Events_/_Formation_et_%C3%A9v%C3%A9nements_du_GC_sur_l%27accessibilit%C3%A9' target='_blank' rel='noopener noreferrer'>GC Accessibility Training and Events (opens in a new tab)</a></li><li><a href='mailto:AAACT-AATIA@ssc-spc.gc.ca'>AAACT-AATIA@ssc-spc.gc.ca</a></li></ul>" ?>`;
+
+	// Phase 1 policy: non-SSC document requests are guidance-only.
+	// Future option: convert this branch to a lightweight tracked request.
+	const guidanceNonSscDocuments = `<?= $isFr
+		? "<p>Actuellement, cette option est informative seulement. Veuillez communiquer avec votre direction des communications pour le soutien en accessibilité documentaire.</p><ul><li><a href='https://a11y.canada.ca/en/create-document/' target='_blank' rel='noopener noreferrer'>Digital Accessibility Toolkit - Create document (ouvre dans un nouvel onglet)</a></li><li><a href='https://www.csps-efpc.gc.ca/video/making-documents-accessible-eng.aspx' target='_blank' rel='noopener noreferrer'>CSPS - Making Documents Accessible (ouvre dans un nouvel onglet)</a></li><li><a href='mailto:AAACT-AATIA@ssc-spc.gc.ca'>AAACT-AATIA@ssc-spc.gc.ca</a></li></ul>"
+		: "<p>This option is guidance-only for now. Please contact your communications branch for document accessibility support.</p><ul><li><a href='https://a11y.canada.ca/en/create-document/' target='_blank' rel='noopener noreferrer'>Digital Accessibility Toolkit - Create document (opens in a new tab)</a></li><li><a href='https://www.csps-efpc.gc.ca/video/making-documents-accessible-eng.aspx' target='_blank' rel='noopener noreferrer'>CSPS - Making Documents Accessible (opens in a new tab)</a></li><li><a href='mailto:AAACT-AATIA@ssc-spc.gc.ca'>AAACT-AATIA@ssc-spc.gc.ca</a></li></ul>" ?>`;
+
+	function showElement(id, visible) {
+		const node = document.getElementById(id);
+		if (!node) return;
+		node.style.display = visible ? '' : 'none';
+	}
+
+	function clearLegacySelectors() {
+		$(".divservice").empty();
+		$(".divsubservice").empty();
+		$(".divsubservice2").empty();
+		$(".divsubservice3").empty();
+	}
+
+	function setTrackableCatalogue(catalogueId) {
+		document.getElementById('catalogueid').value = catalogueId;
+		showElement('guidance-only', false);
+		ajax1(catalogueId);
+	}
+
+	function showGuidanceOnly(html) {
+		document.getElementById('catalogueid').value = '';
+		clearLegacySelectors();
+		document.getElementById('guidance-only-content').innerHTML = html;
+		showElement('guidance-only', true);
+		document.getElementById('guidance-only').focus();
+	}
+
+	function onStreamChange(stream) {
+		showElement('informational-options', stream === 'informational');
+		showElement('software-options', stream === 'software');
+		showElement('documents-options', stream === 'documents');
+		document.getElementById('informational_kind').value = '';
+		document.getElementById('software_kind').value = '';
+		document.getElementById('documents_ssc').value = '';
+		document.getElementById('catalogueid').value = '';
+		clearLegacySelectors();
+		showElement('guidance-only', false);
+	}
+
+	function onInformationalChoice(kind) {
+		if (kind === 'workshops') {
+			showGuidanceOnly(guidanceWorkshop);
+			return;
+		}
+		setTrackableCatalogue(3);
+	}
+
+	function onSoftwareChoice() {
+		setTrackableCatalogue(8);
+	}
+
+	function onDocumentsChoice(isSsc) {
+		if (isSsc === 'yes') {
+			setTrackableCatalogue(6);
+			return;
+		}
+		showGuidanceOnly(guidanceNonSscDocuments);
+	}
+
+	document.addEventListener('DOMContentLoaded', function () {
+		document.getElementById('service_stream').addEventListener('change', function (evt) {
+			const selected = evt.target.value;
+			if (!selected) {
+				onStreamChange('none');
+				return;
+			}
+
+			if (selected === 'guidance_workshops') {
+				onStreamChange('none');
+				showGuidanceOnly(guidanceWorkshop);
+				return;
+			}
+
+			if (selected === 'catalogue_3') {
+				onStreamChange('informational');
+				return;
+			}
+
+			if (selected === 'catalogue_8') {
+				onStreamChange('software');
+				return;
+			}
+
+			if (selected === 'catalogue_6') {
+				onStreamChange('documents');
+				return;
+			}
+		});
+
+		document.getElementById('informational_kind').addEventListener('change', function (evt) {
+			onInformationalChoice(evt.target.value);
+		});
+
+		document.getElementById('software_kind').addEventListener('change', function () {
+			onSoftwareChoice();
+		});
+
+		document.getElementById('documents_ssc').addEventListener('change', function (evt) {
+			onDocumentsChoice(evt.target.value);
+		});
+	});
+
 	// AJAX functions for cascading dropdowns
 	function ajax1(val1){
 		$.ajax({url:"addrequest2-ajax1.php?v1="+val1,success:function(result){
