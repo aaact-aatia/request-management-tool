@@ -357,21 +357,6 @@ elseif ($serviceid=="1:1" || $serviceid=="2:6" || $serviceid=="3:3" || $servicei
 	<option value="8:1:2"><?php echo $translations['reaudit'][$lang]; ?></option>
 </select>
 <?php
-} elseif ($serviceid=='8:2:2') {
-?>
-<label for="subid"><span class="field-name"><?php echo $translations['project_type'][$lang]; ?></span></label>
-<select class="form-control" id="subid" name="subid" onchange="ajax2(this.value)" required>
-	<option value=""><?php echo $translations['select_placeholder'][$lang]; ?></option>
-	<option value="8:2:1" <?php echo ($serviceid == "8:2:1") ? 'selected' : ''; ?>><?php echo $translations['yes'][$lang]; ?></option>
-	<option value="8:2:2" <?php echo ($serviceid == "8:2:2") ? 'selected' : ''; ?>><?php echo $translations['no'][$lang]; ?></option>
-</select>
-<label for="subserviceid"><span class="field-name"><?php echo $translations['select_type_request'][$lang]; ?></span></label>
-<select class="form-control" id="subserviceid" name="subserviceid" onchange="ajax3(this.value)" required>
-	<option value=""><?php echo $translations['select_placeholder'][$lang]; ?></option>
-	<option value="8:2:2:1"><?php echo $translations['audit'][$lang]; ?></option>
-	<option value="8:2:2:2"><?php echo $translations['reaudit'][$lang]; ?></option>
-</select>
-<?php
 } elseif ($serviceid=='8:4') {
 ?>
 <label for="subserviceid"><span class="field-name"><?php echo $translations['audit_type'][$lang]; ?></span></label>
@@ -382,29 +367,23 @@ elseif ($serviceid=="1:1" || $serviceid=="2:6" || $serviceid=="3:3" || $servicei
 </select>
 <?php
 }
-elseif ($serviceid=='8:2:1') {
+elseif ($serviceid=='8:2:1' || $serviceid=='8:2:2' || $serviceid=="8:2") {
 	?>
-	<label for="subid"><span class="field-name"><?php echo $translations['project_type'][$lang]; ?></span></label>
-<select class="form-control" id="subid" name="subid" onchange="ajax2(this.value)" required>
-	<option value=""><?php echo $translations['select_placeholder'][$lang]; ?></option>
-	<option value="8:2:1" <?php echo ($serviceid == "8:2:1") ? 'selected' : ''; ?>><?php echo $translations['yes'][$lang]; ?></option>
-	<option value="8:2:2" <?php echo ($serviceid == "8:2:2") ? 'selected' : ''; ?>><?php echo $translations['no'][$lang]; ?></option>
-</select>
 <label for="subserviceid"><span class="field-name"><?php echo $translations['select_type_request'][$lang]; ?></span></label>
 <select class="form-control" id="subserviceid" name="subserviceid" onchange="ajax3(this.value)" required>
 	<option value=""><?php echo $translations['select_placeholder'][$lang]; ?></option>
+	<?php if ($serviceid == '8:2:1') { ?>
 	<option value="8:2:1:1"><?php echo $translations['sprint_spot_check'][$lang]; ?></option>
 	<option value="8:2:1:2"><?php echo $translations['audit_sample'][$lang]; ?></option>
-</select>
-<?php
-}
-elseif ($serviceid == "8:2") {
-		?>
-<label for="subid"><span class="field-name"><?php echo $translations['project_type'][$lang]; ?></span></label>
-<select class="form-control" id="subid" name="subid" onchange="ajax2(this.value)" required>
-	<option value=""><?php echo $translations['select_placeholder'][$lang]; ?></option>
-	<option value="8:2:1"><?php echo $translations['yes'][$lang]; ?></option>
-	<option value="8:2:2"><?php echo $translations['no'][$lang]; ?></option>
+	<?php } elseif ($serviceid == '8:2:2') { ?>
+	<option value="8:2:2:1"><?php echo $translations['audit'][$lang]; ?></option>
+	<option value="8:2:2:2"><?php echo $translations['reaudit'][$lang]; ?></option>
+	<?php } else { ?>
+	<option value="8:2:1:1"><?php echo $translations['sprint_spot_check'][$lang]; ?></option>
+	<option value="8:2:1:2"><?php echo $translations['audit_sample'][$lang]; ?></option>
+	<option value="8:2:2:1"><?php echo $translations['audit'][$lang]; ?></option>
+	<option value="8:2:2:2"><?php echo $translations['reaudit'][$lang]; ?></option>
+	<?php } ?>
 </select>
 <?php
 	}
