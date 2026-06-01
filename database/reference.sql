@@ -174,6 +174,16 @@ INSERT INTO `tblsubservices` (`id`, `serviceid`, `nameen`, `namefr`, `status`) V
 UPDATE `tblservices` SET `contactid` = 2 WHERE `id` IN (27, 28, 54); -- Dev Team: software apps, websites, SAMS
 UPDATE `tblservices` SET `contactid` = 1 WHERE `id` IN (13, 66);     -- ITAO: audit report questions
 
+-- Request-first routing: keep only current catalogue/services visible
+UPDATE `tblcatalogue`
+SET `status` = CASE WHEN `id` IN (3, 6, 8) THEN 1 ELSE 0 END;
+
+UPDATE `tblservices`
+SET `status` = CASE
+	WHEN `id` IN (34, 25, 61, 62, 63, 64, 65, 27, 28, 66) THEN 1
+	ELSE 0
+END;
+
 -- Sources (for adaptive tech coaching subservices)
 INSERT INTO `tblsources` (`id`, `nameen`, `namefr`, `status`) VALUES
 (1, 'Coaching', 'Coaching', 1),
