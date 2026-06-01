@@ -454,11 +454,6 @@ $reauditFlag = (int)$reauditFlag;
             // Additional information
             echo renderTextarea('additionalinfo', $t['additional_info'], '', false);
             
-            // Attachments
-            for ($i = 1; $i <= 3; $i++) {
-                echo renderTextInput("attach$i", "{$t['attachment']} $i ({$t['url_only']})", '', false, false, 'url');
-            }
-            
             // BDM field removed from the intake flow.
             ?>
             
