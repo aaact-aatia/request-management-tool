@@ -37,6 +37,7 @@ $translations = [
         'first_name' => 'First name',
         'last_name' => 'Last name',
         'email' => 'Email',
+        'department_agency' => 'Department/agency',
         'phone' => 'Business phone number',
         'nsd_question' => 'Do you have NSD/smart IT setup?',
         'nsd_help' => 'NSD is for technical needs (e.g. software installation), smartIT is for things like desk/chair adjustments',
@@ -69,6 +70,7 @@ $translations = [
         'first_name' => 'Prénom',
         'last_name' => 'Nom',
         'email' => 'Courriel',
+        'department_agency' => 'Ministère/organisme',
         'phone' => 'Numéro de téléphone au bureau',
         'nsd_question' => 'Avez-vous une configuration NSD / smart IT?',
         'nsd_help' => 'NSD est pour les besoins techniques (par exemple, installation de logiciels), smartIT est pour des choses comme les ajustements de bureau / chaise',
@@ -438,6 +440,7 @@ $reauditFlag = (int)$reauditFlag;
             echo renderTextInput('clientfname', $t['first_name'], '', true);
             echo renderTextInput('clientlname', $t['last_name'], '', true);
             echo renderTextInput('clientemail', $t['email'], '', true, false, 'email');
+            echo renderTextInput('departmentagency', $t['department_agency'], '', true);
             echo renderTextInput('clientphone', $t['phone'], '', false, false, 'tel');
             
             // NSD/Smart IT (only for needs assessment - catalogue 5)
