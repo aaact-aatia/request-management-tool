@@ -46,7 +46,6 @@ $translations = [
         'additional_info' => 'Additional information',
         'attachment' => 'Attachment',
         'url_only' => 'URL only',
-        'bdm_question' => 'Is this a BDM related project?',
         'yes' => 'Yes',
         'no' => 'No',
         'submit' => 'Submit',
@@ -79,7 +78,6 @@ $translations = [
         'additional_info' => 'Informations supplémentaires',
         'attachment' => 'Pièce jointe',
         'url_only' => 'URL uniquement',
-        'bdm_question' => 'S\'agit-il d\'un projet lié au GRD?',
         'yes' => 'Oui',
         'no' => 'Non',
         'submit' => 'Soumettre',
@@ -102,7 +100,6 @@ $language = getPostValue('language');
 
 // Flags
 $reauditFlag = 0;
-$bdmValue = "";
 $attach1 = $attach2 = $attach3 = "";
 
 // ============================================================================
@@ -188,7 +185,6 @@ if ($subserviceid2 == '8:1:1:1' || $subserviceid2 == '8:1:2:1') {
     
     if ($subserviceid2 == '8:2:1:2') {
         $subserviceid = 95; // Sprint (MVP)
-        $bdmValue = 1;
     } else {
         $subserviceid = 96; // Audit (non-MVP)
     }
@@ -418,7 +414,6 @@ $reauditFlag = (int)$reauditFlag;
             <input type="hidden" name="clientnotes" value="<?php echo htmlspecialchars($clientnotes, ENT_QUOTES); ?>">
             <input type="hidden" name="language" value="<?php echo htmlspecialchars($language, ENT_QUOTES); ?>">
             <input type="hidden" name="reauditFlag" value="<?php echo $reauditFlag; ?>">
-            <input type="hidden" name="bdmValue" value="<?php echo $bdmValue; ?>">
             
             <?php
             // Request title
@@ -464,14 +459,7 @@ $reauditFlag = (int)$reauditFlag;
                 echo renderTextInput("attach$i", "{$t['attachment']} $i ({$t['url_only']})", '', false, false, 'url');
             }
             
-            // BDM question (for audits and re-audits)
-            if ($reauditFlag == 1 || in_array($catalogueid, [6, 8])) {
-                $bdmOptions = [
-                    ['id' => '0', 'name' => $t['no']],
-                    ['id' => '1', 'name' => $t['yes']]
-                ];
-                echo renderSelect('bdm', $t['bdm_question'], $bdmOptions, $bdmValue, false, '');
-            }
+            // BDM field removed from the intake flow.
             ?>
             
             <div class="form-group form-buttons">

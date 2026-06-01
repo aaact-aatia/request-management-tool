@@ -48,7 +48,6 @@ $translations = [
 		'audience' => 'Audience',
 		'nsd_ticket' => 'NSD/Smart IT ticket #',
 		'details_new_window' => 'details (will open in a new window)',
-		'bdm_related' => 'BDM related',
 		'yes' => 'Yes',
 		'no' => 'No',
 		'catalogue_name' => 'Catalogue name',
@@ -132,7 +131,6 @@ $translations = [
 		'audience' => 'Audience',
 		'nsd_ticket' => '# de billet NSD/Smart IT',
 		'details_new_window' => 'details (will open in a new window)',
-		'bdm_related' => 'Demande liée au MVP',
 		'yes' => 'Oui',
 		'no' => 'Non',
 		'catalogue_name' => 'Nom du catalogue',
@@ -610,17 +608,6 @@ if(mysqli_num_rows($result)>0){
 					</dd>				
 						</div>
 				<?php } ?>
-				<?php 
-				// Only display for 5, 8, 9, 10, 11 and 13
-				if ($catalogueid==5 OR $catalogueid==8 OR $catalogueid==9 OR $catalogueid==10 OR $catalogueid==11 OR $catalogueid==13) {
-				?>
-				<div style="break-inside: avoid;">
-					<dt><?= $t['bdm_related'] ?></dt>
-					<dd><?php if ($row['bdm']==0) { ?><?= $t['no'] ?><?php } else { ?><?= $t['yes'] ?><?php } ?></dd>
-				</div>
-				<?php
-				}
-				?>
 				<?php 
 				if ($catalogueid!=0) {
 				?>

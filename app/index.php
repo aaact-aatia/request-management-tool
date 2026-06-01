@@ -495,7 +495,7 @@ include 'includes/template/head.php';
 							<dd><?= htmlspecialchars($clientname) ?></dd>
 						<?php endif; ?>
 						<dt><?= $t['request_service'] ?>:</dt>
-						<dd><?= htmlspecialchars($cataloguename) ?><?php if (!empty($serviceid)): ?> / <?= htmlspecialchars($servicename) ?><?php endif; ?><?php if (!empty($subservicename)): ?> / <?= htmlspecialchars($subservicename) ?><?php endif; ?><?php if (!empty($row['bdm'])): ?> <span class="label label-default">BDM</span><?php endif; ?></dd>
+						<dd><?= htmlspecialchars($cataloguename) ?><?php if (!empty($serviceid)): ?> / <?= htmlspecialchars($servicename) ?><?php endif; ?><?php if (!empty($subservicename)): ?> / <?= htmlspecialchars($subservicename) ?><?php endif; ?></dd>
 						<?php if (!empty($row['nsd']) && !empty($_SESSION['pid']) && !in_array($row['nsd'], ['Yes I have', 'No I do not have', 'Oui j\'ai', 'Non je n\'ai pas'])): ?>
 							<dt>NSD:</dt>
 							<dd>

@@ -70,7 +70,6 @@ $translations = [
         'intended_audience' => 'What is the intended audience',
         'select_audience' => 'Select an audience type',
         'nsd_ticket' => 'NSD/Smart IT ticket #',
-        'bdm_related' => 'BDM related request',
         'no' => 'No',
         'yes' => 'Yes',
         'catalogue_name' => 'Catalogue name',
@@ -138,7 +137,6 @@ $translations = [
         'intended_audience' => 'Public cible',
         'select_audience' => 'Sélectionnez un type de public',
         'nsd_ticket' => '# du billet NSD/Smart IT',
-        'bdm_related' => 'Demandes liées au MVP',
         'no' => 'Non',
         'yes' => 'Oui',
         'catalogue_name' => 'Nom du catalogue',
@@ -318,14 +316,6 @@ $requestid = $row['requestid'];
             // NSD Ticket
             $nsdValue = ($row['nsd'] != 0) ? $row['nsd'] : '';
             echo renderTextInput('nsd', $t['nsd_ticket'], $nsdValue);
-            
-            // BDM
-            $bdmOptions = [
-                ['id' => 0, 'name' => $t['no']],
-                ['id' => 1, 'name' => $t['yes']]
-            ];
-            $bdmSelected = (is_null($row['bdm']) || $row['bdm'] == '0') ? 0 : $row['bdm'];
-            echo renderSelect('bdm', $t['bdm_related'], $bdmOptions, $bdmSelected, true, '');
             
             // Catalogue
             $catalogues = getDropdownOptions($link, 'tblcatalogue', $lang);

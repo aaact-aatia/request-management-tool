@@ -206,11 +206,6 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 		$nosearch = false;
 		$SQLSV .= " nsd = '$nsd' AND";
 	}
-	$bdm = mysqli_real_escape_string($link,$_POST['bdm']);
-	if ($bdm=='1') {
-		$nosearch = false;
-		$SQLSV .= " bdm = '1' AND";
-	}
 	$catalogueid = mysqli_real_escape_string($link,$_POST['catalogueid']);
 	if ($catalogueid!="") {
 		$nosearch = false;
@@ -432,17 +427,7 @@ include 'includes/template/head.php';
 					</div>
 				</div>
 			</div>
-			<div class="row">
-				<div class="col-xs-6">
-					<div class="form-group">
-						<label for="bdm"><span class="field-name"><?= htmlspecialchars($langFile['asearch_bdm_requests']) ?></span></label>
-						<select class="form-control" id="bdm" name="bdm">
-							<option value="0"><?= htmlspecialchars($langFile['asearch_no']) ?></option>
-							<option value="1"><?= htmlspecialchars($langFile['asearch_yes']) ?></option>
-						</select>
-					</div>
-				</div>
-			</div>
+			
 			<div class="row">
 				<div class="col-xs-6">
 					<div class="form-group">
@@ -638,7 +623,7 @@ include 'includes/template/head.php';
 					<td><?php echo htmlspecialchars ($row['title'] ?? '');?></td>
 					<?php if(!empty($_SESSION['pid'])){ ?><td><?php echo $clientname;?></td><?php } ?>
 					<td>
-						<?php echo $cataloguename; ?><?php echo "<br />" . $servicename; ?><?php if (!empty($subservicename)) { echo "<br />" . $subservicename; } ?><?php if (!empty($row['bdm'])) { ?> - <span class="badge">BDM <span class="glyphicon glyphicon-tag"></span></span><?php } ?>
+						<?php echo $cataloguename; ?><?php echo "<br />" . $servicename; ?><?php if (!empty($subservicename)) { echo "<br />" . $subservicename; } ?>
 					</td>					
 					<td>
 					<?php 

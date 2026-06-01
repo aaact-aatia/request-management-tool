@@ -123,7 +123,6 @@ return [
     'asearch_date_resolved_from' => 'Date de résolution (à partir de la date):',
     'asearch_date_resolved_to' => 'Date de résolution (à ce jour):',
     'asearch_nsd_ticket' => '# de billet NSD/Smart IT:',
-    'asearch_bdm_requests' => 'Demandes liées au MVP:',
     'asearch_no' => 'Non',
     'asearch_yes' => 'Oui',
     'asearch_button' => 'Recherche',
