@@ -186,6 +186,7 @@ require('BlobStorage.php');
 // Grab HTTPS check
 require('includes/httpscheck.php');
 require('includes/sla-calculator.php');
+require('includes/helpers.php');
 // Include file for calculating business days
 require('includes/calculate-bdays.php');
 
@@ -396,15 +397,16 @@ if(mysqli_num_rows($result)>0){
 			</section>
 			<?php } ?>
 			<?php
-				// Now that we know the user is logged in we need to check if this ticket is assigned to them except for atype 1 and 2
-				if ($_SESSION['atype']=='1' OR $_SESSION['atype']=='2') {	
+				$canShowEditControls = !empty($_SESSION['pid']) && canEditRequests();
+				// Only authenticated users with edit permissions can see request controls.
+				if ($canShowEditControls && ($_SESSION['atype']=='1' OR $_SESSION['atype']=='2')) {	
 			?>
 			<div class="pull-right">
 				<p><a class="btn btn-primary" href="editrequest.php?erid=<?php echo base64_encode($row['id']);?>">Edit <span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span></a><?php if ($_SESSION['atype']=='1') { ?> <a class="wb-lbx btn btn-primary" href="includes/delete-request.php?id=<?php echo $row['id'];?>">Delete<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span> </a><?php } ?></p>
 			</div>
 			<div class="clearfix"></div>
 			<?php
-				} else  {
+				} elseif ($canShowEditControls) {
 				// User is 3 (Manager) or 4 (Team Leader) so check if they have permission to edit this request
 				// First grab any existing teams
 				$userid = $_SESSION['pid'];
