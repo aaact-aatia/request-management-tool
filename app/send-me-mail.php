@@ -1,6 +1,7 @@
 <?php
 // Load session, env vars, and DB connection
 require('sql.php');
+/** @var mysqli $link */
 
 $requestid = 200303;
 $nrequestid = 11;

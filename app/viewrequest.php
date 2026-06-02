@@ -189,9 +189,11 @@ require('includes/sla-calculator.php');
 require('includes/helpers.php');
 // Include file for calculating business days
 require('includes/calculate-bdays.php');
+/** @var array $holidays */
 
 // Grab MySQL connection
 require('sql.php');
+/** @var mysqli $link */
 
 // Set session language from query parameter
 $_SESSION['lang'] = $lang;

@@ -5,6 +5,7 @@
  */
 
 require('sql.php');
+/** @var mysqli $link */
 require('includes/httpscheck.php');
 require('includes/helpers.php');
 

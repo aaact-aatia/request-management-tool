@@ -6,6 +6,7 @@ if (session_status() != PHP_SESSION_ACTIVE)
 }
 
 require('sql.php');
+/** @var mysqli $link */
 
 // Determine language from session
 $lang = $_SESSION['lang'] ?? 'en';

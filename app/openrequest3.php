@@ -11,6 +11,10 @@ require('includes/httpscheck.php');
 
 // Grab MySQL connection and helpers
 require('sql.php');
+/** @var mysqli $link */
+if (!isset($link) || !($link instanceof mysqli)) {
+    throw new RuntimeException('Database connection was not initialized in sql.php');
+}
 require('includes/helpers.php');
 require('BlobStorage.php');
 require('emailController.php');

@@ -7,6 +7,7 @@ if (session_status() != PHP_SESSION_ACTIVE)
 
 // Grab MySQL connection
 require('sql.php');
+/** @var mysqli $link */
 
 require('includes/calculate-bdays.php');
 

@@ -4,6 +4,7 @@ require('includes/httpscheck.php');
 
 // Grab MySQL connection (handles session management)
 require('sql.php');
+/** @var mysqli $link */
 
 // Handle language from query string or session
 if (isset($_GET['lang']) && in_array($_GET['lang'], ['en', 'fr'])) {

@@ -10,6 +10,7 @@ require('includes/httpscheck.php');
 
 // Grab MySQL connection
 require('sql.php');
+/** @var mysqli $link */
 
 // Security check
 require('includes/loggedincheck-en.php');
