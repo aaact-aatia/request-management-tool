@@ -59,7 +59,6 @@ return [
     'date_resolved' => 'Date de résolution:',
     'status' => 'Statut:',
     'select_status' => 'Sélectionnez un statut',
-    'nsd_ticket' => 'Numéro de billet NSD:',
     'catalogue_name' => 'Nom du catalogue:',
     'select_catalogue' => 'Sélectionnez un nom de catalogue',
     'client_notes' => 'Notes de demande (client):',
@@ -122,7 +121,6 @@ return [
     'asearch_date_required_to' => 'Date requise (à ce jour):',
     'asearch_date_resolved_from' => 'Date de résolution (à partir de la date):',
     'asearch_date_resolved_to' => 'Date de résolution (à ce jour):',
-    'asearch_nsd_ticket' => '# de billet NSD/Smart IT:',
     'asearch_no' => 'Non',
     'asearch_yes' => 'Oui',
     'asearch_button' => 'Recherche',
@@ -219,7 +217,6 @@ return [
     
     // Batch ACE Info page (batch-ace-info.php)
     'batch_ace_no_details' => 'Aucun détail disponible',
-    'batch_ace_see_ticket' => 'Voir le billet NSD #',
     'batch_ace_for_details' => ' pour les détails',
     
     // Change of Domain page (changeofdomain.php)

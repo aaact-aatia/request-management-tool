@@ -70,7 +70,6 @@ $translations = [
         'select_status' => 'Select a status',
         'intended_audience' => 'What is the intended audience',
         'select_audience' => 'Select an audience type',
-        'nsd_ticket' => 'NSD/Smart IT ticket #',
         'no' => 'No',
         'yes' => 'Yes',
         'catalogue_name' => 'Catalogue name',
@@ -137,7 +136,6 @@ $translations = [
         'select_status' => 'Sélectionnez un statut',
         'intended_audience' => 'Public cible',
         'select_audience' => 'Sélectionnez un type de public',
-        'nsd_ticket' => '# du billet NSD/Smart IT',
         'no' => 'Non',
         'yes' => 'Oui',
         'catalogue_name' => 'Nom du catalogue',
@@ -313,10 +311,6 @@ $requestid = $row['requestid'];
                 }
                 echo renderSelect('audience', $t['intended_audience'], $audienceOptions, $row['audienceid'], true, $t['select_audience']);
             }
-            
-            // NSD Ticket
-            $nsdValue = ($row['nsd'] != 0) ? $row['nsd'] : '';
-            echo renderTextInput('nsd', $t['nsd_ticket'], $nsdValue);
             
             // Catalogue
             $catalogues = getDropdownOptions($link, 'tblcatalogue', $lang);

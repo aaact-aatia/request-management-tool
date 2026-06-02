@@ -59,7 +59,6 @@ return [
     'date_resolved' => 'Date resolved:',
     'status' => 'Status:',
     'select_status' => 'Select a status',
-    'nsd_ticket' => 'NSD ticket #:',
     'catalogue_name' => 'Catalogue name:',
     'select_catalogue' => 'Select a catalogue name',
     'client_notes' => 'Request notes (client):',
@@ -122,7 +121,6 @@ return [
     'asearch_date_required_to' => 'Date required (to date):',
     'asearch_date_resolved_from' => 'Date resolved (from date):',
     'asearch_date_resolved_to' => 'Date resolved (to date):',
-    'asearch_nsd_ticket' => 'NSD/Smart IT ticket #:',
     'asearch_no' => 'No',
     'asearch_yes' => 'Yes',
     'asearch_button' => 'Search',
@@ -219,7 +217,6 @@ return [
     
     // Batch ACE Info page (batch-ace-info.php)
     'batch_ace_no_details' => 'No details available',
-    'batch_ace_see_ticket' => 'See NSD ticket #',
     'batch_ace_for_details' => ' for details',
     
     // Change of Domain page (changeofdomain.php)

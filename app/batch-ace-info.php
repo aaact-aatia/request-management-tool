@@ -23,18 +23,11 @@ $result = mysqli_query($link,$sql);
 if(mysqli_num_rows($result)>0){
 	while($row = mysqli_fetch_array($result)){
 		$requestid = $row['id'];
-		$nsd = $row['nsd'];
-		$nsdnote = "";
+		$nsdnote = $lang['batch_ace_no_details'];
 		// Skip the WS CoE services
 		$serviceid = $row['serviceid'];
 		if ($serviceid!='46') {
 			// Now that we're here we need to update the triage ticket information
-			if ($nsd==0) {
-				$nsdnote = $lang['batch_ace_no_details'];
-			} else {
-				$nsdnote = $lang['batch_ace_see_ticket'] . $nsd . $lang['batch_ace_for_details'];
-			}
-			
 			// Create SQL statement to update the request information
 			$sql2 = "UPDATE `tbltriage` SET `clientlname` = 'CLIENT', `clientfname` = 'ACE', `clientemail` = 'ace-cea@hrsdc-rhdcc.gc.ca', `clientphone` = '' WHERE id='$requestid'";
 			mysqli_query($link,$sql2);

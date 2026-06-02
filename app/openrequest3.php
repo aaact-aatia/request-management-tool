@@ -41,7 +41,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $clientemail = getPostValue('clientemail');
     $departmentagency = getPostValue('departmentagency');
     $clientphone = getPostValue('clientphone');
-    $nsd = getPostValue('nsd', 0);
     $bdm = getPostValue('bdm', 0);
     $attach1 = getPostValue('attach1');
     $attach2 = getPostValue('attach2');
@@ -126,8 +125,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     
     // Insert the full triage record in one shot
     $daterequiredSql = $daterequiredu ? 'NULL' : "'$daterequired'";
-    $columns = "requestid, creatorid, catalogueid, serviceid, subserviceid, statusid, datereceived, slatimer, isreaudit, title, clientlname, clientfname, clientemail, clientphone, daterequired, nsd, bdm, attach1, attach2, attach3, status";
-    $values  = "'$nrequestid', $userid, $catalogueid, $serviceid, $subserviceid, $statusid, '$dateopened', '$slatimer', $reauditFlag, '$requesttitle', '$clientlname', '$clientfname', '$clientemail', '$clientphone', $daterequiredSql, '$nsd', '$bdm', '$attach1', '$attach2', '$attach3', '$status'";
+    $columns = "requestid, creatorid, catalogueid, serviceid, subserviceid, statusid, datereceived, slatimer, isreaudit, title, clientlname, clientfname, clientemail, clientphone, daterequired, bdm, attach1, attach2, attach3, status";
+    $values  = "'$nrequestid', $userid, $catalogueid, $serviceid, $subserviceid, $statusid, '$dateopened', '$slatimer', $reauditFlag, '$requesttitle', '$clientlname', '$clientfname', '$clientemail', '$clientphone', $daterequiredSql, '$bdm', '$attach1', '$attach2', '$attach3', '$status'";
     
     if ($firstsprintenddate) {
         $columns .= ", firstsprintenddate";
