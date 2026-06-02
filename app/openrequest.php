@@ -88,8 +88,8 @@ if ($routerCatalogueQuery) {
 				"lngLinks": [{"lang": "<?= $_SESSION['lang'] == 'fr' ? 'en' : 'fr' ?>", "href": "/openrequest.php?lang=<?= $_SESSION['lang'] == 'fr' ? 'en' : 'fr' ?>", "text": "<?= $_SESSION['lang'] == 'fr' ? 'English' : 'Français' ?>"}],
 				"menuPath": "/includes/appmenu.php",
 				"breadcrumbs": [{
-					"title": "<?= $_SESSION['lang'] == 'fr' ? 'Bureau de l\'accessibilité des TI' : 'IT Accessibility Office' ?>",
-					"href": "http://iservice.prv/accessibility"
+					"title": "<?= $_SESSION['lang'] == 'fr' ? 'Accessibilité, adaptation et technologie informatique adaptée (AATIA)' : 'Accessibility, Accommodation and Adaptive Computer Technology (AAACT)' ?>",
+					"href": "<?= $_SESSION['lang'] == 'fr' ? 'https://www.canada.ca/fr/services-partages/services/employes-accessibilite/programme-aatia.html' : 'https://www.canada.ca/en/shared-services/services/employees-accessibility/aaact-program.html' ?>"
 				}, {
 					"title": "<?= $_SESSION['lang'] == 'fr' ? 'Outil de gestion des demandes' : 'Request Management Tool' ?>",
 					"href": "/openrequest.php?lang=<?= $_SESSION['lang'] ?>"

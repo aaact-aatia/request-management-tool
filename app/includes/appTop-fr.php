@@ -36,8 +36,8 @@ if(empty($_SESSION['pid'])){
 				<?php } ?>
 				"menuPath": "/includes/appmenu.php",
 				"breadcrumbs": [{
-					"title": "Bureau de l'accessibilité de la TI",
-					"href": "http://iservice.prv/accessibilite"
+					"title": "Accessibilité, adaptation et technologie informatique adaptée (AATIA)",
+					"href": "https://www.canada.ca/fr/services-partages/services/employes-accessibilite/programme-aatia.html"
 				}, {
 					"title": "Outil de gestion des demandes",
 					"href": "/openrequest-fr.php"
@@ -77,8 +77,8 @@ if(empty($_SESSION['pid'])){
 				<?php } ?>
 				"menuPath": "/includes/appmenu.php",
 				"breadcrumbs": [{
-					"title": "Bureau de l'accessibilité de la TI",
-					"href": "http://iservice.prv/accessibilite"
+					"title": "Accessibilité, adaptation et technologie informatique adaptée (AATIA)",
+					"href": "https://www.canada.ca/fr/services-partages/services/employes-accessibilite/programme-aatia.html"
 				}, {
 					"title": "Outil de gestion des demandes",
 					"href": "/openrequest.php?lang=fr"

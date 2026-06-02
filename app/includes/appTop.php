@@ -39,8 +39,8 @@ if(empty($_SESSION['pid'])){
 				<?php } ?>
 				"menuPath": "/includes/appmenu.php",
 				"breadcrumbs": [{
-					"title": "IT Accessibility Office",
-					"href": "http://iservice.prv/accessibility"
+					"title": "Accessibility, Accommodation and Adaptive Computer Technology (AAACT)",
+					"href": "https://www.canada.ca/en/shared-services/services/employees-accessibility/aaact-program.html"
 				}, {
 					"title": "Request Management Tool",
 					"href": "/openrequest-en.php"
@@ -80,8 +80,8 @@ if(empty($_SESSION['pid'])){
 				<?php } ?>
 				"menuPath": "/includes/appmenu.php",
 				"breadcrumbs": [{
-					"title": "IT Accessibility Office",
-					"href": "http://iservice.prv/accessibility"
+					"title": "Accessibility, Accommodation and Adaptive Computer Technology (AAACT)",
+					"href": "https://www.canada.ca/en/shared-services/services/employees-accessibility/aaact-program.html"
 				}, {
 					"title": "Request Management Tool",
 					"href": "/openrequest.php?lang=en"
