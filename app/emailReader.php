@@ -12,6 +12,7 @@ if (session_status() != PHP_SESSION_ACTIVE)
 // Grab HTTPS check
 require('includes/httpscheck.php');
 require('sql.php');
+/** @var mysqli $link */
 
 // Check if there is a status
 if (!empty($_GET['status'])){

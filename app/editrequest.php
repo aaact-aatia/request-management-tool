@@ -9,6 +9,7 @@ ob_start();
 // Initialize
 require('BlobStorage.php');
 require('sql.php');
+/** @var mysqli $link */
 require('includes/httpscheck.php');
 require('includes/calculate-bdays.php');
 require('emailController.php');

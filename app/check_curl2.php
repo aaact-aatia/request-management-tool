@@ -8,6 +8,7 @@
 
 // Load session, env vars, and DB connection
 require('sql.php');
+/** @var mysqli $link */
 
 $curl = curl_init();
 

@@ -109,6 +109,7 @@ $translations = [
 
 // Grab MySQL connection (starts session)
 require('sql.php');
+/** @var mysqli $link */
 
 require('includes/config.php');
 require('BlobStorage.php');

@@ -7,6 +7,7 @@ require('includes/calculate-bdays.php');
 require('includes/sla-calculator.php');
 // Grab MySQL connection
 require('sql.php');
+/** @var mysqli $link */
 
 // Route guests to the public new request page.
 if (empty($_SESSION['pid'])) {
