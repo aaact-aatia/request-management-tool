@@ -151,10 +151,6 @@ if(mysqli_num_rows($result)>0){
 			?>
 			<dt><?php echo $translations['view_details_status'] ?? ($lang === 'fr' ? 'Statut' : 'Status'); ?></dt>
 			<dd><?php echo $statusname ?></dd>
-			<?php if ($row['nsd']!=0) { ?>
-			<dt><?php echo $translations['view_details_nsd'] ?? ($lang === 'fr' ? '# billet NSD' : 'NSD ticket #'); ?></dt>
-			<dd><a href="http://arweb.prv/SRMIS.htm?Ticket=<?php echo $row['nsd'];?>" target="_blank"><?php echo $row['nsd'];?><span class="glyphicon glyphicon-new-window"></span><span class="wb-inv"> <?php echo $translations['view_details_new_window'] ?? ($lang === 'fr' ? 'détails (s\'ouvrira dans une nouvelle fenêtre)' : 'details (will open in a new window)'); ?></span></a></dd>
-			<?php } ?>
 			<?php 
 			if ($catalogueid!=0) {
 			?>

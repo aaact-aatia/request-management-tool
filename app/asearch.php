@@ -202,11 +202,6 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 		$nosearch = false;
 		$SQLSV .= " statusid = '$statusid' AND";
 	}
-	$nsd = mysqli_real_escape_string($link,$_POST['nsd']);
-	if ($nsd!="") {
-		$nosearch = false;
-		$SQLSV .= " nsd = '$nsd' AND";
-	}
 	$catalogueid = mysqli_real_escape_string($link,$_POST['catalogueid']);
 	if ($catalogueid!="") {
 		$nosearch = false;
@@ -421,12 +416,6 @@ include 'includes/template/head.php';
 						</select>
 					</div>
 				</div>
-				<div class="col-xs-6">
-					<div class="form-group">
-						<label for="nsd"><span class="field-name"><?= htmlspecialchars($langFile['asearch_nsd_ticket']) ?></span></label>
-						<input type="text" class="form-control" id="nsd" name="nsd" value="">
-					</div>
-				</div>
 			</div>
 			
 			<div class="row">
@@ -612,14 +601,6 @@ include 'includes/template/head.php';
 				<?php } ?>
 				<td>
 						<a href="viewrequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?php echo base64_encode($row['id']);?>">a11y-<?php echo $row['requestid'];?> <span class="glyphicon glyphicon-eye-open"></span><span class="wb-inv"><?= htmlspecialchars($langFile['asearch_details']) ?></span></a>
-						<?php if (!empty($row['nsd']) && !empty($_SESSION['pid'])) { ?>
-							<br />
-							<?php if(preg_match('/^[0-9]+$/', $row['nsd'])){?>
-								<a href="http://arweb.prv/SRMIS.htm?Ticket=<?php echo $row['nsd'];?>" target="_blank"># NSD<?php echo $row['nsd'];?><span class="glyphicon glyphicon-new-window"></span><span class="wb-inv"><?= htmlspecialchars($langFile['asearch_details_new_window']) ?></span></a>
-							<?php }else{?>
-								<a href="https://smartitesdc.service.gc.ca/smartit/app/#/search/<?php echo $row['nsd'];?>" target="_blank"># Smart IT <?php echo $row['nsd'];?><span class="glyphicon glyphicon-eye-open"></span><span class="wb-inv"><?= htmlspecialchars($langFile['asearch_details_new_window']) ?></span></a>
-							<?php } ?>
-							<?php }?>
 					</td>					
 					<td><?php echo htmlspecialchars ($row['title'] ?? '');?></td>
 					<?php if(!empty($_SESSION['pid'])){ ?><td><?php echo $clientname;?></td><?php } ?>

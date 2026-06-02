@@ -163,15 +163,6 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 		$statusid = "";
 	}
 	
-	if (!empty($_POST['nsd']))
-	{
-		$nsd = mysqli_real_escape_string($link,$_POST['nsd']);
-	}
-	else
-	{
-		$nsd = 0;
-	}
-	
 	if (!empty($_POST['catalogueid']))
 	{
 		$catalogueid = mysqli_real_escape_string($link,$_POST['catalogueid']);
@@ -233,7 +224,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	}
 	
 	// Create SQL statement
-	$sql = "INSERT INTO tbltriage(`requestid`, `title`, `clientlname`, `clientfname`, `clientemail`, `clientphone`, `sourceid`, `datereceived`, `dateupdated`, `daterequired`, `dateresolved`, `statusid`, `nsd`, `catalogueid`, `serviceid`, `subserviceid`, `creatorid`, `updaterid`, `status`) VALUES ('$requestid', '$requesttitle', '$clientlname', '$clientfname', '$clientemail', '$clientphone', '$sourceid', '$datereceived', '$dateupdated', '$daterequired', '$dateresolved', '$statusid', '$nsd', '$catalogueid', '$serviceid', '$subserviceid', '$creatorid', '$updaterid', '$status')";
+	$sql = "INSERT INTO tbltriage(`requestid`, `title`, `clientlname`, `clientfname`, `clientemail`, `clientphone`, `sourceid`, `datereceived`, `dateupdated`, `daterequired`, `dateresolved`, `statusid`, `catalogueid`, `serviceid`, `subserviceid`, `creatorid`, `updaterid`, `status`) VALUES ('$requestid', '$requesttitle', '$clientlname', '$clientfname', '$clientemail', '$clientphone', '$sourceid', '$datereceived', '$dateupdated', '$daterequired', '$dateresolved', '$statusid', '$catalogueid', '$serviceid', '$subserviceid', '$creatorid', '$updaterid', '$status')";
 	//echo $sql;
 	//exit();
 	mysqli_query($link,$sql);
@@ -417,10 +408,6 @@ else{
 					}
 					?>
 				</select>
-			</div>
-			<div class="form-group">
-				<label for="nsd"><span class="field-name"><?= htmlspecialchars($lang['nsd_ticket']) ?></span></label>
-				<input type="text" class="form-control" id="nsd" name="nsd" value="">
 			</div>
 			<div class="form-group">
 				<label for="catalogueid"><span class="field-name"><?= htmlspecialchars($lang['catalogue_name']) ?> <strong><?= htmlspecialchars($lang['required']) ?></strong></span></label>

@@ -269,16 +269,6 @@ include 'includes/template/head.php';
 						<dd><?= htmlspecialchars($clientname) ?></dd>
 						<dt><?= htmlspecialchars($langFile['indexonly_col_service']) ?>:</dt>
 						<dd><?= htmlspecialchars($cataloguename) ?> / <?= htmlspecialchars($servicename) ?><?php if (!empty($subservicename)) { echo ' / ' . htmlspecialchars($subservicename); } ?></dd>
-						<?php if (!empty($row['nsd']) && !in_array($row['nsd'], ['Yes I have', 'No I do not have', 'Oui j\'ai', 'Non je n\'ai pas'])): ?>
-							<dt>NSD:</dt>
-							<dd>
-								<?php if (preg_match('/^[0-9]+$/', $row['nsd'])): ?>
-									<a href="http://arweb.prv/SRMIS.htm?Ticket=<?= htmlspecialchars($row['nsd']) ?>"># NSD<?= htmlspecialchars($row['nsd']) ?></a>
-								<?php else: ?>
-									<a href="https://smartitesdc.service.gc.ca/smartit/app/#/search/<?= htmlspecialchars($row['nsd']) ?>"># Smart IT <?= htmlspecialchars($row['nsd']) ?></a>
-								<?php endif; ?>
-							</dd>
-						<?php endif; ?>
 						<dt><?= ($_SESSION['lang'] === 'fr') ? 'Date de soumission' : 'Submitted date' ?>:</dt>
 						<dd><?= date('Y-m-d', strtotime($row['datereceived'])) ?></dd>
 						<?php if (!empty($workerName)): ?>

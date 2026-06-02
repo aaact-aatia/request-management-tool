@@ -40,10 +40,6 @@ $translations = [
         'email' => 'Email',
         'department_agency' => 'Department/agency',
         'phone' => 'Business phone number',
-        'nsd_question' => 'Do you have NSD/smart IT setup?',
-        'nsd_help' => 'NSD is for technical needs (e.g. software installation), smartIT is for things like desk/chair adjustments',
-        'nsd_yes' => 'Yes I have',
-        'nsd_no' => 'No I do not have',
         'additional_info' => 'Additional information',
         'attachment' => 'Attachment',
         'url_only' => 'URL only',
@@ -72,10 +68,6 @@ $translations = [
         'email' => 'Courriel',
         'department_agency' => 'Ministère/organisme',
         'phone' => 'Numéro de téléphone au bureau',
-        'nsd_question' => 'Avez-vous une configuration NSD / smart IT?',
-        'nsd_help' => 'NSD est pour les besoins techniques (par exemple, installation de logiciels), smartIT est pour des choses comme les ajustements de bureau / chaise',
-        'nsd_yes' => 'Oui j\'ai',
-        'nsd_no' => 'Non je n\'ai pas',
         'additional_info' => 'Informations supplémentaires',
         'attachment' => 'Pièce jointe',
         'url_only' => 'URL uniquement',
@@ -438,19 +430,6 @@ $reauditFlag = (int)$reauditFlag;
             echo renderTextInput('clientemail', $t['email'], '', true, false, 'email');
             echo renderTextInput('departmentagency', $t['department_agency'], '', true);
             echo renderTextInput('clientphone', $t['phone'], '', false, false, 'tel');
-            
-            // NSD/Smart IT (only for needs assessment - catalogue 5)
-            if ($catalogueid == 5) {
-                $nsdOptions = [
-                    ['id' => 'Yes I have', 'name' => $t['nsd_yes']],
-                    ['id' => 'No I do not have', 'name' => $t['nsd_no']]
-                ];
-                echo '<div class="form-group">';
-                echo '<label for="nsd"><span class="field-name">' . $t['nsd_question'] . '</span></label>';
-                echo '<p>' . $t['nsd_help'] . '</p>';
-                echo renderSelect('nsd', '', $nsdOptions, '', false, '');
-                echo '</div>';
-            }
             
             // Additional information
             echo renderTextarea('additionalinfo', $t['additional_info'], '', false);

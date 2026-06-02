@@ -46,7 +46,6 @@ $translations = [
 		'date_resolved' => 'Date resolved',
 		'status' => 'Status',
 		'audience' => 'Audience',
-		'nsd_ticket' => 'NSD/Smart IT ticket #',
 		'details_new_window' => 'details (will open in a new window)',
 		'yes' => 'Yes',
 		'no' => 'No',
@@ -129,7 +128,6 @@ $translations = [
 		'date_resolved' => 'Date de résolution',
 		'status' => 'Statut',
 		'audience' => 'Audience',
-		'nsd_ticket' => '# de billet NSD/Smart IT',
 		'details_new_window' => 'details (will open in a new window)',
 		'yes' => 'Oui',
 		'no' => 'Non',
@@ -598,19 +596,6 @@ if(mysqli_num_rows($result)>0){
 					<dt><?= $t['audience'] ?></dt>
 					<dd><?php echo $audiencename ?></dd>
 				</div>
-				<?php } ?>
-				<?php if ($row['nsd']!=0 && !empty($userid)) { ?>
-				<div>
-					<dt><?= $t['nsd_ticket'] ?></dt>
-					<dd>
-							<br />
-							<?php if(preg_match('/^[0-9]+$/', $row['nsd'])){?>
-								<a href="http://arweb.prv/SRMIS.htm?Ticket=<?php echo $row['nsd'];?>" target="_blank"># NSD<?php echo $row['nsd'];?><span class="glyphicon glyphicon-new-window"></span><span class="wb-inv"><?= $t['details_new_window'] ?></span></a>
-							<?php }else{?>
-								<a href="https://smartitesdc.service.gc.ca/smartit/app/#/search/<?php echo $row['nsd'];?>" target="_blank"># Smart IT <?php echo $row['nsd'];?><span class="glyphicon glyphicon-eye-open"></span><span class="wb-inv"><?= $t['details_new_window'] ?></span></a>
-							<?php } ?>
-					</dd>				
-						</div>
 				<?php } ?>
 				<?php 
 				if ($catalogueid!=0) {

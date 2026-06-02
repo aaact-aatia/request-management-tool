@@ -103,7 +103,6 @@ CREATE TABLE IF NOT EXISTS `tbltriage` (
   `dateresolved` date DEFAULT NULL,
   `slatimer` date DEFAULT NULL,
   `statusid` int(11) DEFAULT NULL,
-  `nsd` varchar(100) DEFAULT NULL,
   `bdm` varchar(100) DEFAULT NULL,
   `catalogueid` int(11) DEFAULT NULL,
   `serviceid` int(11) DEFAULT NULL,

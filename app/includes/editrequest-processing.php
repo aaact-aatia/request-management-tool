@@ -39,7 +39,6 @@ if (empty($dateresolved) && $statusid == '2') {
 
 $newrequest = getPostValue('newrequest', 'No');
 $slatimer = getPostValue('slatimer');
-$nsd = getPostValue('nsd', 0);
 $audienceid = getPostValue('audience', 0);
 $bdm = getPostValue('bdm', 0);
 $catalogueid = getPostValue('catalogueid');
@@ -309,7 +308,6 @@ $sql = "UPDATE `tbltriage` SET
     `dateupdated` = '$dateupdated',
     `slatimer` = '$slatimer',
     `statusid` = '$statusid',
-    `nsd` = '$nsd',
     `bdm` = '$bdm',
     `attach1` = '$attach1',
     `attach2` = '$attach2',
