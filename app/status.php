@@ -122,7 +122,7 @@ include 'includes/template/head.php';
 						<td><?php echo htmlspecialchars($row[$nameColumn]);?></td>		
 						<?php if ($_SESSION['atype'] == 1) { ?>		
 						<td>
-							<a class="wb-lbx btn btn-primary mrgn-rght-sm" href="includes/edit-status.php?id=<?php echo $row['id'];?>"><?= htmlspecialchars($langFile['edit_button']) ?><span class="wb-inv"> <?php echo htmlspecialchars($row[$nameColumn]) ?></span> <?= htmlspecialchars($langFile['status_status_label']) ?></a><?php if ($_SESSION['atype']=='1') {?> <a class="wb-lbx btn btn-primary" href="includes/delete-status.php?id=<?php echo $row['id'];?>"><?= htmlspecialchars($langFile['delete_button']) ?><span class="wb-inv"> <?php echo htmlspecialchars($row[$nameColumn]) ?></span> <?= htmlspecialchars($langFile['status_status_label']) ?></a><?php } ?>
+							<a class="wb-lbx btn btn-primary btn-block" href="includes/edit-status.php?id=<?php echo $row['id'];?>"><?= htmlspecialchars($langFile['edit_button']) ?><span class="wb-inv"> <?php echo htmlspecialchars($row[$nameColumn]) ?></span> <?= htmlspecialchars($langFile['status_status_label']) ?></a> <a class="wb-lbx btn btn-primary btn-block" href="includes/delete-status.php?id=<?php echo $row['id'];?>"><?= htmlspecialchars($langFile['delete_button']) ?><span class="wb-inv"> <?php echo htmlspecialchars($row[$nameColumn]) ?></span> <?= htmlspecialchars($langFile['status_status_label']) ?></a>
 						</td>
 						<?php } ?>
 					</tr>

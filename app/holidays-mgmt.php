@@ -192,8 +192,7 @@ include 'includes/template/head.php';
                             <td><?= $row['recurring'] ? $t['yes'] : $t['no'] ?></td>
                             <td><?= $row['status'] ? $t['active'] : $t['inactive'] ?></td>
                             <td>
-                                <a href="includes/edit-holiday.php?id=<?= $row['id'] ?>&lang=<?= $lang ?>" class="wb-lbx btn btn-sm btn-default"><?= $t['edit'] ?></a>
-                                <a href="includes/delete-holiday.php?id=<?= $row['id'] ?>&lang=<?= $lang ?>" class="wb-lbx btn btn-sm btn-danger"><?= $t['delete'] ?></a>
+                                <a href="includes/edit-holiday.php?id=<?= $row['id'] ?>&lang=<?= $lang ?>" class="wb-lbx btn btn-primary btn-block"><?= $t['edit'] ?><span class="wb-inv"> <?= htmlspecialchars($row[$lang == 'fr' ? 'name_fr' : 'name_en']) ?></span></a> <a href="includes/delete-holiday.php?id=<?= $row['id'] ?>&lang=<?= $lang ?>" class="wb-lbx btn btn-primary btn-block"><?= $t['delete'] ?><span class="wb-inv"> <?= htmlspecialchars($row[$lang == 'fr' ? 'name_fr' : 'name_en']) ?></span></a>
                             </td>
                         </tr>
                     <?php endwhile; ?>

@@ -120,7 +120,7 @@ include 'includes/template/head.php';
 					<tr>
 						<td><?php echo $row[$nameColumn];?></td>				
 						<td>
-							<a class="wb-lbx btn btn-primary mrgn-rght-sm" href="includes/edit-product.php?id=<?php echo $row['id'];?>&lang=<?= $_SESSION['lang'] ?>"><?= htmlspecialchars($langFile['products_edit_button']) ?><span class="wb-inv"> <?php echo $row[$nameColumn]; ?></span> <?= htmlspecialchars($langFile['products_product_label']) ?></a><?php if ($_SESSION['atype']=='1') {?> <a class="wb-lbx btn btn-primary" href="includes/delete-product.php?id=<?php echo $row['id'];?>&lang=<?= $_SESSION['lang'] ?>"><?= htmlspecialchars($langFile['products_delete_button']) ?><span class="wb-inv"> <?php echo $row[$nameColumn]; ?></span> <?= htmlspecialchars($langFile['products_product_label']) ?></a><?php } ?>
+							<a class="wb-lbx btn btn-primary btn-block" href="includes/edit-product.php?id=<?php echo $row['id'];?>&lang=<?= $_SESSION['lang'] ?>"><?= htmlspecialchars($langFile['products_edit_button']) ?><span class="wb-inv"> <?php echo $row[$nameColumn]; ?></span> <?= htmlspecialchars($langFile['products_product_label']) ?></a> <a class="wb-lbx btn btn-primary btn-block" href="includes/delete-product.php?id=<?php echo $row['id'];?>&lang=<?= $_SESSION['lang'] ?>"><?= htmlspecialchars($langFile['products_delete_button']) ?><span class="wb-inv"> <?php echo $row[$nameColumn]; ?></span> <?= htmlspecialchars($langFile['products_product_label']) ?></a>
 						</td>
 					</tr>
 				<?php } ?>
