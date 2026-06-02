@@ -56,6 +56,7 @@ $translations = [
         'client_lastname' => 'Client last name',
         'client_firstname' => 'Client first name',
         'client_email' => 'Client email',
+        'department_agency' => 'Department/agency',
         'client_phone' => 'Client phone #',
         'request_source' => 'Request source',
         'select_source' => 'Select a request source',
@@ -69,7 +70,6 @@ $translations = [
         'intended_audience' => 'What is the intended audience',
         'select_audience' => 'Select an audience type',
         'nsd_ticket' => 'NSD/Smart IT ticket #',
-        'bdm_related' => 'BDM related request',
         'no' => 'No',
         'yes' => 'Yes',
         'catalogue_name' => 'Catalogue name',
@@ -123,6 +123,7 @@ $translations = [
         'client_lastname' => 'Nom du client',
         'client_firstname' => 'Prénom du client',
         'client_email' => 'Courriel du client',
+        'department_agency' => 'Ministère/organisme',
         'client_phone' => 'Numéro de téléphone client',
         'request_source' => 'Source de la demande',
         'select_source' => 'Sélectionnez une source pour la demande',
@@ -136,7 +137,6 @@ $translations = [
         'intended_audience' => 'Public cible',
         'select_audience' => 'Sélectionnez un type de public',
         'nsd_ticket' => '# du billet NSD/Smart IT',
-        'bdm_related' => 'Demandes liées au MVP',
         'no' => 'Non',
         'yes' => 'Oui',
         'catalogue_name' => 'Nom du catalogue',
@@ -232,6 +232,19 @@ $requestid = $row['requestid'];
         
         if (mysqli_num_rows($result) > 0) {
             $row = mysqli_fetch_assoc($result);
+
+            $departmentAgency = '';
+            $departmentAgencyCommlogId = 0;
+            $deptPrefixRegex = '/^(Department\/agency|Ministère\/organisme):\s*(.+)$/miu';
+
+            $deptResult = mysqli_query($link, "SELECT id, notes FROM tblcommlog WHERE triageid = '$requestuid' AND status = '1' ORDER BY id ASC");
+            while ($deptRow = mysqli_fetch_assoc($deptResult)) {
+                if (preg_match($deptPrefixRegex, (string)$deptRow['notes'], $matches)) {
+                    $departmentAgency = trim($matches[2]);
+                    $departmentAgencyCommlogId = (int)$deptRow['id'];
+                    break;
+                }
+            }
         ?>
         
         <form method="POST" enctype="multipart/form-data" action="editrequest.php?lang=<?php echo $lang; ?>&id=<?php echo $row['id']; ?>">
@@ -256,7 +269,9 @@ $requestid = $row['requestid'];
             echo renderTextInput('clientlname', $t['client_lastname'], $row['clientlname']);
             echo renderTextInput('clientfname', $t['client_firstname'], $row['clientfname']);
             echo renderTextInput('clientemail', $t['client_email'], $row['clientemail'], false, false, 'email');
+            echo renderTextInput('departmentagency', $t['department_agency'], $departmentAgency);
             echo renderTextInput('clientphone', $t['client_phone'], $row['clientphone'], false, false, 'tel', 'data-rule-phoneUS="true"');
+            echo '<input type="hidden" name="departmentagency_commlogid" value="' . $departmentAgencyCommlogId . '">';
             
             // Request Source - only for adaptive technology requests (catalogue 4)
             $serviceid = $row['serviceid'];
@@ -301,14 +316,6 @@ $requestid = $row['requestid'];
             // NSD Ticket
             $nsdValue = ($row['nsd'] != 0) ? $row['nsd'] : '';
             echo renderTextInput('nsd', $t['nsd_ticket'], $nsdValue);
-            
-            // BDM
-            $bdmOptions = [
-                ['id' => 0, 'name' => $t['no']],
-                ['id' => 1, 'name' => $t['yes']]
-            ];
-            $bdmSelected = (is_null($row['bdm']) || $row['bdm'] == '0') ? 0 : $row['bdm'];
-            echo renderSelect('bdm', $t['bdm_related'], $bdmOptions, $bdmSelected, true, '');
             
             // Catalogue
             $catalogues = getDropdownOptions($link, 'tblcatalogue', $lang);

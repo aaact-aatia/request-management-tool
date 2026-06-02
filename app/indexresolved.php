@@ -349,7 +349,7 @@ include 'includes/template/head.php';
 							<dt><?= htmlspecialchars($langFile['indexresolved_col_client']) ?>:</dt>
 							<dd><?= htmlspecialchars($clientname) ?></dd>
 							<dt><?= htmlspecialchars($langFile['indexresolved_col_service']) ?>:</dt>
-							<dd><?= htmlspecialchars($cataloguename) ?> / <?= htmlspecialchars($servicename) ?><?php if (!empty($subservicename)) { echo ' / ' . htmlspecialchars($subservicename); } ?><?php if (!empty($row['bdm'])) { ?> <span class="label label-default">BDM</span><?php } ?></dd>
+							<dd><?= htmlspecialchars($cataloguename) ?> / <?= htmlspecialchars($servicename) ?><?php if (!empty($subservicename)) { echo ' / ' . htmlspecialchars($subservicename); } ?></dd>
 							<?php if (!empty($row['nsd']) && !in_array($row['nsd'], ['Yes I have', 'No I do not have', 'Oui j\'ai', 'Non je n\'ai pas'])): ?>
 								<dt>NSD:</dt>
 								<dd>

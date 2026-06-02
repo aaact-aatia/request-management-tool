@@ -129,10 +129,6 @@ $translations = [
 		'en' => 'Audit report question(s)',
 		'fr' => 'Questions relatives au rapport d\'évaluation'
 	],
-	'8:3' => [
-		'en' => 'SAMS / OCMC request',
-		'fr' => 'Demande GBTI / COGC'
-	],
 	'8:1' => [
 		'en' => 'Software applications',
 		'fr' => 'Logiciel(s)'
@@ -295,13 +291,11 @@ if ($catalogueid==1) {
 				<select class="form-control" id="serviceid" name="serviceid" onchange="ajax2(this.value)" required>
 					<option value=""><?php echo $translations['select_placeholder'][$lang]; ?></option>
 					<?php if ($lang === 'fr'): ?>
-					<option value="8:3"><?php echo $translations['8:3'][$lang]; ?></option>
 					<option value="8:1"><?php echo $translations['8:1'][$lang]; ?></option>
 					<option value="8:4"><?php echo $translations['8:4'][$lang]; ?></option>
 					<option value="8:2"><?php echo $translations['8:2'][$lang]; ?></option>
 					<?php else: ?>
 					<option value="8:4"><?php echo $translations['8:4'][$lang]; ?></option>
-					<option value="8:3"><?php echo $translations['8:3'][$lang]; ?></option>
 					<option value="8:1"><?php echo $translations['8:1'][$lang]; ?></option>
 					<option value="8:2"><?php echo $translations['8:2'][$lang]; ?></option>
 					<?php endif; ?>

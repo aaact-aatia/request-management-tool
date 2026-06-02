@@ -69,3 +69,17 @@ INSERT INTO `tblcommlog` (`triageid`, `dateadded`, `notes`, `creatorid`, `status
 (20, '2026-05-24', 'Provided inclusive event content recommendations and checklist.', 9, 1),
 (23, '2026-05-02', 'Audit started on submitted service portal forms.', 10, 1),
 (25, '2026-05-18', 'Kickoff meeting held; backlog triage and ownership agreed.', 7, 1);
+
+-- Keep sample requests aligned to active request-first routing
+-- Active catalogues: 3 (Advice), 6 (Document audits), 8 (Accessibility audits)
+-- Active services: 34, 25, 61, 62, 63, 64, 65, 27, 28, 66
+UPDATE `tbltriage` SET `catalogueid` = 3, `serviceid` = 34, `subserviceid` = 109 WHERE `requestid` = 'REQ-2025-001';
+UPDATE `tbltriage` SET `catalogueid` = 3, `serviceid` = 34, `subserviceid` = 109 WHERE `requestid` = 'REQ-2025-005';
+UPDATE `tbltriage` SET `catalogueid` = 3, `serviceid` = 34, `subserviceid` = 105 WHERE `requestid` = 'REQ-2025-006';
+UPDATE `tbltriage` SET `catalogueid` = 6, `serviceid` = 25, `subserviceid` = NULL WHERE `requestid` = 'REQ-2025-010';
+UPDATE `tbltriage` SET `catalogueid` = 3, `serviceid` = 34, `subserviceid` = 108 WHERE `requestid` = 'REQ-2025-011';
+UPDATE `tbltriage` SET `catalogueid` = 3, `serviceid` = 34, `subserviceid` = 108 WHERE `requestid` = 'REQ-2025-012';
+UPDATE `tbltriage` SET `catalogueid` = 3, `serviceid` = 34, `subserviceid` = 108 WHERE `requestid` = 'REQ-2025-016';
+UPDATE `tbltriage` SET `catalogueid` = 3, `serviceid` = 34, `subserviceid` = 109 WHERE `requestid` = 'REQ-2025-018';
+UPDATE `tbltriage` SET `catalogueid` = 3, `serviceid` = 34, `subserviceid` = 109 WHERE `requestid` = 'REQ-2025-021';
+UPDATE `tbltriage` SET `catalogueid` = 8, `serviceid` = 27, `subserviceid` = NULL WHERE `requestid` = 'REQ-2025-022';

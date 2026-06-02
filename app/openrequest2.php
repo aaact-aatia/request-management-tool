@@ -37,6 +37,7 @@ $translations = [
         'first_name' => 'First name',
         'last_name' => 'Last name',
         'email' => 'Email',
+        'department_agency' => 'Department/agency',
         'phone' => 'Business phone number',
         'nsd_question' => 'Do you have NSD/smart IT setup?',
         'nsd_help' => 'NSD is for technical needs (e.g. software installation), smartIT is for things like desk/chair adjustments',
@@ -45,7 +46,6 @@ $translations = [
         'additional_info' => 'Additional information',
         'attachment' => 'Attachment',
         'url_only' => 'URL only',
-        'bdm_question' => 'Is this a BDM related project?',
         'yes' => 'Yes',
         'no' => 'No',
         'submit' => 'Submit',
@@ -69,6 +69,7 @@ $translations = [
         'first_name' => 'Prénom',
         'last_name' => 'Nom',
         'email' => 'Courriel',
+        'department_agency' => 'Ministère/organisme',
         'phone' => 'Numéro de téléphone au bureau',
         'nsd_question' => 'Avez-vous une configuration NSD / smart IT?',
         'nsd_help' => 'NSD est pour les besoins techniques (par exemple, installation de logiciels), smartIT est pour des choses comme les ajustements de bureau / chaise',
@@ -77,7 +78,6 @@ $translations = [
         'additional_info' => 'Informations supplémentaires',
         'attachment' => 'Pièce jointe',
         'url_only' => 'URL uniquement',
-        'bdm_question' => 'S\'agit-il d\'un projet lié au GRD?',
         'yes' => 'Oui',
         'no' => 'Non',
         'submit' => 'Soumettre',
@@ -100,7 +100,6 @@ $language = getPostValue('language');
 
 // Flags
 $reauditFlag = 0;
-$bdmValue = "";
 $attach1 = $attach2 = $attach3 = "";
 
 // ============================================================================
@@ -186,7 +185,6 @@ if ($subserviceid2 == '8:1:1:1' || $subserviceid2 == '8:1:2:1') {
     
     if ($subserviceid2 == '8:2:1:2') {
         $subserviceid = 95; // Sprint (MVP)
-        $bdmValue = 1;
     } else {
         $subserviceid = 96; // Audit (non-MVP)
     }
@@ -196,12 +194,6 @@ if ($subserviceid2 == '8:1:1:1' || $subserviceid2 == '8:1:2:1') {
     // Audit report questions
     $catalogueid = 8;
     $serviceid = 66;
-    $subserviceid = 0;
-    
-} elseif ($subserviceid == '8:3:1' || $subserviceid == '8:3:2') {
-    // SAMS/OCMC
-    $catalogueid = 8;
-    $serviceid = 54;
     $subserviceid = 0;
 }
 
@@ -422,7 +414,6 @@ $reauditFlag = (int)$reauditFlag;
             <input type="hidden" name="clientnotes" value="<?php echo htmlspecialchars($clientnotes, ENT_QUOTES); ?>">
             <input type="hidden" name="language" value="<?php echo htmlspecialchars($language, ENT_QUOTES); ?>">
             <input type="hidden" name="reauditFlag" value="<?php echo $reauditFlag; ?>">
-            <input type="hidden" name="bdmValue" value="<?php echo $bdmValue; ?>">
             
             <?php
             // Request title
@@ -444,6 +435,7 @@ $reauditFlag = (int)$reauditFlag;
             echo renderTextInput('clientfname', $t['first_name'], '', true);
             echo renderTextInput('clientlname', $t['last_name'], '', true);
             echo renderTextInput('clientemail', $t['email'], '', true, false, 'email');
+            echo renderTextInput('departmentagency', $t['department_agency'], '', true);
             echo renderTextInput('clientphone', $t['phone'], '', false, false, 'tel');
             
             // NSD/Smart IT (only for needs assessment - catalogue 5)
@@ -462,19 +454,7 @@ $reauditFlag = (int)$reauditFlag;
             // Additional information
             echo renderTextarea('additionalinfo', $t['additional_info'], '', false);
             
-            // Attachments
-            for ($i = 1; $i <= 3; $i++) {
-                echo renderTextInput("attach$i", "{$t['attachment']} $i ({$t['url_only']})", '', false, false, 'url');
-            }
-            
-            // BDM question (for audits and re-audits)
-            if ($reauditFlag == 1 || in_array($catalogueid, [6, 8])) {
-                $bdmOptions = [
-                    ['id' => '0', 'name' => $t['no']],
-                    ['id' => '1', 'name' => $t['yes']]
-                ];
-                echo renderSelect('bdm', $t['bdm_question'], $bdmOptions, $bdmValue, false, '');
-            }
+            // BDM field removed from the intake flow.
             ?>
             
             <div class="form-group form-buttons">

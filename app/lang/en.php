@@ -123,7 +123,6 @@ return [
     'asearch_date_resolved_from' => 'Date resolved (from date):',
     'asearch_date_resolved_to' => 'Date resolved (to date):',
     'asearch_nsd_ticket' => 'NSD/Smart IT ticket #:',
-    'asearch_bdm_requests' => 'BDM related requests:',
     'asearch_no' => 'No',
     'asearch_yes' => 'Yes',
     'asearch_button' => 'Search',

@@ -27,6 +27,7 @@ $translations = [
 		'first_name' => 'First name',
 		'client_email' => 'Client email',
 		'send_email' => 'Send email',
+		'department_agency' => 'Department/agency',
 		'client_phone' => 'Client phone number',
 		'source' => 'Source',
 		'sprint_start' => 'Sprint Start Date',
@@ -47,7 +48,6 @@ $translations = [
 		'audience' => 'Audience',
 		'nsd_ticket' => 'NSD/Smart IT ticket #',
 		'details_new_window' => 'details (will open in a new window)',
-		'bdm_related' => 'BDM related',
 		'yes' => 'Yes',
 		'no' => 'No',
 		'catalogue_name' => 'Catalogue name',
@@ -110,6 +110,7 @@ $translations = [
 		'first_name' => 'Prénom',
 		'client_email' => 'Courriel du client',
 		'send_email' => 'Envoyer un courriel',
+		'department_agency' => 'Ministère/organisme',
 		'client_phone' => 'Numéro de téléphone client',
 		'source' => 'Source',
 		'sprint_start' => 'Date de début du sprint',
@@ -130,7 +131,6 @@ $translations = [
 		'audience' => 'Audience',
 		'nsd_ticket' => '# de billet NSD/Smart IT',
 		'details_new_window' => 'details (will open in a new window)',
-		'bdm_related' => 'Demande liée au MVP',
 		'yes' => 'Oui',
 		'no' => 'Non',
 		'catalogue_name' => 'Nom du catalogue',
@@ -186,6 +186,7 @@ require('BlobStorage.php');
 // Grab HTTPS check
 require('includes/httpscheck.php');
 require('includes/sla-calculator.php');
+require('includes/helpers.php');
 // Include file for calculating business days
 require('includes/calculate-bdays.php');
 
@@ -245,6 +246,7 @@ if(mysqli_num_rows($result)>0){
 		$subservicename = '';
 		$servicename = '';
 		$cataloguename = '';
+		$departmentAgency = '';
 		
 		if ($subserviceid!=0) {
 			// Sub-service is not empty so grab the name
@@ -296,6 +298,16 @@ if(mysqli_num_rows($result)>0){
 		
 		if ($statusid==10) { 
 			$uReview = true;
+		}
+
+		$deptResult = mysqli_query($link, "SELECT notes FROM tblcommlog WHERE triageid = '$triageid' AND status = '1' ORDER BY id ASC");
+		if ($deptResult && mysqli_num_rows($deptResult) > 0) {
+			while ($deptRow = mysqli_fetch_assoc($deptResult)) {
+				if (preg_match('/^(Department\/agency|Ministère\/organisme):\s*(.+)$/miu', (string)$deptRow['notes'], $matches)) {
+					$departmentAgency = trim($matches[2]);
+					break;
+				}
+			}
 		}
 		
 		// Grab the date it was received
@@ -385,15 +397,16 @@ if(mysqli_num_rows($result)>0){
 			</section>
 			<?php } ?>
 			<?php
-				// Now that we know the user is logged in we need to check if this ticket is assigned to them except for atype 1 and 2
-				if ($_SESSION['atype']=='1' OR $_SESSION['atype']=='2') {	
+				$canShowEditControls = !empty($_SESSION['pid']) && canEditRequests();
+				// Only authenticated users with edit permissions can see request controls.
+				if ($canShowEditControls && ($_SESSION['atype']=='1' OR $_SESSION['atype']=='2')) {	
 			?>
 			<div class="pull-right">
 				<p><a class="btn btn-primary" href="editrequest.php?erid=<?php echo base64_encode($row['id']);?>">Edit <span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span></a><?php if ($_SESSION['atype']=='1') { ?> <a class="wb-lbx btn btn-primary" href="includes/delete-request.php?id=<?php echo $row['id'];?>">Delete<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span> </a><?php } ?></p>
 			</div>
 			<div class="clearfix"></div>
 			<?php
-				} else  {
+				} elseif ($canShowEditControls) {
 				// User is 3 (Manager) or 4 (Team Leader) so check if they have permission to edit this request
 				// First grab any existing teams
 				$userid = $_SESSION['pid'];
@@ -430,7 +443,7 @@ if(mysqli_num_rows($result)>0){
 			<div class="alert alert-warning">
 			   <p><?= $t['close_to_sla'] ?></p>
 			</div>
-			<?php } elseif ($uReview) { ?>
+			<?php } elseif ($uReview && !empty($_SESSION['pid'])) { ?>
 			<div class="alert alert-info">
 			   <p><?= $t['urgent_review'] ?></p>
 			</div>
@@ -465,6 +478,12 @@ if(mysqli_num_rows($result)>0){
 				<div style="break-inside: avoid;">
 				<dt><?= $t['client_phone'] ?></dt>
 				<dd><?php echo htmlspecialchars ($row['clientphone']) ?></dd>
+				</div>
+				<?php } ?>
+				<?php if ($departmentAgency!="") { ?>
+				<div style="break-inside: avoid;">
+				<dt><?= $t['department_agency'] ?></dt>
+				<dd><?php echo htmlspecialchars($departmentAgency, ENT_QUOTES, 'UTF-8'); ?></dd>
 				</div>
 				<?php } } ?>
 				<?php
@@ -591,17 +610,6 @@ if(mysqli_num_rows($result)>0){
 					</dd>				
 						</div>
 				<?php } ?>
-				<?php 
-				// Only display for 5, 8, 9, 10, 11 and 13
-				if ($catalogueid==5 OR $catalogueid==8 OR $catalogueid==9 OR $catalogueid==10 OR $catalogueid==11 OR $catalogueid==13) {
-				?>
-				<div style="break-inside: avoid;">
-					<dt><?= $t['bdm_related'] ?></dt>
-					<dd><?php if ($row['bdm']==0) { ?><?= $t['no'] ?><?php } else { ?><?= $t['yes'] ?><?php } ?></dd>
-				</div>
-				<?php
-				}
-				?>
 				<?php 
 				if ($catalogueid!=0) {
 				?>
@@ -859,13 +867,19 @@ $blobStorage = new AzureBlobStorageManager();
 			$result2 = mysqli_query($link,$sql2);
 			//List it
 			if(mysqli_num_rows($result2)>0) {
+			$hasVisibleClientComms = false;
 			?>
 			<dl>
 				<?php
 				while($row2 = mysqli_fetch_array($result2)){
 					// Check if clientlname or clientfname is not empty
 					$dateadded = $row2['dateadded'];
-					$notes = $row2['notes'];
+					$notes = preg_replace('/^\s*(Department\/agency|Ministère\/organisme):\s*.*(?:\R|$)/miu', '', (string)$row2['notes']);
+					$notes = trim((string)$notes);
+					if ($notes === '') {
+						continue;
+					}
+					$hasVisibleClientComms = true;
 					$nnotes = nl2br(htmlspecialchars($notes));
 				?>
 				
@@ -873,6 +887,9 @@ $blobStorage = new AzureBlobStorageManager();
 				<dd><?php echo $nnotes ?></dd>
 				<?php } ?>
 			</dl>
+			<?php if (!$hasVisibleClientComms) { ?>
+			<p>No communications available!</p>
+			<?php } ?>
 			<?php } else { ?>
 			<p>No communications available!</p>
 			<?php } } ?>

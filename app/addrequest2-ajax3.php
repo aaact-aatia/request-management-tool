@@ -116,10 +116,6 @@ $alerts = [
 	'7:1:2' => [
 		'en' => 'Please complete the EPMO accessibility checklist prior to opening a new request.',
 		'fr' => 'Veuillez compléter la liste de contrôle d\'accessibilité du BGPE avant d\'ouvrir une nouvelle demande.'
-	],
-	'8:3:2' => [
-		'en' => 'Please gather all information required before continuing.',
-		'fr' => 'Please gather all information required before continuing.'
 	]
 ];
 
@@ -155,13 +151,6 @@ if ($subserviceid=='99:4:1' || $subserviceid=='99:4:9') {
 ?>
 <div class="alert alert-warning">
     <p tabindex="0"><?php echo $alerts['7:1:2'][$lang]; ?></p>
-</div>
-
-<?php
-} elseif ($subserviceid=='8:3:2') {
-?>
-<div class="alert alert-warning">
-    <p tabindex="0"><?php echo $alerts['8:3:2'][$lang]; ?></p>
 </div>
 
 <?php
@@ -249,7 +238,7 @@ if ($subserviceid=='99:4:1' || $subserviceid=='99:4:9') {
     <option value="8:2:2:2:2"><?php echo $translations['no'][$lang]; ?></option>
 </select>
 <?php
-}elseif ($subserviceid=='4:1:1' OR $subserviceid=='4:2:1' OR $subserviceid=='4:3:1' OR $subserviceid=='3:2:1' OR $subserviceid=='7:1:1' OR $subserviceid=='8:3:1' OR $subserviceid=='8:4:1' OR $subserviceid=='8:4:2' OR $subserviceid = '8:2:1:1' OR $subserviceid = '8:2:1:2') {
+}elseif ($subserviceid=='4:1:1' OR $subserviceid=='4:2:1' OR $subserviceid=='4:3:1' OR $subserviceid=='3:2:1' OR $subserviceid=='7:1:1' OR $subserviceid=='8:4:1' OR $subserviceid=='8:4:2' OR $subserviceid = '8:2:1:1' OR $subserviceid = '8:2:1:2') {
 	?>
 <div class="form-group form-buttons">
     <button type="submit" class="btn btn-primary"><?php echo $translations['continue'][$lang]; ?></button>

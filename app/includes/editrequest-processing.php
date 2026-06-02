@@ -16,6 +16,8 @@ $requesttitle = getPostValue('requesttitle');
 $clientlname = getPostValue('clientlname');
 $clientfname = getPostValue('clientfname');
 $clientemail = getPostValue('clientemail');
+$departmentagency = getPostValue('departmentagency');
+$departmentagencyCommlogId = (int)getPostValue('departmentagency_commlogid', 0);
 $clientphone = getPostValue('clientphone');
 $sourceid = getPostValue('sourceid');
 $statusid = getPostValue('statusid');
@@ -58,6 +60,24 @@ $commlogid2 = getPostValue('commlogid2');
 $adminnotes = getPostValue('adminnotes');
 $updaterid = $_SESSION['pid'];
 $todaydate = getTodayDate();
+
+function upsertDepartmentAgencyInNotes($notes, $departmentValue, $lang) {
+    $cleanedNotes = preg_replace('/^\s*(Department\/agency|Ministère\/organisme):\s*.*(?:\R|$)/miu', '', (string)$notes);
+    $cleanedNotes = trim((string)$cleanedNotes);
+
+    if (!hasValue($departmentValue)) {
+        return $cleanedNotes;
+    }
+
+    $prefix = ($lang === 'fr') ? 'Ministère/organisme: ' : 'Department/agency: ';
+    $line = $prefix . $departmentValue;
+
+    if ($cleanedNotes === '') {
+        return $line;
+    }
+
+    return $line . "\n\n" . $cleanedNotes;
+}
 
 // ============================================================================
 // STATUS CHANGE TRACKING
@@ -341,6 +361,30 @@ if (isAdmin() || $_SESSION['atype'] == 2) {
         $sql = "UPDATE `tblcommlog` SET `notes` = '$commlog2' WHERE id='$commlogid2'";
         mysqli_query($link, $sql);
     }
+}
+
+// Keep Department/agency synchronized in client communications notes.
+$targetCommlogId = $departmentagencyCommlogId;
+if ($targetCommlogId <= 0) {
+    $targetResult = mysqli_query($link, "SELECT id FROM tblcommlog WHERE triageid = '$requestuid' AND status = '1' ORDER BY id ASC LIMIT 1");
+    if ($targetResult && mysqli_num_rows($targetResult) > 0) {
+        $targetRow = mysqli_fetch_assoc($targetResult);
+        $targetCommlogId = (int)$targetRow['id'];
+    }
+}
+
+if ($targetCommlogId > 0) {
+    $notesResult = mysqli_query($link, "SELECT notes FROM tblcommlog WHERE id = '$targetCommlogId' AND triageid = '$requestuid' AND status = '1' LIMIT 1");
+    if ($notesResult && mysqli_num_rows($notesResult) > 0) {
+        $notesRow = mysqli_fetch_assoc($notesResult);
+        $updatedNotes = upsertDepartmentAgencyInNotes($notesRow['notes'], $departmentagency, $lang);
+        $updatedNotesEscaped = mysqli_real_escape_string($link, $updatedNotes);
+        mysqli_query($link, "UPDATE tblcommlog SET notes = '$updatedNotesEscaped' WHERE id = '$targetCommlogId' AND triageid = '$requestuid' AND status = '1'");
+    }
+} elseif (hasValue($departmentagency)) {
+    $departmentPrefix = ($lang === 'fr') ? 'Ministère/organisme: ' : 'Department/agency: ';
+    $departmentNote = mysqli_real_escape_string($link, $departmentPrefix . $departmentagency);
+    mysqli_query($link, "INSERT INTO tblcommlog(`triageid`, `dateadded`, `notes`, `creatorid`, `status`) VALUES ('$requestuid', '$todaydate', '$departmentNote', '$updaterid', '1')");
 }
 
 // Add admin notes
