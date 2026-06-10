@@ -115,7 +115,7 @@ include 'includes/template/head.php';
 			$teamNameField = ($_SESSION['lang'] === 'fr') ? 'namefr' : 'nameen';
 			
 			// Construct SQL statement
-			$sql = "SELECT * FROM tblteams WHERE status = '1' ORDER BY $teamNameField ASC";
+			$sql = "SELECT * FROM tblteams ORDER BY $teamNameField ASC";
 			//echo $sql;
 			
 			$result = mysqli_query($link,$sql);

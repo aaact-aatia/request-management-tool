@@ -178,7 +178,7 @@ if(mysqli_num_rows($result2)>0){
 				$teams = $row2['team'];
 				$tarray = explode(",",$teams);
 				
-				$sql3 = "SELECT * FROM tblteams WHERE status='1' ORDER BY $team_sort ASC";
+				$sql3 = "SELECT * FROM tblteams ORDER BY $team_sort ASC";
 				$result3 = mysqli_query($link,$sql3);	
 				while($row3 = mysqli_fetch_array($result3)){
 				?>

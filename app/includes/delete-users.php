@@ -26,8 +26,8 @@ $userid = $_GET['id'];
 // Process the delete product form
 if ($_SERVER['REQUEST_METHOD']=='POST'){
 	
-	// Create SQL statement
-	$sql = "UPDATE `tblusers` SET `status` = '0' WHERE id='$userid'";
+	// Hard-delete the user record
+	$sql = "DELETE FROM `tblusers` WHERE id='$userid'";
 	//echo $sql;
 	mysqli_query($link,$sql);
 	

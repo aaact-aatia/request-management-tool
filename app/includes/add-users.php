@@ -167,7 +167,7 @@ $t = $translations[$lang_code];
 				<legend><span class="field-name"><?= htmlspecialchars($t['teams']) ?></span></legend>
 				<p class="small"><?= htmlspecialchars($t['team_none_hint']) ?><br><?= htmlspecialchars($t['team_single_hint']) ?></p>
 				<?php
-				$sql3 = "SELECT * FROM tblteams WHERE status='1' ORDER BY {$t['team_sort_field']} ASC";
+				$sql3 = "SELECT * FROM tblteams ORDER BY {$t['team_sort_field']} ASC";
 				$result3 = mysqli_query($link,$sql3);	
 				while($row3 = mysqli_fetch_array($result3)){
 					$teamname = ($lang_code === 'fr') ? $row3['namefr'] : $row3['nameen'];

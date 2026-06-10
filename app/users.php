@@ -95,7 +95,7 @@ include 'includes/template/head.php';
 			
 			<?php
 			// Construct SQL statement
-			$sql = "SELECT * FROM tblusers WHERE status = '1' ORDER BY lastname ASC";
+			$sql = "SELECT * FROM tblusers ORDER BY lastname ASC";
 			//echo $sql;
 			
 			$result = mysqli_query($link,$sql);
