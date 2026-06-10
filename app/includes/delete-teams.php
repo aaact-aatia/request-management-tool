@@ -44,20 +44,23 @@ if(mysqli_num_rows($result2)>0){
 	while($row2 = mysqli_fetch_array($result2)){
 		$teamname = ($lang == 'fr') ? $row2['namefr'] : $row2['nameen'];
 		$title = ($lang == 'fr') ? "Supprimer l'équipe $teamname" : "Delete $teamname team";
-		$question = ($lang == 'fr') ? "Voulez-vous vraiment supprimer cette équipe?" : "Are you sure you wish to delete this team?";
-		$buttonText = ($lang == 'fr') ? "Oui" : "Yes";	
+		$question = ($lang == 'fr') ? "Voulez-vous vraiment supprimer l'équipe <strong>" . htmlspecialchars($teamname) . "</strong>?" : "Are you sure you wish to delete the <strong>" . htmlspecialchars($teamname) . "</strong> team?";
+		$buttonText = ($lang == 'fr') ? "Oui" : "Yes";
 	// Check for users assigned to this team
-	$userCheckSql = "SELECT COUNT(*) as user_count FROM tblusers WHERE team='$contactid'";
+	$userCheckSql = "SELECT firstname, lastname FROM tblusers WHERE team='$contactid' ORDER BY lastname ASC";
 	$userCheckResult = mysqli_query($link, $userCheckSql);
-	$userCheckRow = mysqli_fetch_array($userCheckResult);
-	$assignedUserCount = $userCheckRow['user_count'];
-	
+	$assignedUserCount = mysqli_num_rows($userCheckResult);
+
 	$warningMessage = '';
 	if ($assignedUserCount > 0) {
+		$userListItems = '';
+		while ($urow = mysqli_fetch_array($userCheckResult)) {
+			$userListItems .= '<li>' . htmlspecialchars($urow['firstname'] . ' ' . $urow['lastname']) . '</li>';
+		}
 		if ($lang == 'fr') {
-			$warningMessage = "<div class='alert alert-warning' role='alert'><strong>Attention:</strong> Cette équipe a $assignedUserCount utilisateur(s) assigné(s). Ces utilisateurs seront orphelins après la suppression de cette équipe.</div>";
+			$warningMessage = "<div class='alert alert-warning' role='alert'><strong>Attention&nbsp;:</strong> Les utilisateurs suivants seront orphelins après la suppression de l'équipe <strong>" . htmlspecialchars($teamname) . "</strong>&nbsp;:<ul>$userListItems</ul></div>";
 		} else {
-			$warningMessage = "<div class='alert alert-warning' role='alert'><strong>Warning:</strong> This team has $assignedUserCount user(s) assigned. These users will be orphaned after deleting this team.</div>";
+			$warningMessage = "<div class='alert alert-warning' role='alert'><strong>Warning:</strong> The following user(s) will be orphaned after deleting the <strong>" . htmlspecialchars($teamname) . "</strong> team:<ul>$userListItems</ul></div>";
 		}
 	}?>
 <section id="filter-id" class="modal-dialog modal-content overlay-def">

@@ -144,7 +144,7 @@ include 'includes/template/head.php';
 					<td><?php echo $accounttypename ?></td>
 					<td><?php echo !empty($teamNames) ? htmlspecialchars(implode(', ', $teamNames)) : '—'; ?></td>
 					<td>
-						<a class="wb-lbx btn btn-primary btn-block" href="includes/edit-users.php?id=<?php echo $row['id'];?>"><?= htmlspecialchars($langFile['users_edit_button']) ?><span class="wb-inv"> <?php echo htmlspecialchars($row['firstname'] . ' ' . $row['lastname']); ?></span></a> <a class="wb-lbx btn btn-primary btn-block" href="includes/delete-users.php?id=<?php echo $row['id'];?>"><?= htmlspecialchars($langFile['users_delete_button']) ?><span class="wb-inv"> <?php echo htmlspecialchars($row['firstname'] . ' ' . $row['lastname']); ?></span></a>
+						<a class="wb-lbx btn btn-primary btn-block" href="includes/edit-users.php?id=<?php echo $row['id'];?>&lang=<?php echo $lang;?>"><?= htmlspecialchars($langFile['users_edit_button']) ?><span class="wb-inv"> <?php echo htmlspecialchars($row['firstname'] . ' ' . $row['lastname']); ?></span></a> <a class="wb-lbx btn btn-primary btn-block" href="includes/delete-users.php?id=<?php echo $row['id'];?>&lang=<?php echo $lang;?>"><?= htmlspecialchars($langFile['users_delete_button']) ?><span class="wb-inv"> <?php echo htmlspecialchars($row['firstname'] . ' ' . $row['lastname']); ?></span></a>
 					</td>
 				</tr>
 			<?php } ?>
