@@ -71,19 +71,19 @@ return [
     'subservice_name' => 'Nom du sous-service:',
     'select_subservice' => 'Sélectionnez un nom de sous-service',
     
-    // Contacts page (contacts.php)
-    'contacts_page_title' => 'Gestion des contacts - Outil de gestion des demandes - Bureau de l\'accessibilité de la TI',
-    'contacts_heading' => 'Gestion des contacts',
+    // Contacts/Teams page (legacy keys)
+    'contacts_page_title' => 'Gestion des équipes - Outil de gestion des demandes - Bureau de l\'accessibilité de la TI',
+    'contacts_heading' => 'Gestion des équipes',
     'contacts_success_message' => 'Vous avez mis à jour la base de données, merci!',
     'contacts_failed_message' => 'La mise à jour de la base de données que vous avez demandée n\'a pas fonctionné, veuillez réessayer, merci!',
-    'contacts_add_new' => 'Ajouter un nouveau contact',
+    'contacts_add_new' => 'Ajouter une nouvelle équipe',
     'contacts_team_name' => 'Nom de l\'équipe',
     'contacts_team_email' => 'Courriel de l\'équipe',
     'contacts_actions' => 'Actions',
     'contacts_edit' => 'Modifier',
     'contacts_delete' => 'Supprimer',
-    'contacts_contact' => 'contact',
-    'contacts_no_contacts' => 'Aucun contact disponible',
+    'contacts_contact' => 'équipe',
+    'contacts_no_contacts' => 'Aucune équipe disponible',
     'failed_heading' => 'Échec',
     
     // Password reset page (passwordreset.php)
@@ -351,6 +351,20 @@ return [
     'users_edit_button' => 'Modifier l\'utilisateur',
     'users_delete_button' => 'Supprimer l\'utilisateur',
     'users_no_users' => 'Aucun utilisateur disponible',
+
+    // Teams management page (teams.php)
+    'teams_page_title' => 'Gestion des équipes - Outil de gestion des demandes - Bureau de l\'accessibilité de la TI',
+    'teams_heading' => 'Gestion des equipes',
+    'teams_success_message' => 'Vous avez mis à jour la base de données, merci!',
+    'teams_failed_message' => 'La mise à jour de la base de données que vous avez demandée n\'a pas fonctionné, veuillez réessayer, merci!',
+    'teams_add_button' => 'Ajouter une nouvelle equipe',
+    'teams_name_column' => 'Nom de l\'equipe',
+    'teams_email_column' => 'Courriel de l\'equipe',
+    'teams_actions' => 'Actions',
+    'teams_edit' => 'Modifier',
+    'teams_delete' => 'Supprimer',
+    'teams_team_label' => 'equipe',
+    'teams_no_teams' => 'Aucune equipe disponible',
     
     // Sign in page (signin.php)
     'signin_page_title' => 'Connectez-vous à l\'Outil de gestion des demandes - Bureau de l\'accessibilité de la TI',

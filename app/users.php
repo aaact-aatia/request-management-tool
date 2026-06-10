@@ -126,13 +126,13 @@ include 'includes/template/head.php';
 							$accounttypename = $row2[$accounttypeField];
 						}
 					}
-				// Resolve team names from contact IDs
+				// Resolve team names from contact IDs stored in tblusers.team
 				$teamNames = [];
-				$teamNameField = ($_SESSION['lang'] === 'fr') ? 'teamnamefr' : 'teamnameen';
+				$teamNameField = ($_SESSION['lang'] === 'fr') ? 'namefr' : 'nameen';
 				if (!empty($row['team'])) {
 					foreach (array_filter(explode(',', $row['team'])) as $tid) {
 						$tid = (int)$tid;
-						$r = mysqli_query($link, "SELECT $teamNameField FROM tblcontacts WHERE id='$tid'");
+						$r = mysqli_query($link, "SELECT $teamNameField FROM tblteams WHERE id='$tid' AND status='1'");
 						$tr = mysqli_fetch_assoc($r);
 						if ($tr) $teamNames[] = $tr[$teamNameField];
 					}

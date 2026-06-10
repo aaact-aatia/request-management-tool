@@ -71,19 +71,19 @@ return [
     'subservice_name' => 'Sub-service name:',
     'select_subservice' => 'Select a sub-service name',
     
-    // Contacts page (contacts.php)
-    'contacts_page_title' => 'Contacts management - Request Management Tool - IT Accessibility Office',
-    'contacts_heading' => 'Contacts management',
+    // Contacts/Teams page (legacy keys)
+    'contacts_page_title' => 'Teams management - Request Management Tool - IT Accessibility Office',
+    'contacts_heading' => 'Teams management',
     'contacts_success_message' => 'You have successfully updated the database, thank you!',
     'contacts_failed_message' => 'The database update you requested did not work, please try again, thank you!',
-    'contacts_add_new' => 'Add new contact',
+    'contacts_add_new' => 'Add new team',
     'contacts_team_name' => 'Team name',
     'contacts_team_email' => 'Team email',
     'contacts_actions' => 'Actions',
     'contacts_edit' => 'Edit',
     'contacts_delete' => 'Delete',
-    'contacts_contact' => 'contact',
-    'contacts_no_contacts' => 'No contacts available',
+    'contacts_contact' => 'team',
+    'contacts_no_contacts' => 'No teams available',
     'failed_heading' => 'Failed',
     
     // Password reset page (passwordreset.php)
@@ -351,6 +351,20 @@ return [
     'users_edit_button' => 'Edit user',
     'users_delete_button' => 'Delete user',
     'users_no_users' => 'No users available',
+
+    // Teams management page (teams.php)
+    'teams_page_title' => 'Teams management - Request Management Tool - IT Accessibility Office',
+    'teams_heading' => 'Teams management',
+    'teams_success_message' => 'You have successfully updated the database, thank you!',
+    'teams_failed_message' => 'The database update you requested did not work, please try again, thank you!',
+    'teams_add_button' => 'Add new team',
+    'teams_name_column' => 'Team name',
+    'teams_email_column' => 'Team email',
+    'teams_actions' => 'Actions',
+    'teams_edit' => 'Edit',
+    'teams_delete' => 'Delete',
+    'teams_team_label' => 'team',
+    'teams_no_teams' => 'No teams available',
     
     // Sign in page (signin.php)
     'signin_page_title' => 'Sign in to the Request Management Tool - IT Accessibility Office',

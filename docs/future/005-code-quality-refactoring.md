@@ -149,9 +149,36 @@ Migrate one file at a time, prioritising pages that accept user input via GET/PO
 
 ---
 
+## Part D: Remove Temporary Backward Compatibility (Contacts -> Teams)
+
+### Current State
+
+The rename from "contacts" to "teams" introduced temporary compatibility shims so older links and modal endpoints keep working:
+
+- Legacy page redirect: `app/contacts.php` -> `app/teams.php`
+- Legacy include wrappers:
+  - `app/includes/add-contacts.php` -> `add-teams.php`
+  - `app/includes/edit-contacts.php` -> `edit-teams.php`
+  - `app/includes/delete-contacts.php` -> `delete-teams.php`
+- Legacy translation keys retained for compatibility in language files (`contacts_*`), while `teams_*` keys are now the canonical set used by `app/teams.php`
+
+### Future Cleanup Goal
+
+After one stable release cycle (or once logs confirm no remaining traffic to legacy endpoints):
+
+1. Remove `app/contacts.php` redirect and delete the file
+2. Remove the three `*-contacts.php` include wrappers
+3. Remove legacy `contacts_*` language keys that are no longer referenced
+4. Run a final repo-wide check for `/contacts.php` and `*-contacts.php` references before merge
+
+This cleanup should be bundled with regression testing of admin navigation and team CRUD modals.
+
+---
+
 ## Implementation Order
 
 1. Part B helpers first (additive, no breaking changes)
 2. Migrate highest-risk pages to prepared statements (search, edit, add request flows)
 3. Complete `PriorityUpdates.php` (Part C) — finish SLA logic, add auth, fix SQL
 4. Part A refactor (requires updating all `require('sql.php')` references — do last to minimise churn)
+5. Part D cleanup (remove compatibility shims once safe)

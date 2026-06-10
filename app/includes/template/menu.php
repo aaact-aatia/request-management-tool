@@ -25,7 +25,7 @@ $menu_text = [
 		'search' => 'Search requests',
 		'reports' => 'Reports',
 		'admin' => 'Administration',
-		'contacts' => 'Contacts',
+		'contacts' => 'Teams',
 		'catalogue' => 'Service catalogue',
 		'holidays' => 'Holidays',
 		'sources' => 'Sources',
@@ -44,7 +44,7 @@ $menu_text = [
 		'search' => 'Recherche d\'une demande',
 		'reports' => 'Rapports',
 		'admin' => 'Administration',
-		'contacts' => 'Contacts',
+		'contacts' => 'Équipes',
 		'catalogue' => 'Catalogue de services',
 		'holidays' => 'Jours fériés',
 		'sources' => 'Sources',
@@ -89,7 +89,7 @@ $menuLangStrings = $menu_text[$lang_code];
 				?>
 					<li><a href="#s2" class="item"><?= htmlspecialchars($menuLangStrings['admin']) ?></a>
 						<ul class="sm list-unstyled" id="s2" role="menu">
-							<li><a href="/contacts.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['contacts']) ?></a></li>
+							<li><a href="/teams.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['contacts']) ?></a></li>
 							<?php
 							// Only Super admins can access this option
 							if (isset($_SESSION['atype']) && $_SESSION['atype'] == 1) {

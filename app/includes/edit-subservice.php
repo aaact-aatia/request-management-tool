@@ -71,8 +71,8 @@ if(mysqli_num_rows($result2)>0){
 		$required_label = $is_french ? 'requis' : 'required';
 		$save_btn = $is_french ? 'Sauvegarder' : 'Save';
 		$days_label = $is_french ? 'jours' : 'days';
-		$sort_field = $is_french ? 'teamnamefr' : 'teamnameen';
-		$team_name = $is_french ? 'teamnamefr' : 'teamnameen';
+		$sort_field = $is_french ? 'namefr' : 'nameen';
+		$team_name = $is_french ? 'namefr' : 'nameen';
 ?>
 <section id="filter-id" class="modal-dialog modal-content overlay-def">
 	<header class="modal-header">
@@ -92,7 +92,7 @@ if(mysqli_num_rows($result2)>0){
 			<label for="contactid"><span class="field-name"><?php echo $label_contact ?> <strong>(<?php echo $required_label ?>)</strong></span></label>
 			<select class="form-control" id="contactid" name="contactid" required>
 				<?php 
-				$sql3 = "SELECT * FROM tblcontacts WHERE status='1' ORDER BY $sort_field ASC";
+				$sql3 = "SELECT * FROM tblteams WHERE status='1' ORDER BY $sort_field ASC";
 				$result3 = mysqli_query($link,$sql3);	
 				while($row3 = mysqli_fetch_array($result3)){
 				?>

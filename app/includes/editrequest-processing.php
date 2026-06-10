@@ -163,11 +163,11 @@ if (hasValue($subserviceid)) {
 }
 
 if ($contactid > 0) {
-    $result = mysqli_query($link, "SELECT * FROM tblcontacts WHERE id = '$contactid'");
+    $result = mysqli_query($link, "SELECT * FROM tblteams WHERE id = '$contactid'");
     $row = mysqli_fetch_assoc($result);
     if ($row) {
-        $teamname = $row['teamnameen'];
-        $teamemail = $row['teamemail'];
+        $teamname = $row['nameen'];
+        $teamemail = $row['email'];
         $contactname = $row['contactname'];
         $contactemail = $row['contactemail'];
     }
@@ -249,10 +249,10 @@ if ($csubserviceid != $subserviceid && hasValue($subserviceid)) {
     $contactidold = $rowold['contactid'];
     
     if ($contactid != $contactidold) {
-        $result = mysqli_query($link, "SELECT * FROM tblcontacts WHERE id = '$contactid'");
+        $result = mysqli_query($link, "SELECT * FROM tblteams WHERE id = '$contactid'");
         $row = mysqli_fetch_assoc($result);
-        $personalisation['teamname'] = $row['teamnameen'];
-        $newTeamEmail = $row['teamemail'];
+        $personalisation['teamname'] = $row['nameen'];
+        $newTeamEmail = $row['email'];
         
         sendEmail($newTeamEmail, "8270de12-b994-4d29-aa22-428434fd9896", json_encode($personalisation));
         if ($newTeamEmail != "ACE-CEA@hrsdc-rhdcc.gc.ca") {
@@ -270,10 +270,10 @@ if ($csubserviceid != $subserviceid && hasValue($subserviceid)) {
     $contactidold = $rowold['contactid'];
     
     if ($contactid != $contactidold) {
-        $result = mysqli_query($link, "SELECT * FROM tblcontacts WHERE id = '$contactid'");
+        $result = mysqli_query($link, "SELECT * FROM tblteams WHERE id = '$contactid'");
         $row = mysqli_fetch_assoc($result);
-        $personalisation['teamname'] = $row['teamnameen'];
-        $newTeamEmail = $row['teamemail'];
+        $personalisation['teamname'] = $row['nameen'];
+        $newTeamEmail = $row['email'];
         
         sendEmail($newTeamEmail, "8270de12-b994-4d29-aa22-428434fd9896", json_encode($personalisation));
         if ($newTeamEmail != "ACE-CEA@hrsdc-rhdcc.gc.ca") {

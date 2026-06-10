@@ -183,11 +183,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
         
         // Get team details
-        $result = mysqli_query($link, "SELECT * FROM tblcontacts WHERE id = '$contactid'");
+        $result = mysqli_query($link, "SELECT * FROM tblteams WHERE id = '$contactid'");
         $row = mysqli_fetch_array($result);
         if (!empty($row)) {
-            $teamname = $isFrench ? $row['teamnamefr'] : $row['teamnameen'];
-            $teamemail = $row['teamemail'];
+            $teamname = $isFrench ? $row['namefr'] : $row['nameen'];
+            $teamemail = $row['email'];
             $contactname = $row['contactname'];
             $contactemail = $row['contactemail'];
         }
@@ -200,11 +200,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
         
         // Get team details
-        $result = mysqli_query($link, "SELECT * FROM tblcontacts WHERE id = '$contactid'");
+        $result = mysqli_query($link, "SELECT * FROM tblteams WHERE id = '$contactid'");
         $row = mysqli_fetch_array($result);
         if (!empty($row)) {
-            $teamname = $isFrench ? $row['teamnamefr'] : $row['teamnameen'];
-            $teamemail = $row['teamemail'];
+            $teamname = $isFrench ? $row['namefr'] : $row['nameen'];
+            $teamemail = $row['email'];
             $contactname = $row['contactname'];
             $contactemail = $row['contactemail'];
         }
