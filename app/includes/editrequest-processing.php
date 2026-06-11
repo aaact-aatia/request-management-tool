@@ -42,7 +42,7 @@ $slatimer = getPostValue('slatimer');
 $audienceid = getPostValue('audience', 0);
 $bdm = getPostValue('bdm', 0);
 $catalogueid = getPostValue('catalogueid');
-$serviceid = getPostValue('serviceid');
+$serviceid = (int)getPostValue('serviceid', 0);
 $subserviceid = getPostValue('subserviceid', 0);
 $workerid = getPostValue('workerid', 0);
 $attach1 = getPostValue('attach1');
@@ -287,7 +287,7 @@ if ($csubserviceid != $subserviceid && hasValue($subserviceid)) {
 // ============================================================================
 
 if (empty($requestid) || empty($requesttitle) || empty($datereceived) || 
-    empty($statusid) || empty($catalogueid) || empty($serviceid)) {
+    empty($statusid) || empty($catalogueid)) {
     header("location: /editrequest.php?lang=$lang&id=$requestuid&status=failed");
     exit();
 }

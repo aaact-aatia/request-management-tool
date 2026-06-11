@@ -337,8 +337,8 @@ $requestid = $row['requestid'];
                 $services = getServicesByCategory($link, $row['catalogueid'], $lang);
             ?>
             <div class="form-group divservice">
-                <label for="serviceid"><span class="field-name"><?php echo $t['service_name']; ?>: <strong>(<?php echo $t['required']; ?>)</strong></span></label>
-                <select class="form-control" id="serviceid" name="serviceid" onchange="ajax2(this.value)" required>
+                <label for="serviceid"><span class="field-name"><?php echo $t['service_name']; ?>:</span></label>
+                <select class="form-control" id="serviceid" name="serviceid" onchange="ajax2(this.value)">
                     <option value=""><?php echo $t['select_service']; ?></option>
                     <?php while ($service = mysqli_fetch_assoc($services)): ?>
                     <option value="<?php echo $service['id']; ?>" <?php echo ($row['serviceid'] == $service['id']) ? 'selected' : ''; ?>>
