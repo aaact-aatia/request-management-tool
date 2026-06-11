@@ -176,6 +176,23 @@ CREATE TABLE IF NOT EXISTS `tblcontacts` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE IF NOT EXISTS `tblteams` (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'Matches tblcontacts.id for request/team permission compatibility',
+  `nameen` varchar(100) NOT NULL,
+  `namefr` varchar(100) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `contactname` varchar(200) NOT NULL,
+  `contactemail` varchar(255) NOT NULL,
+  `escalationcontactname` varchar(200) DEFAULT NULL,
+  `escalationcontactemail` varchar(255) DEFAULT NULL,
+  `dateadded` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `dateupdated` timestamp NULL DEFAULT NULL,
+  `updatedby` int(11) DEFAULT NULL,
+  `status` tinyint(1) DEFAULT 1,
+  PRIMARY KEY (`id`),
+  KEY `status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS `tblcss` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `requestid` varchar(50) NOT NULL,

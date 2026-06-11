@@ -76,7 +76,7 @@ $translations = [
 		'days' => 'days',
 		'required' => '(required)',
 		'add_button' => 'Add',
-		'team_sort_field' => 'teamnameen'
+		'team_sort_field' => 'nameen'
 	],
 	'fr' => [
 		'modal_title' => 'Ajouter un nouvel élément de service pour',
@@ -87,7 +87,7 @@ $translations = [
 		'days' => 'jours',
 		'required' => '(requis)',
 		'add_button' => 'Ajouter',
-		'team_sort_field' => 'teamnamefr'
+		'team_sort_field' => 'namefr'
 	]
 ];
 
@@ -111,10 +111,10 @@ $t = $translations[$lang_code];
 			<label for="contactid"><span class="field-name"><?= htmlspecialchars($t['contact_group']) ?> <strong><?= htmlspecialchars($t['required']) ?></strong></span></label>
 			<select class="form-control" id="contactid" name="contactid" required>
 				<?php 
-				$sql2 = "SELECT * FROM tblcontacts WHERE status='1' ORDER BY {$t['team_sort_field']} ASC";
+				$sql2 = "SELECT * FROM tblteams WHERE status='1' ORDER BY {$t['team_sort_field']} ASC";
 				$result2 = mysqli_query($link,$sql2);	
 				while($row2 = mysqli_fetch_array($result2)){
-					$teamname = ($lang_code === 'fr') ? $row2['teamnamefr'] : $row2['teamnameen'];
+					$teamname = ($lang_code === 'fr') ? $row2['namefr'] : $row2['nameen'];
 				?>
 					<option value="<?= htmlspecialchars($row2['id']) ?>"><?= htmlspecialchars($teamname) ?></option>
 				<?php

@@ -19,6 +19,7 @@ if ($_SESSION['atype'] != 1) {
 
 // Grab MySQL connection
 require('../sql.php');
+/** @var mysqli $link */
 
 // Process the add product form
 if ($_SERVER['REQUEST_METHOD']=='POST'){
@@ -29,17 +30,17 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	$email = strtolower(mysqli_real_escape_string($link,$_POST['email']));
 	$password = mysqli_real_escape_string($link,$_POST['password']);
 	$accounttype = mysqli_real_escape_string($link,$_POST['accounttype']);
-	$teamstring = "";
-	if(!empty($_POST['teams'])) {
-		foreach($_POST['teams'] as $teamid) {
-			$teamstring .= $teamid . ",";
+	$selectedTeams = [];
+	if (!empty($_POST['teams']) && is_array($_POST['teams'])) {
+		foreach ($_POST['teams'] as $teamid) {
+			$teamid = (int)$teamid;
+			if ($teamid > 0) {
+				$selectedTeams[] = $teamid;
+			}
 		}
-		$teamstring = rtrim($teamstring, ',');
-		//echo "Selected teams : " . $teamstring;
-	} else {
-			$teamstring = "";
-		//echo "You did not choose a team.";
 	}
+	$selectedTeams = array_values(array_unique($selectedTeams));
+	$teamstring = "";
 	//exit();
 	$date_now = date("Y-m-d H:i:s");
 	$updatedby = $_SESSION['pid'];
@@ -51,22 +52,40 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 		$noerror = true;
 	}
 
+	if ($accounttype == '1' || $accounttype == '2' || $accounttype == '6') {
+		$teamstring = "";
+	} elseif ($accounttype == '4' || $accounttype == '5') {
+		if (count($selectedTeams) !== 1) {
+			$noerror = true;
+		} else {
+			$teamstring = (string)$selectedTeams[0];
+		}
+	} elseif ($accounttype == '3') {
+		if (count($selectedTeams) < 1) {
+			$noerror = true;
+		} else {
+			$teamstring = implode(',', $selectedTeams);
+		}
+	} else {
+		$noerror = true;
+	}
+
 	// If error detected send user back to modal dialog
 	if ($noerror) {
-		header("location:/users.php?lang={$lang_code}?status=failed"); 
+		header("location:/users.php?lang={$lang_code}&status=failed"); 
 		exit();
 	}
 	
 	$npassword = password_hash($password, PASSWORD_DEFAULT);
 	
 	// Create SQL statement
-	$sql = "INSERT INTO tblusers(`firstname`, `lastname`, `email`, `password`, `accounttype`, `team`, `dateadded`, `dateupdated`, `updatedby`, `status`, `environment`) VALUES ('$firstname', '$lastname', '$email', '$npassword', '$accounttype', '$teamstring', '$date_now', '$date_now', '$updatedby', '$status', 1)";
+	$sql = "INSERT INTO tblusers(`firstname`, `lastname`, `email`, `password`, `atype`, `team`, `status`, `environment`) VALUES ('$firstname', '$lastname', '$email', '$npassword', '$accounttype', '$teamstring', '$status', 1)";
 	//echo $sql;
 	//exit();
 	mysqli_query($link,$sql);
 	
 	// Now redirect
-	header("location:/users.php?lang={$lang_code}?status=success"); 
+	header("location:/users.php?lang={$lang_code}&status=success"); 
 	exit();
 }
 
@@ -83,7 +102,9 @@ $translations = [
 		'required' => '(required)',
 		'add_button' => 'Add',
 		'account_sort_field' => 'nameen',
-		'team_sort_field' => 'teamnameen'
+		'team_sort_field' => 'nameen',
+		'team_none_hint' => 'No team is assigned for Admin, Super Admin, and External accounts.',
+		'team_single_hint' => 'Team Lead and Employee must have exactly one team. Manager can have multiple teams.'
 	],
 	'fr' => [
 		'modal_title' => 'Ajouter un nouvel utilisateur',
@@ -96,7 +117,9 @@ $translations = [
 		'required' => '(requis)',
 		'add_button' => 'Ajouter',
 		'account_sort_field' => 'namefr',
-		'team_sort_field' => 'teamnamefr'
+		'team_sort_field' => 'namefr',
+		'team_none_hint' => 'Aucune équipe n\'est assignée aux comptes Administrateur, Super administrateur et Externe.',
+		'team_single_hint' => 'Un Chef d\'équipe et un Employé doivent avoir exactement une équipe. Un Gestionnaire peut avoir plusieurs équipes.'
 	]
 ];
 
@@ -142,14 +165,15 @@ $t = $translations[$lang_code];
 		<div class="form-group">
 			<fieldset class="chkbxrdio-grp">
 				<legend><span class="field-name"><?= htmlspecialchars($t['teams']) ?></span></legend>
+				<p class="small"><?= htmlspecialchars($t['team_none_hint']) ?><br><?= htmlspecialchars($t['team_single_hint']) ?></p>
 				<?php
-				$sql3 = "SELECT * FROM tblcontacts WHERE status='1' ORDER BY {$t['team_sort_field']} ASC";
+				$sql3 = "SELECT * FROM tblteams ORDER BY {$t['team_sort_field']} ASC";
 				$result3 = mysqli_query($link,$sql3);	
 				while($row3 = mysqli_fetch_array($result3)){
-					$teamname = ($lang_code === 'fr') ? $row3['teamnamefr'] : $row3['teamnameen'];
+					$teamname = ($lang_code === 'fr') ? $row3['namefr'] : $row3['nameen'];
 				?>
 				<div class="checkbox">
-					<label><input type="checkbox" name="teams[]" value="<?= htmlspecialchars($row3['id']) ?>" id="<?= htmlspecialchars($row3['id']) ?>" />&#160;&#160;<?= htmlspecialchars($teamname) ?></label>
+					<label><input type="checkbox" class="team-option" name="teams[]" value="<?= htmlspecialchars($row3['id']) ?>" id="team-<?= htmlspecialchars($row3['id']) ?>" />&#160;&#160;<?= htmlspecialchars($teamname) ?></label>
 				</div>
 				<?php
 				}
@@ -159,6 +183,51 @@ $t = $translations[$lang_code];
 		<div class="form-group form-buttons">
 			<button type="submit" class="btn btn-default"><?= htmlspecialchars($t['add_button']) ?></button>
 		</div>
+		<script>
+		(function () {
+			var accountType = document.getElementById('accounttype');
+			var teamBoxes = document.querySelectorAll('.team-option');
+			function updateTeamSelectionRules() {
+				var role = accountType.value;
+				var noTeamRoles = ['1', '2', '6'];
+				var singleTeamRoles = ['4', '5'];
+
+				if (noTeamRoles.indexOf(role) !== -1) {
+					teamBoxes.forEach(function (cb) {
+						cb.checked = false;
+						cb.disabled = true;
+					});
+					return;
+				}
+
+				teamBoxes.forEach(function (cb) {
+					cb.disabled = false;
+				});
+
+				if (singleTeamRoles.indexOf(role) !== -1) {
+					var checked = Array.prototype.filter.call(teamBoxes, function (cb) { return cb.checked; });
+					if (checked.length > 1) {
+						checked.slice(1).forEach(function (cb) { cb.checked = false; });
+					}
+				}
+			}
+
+			teamBoxes.forEach(function (cb) {
+				cb.addEventListener('change', function () {
+					if (['4', '5'].indexOf(accountType.value) !== -1) {
+						teamBoxes.forEach(function (other) {
+							if (other !== cb) {
+								other.checked = false;
+							}
+						});
+					}
+				});
+			});
+
+			accountType.addEventListener('change', updateTeamSelectionRules);
+			updateTeamSelectionRules();
+		})();
+		</script>
 		</form>
 	</div>
 </section>

@@ -95,7 +95,7 @@ include 'includes/template/head.php';
 			
 			<?php
 			// Construct SQL statement
-			$sql = "SELECT * FROM tblusers WHERE status = '1' ORDER BY lastname ASC";
+			$sql = "SELECT * FROM tblusers ORDER BY lastname ASC";
 			//echo $sql;
 			
 			$result = mysqli_query($link,$sql);
@@ -126,13 +126,13 @@ include 'includes/template/head.php';
 							$accounttypename = $row2[$accounttypeField];
 						}
 					}
-				// Resolve team names from contact IDs
+				// Resolve team names from contact IDs stored in tblusers.team
 				$teamNames = [];
-				$teamNameField = ($_SESSION['lang'] === 'fr') ? 'teamnamefr' : 'teamnameen';
+				$teamNameField = ($_SESSION['lang'] === 'fr') ? 'namefr' : 'nameen';
 				if (!empty($row['team'])) {
 					foreach (array_filter(explode(',', $row['team'])) as $tid) {
 						$tid = (int)$tid;
-						$r = mysqli_query($link, "SELECT $teamNameField FROM tblcontacts WHERE id='$tid'");
+						$r = mysqli_query($link, "SELECT $teamNameField FROM tblteams WHERE id='$tid' AND status='1'");
 						$tr = mysqli_fetch_assoc($r);
 						if ($tr) $teamNames[] = $tr[$teamNameField];
 					}
@@ -144,7 +144,7 @@ include 'includes/template/head.php';
 					<td><?php echo $accounttypename ?></td>
 					<td><?php echo !empty($teamNames) ? htmlspecialchars(implode(', ', $teamNames)) : '—'; ?></td>
 					<td>
-						<a class="wb-lbx btn btn-primary btn-block" href="includes/edit-users.php?id=<?php echo $row['id'];?>"><?= htmlspecialchars($langFile['users_edit_button']) ?><span class="wb-inv"> <?php echo htmlspecialchars($row['firstname'] . ' ' . $row['lastname']); ?></span></a> <a class="wb-lbx btn btn-primary btn-block" href="includes/delete-users.php?id=<?php echo $row['id'];?>"><?= htmlspecialchars($langFile['users_delete_button']) ?><span class="wb-inv"> <?php echo htmlspecialchars($row['firstname'] . ' ' . $row['lastname']); ?></span></a>
+						<a class="wb-lbx btn btn-primary btn-block" href="includes/edit-users.php?id=<?php echo $row['id'];?>&lang=<?php echo $lang;?>"><?= htmlspecialchars($langFile['users_edit_button']) ?><span class="wb-inv"> <?php echo htmlspecialchars($row['firstname'] . ' ' . $row['lastname']); ?></span></a> <a class="wb-lbx btn btn-primary btn-block" href="includes/delete-users.php?id=<?php echo $row['id'];?>&lang=<?php echo $lang;?>"><?= htmlspecialchars($langFile['users_delete_button']) ?><span class="wb-inv"> <?php echo htmlspecialchars($row['firstname'] . ' ' . $row['lastname']); ?></span></a>
 					</td>
 				</tr>
 			<?php } ?>

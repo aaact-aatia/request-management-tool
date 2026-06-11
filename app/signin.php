@@ -52,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 		// String contains domain name so do nothing
 	} else {
 		// String doesn't contain domain so add it for login
-		$username .= "@hrsdc-rhdcc.gc.ca";
+		$username .= "@ssc-spc.gc.ca";
 	}
 	
 	$sql = "SELECT id,firstname,email,password,atype,team FROM tblusers WHERE email='$username' AND status = '1'";

@@ -428,7 +428,7 @@ $reauditFlag = (int)$reauditFlag;
             echo renderTextInput('clientfname', $t['first_name'], '', true);
             echo renderTextInput('clientlname', $t['last_name'], '', true);
             echo renderTextInput('clientemail', $t['email'], '', true, false, 'email');
-            echo renderTextInput('departmentagency', $t['department_agency'], '', true);
+            echo renderTextInput('departmentagency', $t['department_agency'], '', false);
             echo renderTextInput('clientphone', $t['phone'], '', false, false, 'tel');
             
             // Additional information

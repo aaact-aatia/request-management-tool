@@ -170,9 +170,9 @@ INSERT INTO `tblsubservices` (`id`, `serviceid`, `nameen`, `namefr`, `status`) V
 (109, 34, 'Testing', 'Tests', 1),
 (110, 34, 'Emails', 'Courriels', 1);
 
--- Team assignments for services (contactid: 1=ITAO, 2=Dev Team)
+-- Team assignments for services (contactid: 1=AAACT, 2=Dev Team)
 UPDATE `tblservices` SET `contactid` = 2 WHERE `id` IN (27, 28, 54); -- Dev Team: software apps, websites, SAMS
-UPDATE `tblservices` SET `contactid` = 1 WHERE `id` IN (13, 66);     -- ITAO: audit report questions
+UPDATE `tblservices` SET `contactid` = 1 WHERE `id` IN (13, 66);     -- AAACT: audit report questions
 
 -- Request-first routing: keep only current catalogue/services visible
 UPDATE `tblcatalogue`
@@ -210,8 +210,8 @@ INSERT INTO `tblstatus` (`id`, `nameen`, `namefr`, `status`) VALUES
 (5, 'Closed', 'Fermé', 1),
 (6, 'Cancelled', 'Annulé', 1);
 
--- Contacts
-INSERT INTO `tblcontacts` (`teamnameen`, `teamnamefr`, `teamemail`, `contactname`, `contactemail`, `escalationcontactname`, `escalationcontactemail`, `status`) VALUES
+-- Teams
+INSERT INTO `tblteams` (`nameen`, `namefr`, `email`, `contactname`, `contactemail`, `escalationcontactname`, `escalationcontactemail`, `status`) VALUES
 ('IT Accessibility Office', 'Bureau de l''accessibilité des TI', 'accessibility@example.com', 'John Doe', 'john.doe@example.com', 'Jane Manager', 'jane.manager@example.com', 1),
 ('Development Team', 'Équipe de développement', 'dev.team@example.com', 'Alice Developer', 'alice.dev@example.com', 'Bob Tech Lead', 'bob.techlead@example.com', 1);
 

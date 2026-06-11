@@ -19,6 +19,7 @@ if ($_SESSION['atype'] != 1) {
 
 // Grab MySQL connection
 require('../sql.php');
+/** @var mysqli $link */
 
 // Now first get the ID
 $userid = $_GET['id'];
@@ -33,23 +34,23 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	$password = mysqli_real_escape_string($link,$_POST['password']);
 	$password2 = mysqli_real_escape_string($link,$_POST['password2']);
 	$accounttype = mysqli_real_escape_string($link,$_POST['accounttype']);
-	$teamstring = "";
-	
-	if(!empty($_POST['teams'])) {
-		foreach($_POST['teams'] as $teamid) {
-			$teamstring .= $teamid . ",";
+	$selectedTeams = [];
+	if (!empty($_POST['teams']) && is_array($_POST['teams'])) {
+		foreach ($_POST['teams'] as $teamid) {
+			$teamid = (int)$teamid;
+			if ($teamid > 0) {
+				$selectedTeams[] = $teamid;
+			}
 		}
-		$teamstring = rtrim($teamstring, ',');
-		//echo "Selected teams : " . $teamstring;
-	} else {
-			$teamstring = "";
-		//echo "You did not choose a team.";
 	}
+	$selectedTeams = array_values(array_unique($selectedTeams));
+	$teamstring = "";
 	//exit();
 	
 	$date_now = date("Y-m-d H:i:s");
 	$updatedby = $_SESSION['pid'];
 	$noerror = false;
+	$npassword = '';
 	
 	// Custom form validation
 	if ($firstname=="" OR $lastname=="" OR $email=="" OR $accounttype=="") {
@@ -61,10 +62,28 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 			$noerror = true;
 		}
 	}
+
+	if ($accounttype == '1' || $accounttype == '2' || $accounttype == '6') {
+		$teamstring = "";
+	} elseif ($accounttype == '4' || $accounttype == '5') {
+		if (count($selectedTeams) !== 1) {
+			$noerror = true;
+		} else {
+			$teamstring = (string)$selectedTeams[0];
+		}
+	} elseif ($accounttype == '3') {
+		if (count($selectedTeams) < 1) {
+			$noerror = true;
+		} else {
+			$teamstring = implode(',', $selectedTeams);
+		}
+	} else {
+		$noerror = true;
+	}
 	
 	// If error detected send user back to modal dialog
 	if ($noerror) {
-		header("location:/users.php?lang=" . $lang . "?status=failed"); 
+		header("location:/users.php?lang=" . $lang . "&status=failed"); 
 		exit();
 	}
 	if ($password!="") {
@@ -81,7 +100,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	mysqli_query($link,$sql);
 	
 	// Now redirect
-	header("location:/users.php?lang=" . $lang . "?status=success"); 
+	header("location:/users.php?lang=" . $lang . "&status=success"); 
 	exit();
 }
 
@@ -105,8 +124,10 @@ if(mysqli_num_rows($result2)>0){
 		$save_btn = $is_french ? 'Sauvegarder' : 'Save';
 		$sort_field = $is_french ? 'namefr' : 'nameen';
 		$name_field = $is_french ? 'namefr' : 'nameen';
-		$team_sort = $is_french ? 'teamnamefr' : 'teamnameen';
-		$team_name = $is_french ? 'teamnamefr' : 'teamnameen';
+		$team_sort = $is_french ? 'namefr' : 'nameen';
+		$team_name = $is_french ? 'namefr' : 'nameen';
+		$hint_none = $is_french ? 'Aucune équipe n\'est assignée aux comptes Administrateur, Super administrateur et Externe.' : 'No team is assigned for Admin, Super Admin, and External accounts.';
+		$hint_single = $is_french ? 'Un Chef d\'équipe et un Employé doivent avoir exactement une équipe. Un Gestionnaire peut avoir plusieurs équipes.' : 'Team Lead and Employee must have exactly one team. Manager can have multiple teams.';
 ?>
 <section id="filter-id" class="modal-dialog modal-content overlay-def">
 	<header class="modal-header">
@@ -151,17 +172,18 @@ if(mysqli_num_rows($result2)>0){
 		<div class="form-group">
 			<fieldset class="chkbxrdio-grp">
 				<legend><span class="field-name"><?php echo $label_teams ?></span></legend>
+				<p class="small"><?php echo htmlspecialchars($hint_none); ?><br><?php echo htmlspecialchars($hint_single); ?></p>
 				<?php
 				// First grab any existing teams
 				$teams = $row2['team'];
 				$tarray = explode(",",$teams);
 				
-				$sql3 = "SELECT * FROM tblcontacts WHERE status='1' ORDER BY $team_sort ASC";
+				$sql3 = "SELECT * FROM tblteams ORDER BY $team_sort ASC";
 				$result3 = mysqli_query($link,$sql3);	
 				while($row3 = mysqli_fetch_array($result3)){
 				?>
 				<div class="checkbox">
-					<label><input type="checkbox" name="teams[]" value="<?php echo $row3['id']; ?>" id="<?php echo $row3['id']; ?>"<?php if(in_array($row3['id'], $tarray)) {?> checked="checked"<?php } ?> />&#160;&#160;<?php echo $row3[$team_name]; ?></label>
+					<label><input type="checkbox" class="team-option" name="teams[]" value="<?php echo $row3['id']; ?>" id="team-<?php echo $row3['id']; ?>"<?php if(in_array((string)$row3['id'], $tarray)) {?> checked="checked"<?php } ?> />&#160;&#160;<?php echo htmlspecialchars($row3[$team_name]); ?></label>
 				</div>
 				<?php
 				}
@@ -171,6 +193,52 @@ if(mysqli_num_rows($result2)>0){
 		<div class="form-group form-buttons">
 			<button type="submit" class="btn btn-default"><?php echo $save_btn ?></button>
 		</div>
+		<script>
+		(function () {
+			var accountType = document.getElementById('accounttype');
+			var teamBoxes = document.querySelectorAll('.team-option');
+
+			function updateTeamSelectionRules() {
+				var role = accountType.value;
+				var noTeamRoles = ['1', '2', '6'];
+				var singleTeamRoles = ['4', '5'];
+
+				if (noTeamRoles.indexOf(role) !== -1) {
+					teamBoxes.forEach(function (cb) {
+						cb.checked = false;
+						cb.disabled = true;
+					});
+					return;
+				}
+
+				teamBoxes.forEach(function (cb) {
+					cb.disabled = false;
+				});
+
+				if (singleTeamRoles.indexOf(role) !== -1) {
+					var checked = Array.prototype.filter.call(teamBoxes, function (cb) { return cb.checked; });
+					if (checked.length > 1) {
+						checked.slice(1).forEach(function (cb) { cb.checked = false; });
+					}
+				}
+			}
+
+			teamBoxes.forEach(function (cb) {
+				cb.addEventListener('change', function () {
+					if (['4', '5'].indexOf(accountType.value) !== -1) {
+						teamBoxes.forEach(function (other) {
+							if (other !== cb) {
+								other.checked = false;
+							}
+						});
+					}
+				});
+			});
+
+			accountType.addEventListener('change', updateTeamSelectionRules);
+			updateTeamSelectionRules();
+		})();
+		</script>
 		</form>
 	</div>
 </section>

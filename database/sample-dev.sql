@@ -23,7 +23,7 @@ INSERT INTO `tblusers` (`id`, `firstname`, `lastname`, `email`, `password`, `aty
 (12, 'Devon', 'Walsh', 'devon.walsh@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 5, '2', 1, 0);
 
 -- Sample requests (expanded for local testing)
--- Includes workload distribution across ITAO and Development team members (workerid 7-12)
+-- Includes workload distribution across AAACT and Development team members (workerid 7-12)
 INSERT INTO `tbltriage` (`requestid`, `title`, `clientfname`, `clientlname`, `clientemail`, `catalogueid`, `serviceid`, `subserviceid`, `statusid`, `datereceived`, `creatorid`, `updaterid`, `workerid`, `status`) VALUES
 ('REQ-2025-001', 'Sample accessibility coaching request', 'Jane', 'Smith', 'jane.smith@example.com', 2, 2, NULL, 1, '2026-05-26', 1, 1, 7, 1),
 ('REQ-2025-002', 'Word document accessibility review for policy memo', 'Liam', 'Nguyen', 'liam.nguyen@example.com', 6, 25, NULL, 1, '2026-05-15', 2, 2, 8, 1),

@@ -600,7 +600,7 @@ include 'includes/template/head.php';
 				<tr <?php if ($doverdue) { ?> style="background-color: #e87d88;"<?php } elseif($overdue) { ?> style="background-color: #f5c6cb;"<?php } elseif ($closedue) { ?> style="background-color: #ffeeba;"<?php } ?>>
 				<?php } ?>
 				<td>
-						<a href="viewrequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?php echo base64_encode($row['id']);?>">a11y-<?php echo $row['requestid'];?> <span class="glyphicon glyphicon-eye-open"></span><span class="wb-inv"><?= htmlspecialchars($langFile['asearch_details']) ?></span></a>
+						<a href="viewrequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?php echo base64_encode($row['id']);?>&reqid=<?php echo urlencode('a11y-' . $row['requestid']);?>">a11y-<?php echo $row['requestid'];?> <span class="glyphicon glyphicon-eye-open"></span><span class="wb-inv"><?= htmlspecialchars($langFile['asearch_details']) ?></span></a>
 					</td>					
 					<td><?php echo htmlspecialchars ($row['title'] ?? '');?></td>
 					<?php if(!empty($_SESSION['pid'])){ ?><td><?php echo $clientname;?></td><?php } ?>

@@ -176,7 +176,7 @@ The application's data model consists of the following tables:
 2.  **tbladminlog**: Logs administrative activities or actions performed by administrators or privileged users. Each log entry includes the admin's ID, the request being triaged, and its corresponding status.
 3.  **tblcatalogue**: Contains a catalog or directory of services offered by the RMT (Request Management Tool). The data from this table populates the first dropdown on the "New Request" page.
 4.  **tblcommlog**: Logs non-administrative communication-related activities within the application, such as messages, notifications, or emails sent.
-5.  **tblcontacts**: Stores contact information for individuals or organizations related to the application, including team names and escalation contacts.
+5.  **tblteams**: Stores team information and escalation contacts used for request routing and team assignment.
 6.  **tblcss**: Stores feedback collected from the RMT tool.
 7.  **tblservices**: Contains details about various services offered or managed by the application. In some cases, the data from this table populates the second dropdown on the "New Request" page.
 8.  **tblsources**: Relates to sub-services used within the application. In some cases, the data from this table populates the third dropdown on the "New Request" page.

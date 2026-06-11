@@ -82,11 +82,11 @@ if(mysqli_num_rows($result2)>0){
 			<label for="contactid"><span class="field-name"><?php echo $lang_code === 'en' ? 'Contact group' : 'Groupe de contact'; ?>: <strong>(<?php echo $lang_code === 'en' ? 'required' : 'requis'; ?>)</strong></span></label>
 			<select class="form-control" id="contactid" name="contactid" required>
 				<?php 
-				$sort_field = $lang_code === 'fr' ? 'teamnamefr' : 'teamnameen';
-				$sql3 = "SELECT * FROM tblcontacts WHERE status='1' ORDER BY {$sort_field} ASC";
+				$sort_field = $lang_code === 'fr' ? 'namefr' : 'nameen';
+				$sql3 = "SELECT * FROM tblteams WHERE status='1' ORDER BY {$sort_field} ASC";
 				$result3 = mysqli_query($link,$sql3);	
 				while($row3 = mysqli_fetch_array($result3)){
-					$team_name = $lang_code === 'fr' ? $row3['teamnamefr'] : $row3['teamnameen'];
+					$team_name = $lang_code === 'fr' ? $row3['namefr'] : $row3['nameen'];
 				?>
 					<option value="<?php echo $row3['id']; ?>"<?php if($row3['id'] == $row2['contactid']) echo " selected"; ?>><?php echo htmlspecialchars($team_name); ?></option>
 				<?php

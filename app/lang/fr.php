@@ -62,7 +62,7 @@ return [
     'catalogue_name' => 'Nom du catalogue:',
     'select_catalogue' => 'Sélectionnez un nom de catalogue',
     'client_notes' => 'Notes de demande (client):',
-    'admin_notes' => 'Notes de demande (BATI):',
+    'admin_notes' => 'Notes de demande (AATIA):',
     'add_request' => 'Ajouter une demande',
     
     // AJAX dropdown labels
@@ -71,19 +71,19 @@ return [
     'subservice_name' => 'Nom du sous-service:',
     'select_subservice' => 'Sélectionnez un nom de sous-service',
     
-    // Contacts page (contacts.php)
-    'contacts_page_title' => 'Gestion des contacts - Outil de gestion des demandes - Bureau de l\'accessibilité de la TI',
-    'contacts_heading' => 'Gestion des contacts',
+    // Contacts/Teams page (legacy keys)
+    'contacts_page_title' => 'Gestion des équipes - Outil de gestion des demandes - Bureau de l\'accessibilité de la TI',
+    'contacts_heading' => 'Gestion des équipes',
     'contacts_success_message' => 'Vous avez mis à jour la base de données, merci!',
     'contacts_failed_message' => 'La mise à jour de la base de données que vous avez demandée n\'a pas fonctionné, veuillez réessayer, merci!',
-    'contacts_add_new' => 'Ajouter un nouveau contact',
+    'contacts_add_new' => 'Ajouter une nouvelle équipe',
     'contacts_team_name' => 'Nom de l\'équipe',
     'contacts_team_email' => 'Courriel de l\'équipe',
     'contacts_actions' => 'Actions',
     'contacts_edit' => 'Modifier',
     'contacts_delete' => 'Supprimer',
-    'contacts_contact' => 'contact',
-    'contacts_no_contacts' => 'Aucun contact disponible',
+    'contacts_contact' => 'équipe',
+    'contacts_no_contacts' => 'Aucune équipe disponible',
     'failed_heading' => 'Échec',
     
     // Password reset page (passwordreset.php)
@@ -215,7 +215,7 @@ return [
     'css_pending_mark_sent' => 'Marquer comme envoyé',
     'css_pending_no_surveys' => 'Aucun sondage disponible!',
     
-    // Batch ACE Info page (batch-ace-info.php)
+    // Batch AAACT Info page (batch-ace-info.php)
     'batch_ace_no_details' => 'Aucun détail disponible',
     'batch_ace_for_details' => ' pour les détails',
     
@@ -223,7 +223,7 @@ return [
     'changeofdomain_page_title' => 'Avis de désactivation - IT Accessibility Office',
     'changeofdomain_heading' => 'Avis de désactivation',
     'changeofdomain_intro' => 'Ce domaine a été désactivé. Veuillez mettre à jour vos favoris et commencer à utiliser la nouvelle URL :',
-    'changeofdomain_link_text' => 'ITAO RMT',
+    'changeofdomain_link_text' => 'AAACT RMT',
     'changeofdomain_thank_you' => 'Merci!',
     'changeofdomain_error_intro' => 'En cas de message d\'erreur indiquant que votre connexion n\'est pas privée, veuillez suivre ces étapes pour résoudre ce problème :',
     'changeofdomain_step1' => 'Tout d\'abord, allez dans la barre de recherche en bas à gauche de votre machine et recherchez Paramètres du proxy.',
@@ -231,7 +231,7 @@ return [
     'changeofdomain_step2_option1' => 'Détecter automatiquement les paramètres',
     'changeofdomain_step2_option2' => 'Utiliser un script de configuration',
     'changeofdomain_step2_option3' => 'Utiliser un serveur proxy',
-    'changeofdomain_contact' => 'Après avoir fait cela, vous devriez pouvoir vous connecter. Sinon, veuillez me contacter à <a href="mailto:sami.rifi@hrsdc-rhdcc.gc.ca">sami.rifi@hrsdc-rhdcc.gc.ca</a>.',
+    'changeofdomain_contact' => 'Après avoir fait cela, vous devriez pouvoir vous connecter. Sinon, veuillez me contacter à <a href="mailto:shawn.thompson@ssc-spc.gc.ca">shawn.thompson@ssc-spc.gc.ca</a>.',
     'changeofdomain_img_alt' => 'Paramètres du proxy',
     
     // CSS Results page (css-results.php)
@@ -351,6 +351,20 @@ return [
     'users_edit_button' => 'Modifier l\'utilisateur',
     'users_delete_button' => 'Supprimer l\'utilisateur',
     'users_no_users' => 'Aucun utilisateur disponible',
+
+    // Teams management page (teams.php)
+    'teams_page_title' => 'Gestion des équipes - Outil de gestion des demandes - Bureau de l\'accessibilité de la TI',
+    'teams_heading' => 'Gestion des equipes',
+    'teams_success_message' => 'Vous avez mis à jour la base de données, merci!',
+    'teams_failed_message' => 'La mise à jour de la base de données que vous avez demandée n\'a pas fonctionné, veuillez réessayer, merci!',
+    'teams_add_button' => 'Ajouter une nouvelle equipe',
+    'teams_name_column' => 'Nom de l\'equipe',
+    'teams_email_column' => 'Courriel de l\'equipe',
+    'teams_actions' => 'Actions',
+    'teams_edit' => 'Modifier',
+    'teams_delete' => 'Supprimer',
+    'teams_team_label' => 'equipe',
+    'teams_no_teams' => 'Aucune equipe disponible',
     
     // Sign in page (signin.php)
     'signin_page_title' => 'Connectez-vous à l\'Outil de gestion des demandes - Bureau de l\'accessibilité de la TI',

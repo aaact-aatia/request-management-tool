@@ -183,11 +183,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
         
         // Get team details
-        $result = mysqli_query($link, "SELECT * FROM tblcontacts WHERE id = '$contactid'");
+        $result = mysqli_query($link, "SELECT * FROM tblteams WHERE id = '$contactid'");
         $row = mysqli_fetch_array($result);
         if (!empty($row)) {
-            $teamname = $isFrench ? $row['teamnamefr'] : $row['teamnameen'];
-            $teamemail = $row['teamemail'];
+            $teamname = $isFrench ? $row['namefr'] : $row['nameen'];
+            $teamemail = $row['email'];
             $contactname = $row['contactname'];
             $contactemail = $row['contactemail'];
         }
@@ -200,20 +200,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
         
         // Get team details
-        $result = mysqli_query($link, "SELECT * FROM tblcontacts WHERE id = '$contactid'");
+        $result = mysqli_query($link, "SELECT * FROM tblteams WHERE id = '$contactid'");
         $row = mysqli_fetch_array($result);
         if (!empty($row)) {
-            $teamname = $isFrench ? $row['teamnamefr'] : $row['teamnameen'];
-            $teamemail = $row['teamemail'];
+            $teamname = $isFrench ? $row['namefr'] : $row['nameen'];
+            $teamemail = $row['email'];
             $contactname = $row['contactname'];
             $contactemail = $row['contactemail'];
         }
     } else {
-        // Fallback to ITAO triage
-        $teamname = "ITAO Triage";
-        $teamemail = "edsc.ti-it.a11y.esdc@hrsdc-rhdcc.gc.ca";
-        $contactname = "Valerie Auger";
-        $contactemail = "valerie.auger@hrsdc-rhdcc.gc.ca";
+        // Fallback to AAACT triage
+        $teamname = "AAACT Triage";
+        $teamemail = "daiu-anci@ssc-spc.gc.ca";
+        $contactname = "Brad Souster";
+        $contactemail = "Brad.Souster@ssc-spc.gc.ca";
     }
     
     // Prepare email data
@@ -237,7 +237,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $servicename = $row[$nameField];
     }
     
-    $domain = "https://a11y.itaormt-batiogd-int.service.cloud-nuage.canada.ca";
+    $domain = "https://gcdc-ssc-ictaccess-linux-aaact-rmt-dev-asv.azurewebsites.net/";
     
     // Email personalization data
     $personalisation = [
@@ -253,7 +253,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         "client_communications" => $clientnotes,
         "catalogue_name" => $cataloguename,
         "service_name" => $servicename,
-        "url" => $domain . "/viewrequest.php?lang=" . $lang . "&erid=" . $nrequestemailid
+        "url" => $domain . "/viewrequest.php?lang=" . $lang . "&erid=" . $nrequestemailid . "&reqid=" . urlencode("a11y-" . $nrequestid)
     ];
     
     $encoded_personalisation = json_encode($personalisation);
@@ -274,22 +274,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         
         // Send to team
         if (!empty($teamemail)) {
-            if ($teamemail == "EDSC.SVTIC-ICTAS.A11Y.ESDC@hrsdc-rhdcc.gc.ca") {
+            if ($teamemail == "daiu-anci@ssc-spc.gc.ca") {
                 sendEmail($teamemail, "35388592-27f3-47f5-ae09-ac3f9ddf7904", $encoded_personalisation);
             } else {
                 sendEmail($teamemail, $template_id, $encoded_personalisation);
             }
         }
         
-        // Send to client (not for ACE)
-        if ($teamemail != "ACE-CEA@hrsdc-rhdcc.gc.ca") {
+        // Send to client (not for AAACT)
+        if ($teamemail != "daiu-anci@ssc-spc.gc.ca") {
             $clientTemplate = $isFrench ? "d4fb66f3-e9f3-442f-9b7b-8b8e24f8799d" : "9e4e2ca4-ad1a-4204-ba1e-4be61a12f51c";
             sendEmail($clientemail, $clientTemplate, $encoded_personalisation);
         }
         
     } elseif ($notification != "N" || $notification == 1) {
-        // Default notification behavior (not for ACE)
-        if ($teamemail != "ACE-CEA@hrsdc-rhdcc.gc.ca") {
+        // Default notification behavior (not for AAACT)
+        if ($teamemail != "daiu-anci@ssc-spc.gc.ca") {
             // Team notification
             $template_id = $isFrench ? "c72c5e69-8a8c-42a2-9bb9-dfcf2c5f7d84" : "265e8009-741e-4a79-8e89-bfedaf071494";
             
@@ -308,7 +308,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
     
     // Redirect to view request page
-    header("location:/viewrequest.php?lang=" . $lang . "&erid=" . $nrequestemailid . "&status=newrequestcomplete");
+    header("location:/viewrequest.php?lang=" . $lang . "&erid=" . $nrequestemailid . "&reqid=" . urlencode("a11y-" . $nrequestid) . "&status=newrequestcomplete");
     exit();
 }
 
