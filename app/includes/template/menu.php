@@ -81,7 +81,7 @@ $menuLangStrings = $menu_text[$lang_code];
 				// Only Super admins can access this option
 				if (isset($_SESSION['atype']) && $_SESSION['atype'] == 1) {
 				?>
-					<!-- <li><a href="/batch-ace-info.php?lang=<?= $lang_code ?>">Update (batch) ACE tickets</a></li> -->
+					<!-- <li><a href="/batch-ace-info.php?lang=<?= $lang_code ?>">Update (batch) AAACT tickets</a></li> -->
 				<?php
 				}
 				// Only Super admins can access admin options
@@ -103,7 +103,7 @@ $menuLangStrings = $menu_text[$lang_code];
 							// Only Super admins can access this option
 							if (isset($_SESSION['atype']) && $_SESSION['atype'] == 1) {
 							?>
-								<!-- <li><a href="/batch-ace-info.php?lang=<?= $lang_code ?>">Update (batch) ACE tickets</a></li> -->
+								<!-- <li><a href="/batch-ace-info.php?lang=<?= $lang_code ?>">Update (batch) AAACT tickets</a></li> -->
 								<li><a href="/users.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['users']) ?></a></li>
 							<?php } ?>
 						</ul>

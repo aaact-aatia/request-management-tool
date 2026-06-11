@@ -172,11 +172,11 @@ if ($contactid > 0) {
         $contactemail = $row['contactemail'];
     }
 } else {
-    // Default to ITAO Triage
-    $teamname = "ITAO Triage";
-    $teamemail = "edsc.ti-it.a11y.esdc@hrsdc-rhdcc.gc.ca";
-    $contactname = "Valerie Auger";
-    $contactemail = "valerie.auger@hrsdc-rhdcc.gc.ca";
+    // Default to AAACT Triage
+    $teamname = "AAACT Triage";
+    $teamemail = "daiu-anci@ssc-spc.gc.ca";
+    $contactname = "Brad Souster";
+    $contactemail = "Brad.Souster@ssc-spc.gc.ca";
 }
 
 // Prepare email personalization
@@ -197,7 +197,7 @@ $row = mysqli_fetch_assoc($result);
 $statusEn = $row ? $row['nameen'] : "";
 $statusFr = $row ? $row['namefr'] : "";
 
-$domain = "https://a11y.itaormt-batiogd-int.service.cloud-nuage.canada.ca";
+$domain = "https://gcdc-ssc-ictaccess-linux-aaact-rmt-dev-asv.azurewebsites.net/";
 $nrequestemailid = base64_encode($requestuid);
 
 $personalisation = [
@@ -222,12 +222,12 @@ $personalisation = [
 if ($cstatusid != 2 && $statusid == 2) {
     // Request resolved
     sendEmail($teamemail, "5dc8291c-a0b4-4fa0-8733-40c28d3ddf6d", json_encode($personalisation));
-    if ($teamemail != "ACE-CEA@hrsdc-rhdcc.gc.ca") {
+    if ($teamemail != "daiu-anci@ssc-spc.gc.ca") {
         sendEmail($clientemail, "49ffefeb-21d0-4508-ac5f-46b41c0f3348", json_encode($personalisation));
     }
 } elseif ($cstatusid != $statusid) {
     // Status changed (not to resolved)
-    if ($teamemail != "ACE-CEA@hrsdc-rhdcc.gc.ca") {
+    if ($teamemail != "daiu-anci@ssc-spc.gc.ca") {
         sendEmail($clientemail, "393948e5-39fe-418e-b16f-73a1f084a0f2", json_encode($personalisation));
     }
 }
@@ -255,7 +255,7 @@ if ($csubserviceid != $subserviceid && hasValue($subserviceid)) {
         $newTeamEmail = $row['email'];
         
         sendEmail($newTeamEmail, "8270de12-b994-4d29-aa22-428434fd9896", json_encode($personalisation));
-        if ($newTeamEmail != "ACE-CEA@hrsdc-rhdcc.gc.ca") {
+        if ($newTeamEmail != "daiu-anci@ssc-spc.gc.ca") {
             sendEmail($clientemail, "8bb9cc70-dd1a-46d6-9843-c73cbe4e70f0", json_encode($personalisation));
         }
     }
@@ -276,7 +276,7 @@ if ($csubserviceid != $subserviceid && hasValue($subserviceid)) {
         $newTeamEmail = $row['email'];
         
         sendEmail($newTeamEmail, "8270de12-b994-4d29-aa22-428434fd9896", json_encode($personalisation));
-        if ($newTeamEmail != "ACE-CEA@hrsdc-rhdcc.gc.ca") {
+        if ($newTeamEmail != "daiu-anci@ssc-spc.gc.ca") {
             sendEmail($clientemail, "8bb9cc70-dd1a-46d6-9843-c73cbe4e70f0", json_encode($personalisation));
         }
     }

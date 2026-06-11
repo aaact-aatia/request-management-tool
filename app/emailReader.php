@@ -86,7 +86,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     if(str_contains($first_answer , "accessibility centre of excellence") || str_contains($first_answer , "centre d’excellence en accessibilité")){       
     echo '<pre>';
-    echo "ACE";
+    echo "AAACT";
     echo '</pre>';
     }else if(str_contains(haystack: $first_answer, needle: "hardware") || str_contains(haystack: $first_answer, needle: "matériel")){ // Matériel: Ordinateur de bureau [déplacement, disque dur, cpu, carte video, gpu, mémoire vive] 
         echo '<pre>';

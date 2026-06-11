@@ -62,7 +62,7 @@ return [
     'catalogue_name' => 'Catalogue name:',
     'select_catalogue' => 'Select a catalogue name',
     'client_notes' => 'Request notes (client):',
-    'admin_notes' => 'Request notes (ITAO):',
+    'admin_notes' => 'Request notes (AAACT):',
     'add_request' => 'Add request',
     
     // AJAX dropdown translations
@@ -215,7 +215,7 @@ return [
     'css_pending_mark_sent' => 'Mark as sent',
     'css_pending_no_surveys' => 'No surveys available!',
     
-    // Batch ACE Info page (batch-ace-info.php)
+    // Batch AAACT Info page (batch-ace-info.php)
     'batch_ace_no_details' => 'No details available',
     'batch_ace_for_details' => ' for details',
     
@@ -223,7 +223,7 @@ return [
     'changeofdomain_page_title' => 'Decommission Notice - IT Accessibility Office',
     'changeofdomain_heading' => 'Decommission Notice',
     'changeofdomain_intro' => 'This domain has been decommissioned. Please update your bookmarks and start using the new URL:',
-    'changeofdomain_link_text' => 'ITAO RMT',
+    'changeofdomain_link_text' => 'AAACT RMT',
     'changeofdomain_thank_you' => 'Thank you!',
     'changeofdomain_error_intro' => 'In case of getting an error message that your connection isn\'t private, please follow these steps to fix this issue:',
     'changeofdomain_step1' => 'First, go to the search toolbar on the bottom left of your machine and search for Proxy settings.',
@@ -231,7 +231,7 @@ return [
     'changeofdomain_step2_option1' => 'Automatically detect settings',
     'changeofdomain_step2_option2' => 'Use setup script',
     'changeofdomain_step2_option3' => 'Use a proxy server',
-    'changeofdomain_contact' => 'After doing this, you should be able to connect. Otherwise, please contact me at <a href="mailto:sami.rifi@hrsdc-rhdcc.gc.ca">sami.rifi@hrsdc-rhdcc.gc.ca</a>.',
+    'changeofdomain_contact' => 'After doing this, you should be able to connect. Otherwise, please contact me at <a href="mailto:shawn.thompson@ssc-spc.gc.ca">shawn.thompson@ssc-spc.gc.ca</a>.',
     'changeofdomain_img_alt' => 'Proxy Settings',
     
     // CSS Results page (css-results.php)

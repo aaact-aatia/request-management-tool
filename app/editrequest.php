@@ -98,9 +98,9 @@ $translations = [
         'communications_heading' => 'Communications',
         'edit_original_commlog' => 'Edit original communications log entry',
         'view_existing_comms' => 'View existing communications',
-        'add_new_commlog' => 'Add new ITAO communications log entry',
-        'itao_use_only' => 'ITAO use only',
-        'assigned_team_member' => 'Assigned ITAO team member',
+        'add_new_commlog' => 'Add new AAACT communications log entry',
+        'staff_use_only' => 'AAACT use only',
+        'assigned_team_member' => 'Assigned AAACT team member',
         'select_team_member' => 'Select a team member',
         'reset_sla_timer' => 'Need to reset the SLA timer? Choose the new start date',
         'is_new_request' => 'Is this a new request ?',
@@ -164,9 +164,9 @@ $translations = [
         'communications_heading' => 'Communications',
         'edit_original_commlog' => 'Modifier le journal des communications client',
         'view_existing_comms' => 'Afficher les communications existantes',
-        'add_new_commlog' => 'Ajouter une nouvelle entrée au journal des communications du BATI',
-        'itao_use_only' => 'À l\'usage du BATI uniquement',
-        'assigned_team_member' => 'Membre assigné de l\'équipe BATI',
+        'add_new_commlog' => 'Ajouter une nouvelle entrée au journal des communications du AATIA',
+        'staff_use_only' => 'À l\'usage du AATIA uniquement',
+        'assigned_team_member' => 'Membre assigné de l\'équipe AATIA',
         'select_team_member' => 'Sélectionnez un membre de l\'équipe',
         'reset_sla_timer' => 'Besoin de réinitialiser la minuterie SLA? Choisissez la nouvelle date de début',
         'is_new_request' => 'C\'est une nouvelle requete ??',
@@ -401,7 +401,7 @@ $requestid = $row['requestid'];
             <?php include 'includes/editrequest-communications-section.php'; ?>
             
             <?php if (canEditRequests()): ?>
-                <?php include 'includes/editrequest-itao-section.php'; ?>
+                <?php include 'includes/editrequest-staff-section.php'; ?>
             <?php endif; ?>
             
             <div class="form-group form-buttons">

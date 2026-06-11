@@ -52,7 +52,7 @@ $translations = [
 		'catalogue_name' => 'Catalogue name',
 		'service_name' => 'Service name',
 		'subservice_name' => 'Sub-service name',
-		'assigned_member' => 'Assigned ITAO team member',
+		'assigned_member' => 'Assigned AAACT team member',
 		'files' => 'Files',
 		'checkbox' => 'CheckBox',
 		'file_name' => 'File Name',
@@ -81,7 +81,7 @@ $translations = [
 		'client_comms' => 'Client communications log',
 		'delete_comment' => 'Delete comment',
 		'no_comms' => 'No communications available!',
-		'itao_comms' => 'ITAO communications log',
+		'staff_comms' => 'AAACT communications log',
 		'not_found_title' => 'Request not found!',
 		'not_found_msg' => 'Sorry something went wrong with your request, please try again!',
 		'image_preview_opened' => 'Image preview opened.',
@@ -134,7 +134,7 @@ $translations = [
 		'catalogue_name' => 'Nom du catalogue',
 		'service_name' => 'Nom du service',
 		'subservice_name' => 'Nom du sous-service',
-		'assigned_member' => 'Membre de l\'équipe du BATI assigné',
+		'assigned_member' => 'Membre de l\'équipe du AATIA assigné',
 		'files' => 'Fichiers',
 		'checkbox' => 'Case à cocher',
 		'file_name' => 'Nom du fichier',
@@ -163,7 +163,7 @@ $translations = [
 		'client_comms' => 'Journal des communications avec le client',
 		'delete_comment' => 'Supprimer le commentaire',
 		'no_comms' => 'Aucune communication disponible!',
-		'itao_comms' => 'Journal des communications du BATI',
+		'staff_comms' => 'Journal des communications du AATIA',
 		'not_found_title' => 'Demande introuvable!',
 		'not_found_msg' => 'Désolé, quelque chose s\'est mal passé avec votre demande, veuillez réessayer!',
 		'image_preview_opened' => 'Aperçu de l\'image ouvert.',
@@ -637,7 +637,7 @@ if(mysqli_num_rows($result)>0){
 						$ufirstname = $row2[1];
 				?>
 				<div tyle="break-inside: avoid;">
-					<dt>Assigned ITAO team member</dt>
+					<dt>Assigned AAACT team member</dt>
 					<dd><?php echo $ulastname ?>, <?php echo $ufirstname ?></dd>
 				</div>
 				<?php
@@ -816,7 +816,7 @@ $blobStorage = new AzureBlobStorageManager();
 			$erequestnum = $row['requestid'];
 			$eclientemail = $row['clientemail'];
 			$esubject = "Sondage sur la satisfaction de la clientèle pour / Client satisfaction survey for a11y-".$erequestnum;
-			$ebody = "Bonjour,%0d%0a%0d%0aVotre demande d’accessibilité a été complété par un membre de notre équipe, serait-il possible pour vous de compléter sondage sur la satisfaction de la clientèle? Ce sondage nous aidera à mieux servir nos clients et ne prendra que 30 secondes à remplir.%0d%0a%0d%0ahttps://a11y.itaormt-batiogd-int.service.cloud-nuage.canada.ca/css-fr.php?erid=".$nrequestid."%0d%0a%0d%0a**********************************************************%0d%0a%0d%0aHello,%0d%0a%0d%0aYour accessibility request has now been completed by one of our team members, could you please fill out the following client satisfaction survey? This survey will help us serve our clients better and will only take 30 seconds to complete.%0d%0a%0d%0ahttps://a11y.itaormt-batiogd-int.service.cloud-nuage.canada.ca/css-en.php?erid=".$nrequestid."%0d%0a%0d%0aMerci / Thank you"
+			$ebody = "Bonjour,%0d%0a%0d%0aVotre demande d’accessibilité a été complété par un membre de notre équipe, serait-il possible pour vous de compléter sondage sur la satisfaction de la clientèle? Ce sondage nous aidera à mieux servir nos clients et ne prendra que 30 secondes à remplir.%0d%0a%0d%0ahttps://gcdc-ssc-ictaccess-linux-aaact-rmt-dev-asv.azurewebsites.net//css-fr.php?erid=".$nrequestid."%0d%0a%0d%0a**********************************************************%0d%0a%0d%0aHello,%0d%0a%0d%0aYour accessibility request has now been completed by one of our team members, could you please fill out the following client satisfaction survey? This survey will help us serve our clients better and will only take 30 seconds to complete.%0d%0a%0d%0ahttps://gcdc-ssc-ictaccess-linux-aaact-rmt-dev-asv.azurewebsites.net//css-en.php?erid=".$nrequestid."%0d%0a%0d%0aMerci / Thank you"
 			?>
 			
 			<p><a class="btn btn-primary" href="mailto:<?php echo $eclientemail ?>?subject=<?php echo $esubject ?>&body=<?php echo $ebody ?>">Generate email with survey link</a> <?php if ($cssurvey>=1) { ?><a class="wb-lbx btn btn-primary" href="includes/css-sent-en.php?id=<?php echo $row['id'];?>">Survey was sent (<?php echo $cssurvey ?>), resend? <span class="glyphicon glyphicon-ok"></span></a><?php } else {?><a class="wb-lbx btn btn-primary" href="includes/css-sent-en.php?id=<?php echo $row['id'];?>">Mark survey as sent</a><?php } ?></p>
@@ -885,7 +885,7 @@ $blobStorage = new AzureBlobStorageManager();
 			// Check if the account is admin level to show this option 
 			if ($_SESSION['atype']=='1' OR $_SESSION['atype']=='2' OR $_SESSION['atype']=='3' OR $_SESSION['atype']=='4' OR $_SESSION['atype'] == '6') {
 			?>			
-			<h2>ITAO communications log</h2>
+			<h2>AAACT communications log</h2>
 			
 			<?php
 			// Construct SQL statement

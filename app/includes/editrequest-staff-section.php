@@ -1,11 +1,11 @@
 <?php
 /**
- * Edit Request - ITAO Admin Section
+ * Edit Request - AAACT Admin Section
  * Team member assignment, SLA timer, and admin controls
  */
 ?>
 
-<h2><?php echo $t['itao_use_only']; ?></h2>
+<h2><?php echo $t['staff_use_only']; ?></h2>
 
 <div class="form-group">
     <label for="workerid"><span class="field-name"><?php echo $t['assigned_team_member']; ?>:</span></label>
@@ -25,7 +25,7 @@
             $contactid = $cr['contactid'] ?? 0;
         }
 
-        // Default to ITAO (contactid=1) when service has no team assignment
+        // Default to AAACT (contactid=1) when service has no team assignment
         if (!$contactid) {
             $contactid = 1;
         }

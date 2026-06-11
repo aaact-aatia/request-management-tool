@@ -62,7 +62,7 @@ return [
     'catalogue_name' => 'Nom du catalogue:',
     'select_catalogue' => 'Sélectionnez un nom de catalogue',
     'client_notes' => 'Notes de demande (client):',
-    'admin_notes' => 'Notes de demande (BATI):',
+    'admin_notes' => 'Notes de demande (AATIA):',
     'add_request' => 'Ajouter une demande',
     
     // AJAX dropdown labels
@@ -215,7 +215,7 @@ return [
     'css_pending_mark_sent' => 'Marquer comme envoyé',
     'css_pending_no_surveys' => 'Aucun sondage disponible!',
     
-    // Batch ACE Info page (batch-ace-info.php)
+    // Batch AAACT Info page (batch-ace-info.php)
     'batch_ace_no_details' => 'Aucun détail disponible',
     'batch_ace_for_details' => ' pour les détails',
     
@@ -223,7 +223,7 @@ return [
     'changeofdomain_page_title' => 'Avis de désactivation - IT Accessibility Office',
     'changeofdomain_heading' => 'Avis de désactivation',
     'changeofdomain_intro' => 'Ce domaine a été désactivé. Veuillez mettre à jour vos favoris et commencer à utiliser la nouvelle URL :',
-    'changeofdomain_link_text' => 'ITAO RMT',
+    'changeofdomain_link_text' => 'AAACT RMT',
     'changeofdomain_thank_you' => 'Merci!',
     'changeofdomain_error_intro' => 'En cas de message d\'erreur indiquant que votre connexion n\'est pas privée, veuillez suivre ces étapes pour résoudre ce problème :',
     'changeofdomain_step1' => 'Tout d\'abord, allez dans la barre de recherche en bas à gauche de votre machine et recherchez Paramètres du proxy.',
@@ -231,7 +231,7 @@ return [
     'changeofdomain_step2_option1' => 'Détecter automatiquement les paramètres',
     'changeofdomain_step2_option2' => 'Utiliser un script de configuration',
     'changeofdomain_step2_option3' => 'Utiliser un serveur proxy',
-    'changeofdomain_contact' => 'Après avoir fait cela, vous devriez pouvoir vous connecter. Sinon, veuillez me contacter à <a href="mailto:sami.rifi@hrsdc-rhdcc.gc.ca">sami.rifi@hrsdc-rhdcc.gc.ca</a>.',
+    'changeofdomain_contact' => 'Après avoir fait cela, vous devriez pouvoir vous connecter. Sinon, veuillez me contacter à <a href="mailto:shawn.thompson@ssc-spc.gc.ca">shawn.thompson@ssc-spc.gc.ca</a>.',
     'changeofdomain_img_alt' => 'Paramètres du proxy',
     
     // CSS Results page (css-results.php)

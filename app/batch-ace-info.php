@@ -29,7 +29,7 @@ if(mysqli_num_rows($result)>0){
 		if ($serviceid!='46') {
 			// Now that we're here we need to update the triage ticket information
 			// Create SQL statement to update the request information
-			$sql2 = "UPDATE `tbltriage` SET `clientlname` = 'CLIENT', `clientfname` = 'ACE', `clientemail` = 'ace-cea@hrsdc-rhdcc.gc.ca', `clientphone` = '' WHERE id='$requestid'";
+			$sql2 = "UPDATE `tbltriage` SET `clientlname` = 'CLIENT', `clientfname` = 'AAACT', `clientemail` = 'daiu-anci@ssc-spc.gc.ca', `clientphone` = '' WHERE id='$requestid'";
 			mysqli_query($link,$sql2);
 			
 			// Now update the original description
