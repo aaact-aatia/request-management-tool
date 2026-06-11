@@ -253,7 +253,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         "client_communications" => $clientnotes,
         "catalogue_name" => $cataloguename,
         "service_name" => $servicename,
-        "url" => $domain . "/viewrequest.php?lang=" . $lang . "&erid=" . $nrequestemailid
+        "url" => $domain . "/viewrequest.php?lang=" . $lang . "&erid=" . $nrequestemailid . "&reqid=" . urlencode("a11y-" . $nrequestid)
     ];
     
     $encoded_personalisation = json_encode($personalisation);
@@ -308,7 +308,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
     
     // Redirect to view request page
-    header("location:/viewrequest.php?lang=" . $lang . "&erid=" . $nrequestemailid . "&status=newrequestcomplete");
+    header("location:/viewrequest.php?lang=" . $lang . "&erid=" . $nrequestemailid . "&reqid=" . urlencode("a11y-" . $nrequestid) . "&status=newrequestcomplete");
     exit();
 }
 

@@ -215,7 +215,7 @@ $personalisation = [
     "service_name" => $servicename,
     "status_en" => $statusEn,
     "status_fr" => $statusFr,
-    "url" => $domain . "/viewrequest.php?lang=en&erid=" . $nrequestemailid
+    "url" => $domain . "/viewrequest.php?lang=en&erid=" . $nrequestemailid . "&reqid=" . urlencode("a11y-" . $requestid)
 ];
 
 // Send emails based on status changes
@@ -404,6 +404,6 @@ if (isset($dateresolvedu)) {
 }
 
 // Redirect on success
-header("location:/viewrequest.php?lang=$lang&erid=$redirectid&status=success");
+header("location:/viewrequest.php?lang=$lang&erid=$redirectid&reqid=" . urlencode("a11y-" . $requestid) . "&status=success");
 exit();
 ?>

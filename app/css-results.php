@@ -73,7 +73,7 @@ include 'includes/template/header.php';
 					$title = $row2[1];
 					
 					// Build link to viewrequest page
-					$viewRequestLink = "viewrequest.php?erid=" . base64_encode($requestid) . "&lang=" . $_SESSION['lang'];
+					$viewRequestLink = "viewrequest.php?erid=" . base64_encode($requestid) . "&lang=" . $_SESSION['lang'] . "&reqid=" . urlencode("a11y-" . $requestidnum);
 				?>
 				<tr>
 					<td><a href="<?= $viewRequestLink ?>">a11y-<?php echo $requestidnum ?> <span class="glyphicon glyphicon-eye-open"></span><span class="wb-inv"><?= htmlspecialchars($langFile['css_results_details']) ?></span></a></td>

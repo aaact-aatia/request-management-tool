@@ -534,7 +534,7 @@ include 'includes/template/head.php';
 					$requestCard = [
 						'tags' => $cardTags,
 						'panelClass' => $panelClass,
-						'requestUrl' => $t['view_request'] . '&erid=' . base64_encode($row['id']),
+						'requestUrl' => $t['view_request'] . '&erid=' . base64_encode($row['id']) . '&reqid=' . urlencode('a11y-' . ($row['requestid'] ?? '')),
 						'requestCode' => 'a11y-' . ($row['requestid'] ?? ''),
 						'title' => !empty($row['title']) ? $row['title'] : $t['no_title'],
 						'statusPrefix' => $t['status'],
