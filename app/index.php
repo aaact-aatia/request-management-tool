@@ -518,7 +518,7 @@ include 'includes/template/head.php';
 						<div class="row">
 							<?php if ($_SESSION['atype'] == '1' || $_SESSION['atype'] == '3' || $_SESSION['atype'] == '4'): ?>
 								<div class="col-xs-6">
-									<a href="<?= $t['edit_request'] ?>?erid=<?= base64_encode($row['id']) ?>" class="btn btn-default btn-block"><span class="glyphicon glyphicon-pencil" aria-hidden="true"></span><span class="mrgn-lft-sm"><?= $t['edit'] ?></span></a>
+									<a href="<?= $t['edit_request'] ?>?lang=<?= $lang ?>&erid=<?= base64_encode($row['id']) ?>&reqid=<?= urlencode('a11y-' . ($row['requestid'] ?? '')) ?>" class="btn btn-default btn-block"><span class="glyphicon glyphicon-pencil" aria-hidden="true"></span><span class="mrgn-lft-sm"><?= $t['edit'] ?></span></a>
 								</div>
 							<?php endif; ?>
 							<?php if ($_SESSION['atype'] == '1'): ?>
