@@ -173,7 +173,7 @@ if(mysqli_num_rows($result2)>0){
 			<fieldset class="gc-chckbxrdio">
 				<legend><?php echo $label_teams ?></legend>
 				<p class="small"><?php echo htmlspecialchars($hint_none); ?><br><?php echo htmlspecialchars($hint_single); ?></p>
-				<ul class="list-unstyled list-inline">
+				<ul class="list-unstyled lst-spcd-2">
 				<?php
 				// First grab any existing teams
 				$teams = $row2['team'];

@@ -160,7 +160,7 @@ include 'includes/template/head.php';
 					<div class="form-group">
 						<fieldset class="gc-chckbxrdio">
 							<legend class="mrgn-bttm-0"><?= htmlspecialchars($langFile['indexresolved_filter_survey']) ?></legend>
-							<ul class="list-unstyled list-inline">
+							<ul class="list-unstyled lst-spcd-2">
 								<li class="checkbox"><input type="checkbox" id="survey-sent-filter" name="survey-filter" class="wb-tagfilter-ctrl" value="survey-sent"><label for="survey-sent-filter"><?= htmlspecialchars($langFile['indexresolved_survey_sent']) ?></label></li>
 								<li class="checkbox"><input type="checkbox" id="survey-answered-filter" name="survey-filter" class="wb-tagfilter-ctrl" value="survey-answered"><label for="survey-answered-filter"><?= htmlspecialchars($langFile['indexresolved_survey_answered']) ?></label></li>
 							</ul>
