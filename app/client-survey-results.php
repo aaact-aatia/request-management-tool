@@ -1,6 +1,6 @@
 <?php
 /**
- * CSS Results - Customer Satisfaction Survey Results
+ * Client Survey Results - Customer Satisfaction Survey Results
  */
 
 // Grab MySQL connection (includes session management)
@@ -29,14 +29,14 @@ require('includes/loggedincheck.php');
 require_once 'includes/config.php';
 
 // Page-specific metadata
-$pageTitle = $langFile['css_results_page_title'];
+$pageTitle = $langFile['client_survey_results_page_title'];
 $pageDescription = '';
 
 include 'includes/template/head.php';
 include 'includes/template/header.php';
 ?>
 		<main role="main" property="mainContentOfPage" class="container">
-			<h1 property="name" id="wb-cont"><?= htmlspecialchars($langFile['css_results_heading']) ?></h1>
+			<h1 property="name" id="wb-cont"><?= htmlspecialchars($langFile['client_survey_results_heading']) ?></h1>
 			
 			<?php
 			// Construct SQL statement
@@ -50,11 +50,11 @@ include 'includes/template/header.php';
 			<table class="wb-tables table table-striped table-hover table-sm" data-wb-tables='{"paging": false, "columnDefs": [{ "type": "html-num", "targets": 0 }]}'>
 				<thead>
 				<tr>
-					<th><?= htmlspecialchars($langFile['css_results_request_num']) ?></th>
-					<th><?= htmlspecialchars($langFile['css_results_title']) ?></th>
-					<th><?= htmlspecialchars($langFile['css_results_overall']) ?></th>
-					<th><?= htmlspecialchars($langFile['css_results_response']) ?></th>
-					<th><?= htmlspecialchars($langFile['css_results_comments']) ?></th>
+					<th><?= htmlspecialchars($langFile['client_survey_results_request_num']) ?></th>
+					<th><?= htmlspecialchars($langFile['client_survey_results_title']) ?></th>
+					<th><?= htmlspecialchars($langFile['client_survey_results_overall']) ?></th>
+					<th><?= htmlspecialchars($langFile['client_survey_results_response']) ?></th>
+					<th><?= htmlspecialchars($langFile['client_survey_results_comments']) ?></th>
 				</tr>
 				</thead>
 				<tbody>
@@ -76,7 +76,7 @@ include 'includes/template/header.php';
 					$viewRequestLink = "viewrequest.php?erid=" . base64_encode($requestid) . "&lang=" . $_SESSION['lang'] . "&reqid=" . urlencode("a11y-" . $requestidnum);
 				?>
 				<tr>
-					<td><a href="<?= $viewRequestLink ?>">a11y-<?php echo $requestidnum ?> <span class="glyphicon glyphicon-eye-open"></span><span class="wb-inv"><?= htmlspecialchars($langFile['css_results_details']) ?></span></a></td>
+					<td><a href="<?= $viewRequestLink ?>">a11y-<?php echo $requestidnum ?> <span class="glyphicon glyphicon-eye-open"></span><span class="wb-inv"><?= htmlspecialchars($langFile['client_survey_results_details']) ?></span></a></td>
 					<td><?php echo $title ?></td>
 					<td><?php echo $overall ?>/10</td>
 					<td><?php echo $response ?>/10</td>
@@ -87,7 +87,7 @@ include 'includes/template/header.php';
 			</table>
 			
 			<?php } else { ?>
-			<p><strong><?= htmlspecialchars($langFile['css_results_no_surveys']) ?></strong></p>
+			<p><strong><?= htmlspecialchars($langFile['client_survey_results_no_surveys']) ?></strong></p>
 			<?php } ?>
 			
 <?php include 'includes/template/page-details.php'; ?>

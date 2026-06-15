@@ -777,26 +777,37 @@ $blobStorage = new AzureBlobStorageManager();
 			<?php if($_SESSION['pid']!=""){ ?>
 			<?php
 			// Check if status is resolved, if it is then display the client satisfaction survey link and results if available
-			if ($statusid==2){
-				// Status is resolved so first check if a CSS has been completed
-				$sqlcss = "SELECT * FROM tblcss WHERE requestid='$triageid' AND status=1";
-				$resultcss = mysqli_query($link,$sqlcss);
+			$resolvedStatusId = 2;
+			$resolvedStatusSql = "SELECT id FROM tblstatus WHERE LOWER(nameen) = 'resolved' AND status = '1' LIMIT 1";
+			$resolvedStatusResult = mysqli_query($link, $resolvedStatusSql);
+			if ($resolvedStatusResult && mysqli_num_rows($resolvedStatusResult) > 0) {
+				$resolvedStatusRow = mysqli_fetch_array($resolvedStatusResult);
+				$resolvedStatusId = (int)$resolvedStatusRow['id'];
+			}
+
+			if ((int)$statusid === $resolvedStatusId){
+			// First check if surveys are enabled for this catalogue
+			$catalogueSurveySql = "SELECT survey FROM tblcatalogue WHERE id = '$catalogueid'";
+			$catalogueSurveyResult = mysqli_query($link, $catalogueSurveySql);
+			$catalogueSurveyRow = mysqli_fetch_array($catalogueSurveyResult);
+			$surveyEnabled = $catalogueSurveyRow['survey'];
+			
+			if ($surveyEnabled == 1) {
+				// Status is resolved and surveys are enabled, so first check if a client survey has been completed.
+				$surveySql = "SELECT * FROM tblcss WHERE requestid='$triageid' AND status=1";
+				$surveyResult = mysqli_query($link,$surveySql);
 				//List it
-				if(mysqli_num_rows($resultcss)>0){
-					while($rowcss = mysqli_fetch_array($resultcss)){
-						$overall = $rowcss['overall'];
-						$response = $rowcss['response'];
-						$comments = $rowcss['comments'];
+				if(mysqli_num_rows($surveyResult)>0){
+					while($surveyRow = mysqli_fetch_array($surveyResult)){
+						$overall = $surveyRow['overall'];
+						$response = $surveyRow['response'];
+						$comments = $surveyRow['comments'];
 						if ($comments=="") {
 							$comments = "N/A";
 						}
 					}				
 			?>
 			<h2>Client satisfaction survey <span class="glyphicon glyphicon-ok"></span><span class="wb-inv">completed</span></h2>
-			
-			<dl>
-				<dt>Over-all satisfaction</dt>
-				<dd><?php echo $overall ?>/10</dd>
 				<dt>Response time</dt>
 				<dd><?php echo $response ?>/10</dd>
 				<dt>Comments</dt>
@@ -805,7 +816,7 @@ $blobStorage = new AzureBlobStorageManager();
 			<?php
 				} else {
 					// No results so display copy form link for triage agent
-					$cssurvey = $row['cssurvey'];
+				    $surveySentCount = $row['cssurvey'];
 			?>
 			<h2>Client satisfaction survey <span class="glyphicon glyphicon-remove"></span><span class="wb-inv">not completed</span></h2>
 			
@@ -816,13 +827,27 @@ $blobStorage = new AzureBlobStorageManager();
 			$erequestnum = $row['requestid'];
 			$eclientemail = $row['clientemail'];
 			$esubject = "Sondage sur la satisfaction de la clientèle pour / Client satisfaction survey for a11y-".$erequestnum;
-			$ebody = "Bonjour,%0d%0a%0d%0aVotre demande d’accessibilité a été complété par un membre de notre équipe, serait-il possible pour vous de compléter sondage sur la satisfaction de la clientèle? Ce sondage nous aidera à mieux servir nos clients et ne prendra que 30 secondes à remplir.%0d%0a%0d%0ahttps://gcdc-ssc-ictaccess-linux-aaact-rmt-dev-asv.azurewebsites.net//css-fr.php?erid=".$nrequestid."%0d%0a%0d%0a**********************************************************%0d%0a%0d%0aHello,%0d%0a%0d%0aYour accessibility request has now been completed by one of our team members, could you please fill out the following client satisfaction survey? This survey will help us serve our clients better and will only take 30 seconds to complete.%0d%0a%0d%0ahttps://gcdc-ssc-ictaccess-linux-aaact-rmt-dev-asv.azurewebsites.net//css-en.php?erid=".$nrequestid."%0d%0a%0d%0aMerci / Thank you"
+			$erequestPublicId = urlencode('a11y-' . $erequestnum);
+			
+			// Build dynamic base URL using current server
+			$emailScheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+			$emailHost = isset($_SERVER['HTTP_HOST']) ? trim((string)$_SERVER['HTTP_HOST']) : '';
+			$emailBaseUrl = $emailHost !== '' ? ($emailScheme . '://' . $emailHost) : 'https://gcdc-ssc-ictaccess-linux-aaact-rmt-dev-asv.azurewebsites.net';
+			
+			$ebodyText = "Bonjour,\r\n\r\nVotre demande d’accessibilité a été complété par un membre de notre équipe, serait-il possible pour vous de compléter sondage sur la satisfaction de la clientèle? Ce sondage nous aidera à mieux servir nos clients et ne prendra que 30 secondes à remplir.\r\n\r\n"
+				. $emailBaseUrl . "/client-survey.php?lang=fr&erid=".$nrequestid."&reqid=".$erequestPublicId
+				. "\r\n\r\n**********************************************************\r\n\r\nHello,\r\n\r\nYour accessibility request has now been completed by one of our team members, could you please fill out the following client satisfaction survey? This survey will help us serve our clients better and will only take 30 seconds to complete.\r\n\r\n"
+				. $emailBaseUrl . "/client-survey.php?lang=en&erid=".$nrequestid."&reqid=".$erequestPublicId
+				. "\r\n\r\nMerci / Thank you";
+			$encodedSubject = rawurlencode($esubject);
+			$encodedBody = rawurlencode($ebodyText);
 			?>
 			
-			<p><a class="btn btn-primary" href="mailto:<?php echo $eclientemail ?>?subject=<?php echo $esubject ?>&body=<?php echo $ebody ?>">Generate email with survey link</a> <?php if ($cssurvey>=1) { ?><a class="wb-lbx btn btn-primary" href="includes/css-sent-en.php?id=<?php echo $row['id'];?>">Survey was sent (<?php echo $cssurvey ?>), resend? <span class="glyphicon glyphicon-ok"></span></a><?php } else {?><a class="wb-lbx btn btn-primary" href="includes/css-sent-en.php?id=<?php echo $row['id'];?>">Mark survey as sent</a><?php } ?></p>
+			<p><a class="btn btn-primary" href="/client-survey-link.php?lang=<?= htmlspecialchars($_SESSION['lang']) ?>&erid=<?php echo $nrequestid; ?>">View survey links</a> <a class="btn btn-default" href="mailto:<?php echo htmlspecialchars($eclientemail) ?>?subject=<?php echo $encodedSubject ?>&body=<?php echo $encodedBody ?>">Generate email with survey link</a> <?php if ($surveySentCount>=1) { ?><a class="wb-lbx btn btn-primary" href="includes/client-survey-sent.php?id=<?php echo $row['id'];?>">Survey was sent (<?php echo $surveySentCount ?>), resend? <span class="glyphicon glyphicon-ok"></span></a><?php } else {?><a class="wb-lbx btn btn-primary" href="includes/client-survey-sent.php?id=<?php echo $row['id'];?>">Mark survey as sent</a><?php } ?></p>
 			
 			<?php
 				}
+			}
 			}
 			?>			
 			<?php

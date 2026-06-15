@@ -110,10 +110,10 @@ include 'includes/template/head.php';
 			</div>
 			</form>
 			
-			<h2><?= htmlspecialchars($langFile['reports_css_heading']) ?></h2>
+			<h2><?= htmlspecialchars($langFile['reports_client_survey_heading']) ?></h2>
 			
 			<div class="pull-left">
-				<p><a class="btn btn-primary btn-block" href="css-results.php?lang=<?= $_SESSION['lang'] ?>"><?= htmlspecialchars($langFile['reports_css_view_results']) ?></a> <a class="btn btn-primary btn-block" href="css-pending.php?lang=<?= $_SESSION['lang'] ?>"><?= htmlspecialchars($langFile['reports_css_pending']) ?></a></p>
+				<p><a class="btn btn-primary btn-block" href="client-survey-results.php?lang=<?= $_SESSION['lang'] ?>"><?= htmlspecialchars($langFile['reports_client_survey_view_results']) ?></a> <a class="btn btn-primary btn-block" href="client-survey-pending.php?lang=<?= $_SESSION['lang'] ?>"><?= htmlspecialchars($langFile['reports_client_survey_pending']) ?></a></p>
 			</div>
 			
 			<?php include 'includes/template/page-details.php'; ?>
