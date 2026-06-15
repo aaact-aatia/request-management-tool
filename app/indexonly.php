@@ -84,6 +84,13 @@ include 'includes/template/head.php';
 			$sql = "SELECT * FROM tbltriage WHERE status = '1' AND (statusid='1' OR statusid='3' OR statusid='5' OR statusid='6' OR statusid='7' OR statusid='10' OR statusid='11' OR statusid='12') ORDER BY requestid DESC";
 			
 			$result = mysqli_query($link,$sql);
+			$surveyAnsweredByRequest = [];
+			$surveyResult = mysqli_query($link, "SELECT DISTINCT requestid FROM tblcss WHERE status = 1");
+			if ($surveyResult) {
+				while ($surveyRow = mysqli_fetch_assoc($surveyResult)) {
+					$surveyAnsweredByRequest[(int)$surveyRow['requestid']] = true;
+				}
+			}
 			//List it
 			if(mysqli_num_rows($result)>0){
 			?>
@@ -104,8 +111,17 @@ include 'includes/template/head.php';
 								<legend class="mrgn-bttm-0"><span class="field-name"><?= htmlspecialchars($langFile['indexonly_col_status']) ?></span></legend>
 								<ul class="list-unstyled list-inline">
 									<li class="checkbox"><label><input type="checkbox" name="priority-filter" class="wb-tagfilter-ctrl" value="sla-escalation"> <?= htmlspecialchars($langFile['indexonly_escalation_required']) ?></label></li>
-									<li class="checkbox"><label><input type="checkbox" name="priority-filter" class="wb-tagfilter-ctrl" value="sla-close"> <?= htmlspecialchars($langFile['indexonly_request_close_sla']) ?></label></li>
-								</ul>
+									<li class="checkbox"><label><input type="checkbox" name="priority-filter" class="wb-tagfilter-ctrl" value="sla-close"> <?= htmlspecialchars($langFile['indexonly_request_close_sla']) ?></label></li>					</ul>
+				</fieldset>
+				</div>
+			</div>
+			<div class="col-md-12">
+				<div class="form-group">
+					<fieldset>
+						<legend class="mrgn-bttm-0"><span class="field-name"><?= htmlspecialchars($langFile['indexonly_filter_survey'] ?? (($_SESSION['lang'] === 'fr') ? 'Sondage' : 'Survey')) ?></span></legend>
+						<ul class="list-unstyled list-inline">
+							<li class="checkbox"><label><input type="checkbox" name="survey-filter" class="wb-tagfilter-ctrl" value="survey-sent"> <?= htmlspecialchars($langFile['indexonly_survey_sent'] ?? (($_SESSION['lang'] === 'fr') ? 'Envoyé' : 'Sent')) ?></label></li>
+							<li class="checkbox"><label><input type="checkbox" name="survey-filter" class="wb-tagfilter-ctrl" value="survey-answered"> <?= htmlspecialchars($langFile['indexonly_survey_answered'] ?? (($_SESSION['lang'] === 'fr') ? 'Répondu' : 'Answered')) ?></label></li>								</ul>
 							</fieldset>
 						</div>
 					</div>
@@ -216,12 +232,21 @@ include 'includes/template/head.php';
 						$hasVisibleRows = true;
 
 						// Build tags for client-side filter
-						$cardTags = 'status-' . (int)$statusid;
-						if ($doverdue || $overdue) {
-							$cardTags .= ' sla-escalation';
-						} elseif ($closedue) {
-							$cardTags .= ' sla-close';
-						}
+                    $hasSurveySent = ((int)($row['cssurvey'] ?? 0) > 0);
+                    $hasSurveyAnswered = !empty($surveyAnsweredByRequest[(int)$row['id']]);
+
+                    $cardTags = 'status-' . (int)$statusid;
+                    if ($hasSurveySent) {
+                        $cardTags .= ' survey-sent';
+                    }
+                    if ($hasSurveyAnswered) {
+                        $cardTags .= ' survey-answered';
+                    }
+                    if ($doverdue || $overdue) {
+                        $cardTags .= ' sla-escalation';
+                    } elseif ($closedue) {
+                        $cardTags .= ' sla-close';
+                    }
 
 						if ($doverdue || $overdue) {
 							$panelClass = 'panel-danger';
@@ -301,6 +326,11 @@ include 'includes/template/head.php';
 						'statusPrefix' => $langFile['indexonly_col_status'],
 						'statusText' => $statusname,
 						'statusLabelClass' => $statusLabelClass,
+						'surveyPrefix' => $langFile['indexonly_col_survey'] ?? (($_SESSION['lang'] === 'fr') ? 'Sondage' : 'Survey'),
+						'surveySentLabel' => $langFile['indexonly_survey_sent'] ?? (($_SESSION['lang'] === 'fr') ? 'Envoyé' : 'Sent'),
+						'surveyAnsweredLabel' => $langFile['indexonly_survey_answered'] ?? (($_SESSION['lang'] === 'fr') ? 'Répondu' : 'Answered'),
+						'showSurveySent' => $hasSurveySent,
+						'showSurveyAnswered' => $hasSurveyAnswered,
 						'slaLabel' => $slaLabel,
 						'slaAlertClass' => ($panelClass === 'panel-danger') ? 'alert-danger' : 'alert-warning',
 						'bodyHtml' => $cardBodyHtml,

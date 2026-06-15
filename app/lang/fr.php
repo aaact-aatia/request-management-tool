@@ -164,6 +164,9 @@ return [
     'indexonly_request' => 'demande',
     'indexonly_clone' => 'Clone',
     'indexonly_clone_close' => 'Clone & Fermer',
+    'indexonly_filter_survey' => 'Sondage',
+    'indexonly_survey_sent' => 'Envoye',
+    'indexonly_survey_answered' => 'Repondu',
     'indexonly_no_requests' => 'Aucune demande disponible!',
     
     // Index Resolved page (indexresolved.php) - Resolved requests dashboard
