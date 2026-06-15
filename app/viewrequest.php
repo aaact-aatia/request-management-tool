@@ -72,6 +72,7 @@ $translations = [
 		'comments' => 'Comments',
 		'na' => 'N/A',
 		'css_send' => 'Please send the client satisfaction survey link to the client using the copy function below.',
+		'view_links' => 'View survey links',
 		'generate_email' => 'Generate email with survey link',
 		'survey_sent' => 'Survey was sent',
 		'resend' => 'resend?',
@@ -154,6 +155,7 @@ $translations = [
 		'comments' => 'Commentaires',
 		'na' => 'S.O.',
 		'css_send' => 'Veuillez envoyer le lien du sondage de satisfaction de la clientèle au client en utilisant la fonction de copie ci-dessous.',
+		'view_links' => 'Voir les liens du sondage',
 		'generate_email' => 'Générer un courriel avec le lien du sondage',
 		'survey_sent' => 'Le sondage a été envoyé',
 		'resend' => 'renvoyer?',
@@ -807,10 +809,10 @@ $blobStorage = new AzureBlobStorageManager();
 						}
 					}				
 			?>
-			<h2>Client satisfaction survey <span class="glyphicon glyphicon-ok"></span><span class="wb-inv">completed</span></h2>
-				<dt>Response time</dt>
+			<h2><?= htmlspecialchars($t['css_completed']) ?> <span class="glyphicon glyphicon-ok"></span><span class="wb-inv"><?= htmlspecialchars($t['completed']) ?></span></h2>
+				<dt><?= htmlspecialchars($t['response_time']) ?></dt>
 				<dd><?php echo $response ?>/10</dd>
-				<dt>Comments</dt>
+				<dt><?= htmlspecialchars($t['comments']) ?></dt>
 				<dd><?php echo $comments ?></dd>
 			</dl>
 			<?php
@@ -818,9 +820,9 @@ $blobStorage = new AzureBlobStorageManager();
 					// No results so display copy form link for triage agent
 				    $surveySentCount = $row['cssurvey'];
 			?>
-			<h2>Client satisfaction survey <span class="glyphicon glyphicon-remove"></span><span class="wb-inv">not completed</span></h2>
+			<h2><?= htmlspecialchars($t['css_completed']) ?> <span class="glyphicon glyphicon-remove"></span><span class="wb-inv"><?= htmlspecialchars($t['not_completed']) ?></span></h2>
 			
-			<p>Please send the client satisfaction survey link to the client using the copy function below.</p>
+			<p><?= htmlspecialchars($t['css_send']) ?></p>
 			
 			<?php
 			// Prepare email
@@ -843,7 +845,7 @@ $blobStorage = new AzureBlobStorageManager();
 			$encodedBody = rawurlencode($ebodyText);
 			?>
 			
-			<p><a class="btn btn-primary" href="/client-survey-link.php?lang=<?= htmlspecialchars($_SESSION['lang']) ?>&erid=<?php echo $nrequestid; ?>">View survey links</a> <a class="btn btn-default" href="mailto:<?php echo htmlspecialchars($eclientemail) ?>?subject=<?php echo $encodedSubject ?>&body=<?php echo $encodedBody ?>">Generate email with survey link</a> <?php if ($surveySentCount>=1) { ?><a class="wb-lbx btn btn-primary" href="includes/client-survey-sent.php?id=<?php echo $row['id'];?>">Survey was sent (<?php echo $surveySentCount ?>), resend? <span class="glyphicon glyphicon-ok"></span></a><?php } else {?><a class="wb-lbx btn btn-primary" href="includes/client-survey-sent.php?id=<?php echo $row['id'];?>">Mark survey as sent</a><?php } ?></p>
+			<p><a class="btn btn-primary" href="/client-survey-link.php?lang=<?= htmlspecialchars($_SESSION['lang']) ?>&erid=<?php echo $nrequestid; ?>"><?= htmlspecialchars($t['view_links']) ?></a> <a class="btn btn-default" href="mailto:<?php echo htmlspecialchars($eclientemail) ?>?subject=<?php echo $encodedSubject ?>&body=<?php echo $encodedBody ?>"><?= htmlspecialchars($t['generate_email']) ?></a> <?php if ($surveySentCount>=1) { ?><a class="wb-lbx btn btn-primary" href="includes/client-survey-sent.php?id=<?php echo $row['id'];?>"><?= htmlspecialchars($t['survey_sent']) ?> (<?php echo $surveySentCount ?>), <?= htmlspecialchars($t['resend']) ?> <span class="glyphicon glyphicon-ok"></span></a><?php } else {?><a class="wb-lbx btn btn-primary" href="includes/client-survey-sent.php?id=<?php echo $row['id'];?>"><?= htmlspecialchars($t['mark_sent']) ?></a><?php } ?></p>
 			
 			<?php
 				}
@@ -869,7 +871,7 @@ $blobStorage = new AzureBlobStorageManager();
 			}
 			?>
 			
-			<h2>Client communications log</h2>
+			<h2><?= htmlspecialchars($t['client_comms']) ?></h2>
 			
 			<?php
 			// Construct SQL statement
@@ -895,22 +897,22 @@ $blobStorage = new AzureBlobStorageManager();
 					$nnotes = nl2br(htmlspecialchars($notes));
 				?>
 				
-				<dt><?php echo $dateadded ?><?php if ($_SESSION['atype']=='1') {?> <a class="wb-lbx" href="includes/delete-comms.php?t=c&id=<?php echo $row2['id'];?>&rid=<?php echo $triageid ?>"><span class="glyphicon glyphicon-trash"></span><span class="wb-inv"> Delete comment</span></a><?php } ?></dt>
+				<dt><?php echo $dateadded ?><?php if ($_SESSION['atype']=='1') {?> <a class="wb-lbx" href="includes/delete-comms.php?t=c&id=<?php echo $row2['id'];?>&rid=<?php echo $triageid ?>"><span class="glyphicon glyphicon-trash"></span><span class="wb-inv"> <?= htmlspecialchars($t['delete_comment']) ?></span></a><?php } ?></dt>
 				<dd><?php echo $nnotes ?></dd>
 				<?php } ?>
 			</dl>
 			<?php if (!$hasVisibleClientComms) { ?>
-			<p>No communications available!</p>
+			<p><?= htmlspecialchars($t['no_comms']) ?></p>
 			<?php } ?>
 			<?php } else { ?>
-			<p>No communications available!</p>
+			<p><?= htmlspecialchars($t['no_comms']) ?></p>
 			<?php } } ?>
 			
 			<?php
 			// Check if the account is admin level to show this option 
 			if ($_SESSION['atype']=='1' OR $_SESSION['atype']=='2' OR $_SESSION['atype']=='3' OR $_SESSION['atype']=='4' OR $_SESSION['atype'] == '6') {
 			?>			
-			<h2>AAACT communications log</h2>
+			<h2><?= htmlspecialchars($t['staff_comms']) ?></h2>
 			
 			<?php
 			// Construct SQL statement
@@ -935,12 +937,12 @@ $blobStorage = new AzureBlobStorageManager();
 					$cfname = $row3['firstname'];
 					$clname = $row3['lastname'];
 				?>
-				<dt><?php echo $dateadded ?><?php if($creatorid!=0) {?> - <?php echo $clname ?>, <?php echo $cfname ?><?php } ?><?php if ($_SESSION['atype']=='1') {?> <a class="wb-lbx" href="includes/delete-comms.php?t=a&id=<?php echo $row2['id'];?>&rid=<?php echo $triageid ?>"><span class="glyphicon glyphicon-trash"></span><span class="wb-inv"> Delete comment</span></a><?php } ?></dt>
+				<dt><?php echo $dateadded ?><?php if($creatorid!=0) {?> - <?php echo $clname ?>, <?php echo $cfname ?><?php } ?><?php if ($_SESSION['atype']=='1') {?> <a class="wb-lbx" href="includes/delete-comms.php?t=a&id=<?php echo $row2['id'];?>&rid=<?php echo $triageid ?>"><span class="glyphicon glyphicon-trash"></span><span class="wb-inv"> <?= htmlspecialchars($t['delete_comment']) ?></span></a><?php } ?></dt>
 				<dd><?php echo $annotes ?></dd>
 				<?php } ?>
 			</dl>
 			<?php } else { ?>
-			<p>No communications available!</p>
+			<p><?= htmlspecialchars($t['no_comms']) ?></p>
 			<?php } ?>
 			<?php } ?>
 		</main>
