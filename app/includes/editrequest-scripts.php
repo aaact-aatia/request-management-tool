@@ -60,11 +60,23 @@ document.querySelectorAll('.image-link').forEach(link => {
 // Close image preview
 function closePreview() {
     const imagePreview = document.getElementById('imagePreview');
+    if (!imagePreview) {
+        return;
+    }
+
     imagePreview.style.display = 'none';
     imagePreview.setAttribute('aria-hidden', 'true');
+
+    const previewImage = document.getElementById('previewImage');
+    if (previewImage) {
+        previewImage.src = '';
+    }
     
     // Clear announcement text
-    document.getElementById('imageAnnouncement').textContent = "";
+    const imageAnnouncement = document.getElementById('imageAnnouncement');
+    if (imageAnnouncement) {
+        imageAnnouncement.textContent = "";
+    }
 }
 
 // Download file function

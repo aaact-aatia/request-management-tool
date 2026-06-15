@@ -7,6 +7,81 @@
 $blobStorage = new AzureBlobStorageManager();
 ?>
 
+<h2><?php echo $t['files_heading']; ?></h2>
+
+<div class="form-group">
+    <label for="fileToUpload"><span class="field-name"><?php echo $t['upload_file']; ?>:</span></label>
+    <input type="file" class="form-control" id="fileToUpload" name="fileToUpload[]" multiple>
+</div>
+
+<br><br>
+
+<?php
+$result_files = mysqli_query($link, "SELECT * FROM tblfiles WHERE requestid = '$requestid'");
+$validImageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'tiff', 'svg', 'ico'];
+
+$files = [];
+$hasImageAttachment = false;
+
+while ($fileRow = mysqli_fetch_assoc($result_files)) {
+    $files[] = $fileRow;
+    $fileExtension = strtolower($fileRow['type'] ?? '');
+    if (in_array($fileExtension, $validImageExtensions, true)) {
+        $hasImageAttachment = true;
+    }
+}
+
+if (!empty($files)) {
+?>
+<table class="wb-tables table" data-wb-tables='{ "ordering": true, "searching": true }' id="fileTable">
+    <thead>
+        <tr>
+            <th><?php echo $t['checkbox']; ?></th>
+            <th><?php echo $t['file_name']; ?></th>
+            <th><?php echo $t['file_type']; ?></th>
+            <th><?php echo $t['file_size']; ?></th>
+            <th><?php echo $t['date_submitted']; ?></th>
+            <th><?php echo $t['action']; ?></th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php
+        foreach ($files as $file) {
+            $fileExtension = strtolower($file['type']);
+            echo "<tr>";
+            echo "<td><input type='checkbox' class='fileCheckbox' value='" . $file['name'] . "'></td>";
+            echo "<td>";
+            
+            if (in_array($fileExtension, $validImageExtensions)) {
+                echo "<a href='#' class='image-link' data-src='" . $blobStorage->getFileUrl($file['code']) . "' download>" . $file['name'] . "</a>";
+            } else {
+                echo "<a href='" . $blobStorage->getFileUrl($file['code']) . "' download>" . $file['name'] . "</a>";
+            }
+            
+            echo "</td>";
+            echo "<td>" . $file['type'] . "</td>";
+            echo "<td>" . $file['size'] . " KB</td>";
+            echo "<td>" . $file['date'] . "</td>";
+            echo "<td>";
+            echo "<a href='#' class='btn btn-primary download-btn' data-name='" . htmlspecialchars($file['name'], ENT_QUOTES, 'UTF-8') . "' data-file='" . $file['code'] . "'>{$t['download']}</a> ";
+            echo "<a class='btn btn-danger delete-btn' style='color:white;' data-file='" . $file['code'] . "'>{$t['delete']}</a>";
+            echo "</td>";
+            echo "</tr>";
+        }
+        ?>
+    </tbody>
+</table>
+
+<br>
+<div class="form-group">
+    <input type="checkbox" id="selectAll">
+    <label for="selectAll"><span class="field-name"><?php echo $t['select_all']; ?></span></label>
+</div>
+<a class="btn btn-primary" style="color:white;" id="downloadAll"><?php echo $t['download_all']; ?></a>
+<?php
+
+if ($hasImageAttachment) {
+?>
 <style>
 .image-preview {
     position: fixed;
@@ -54,67 +129,15 @@ $blobStorage = new AzureBlobStorageManager();
 }
 </style>
 
-<h2><?php echo $t['files_heading']; ?></h2>
-
-<div class="form-group">
-    <label for="fileToUpload"><span class="field-name"><?php echo $t['upload_file']; ?>:</span></label>
-    <input type="file" class="form-control" id="fileToUpload" name="fileToUpload[]" multiple>
+<div class="image-preview" id="imagePreview" role="dialog" aria-modal="true" aria-labelledby="imagePreviewTitle" aria-hidden="true">
+    <h2 id="imagePreviewTitle" class="sr-only"><?php echo $lang === 'fr' ? 'Aperçu de l\'image' : 'Image preview'; ?></h2>
+    <button class="close-btn" id="closePreview" aria-label="<?php echo $lang === 'fr' ? 'Fermer l\'aperçu' : 'Close preview'; ?>">&times;</button>
+    <img id="previewImage" src="" alt="">
+    <p id="imageAnnouncement" class="sr-only" aria-live="assertive"></p>
 </div>
-
-<br><br>
-
 <?php
-$result_files = mysqli_query($link, "SELECT * FROM tblfiles WHERE requestid = '$requestid'");
-$validImageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'tiff', 'svg', 'ico'];
+}
 
-if (mysqli_num_rows($result_files) > 0) {
-?>
-<table class="wb-tables table" data-wb-tables='{ "ordering": true, "searching": true }' id="fileTable">
-    <thead>
-        <tr>
-            <th><?php echo $t['checkbox']; ?></th>
-            <th><?php echo $t['file_name']; ?></th>
-            <th><?php echo $t['file_type']; ?></th>
-            <th><?php echo $t['file_size']; ?></th>
-            <th><?php echo $t['date_submitted']; ?></th>
-            <th><?php echo $t['action']; ?></th>
-        </tr>
-    </thead>
-    <tbody>
-        <?php
-        while ($file = mysqli_fetch_assoc($result_files)) {
-            $fileExtension = strtolower($file['type']);
-            echo "<tr>";
-            echo "<td><input type='checkbox' class='fileCheckbox' value='" . $file['name'] . "'></td>";
-            echo "<td>";
-            
-            if (in_array($fileExtension, $validImageExtensions)) {
-                echo "<a href='#' class='image-link' data-src='" . $blobStorage->getFileUrl($file['code']) . "' download>" . $file['name'] . "</a>";
-            } else {
-                echo "<a href='" . $blobStorage->getFileUrl($file['code']) . "' download>" . $file['name'] . "</a>";
-            }
-            
-            echo "</td>";
-            echo "<td>" . $file['type'] . "</td>";
-            echo "<td>" . $file['size'] . " KB</td>";
-            echo "<td>" . $file['date'] . "</td>";
-            echo "<td>";
-            echo "<a href='#' class='btn btn-primary download-btn' data-name='" . htmlspecialchars($file['name'], ENT_QUOTES, 'UTF-8') . "' data-file='" . $file['code'] . "'>{$t['download']}</a> ";
-            echo "<a class='btn btn-danger delete-btn' style='color:white;' data-file='" . $file['code'] . "'>{$t['delete']}</a>";
-            echo "</td>";
-            echo "</tr>";
-        }
-        ?>
-    </tbody>
-</table>
-
-<br>
-<div class="form-group">
-    <input type="checkbox" id="selectAll">
-    <label for="selectAll"><span class="field-name"><?php echo $t['select_all']; ?></span></label>
-</div>
-<a class="btn btn-primary" style="color:white;" id="downloadAll"><?php echo $t['download_all']; ?></a>
-<?php
 } else {
     echo "<p>{$t['no_files_found']}</p>";
 }
