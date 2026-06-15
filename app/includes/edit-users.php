@@ -170,9 +170,10 @@ if(mysqli_num_rows($result2)>0){
 			</select>
 		</div>
 		<div class="form-group">
-			<fieldset class="chkbxrdio-grp">
-				<legend><span class="field-name"><?php echo $label_teams ?></span></legend>
+			<fieldset class="gc-chckbxrdio">
+				<legend><?php echo $label_teams ?></legend>
 				<p class="small"><?php echo htmlspecialchars($hint_none); ?><br><?php echo htmlspecialchars($hint_single); ?></p>
+				<ul class="list-unstyled lst-spcd-2">
 				<?php
 				// First grab any existing teams
 				$teams = $row2['team'];
@@ -182,12 +183,14 @@ if(mysqli_num_rows($result2)>0){
 				$result3 = mysqli_query($link,$sql3);	
 				while($row3 = mysqli_fetch_array($result3)){
 				?>
-				<div class="checkbox">
-					<label><input type="checkbox" class="team-option" name="teams[]" value="<?php echo $row3['id']; ?>" id="team-<?php echo $row3['id']; ?>"<?php if(in_array((string)$row3['id'], $tarray)) {?> checked="checked"<?php } ?> />&#160;&#160;<?php echo htmlspecialchars($row3[$team_name]); ?></label>
-				</div>
+					<li class="checkbox">
+						<input type="checkbox" class="team-option" name="teams[]" value="<?php echo $row3['id']; ?>" id="team-<?php echo $row3['id']; ?>"<?php if(in_array((string)$row3['id'], $tarray)) {?> checked="checked"<?php } ?> />
+						<label for="team-<?php echo $row3['id']; ?>"><?php echo htmlspecialchars($row3[$team_name]); ?></label>
+					</li>
 				<?php
 				}
 				?>
+				</ul>
 			</fieldset>
 		</div>
 		<div class="form-group form-buttons">

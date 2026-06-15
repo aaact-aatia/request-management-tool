@@ -86,8 +86,9 @@ include 'includes/template/head.php';
 			<div class="row">
 				<div class="col-xs-6">
 					<div class="form-group">
-						<fieldset class="legend-brdr-bttm">
+						<fieldset class="gc-chckbxrdio">
 							<legend><?= htmlspecialchars($langFile['reports_catalogue_name']) ?> <strong>(<?= htmlspecialchars($langFile['reports_optional']) ?>)</strong></legend>
+							<ul class="list-unstyled lst-spcd-2">
 							<?php 
 							// Determine which name column to use based on language
 							$nameColumn = ($_SESSION['lang'] === 'fr') ? 'namefr' : 'nameen';
@@ -97,10 +98,14 @@ include 'includes/template/head.php';
 							$result2 = mysqli_query($link,$sql2);	
 							while($row2 = mysqli_fetch_array($result2)){
 							?>
-							<label><input name="catalogueid[]" id="<?php echo $row2['id']; ?>" type="checkbox" value="<?php echo $row2['id']; ?>"> <?php echo $row2[$nameColumn]; ?></label><br />
+								<li class="checkbox">
+									<input name="catalogueid[]" id="cat-<?php echo $row2['id']; ?>" type="checkbox" value="<?php echo $row2['id']; ?>" />
+									<label for="cat-<?php echo $row2['id']; ?>"><?php echo $row2[$nameColumn]; ?></label>
+								</li>
 							<?php
 							}
 							?>
+							</ul>
 						</fieldset>
 					</div>
 				</div>

@@ -163,21 +163,24 @@ $t = $translations[$lang_code];
 			</select>
 		</div>
 		<div class="form-group">
-			<fieldset class="chkbxrdio-grp">
-				<legend><span class="field-name"><?= htmlspecialchars($t['teams']) ?></span></legend>
+			<fieldset class="gc-chckbxrdio">
+				<legend><?= htmlspecialchars($t['teams']) ?></legend>
 				<p class="small"><?= htmlspecialchars($t['team_none_hint']) ?><br><?= htmlspecialchars($t['team_single_hint']) ?></p>
+				<ul class="list-unstyled lst-spcd-2">
 				<?php
 				$sql3 = "SELECT * FROM tblteams ORDER BY {$t['team_sort_field']} ASC";
 				$result3 = mysqli_query($link,$sql3);	
 				while($row3 = mysqli_fetch_array($result3)){
 					$teamname = ($lang_code === 'fr') ? $row3['namefr'] : $row3['nameen'];
 				?>
-				<div class="checkbox">
-					<label><input type="checkbox" class="team-option" name="teams[]" value="<?= htmlspecialchars($row3['id']) ?>" id="team-<?= htmlspecialchars($row3['id']) ?>" />&#160;&#160;<?= htmlspecialchars($teamname) ?></label>
-				</div>
+					<li class="checkbox">
+						<input type="checkbox" class="team-option" name="teams[]" value="<?= htmlspecialchars($row3['id']) ?>" id="team-<?= htmlspecialchars($row3['id']) ?>" />
+						<label for="team-<?= htmlspecialchars($row3['id']) ?>"><?= htmlspecialchars($teamname) ?></label>
+					</li>
 				<?php
 				}
 				?>
+				</ul>
 			</fieldset>
 		</div>
 		<div class="form-group form-buttons">

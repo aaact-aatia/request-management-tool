@@ -309,11 +309,11 @@ include 'includes/template/head.php';
 				</div>
 				<div class="col-md-12">
 					<div class="form-group">
-						<fieldset>
-							<legend class="mrgn-bttm-0"><span class="field-name"><?= $t['filter_priority_label'] ?></span></legend>
-							<ul class="list-unstyled list-inline">
-								<li class="checkbox"><label><input type="checkbox" name="priority-filter" class="wb-tagfilter-ctrl" value="sla-escalation"> <?= $t['escalation_required'] ?></label></li>
-								<li class="checkbox"><label><input type="checkbox" name="priority-filter" class="wb-tagfilter-ctrl" value="sla-close"> <?= $t['close_to_sla'] ?></label></li>
+					<fieldset class="gc-chckbxrdio">
+						<legend class="mrgn-bttm-0"><?= $t['filter_priority_label'] ?></legend>
+						<ul class="list-unstyled lst-spcd-2">
+							<li class="checkbox"><input type="checkbox" id="sla-escalation-filter-dashboard" name="priority-filter" class="wb-tagfilter-ctrl" value="sla-escalation"><label for="sla-escalation-filter-dashboard"><?= $t['escalation_required'] ?></label></li>
+							<li class="checkbox"><input type="checkbox" id="sla-close-filter-dashboard" name="priority-filter" class="wb-tagfilter-ctrl" value="sla-close"><label for="sla-close-filter-dashboard"><?= $t['close_to_sla'] ?></label></li>
 							</ul>
 						</fieldset>
 					</div>

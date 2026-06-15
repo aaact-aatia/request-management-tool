@@ -158,11 +158,11 @@ include 'includes/template/head.php';
 					</div>
 				<div class="col-md-12">
 					<div class="form-group">
-						<fieldset>
-							<legend class="mrgn-bttm-0"><span class="field-name"><?= htmlspecialchars($langFile['indexresolved_filter_survey']) ?></span></legend>
-							<ul class="list-unstyled list-inline">
-								<li class="checkbox"><label><input type="checkbox" name="survey-filter" class="wb-tagfilter-ctrl" value="survey-sent"> <?= htmlspecialchars($langFile['indexresolved_survey_sent']) ?></label></li>
-								<li class="checkbox"><label><input type="checkbox" name="survey-filter" class="wb-tagfilter-ctrl" value="survey-answered"> <?= htmlspecialchars($langFile['indexresolved_survey_answered']) ?></label></li>
+						<fieldset class="gc-chckbxrdio">
+							<legend class="mrgn-bttm-0"><?= htmlspecialchars($langFile['indexresolved_filter_survey']) ?></legend>
+							<ul class="list-unstyled lst-spcd-2">
+								<li class="checkbox"><input type="checkbox" id="survey-sent-filter" name="survey-filter" class="wb-tagfilter-ctrl" value="survey-sent"><label for="survey-sent-filter"><?= htmlspecialchars($langFile['indexresolved_survey_sent']) ?></label></li>
+								<li class="checkbox"><input type="checkbox" id="survey-answered-filter" name="survey-filter" class="wb-tagfilter-ctrl" value="survey-answered"><label for="survey-answered-filter"><?= htmlspecialchars($langFile['indexresolved_survey_answered']) ?></label></li>
 							</ul>
 							</fieldset>
 						</div>

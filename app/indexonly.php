@@ -107,21 +107,23 @@ include 'includes/template/head.php';
 					</div>
 					<div class="col-md-12">
 						<div class="form-group">
-							<fieldset>
-								<legend class="mrgn-bttm-0"><span class="field-name"><?= htmlspecialchars($langFile['indexonly_col_status']) ?></span></legend>
-								<ul class="list-unstyled list-inline">
-									<li class="checkbox"><label><input type="checkbox" name="priority-filter" class="wb-tagfilter-ctrl" value="sla-escalation"> <?= htmlspecialchars($langFile['indexonly_escalation_required']) ?></label></li>
-									<li class="checkbox"><label><input type="checkbox" name="priority-filter" class="wb-tagfilter-ctrl" value="sla-close"> <?= htmlspecialchars($langFile['indexonly_request_close_sla']) ?></label></li>					</ul>
+						<fieldset class="gc-chckbxrdio">
+							<legend class="mrgn-bttm-0"><?= htmlspecialchars($langFile['indexonly_col_status']) ?></legend>
+							<ul class="list-unstyled lst-spcd-2">
+								<li class="checkbox"><input type="checkbox" id="sla-escalation-filter" name="priority-filter" class="wb-tagfilter-ctrl" value="sla-escalation"><label for="sla-escalation-filter"><?= htmlspecialchars($langFile['indexonly_escalation_required']) ?></label></li>
+								<li class="checkbox"><input type="checkbox" id="sla-close-filter" name="priority-filter" class="wb-tagfilter-ctrl" value="sla-close"><label for="sla-close-filter"><?= htmlspecialchars($langFile['indexonly_request_close_sla']) ?></label></li>
+							</ul>
 				</fieldset>
 				</div>
 			</div>
 			<div class="col-md-12">
 				<div class="form-group">
-					<fieldset>
-						<legend class="mrgn-bttm-0"><span class="field-name"><?= htmlspecialchars($langFile['indexonly_filter_survey'] ?? (($_SESSION['lang'] === 'fr') ? 'Sondage' : 'Survey')) ?></span></legend>
-						<ul class="list-unstyled list-inline">
-							<li class="checkbox"><label><input type="checkbox" name="survey-filter" class="wb-tagfilter-ctrl" value="survey-sent"> <?= htmlspecialchars($langFile['indexonly_survey_sent'] ?? (($_SESSION['lang'] === 'fr') ? 'Envoyé' : 'Sent')) ?></label></li>
-							<li class="checkbox"><label><input type="checkbox" name="survey-filter" class="wb-tagfilter-ctrl" value="survey-answered"> <?= htmlspecialchars($langFile['indexonly_survey_answered'] ?? (($_SESSION['lang'] === 'fr') ? 'Répondu' : 'Answered')) ?></label></li>								</ul>
+					<fieldset class="gc-chckbxrdio">
+						<legend class="mrgn-bttm-0"><?= htmlspecialchars($langFile['indexonly_filter_survey'] ?? (($_SESSION['lang'] === 'fr') ? 'Sondage' : 'Survey')) ?></legend>
+						<ul class="list-unstyled lst-spcd-2">
+							<li class="checkbox"><input type="checkbox" id="survey-sent-filter-my" name="survey-filter" class="wb-tagfilter-ctrl" value="survey-sent"><label for="survey-sent-filter-my"><?= htmlspecialchars($langFile['indexonly_survey_sent'] ?? (($_SESSION['lang'] === 'fr') ? 'Envoyé' : 'Sent')) ?></label></li>
+							<li class="checkbox"><input type="checkbox" id="survey-answered-filter-my" name="survey-filter" class="wb-tagfilter-ctrl" value="survey-answered"><label for="survey-answered-filter-my"><?= htmlspecialchars($langFile['indexonly_survey_answered'] ?? (($_SESSION['lang'] === 'fr') ? 'Répondu' : 'Answered')) ?></label></li>
+						</ul>
 							</fieldset>
 						</div>
 					</div>
