@@ -188,7 +188,12 @@ return [
     'indexresolved_sort_closed_oldest' => 'Date de fermeture : plus anciennes',
     'indexresolved_sort_updated_newest' => 'Derniere mise a jour : plus recentes',
     'indexresolved_sort_updated_oldest' => 'Derniere mise a jour : plus anciennes',
+    'indexresolved_filter_survey' => 'Sondage',
+    'indexresolved_filter_all' => 'Tous',
     'indexresolved_no_requests' => 'Aucune demande disponible!',
+    'indexresolved_col_survey' => 'Sondage',
+    'indexresolved_survey_sent' => 'Envoye',
+    'indexresolved_survey_answered' => 'Repondu',
     
     // Customer Satisfaction Survey page (client-survey.php)
     'client_survey_page_title' => 'Sondage sur la satisfaction de la clientèle - Outil de gestion des demandes - Bureau de l\'accessibilité de la TI',

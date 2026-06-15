@@ -188,6 +188,11 @@ return [
     'indexresolved_sort_closed_oldest' => 'Closed date: oldest first',
     'indexresolved_sort_updated_newest' => 'Last updated: newest first',
     'indexresolved_sort_updated_oldest' => 'Last updated: oldest first',
+    'indexresolved_filter_survey' => 'Survey',
+    'indexresolved_filter_all' => 'All',
+    'indexresolved_col_survey' => 'Survey',
+    'indexresolved_survey_sent' => 'Sent',
+    'indexresolved_survey_answered' => 'Answered',
     'indexresolved_no_requests' => 'No requests available!',
     
     // Customer Satisfaction Survey page (client-survey.php)

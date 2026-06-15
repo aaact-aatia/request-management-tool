@@ -101,6 +101,14 @@ include 'includes/template/head.php';
 			
 			$result = mysqli_query($link,$sql);
 
+			$surveyAnsweredByRequest = [];
+			$surveyResult = mysqli_query($link, "SELECT DISTINCT requestid FROM tblcss WHERE status = 1");
+			if ($surveyResult) {
+				while ($surveyRow = mysqli_fetch_assoc($surveyResult)) {
+					$surveyAnsweredByRequest[(int)$surveyRow['requestid']] = true;
+				}
+			}
+
 			$statusOptions = [];
 			$statusOptResult = mysqli_query($link, "SELECT id, $nameColumn FROM tblstatus WHERE status = 1 AND id IN ($statusFilterList) ORDER BY id");
 			while ($sr = mysqli_fetch_assoc($statusOptResult)) {
@@ -144,6 +152,18 @@ include 'includes/template/head.php';
 									<?php foreach ($catalogueOptions as $co): ?>
 										<option value="cat-<?= (int)$co['id'] ?>"><?= htmlspecialchars($co[$nameColumn]) ?></option>
 									<?php endforeach; ?>
+								</select>
+							</fieldset>
+						</div>
+					</div>
+					<div class="col-md-4">
+						<div class="form-group">
+							<fieldset>
+								<legend class="mrgn-bttm-0"><label for="indexresolved-survey-filter" class="fnt-nrml"><?= htmlspecialchars($langFile['indexresolved_filter_survey']) ?></label></legend>
+								<select id="indexresolved-survey-filter" name="survey-filter" class="full-width wb-tagfilter-ctrl form-control">
+									<option value=""><?= htmlspecialchars($langFile['indexresolved_filter_all']) ?></option>
+									<option value="survey-sent"><?= htmlspecialchars($langFile['indexresolved_survey_sent']) ?></option>
+									<option value="survey-answered"><?= htmlspecialchars($langFile['indexresolved_survey_answered']) ?></option>
 								</select>
 							</fieldset>
 						</div>
@@ -290,7 +310,16 @@ include 'includes/template/head.php';
 						$hasVisibleRows = true;
 						$suppressSlaWarning = in_array((int)$statusid, [4, 5, 6], true);
 
+						$hasSurveySent = ((int)($row['cssurvey'] ?? 0) > 0);
+						$hasSurveyAnswered = !empty($surveyAnsweredByRequest[(int)$row['id']]);
+
 						$cardTags = 'status-' . (int)$statusid . ' cat-' . (int)$catalogueid;
+						if ($hasSurveySent) {
+							$cardTags .= ' survey-sent';
+						}
+						if ($hasSurveyAnswered) {
+							$cardTags .= ' survey-answered';
+						}
 						if (!$suppressSlaWarning && ($doverdue || $overdue)) {
 							$cardTags .= ' sla-escalation';
 						} elseif (!$suppressSlaWarning && $closedue) {
@@ -390,6 +419,11 @@ include 'includes/template/head.php';
 							'statusPrefix' => $langFile['indexresolved_col_status'],
 							'statusText' => $statusname,
 							'statusLabelClass' => $statusLabelClass,
+							'surveyPrefix' => $langFile['indexresolved_col_survey'] ?? (($_SESSION['lang'] === 'fr') ? 'Sondage' : 'Survey'),
+							'surveySentLabel' => $langFile['indexresolved_survey_sent'] ?? (($_SESSION['lang'] === 'fr') ? 'Envoye' : 'Sent'),
+							'surveyAnsweredLabel' => $langFile['indexresolved_survey_answered'] ?? (($_SESSION['lang'] === 'fr') ? 'Repondu' : 'Answered'),
+							'showSurveySent' => $hasSurveySent,
+							'showSurveyAnswered' => $hasSurveyAnswered,
 							'slaLabel' => $slaLabel,
 							'slaAlertClass' => ($panelClass === 'panel-danger') ? 'alert-danger' : 'alert-warning',
 							'bodyHtml' => $cardBodyHtml,
