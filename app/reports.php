@@ -88,7 +88,7 @@ include 'includes/template/head.php';
 					<div class="form-group">
 						<fieldset class="gc-chckbxrdio">
 							<legend><?= htmlspecialchars($langFile['reports_catalogue_name']) ?> <strong>(<?= htmlspecialchars($langFile['reports_optional']) ?>)</strong></legend>
-							<ul class="list-unstyled lst-spcd-2">
+							<ul class="list-unstyled list-inline">
 							<?php 
 							// Determine which name column to use based on language
 							$nameColumn = ($_SESSION['lang'] === 'fr') ? 'namefr' : 'nameen';

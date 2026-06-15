@@ -311,7 +311,7 @@ include 'includes/template/head.php';
 					<div class="form-group">
 					<fieldset class="gc-chckbxrdio">
 						<legend class="mrgn-bttm-0"><?= $t['filter_priority_label'] ?></legend>
-						<ul class="list-unstyled lst-spcd-2">
+						<ul class="list-unstyled list-inline">
 							<li class="checkbox"><input type="checkbox" id="sla-escalation-filter-dashboard" name="priority-filter" class="wb-tagfilter-ctrl" value="sla-escalation"><label for="sla-escalation-filter-dashboard"><?= $t['escalation_required'] ?></label></li>
 							<li class="checkbox"><input type="checkbox" id="sla-close-filter-dashboard" name="priority-filter" class="wb-tagfilter-ctrl" value="sla-close"><label for="sla-close-filter-dashboard"><?= $t['close_to_sla'] ?></label></li>
 							</ul>

@@ -166,7 +166,7 @@ $t = $translations[$lang_code];
 			<fieldset class="gc-chckbxrdio">
 				<legend><?= htmlspecialchars($t['teams']) ?></legend>
 				<p class="small"><?= htmlspecialchars($t['team_none_hint']) ?><br><?= htmlspecialchars($t['team_single_hint']) ?></p>
-				<ul class="list-unstyled lst-spcd-2">
+				<ul class="list-unstyled list-inline">
 				<?php
 				$sql3 = "SELECT * FROM tblteams ORDER BY {$t['team_sort_field']} ASC";
 				$result3 = mysqli_query($link,$sql3);	
