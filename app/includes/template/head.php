@@ -11,17 +11,17 @@
 require_once(__DIR__ . '/../config.php');
 
 $config = get_app_config();
-$lang = $_SESSION['lang'] ?? 'en';
+$langCode = $_SESSION['lang'] ?? 'en';
 $pageDescription = $pageDescription ?? '';
-$otherLang = $lang === 'en' ? 'fr' : 'en';
+$otherLang = $langCode === 'en' ? 'fr' : 'en';
 
 // Build full page title: "Page Title - App Name - Organization"
-$appName = $config['app']['name'][$lang];
-$orgName = $config['app']['organization'][$lang];
+$appName = $config['app']['name'][$langCode];
+$orgName = $config['app']['organization'][$langCode];
 $fullPageTitle = $pageTitle . ' - ' . $appName . ' - ' . $orgName;
 ?>
 <!DOCTYPE html>
-<html class="no-js" lang="<?= $lang ?>" dir="ltr">
+<html class="no-js" lang="<?= $langCode ?>" dir="ltr">
 	<head>
 		<meta charset="utf-8">
 
@@ -51,6 +51,6 @@ $fullPageTitle = $pageTitle . ' - ' . $appName . ' - ' . $orgName;
 		<!-- Dublin Core Metadata -->
 		<meta name="dcterms.title" content="<?= htmlspecialchars($fullPageTitle) ?>" />
 		<meta name="dcterms.description" content="<?= htmlspecialchars($pageDescription) ?>" />
-		<meta name="dcterms.language" content="<?= $lang ?>" />
+		<meta name="dcterms.language" content="<?= $langCode ?>" />
 		<meta name="dcterms.modified" content="<?= date('Y-m-d') ?>" />
 	</head>

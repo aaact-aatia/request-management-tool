@@ -5,7 +5,7 @@ $lang_code = $_SESSION['lang'] ?? 'en';
 <script src="https://www.canada.ca/etc/designs/canada/cdts/gcweb/rn/cdts/compiled/soyutils.js"></script>
 <script src="https://www.canada.ca/etc/designs/canada/cdts/gcweb/rn/cdts/compiled/wet-<?= htmlspecialchars($lang_code, ENT_QUOTES, 'UTF-8') ?>.js"></script>
 
-<!-- Core WET/GCWeb head assets previously injected via wet.builder.refTop(...) -->
+<!-- Core WET/GCWeb head assets for the application -->
 <link rel="icon" href="https://www.canada.ca/etc/designs/canada/wet-boew/assets/favicon.ico" type="image/x-icon">
 <link rel="stylesheet" href="https://www.canada.ca/etc/designs/canada/wet-boew/css/wet-boew.min.css">
 <link rel="stylesheet" href="https://www.canada.ca/etc/designs/canada/wet-boew/css/theme.min.css">
