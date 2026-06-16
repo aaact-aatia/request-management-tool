@@ -377,13 +377,7 @@ $reauditFlag = (int)$reauditFlag;
 
 <body vocab="https://schema.org/" typeof="WebPage">
     <div id="def-top"></div>
-    <?php 
-    if ($_SESSION['lang'] === 'fr') {
-        include 'includes/appTop-fr.php';
-    } else {
-        include 'includes/appTop.php';
-    }
-    ?>
+    <?php include 'includes/appTop.php'; ?>
     
     <main role="main" property="mainContentOfPage" class="container">
         <h1 property="name" id="wb-cont"><?php echo $t['page_title']; ?></h1>

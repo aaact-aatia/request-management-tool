@@ -213,7 +213,7 @@ $requestid = $row['requestid'];
 
 <body vocab="https://schema.org/" typeof="WebPage">
     <div id="def-top"></div>
-    <?php include $lang === 'fr' ? 'includes/appTop-fr.php' : 'includes/appTop.php'; ?>
+    <?php include 'includes/appTop.php'; ?>
     
     <main role="main" property="mainContentOfPage" class="container">
         <h1 property="name" id="wb-cont"><?php echo $t['page_title']; ?> - a11y-<?php echo $requestid; ?></h1>

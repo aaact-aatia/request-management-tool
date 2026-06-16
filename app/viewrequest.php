@@ -359,7 +359,7 @@ if(mysqli_num_rows($result)>0){
 	<body vocab="https://schema.org/" typeof="WebPage">
 		<div id="def-top">
 		</div>
-		<?php include $lang == 'fr' ? 'includes/appTop-fr.php' : 'includes/appTop.php';?>
+		<?php include 'includes/appTop.php'; ?>
 		<main role="main" property="mainContentOfPage" class="container">
 			<h1 property="name" id="wb-cont"><?= $t['page_title'] ?><?php echo $row['requestid'] ?></h1>
 			
@@ -1118,7 +1118,7 @@ document.querySelectorAll('.delete-btn').forEach(button => {
 	<body vocab="https://schema.org/" typeof="WebPage">
 		<div id="def-top">
 		</div>
-		<?php include $lang == 'fr' ? 'includes/appTop-fr.php' : 'includes/appTop.php';?>
+		<?php include 'includes/appTop.php'; ?>
 		<main role="main" property="mainContentOfPage" class="container">
 			<h1 property="name" id="wb-cont"><?= $t['not_found_title'] ?></h1>
 			

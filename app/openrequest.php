@@ -74,28 +74,7 @@ if ($routerCatalogueQuery) {
 	<body vocab="https://schema.org/" typeof="WebPage">
 		<div id="def-top">
 		</div>
-		<!-- Write closure template -->
-		<script>
-			var defTop = document.getElementById("def-top");
-			defTop.outerHTML = wet.builder.appTop({
-				"appName": [{"text": "<?= $_SESSION['lang'] == 'fr' ? 'Outil de gestion des demandes (OGD)' : 'Request Management Tool (RMT)' ?>", "href": "/openrequest.php?lang=<?= $_SESSION['lang'] ?>"}],
-				<?php if(empty($_SESSION['pid'])){ ?>
-				"signIn": [{"href": "/signin.php?lang=<?= $_SESSION['lang'] ?>"}],
-				<?php } else { ?>
-				"signOut": [{"href": "/signout.php?lang=<?= $_SESSION['lang'] ?>"}],
-				"appSettings": [{"href": "/settings.php?lang=<?= $_SESSION['lang'] ?>"}],
-				<?php } ?>
-				"lngLinks": [{"lang": "<?= $_SESSION['lang'] == 'fr' ? 'en' : 'fr' ?>", "href": "/openrequest.php?lang=<?= $_SESSION['lang'] == 'fr' ? 'en' : 'fr' ?>", "text": "<?= $_SESSION['lang'] == 'fr' ? 'English' : 'Français' ?>"}],
-				"menuPath": "/includes/appmenu.php",
-				"breadcrumbs": [{
-					"title": "<?= $_SESSION['lang'] == 'fr' ? 'Accessibilité, adaptation et technologie informatique adaptée (AATIA)' : 'Accessibility, Accommodation and Adaptive Computer Technology (AAACT)' ?>",
-					"href": "<?= $_SESSION['lang'] == 'fr' ? 'https://www.canada.ca/fr/services-partages/services/employes-accessibilite/programme-aatia.html' : 'https://www.canada.ca/en/shared-services/services/employees-accessibility/aaact-program.html' ?>"
-				}, {
-					"title": "<?= $_SESSION['lang'] == 'fr' ? 'Outil de gestion des demandes' : 'Request Management Tool' ?>",
-					"href": "/openrequest.php?lang=<?= $_SESSION['lang'] ?>"
-				}]
-			});
-		</script>
+		<?php include 'includes/appTop.php'; ?>
 		<main role="main" property="mainContentOfPage" class="container">
 			<h1 property="name" id="wb-cont"><?= htmlspecialchars($lang['main_heading']) ?></h1>
 			<?php 
