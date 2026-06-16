@@ -1,0 +1,9 @@
+/*
+ * RMT migration bridge stylesheet.
+ *
+ * CDTS docs indicate wet.builder.refTop({"isApplication": true}) adds app CSS.
+ * We load cdtsapps.css/cdtsfixes.css explicitly in refTop.php now.
+ * Keep this file as the local override layer while removing JS document.write blocks.
+ */
+
+/* Add temporary overrides here as needed during migration. */
