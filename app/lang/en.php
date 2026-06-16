@@ -13,6 +13,29 @@ return [
     // Page metadata
     'page_title' => 'New request - Request Management Tool - IT Accessibility Office',
     'page_description' => '',
+
+    // 404 page (error-page.php)
+    'error404_page_title' => 'Page not found',
+    'error404_page_description' => '404 error page',
+    'error404_heading' => 'Page not found',
+    'error404_code' => '404 error',
+    'error404_intro' => 'The page you\'re looking for may have been moved or deleted.',
+    'error404_url_hint' => 'Check that the web address (URL) is spelled correctly. Do not include special characters or spaces in the URL.',
+    'error404_links_heading' => 'You may be looking for:',
+    'error404_link_home_text' => 'Canada.ca home page',
+    'error404_link_home_url' => 'https://www.canada.ca/en.html',
+    'error404_link_services_text' => 'Government of Canada services',
+    'error404_link_services_url' => 'https://www.canada.ca/en/services.html',
+    'error404_link_contact_text' => 'Contact the Government of Canada',
+    'error404_link_contact_url' => 'https://www.canada.ca/en/contact.html',
+    'error404_link_signin_text' => 'Sign in to an account',
+    'error404_link_signin_url' => 'https://www.canada.ca/en/government/sign-in-online-account.html',
+    'error404_link_benefits_text' => 'Benefits',
+    'error404_link_benefits_url' => 'https://www.canada.ca/en/services/benefits.html',
+    'error404_link_taxes_text' => 'Taxes',
+    'error404_link_taxes_url' => 'https://www.canada.ca/en/services/taxes.html',
+    'error404_link_immigration_text' => 'Visit or immigrate to Canada',
+    'error404_link_immigration_url' => 'https://www.canada.ca/en/services/immigration-citizenship.html',
     
     // Main heading
     'main_heading' => 'Need help? Create a new request',

@@ -13,6 +13,29 @@ return [
     // Page metadata
     'page_title' => 'Nouvelle demande - Outil de gestion des demandes - Bureau de l\'accessibilité de la TI',
     'page_description' => '',
+
+    // Page 404 (error-page.php)
+    'error404_page_title' => 'Page non trouvée',
+    'error404_page_description' => 'Page d\'erreur 404',
+    'error404_heading' => 'Page non trouvée',
+    'error404_code' => 'Erreur 404',
+    'error404_intro' => 'La page que vous souhaitez consulter a peut-être été déplacée ou supprimée.',
+    'error404_url_hint' => 'Assurez-vous que l\'adresse Web (URL) est exacte. N\'incluez pas de caractères spéciaux ni d\'espaces dans l\'URL.',
+    'error404_links_heading' => 'Vous cherchez peut-être l\'une des pages suivantes :',
+    'error404_link_home_text' => 'Page d\'accueil de Canada.ca',
+    'error404_link_home_url' => 'https://www.canada.ca/fr.html',
+    'error404_link_services_text' => 'Services du gouvernement du Canada',
+    'error404_link_services_url' => 'https://www.canada.ca/fr/services.html',
+    'error404_link_contact_text' => 'Coordonnées du gouvernement du Canada',
+    'error404_link_contact_url' => 'https://www.canada.ca/fr/contact.html',
+    'error404_link_signin_text' => 'Se connecter à un dossier ou un compte en ligne',
+    'error404_link_signin_url' => 'https://www.canada.ca/fr/gouvernement/ouvrir-session-dossier-compte-en-ligne.html',
+    'error404_link_benefits_text' => 'Prestations',
+    'error404_link_benefits_url' => 'https://www.canada.ca/fr/services/prestations.html',
+    'error404_link_taxes_text' => 'Impôts',
+    'error404_link_taxes_url' => 'https://www.canada.ca/fr/services/impots.html',
+    'error404_link_immigration_text' => 'Immigration ou citoyenneté Canada',
+    'error404_link_immigration_url' => 'https://www.canada.ca/fr/services/immigration-citoyennete.html',
     
     // Main heading
     'main_heading' => 'Besoin d\'aide? Créer une nouvelle demande',
