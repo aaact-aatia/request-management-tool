@@ -341,6 +341,7 @@ if(mysqli_num_rows($result)>0){
 			if ($cBdays >= $sla2) {
 				$closedue = true;
 			}
+			$suppressSlaWarning = rmt_is_resolved_status_id($link, $row['statusid']) || in_array((int)$row['statusid'], [5, 6], true);
 		}
 ?>
 	<?php
@@ -420,7 +421,7 @@ if(mysqli_num_rows($result)>0){
 				}
 			?>
 			
-			<?php if ($row['statusid']!=2) { ?>
+			<?php if (!$suppressSlaWarning) { ?>
 			<?php if ($doverdue) { ?>
 			<div class="alert alert-danger">
 				<p><?= $t['escalation_required'] ?></p>

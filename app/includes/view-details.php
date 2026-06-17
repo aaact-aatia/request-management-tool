@@ -79,6 +79,7 @@ if(mysqli_num_rows($result)>0){
 		if ($cBdays >= $sla2) {
 			$closedue = true;
 		}
+		$suppressSlaWarning = rmt_is_resolved_status_id($link, $row['statusid']) || in_array((int)$row['statusid'], [5, 6], true);
 		
 		// Get labels
 		$sla_past = $translations['view_details_sla_past'] ?? ($lang === 'fr' ? 'La demande est passée SLA' : 'Request is past SLA');
@@ -86,7 +87,7 @@ if(mysqli_num_rows($result)>0){
 ?>
 <section id="filter-id" class="modal-dialog modal-lg modal-content overlay-def">
 	<header class="modal-header">
-		<h2 class="modal-title"><?php echo $translations['view_details_title'] ?? ($lang === 'fr' ? 'Détails' : 'Details'); ?> - a11y-<?php echo $row['requestid'] ?><?php if ($overdue) { ?> - <span class="glyphicon glyphicon-warning-sign"></span> <?php echo $sla_past; ?><?php } elseif ($closedue) { ?> - <span class="glyphicon glyphicon-warning-sign"></span> <?php echo $sla_close; ?><?php } ?></h2>
+		<h2 class="modal-title"><?php echo $translations['view_details_title'] ?? ($lang === 'fr' ? 'Détails' : 'Details'); ?> - a11y-<?php echo $row['requestid'] ?><?php if (!$suppressSlaWarning && $overdue) { ?> - <span class="glyphicon glyphicon-warning-sign"></span> <?php echo $sla_past; ?><?php } elseif (!$suppressSlaWarning && $closedue) { ?> - <span class="glyphicon glyphicon-warning-sign"></span> <?php echo $sla_close; ?><?php } ?></h2>
 	</header>
 	<div class="modal-body">
 		<dl class="colcount-sm-2">

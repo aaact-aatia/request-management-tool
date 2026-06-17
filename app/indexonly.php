@@ -12,6 +12,7 @@
 // Grab MySQL connection (includes session management)
 require('sql.php');
 /** @var mysqli $link */
+require('includes/helpers.php');
 
 // Handle language from query string or session
 if (isset($_GET['lang']) && in_array($_GET['lang'], ['en', 'fr'])) {
@@ -221,6 +222,8 @@ include 'includes/template/head.php';
 					if ($cBdays >= $sla2) {
 						$closedue = true;
 					}
+
+					$suppressSlaWarning = rmt_is_resolved_status_id($link, $statusid) || in_array((int)$statusid, [5, 6], true);
 					
 					// Now we need to check if this should be displayed
 					$userid = $_SESSION['pid'];
@@ -244,16 +247,16 @@ include 'includes/template/head.php';
                     if ($hasSurveyAnswered) {
                         $cardTags .= ' survey-answered';
                     }
-                    if ($doverdue || $overdue) {
+						if (!$suppressSlaWarning && ($doverdue || $overdue)) {
                         $cardTags .= ' sla-escalation';
-                    } elseif ($closedue) {
+						} elseif (!$suppressSlaWarning && $closedue) {
                         $cardTags .= ' sla-close';
                     }
 
-						if ($doverdue || $overdue) {
+						if (!$suppressSlaWarning && ($doverdue || $overdue)) {
 							$panelClass = 'panel-danger';
 							$slaLabel = htmlspecialchars($langFile['indexonly_escalation_required']);
-						} elseif ($closedue) {
+						} elseif (!$suppressSlaWarning && $closedue) {
 							$panelClass = 'panel-warning';
 							$slaLabel = htmlspecialchars($langFile['indexonly_request_close_sla']);
 						} else {

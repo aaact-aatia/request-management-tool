@@ -562,6 +562,7 @@ include 'includes/template/head.php';
 					// Grab the status id
 					$statusid = $row['statusid'];
 					$isResolvedStatus = rmt_is_resolved_status_id($link, $statusid);
+					$suppressSlaWarning = $isResolvedStatus || in_array((int)$statusid, [5, 6], true);
 					if ($isResolvedStatus) {
 						// Get the date resolved
 						$dateresolved = $row['dateresolved'];
@@ -597,7 +598,7 @@ include 'includes/template/head.php';
 						$closedue = true;
 					}
 			?>
-					<?php if ($isResolvedStatus) { ?>
+					<?php if ($suppressSlaWarning) { ?>
 					<tr>
 					<?php } else { ?>
 				<tr <?php if ($doverdue) { ?> style="background-color: #e87d88;"<?php } elseif($overdue) { ?> style="background-color: #f5c6cb;"<?php } elseif ($closedue) { ?> style="background-color: #ffeeba;"<?php } ?>>
@@ -619,7 +620,7 @@ include 'includes/template/head.php';
 					?>
 						<?php echo $statusname; ?>
 						
-						<?php if ($isResolvedStatus) { ?>
+						<?php if ($suppressSlaWarning) { ?>
 						<?php } else { ?>
 						<?php if ($doverdue) { ?><br /><span class="glyphicon glyphicon-warning-sign"></span> <?= htmlspecialchars($langFile['asearch_escalation_required']) ?><?php } elseif ($overdue) { ?><br /><span class="glyphicon glyphicon-warning-sign"></span> <?= htmlspecialchars($langFile['asearch_request_past_sla']) ?><?php } elseif ($closedue) { ?><br /><span class="glyphicon glyphicon-warning-sign"></span> <?= htmlspecialchars($langFile['asearch_request_close_sla']) ?><?php } ?>
 						<?php } ?>
