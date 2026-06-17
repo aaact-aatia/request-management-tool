@@ -29,8 +29,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	// Grab form elements
 	$snameen = mysqli_real_escape_string($link,$_POST['snameen']);
 	$snamefr = mysqli_real_escape_string($link,$_POST['snamefr']);
-	$date_now = date("Y-m-d H:i:s");
-	$updatedby = $_SESSION['pid'];
+	$isResolved = isset($_POST['is_resolved']) ? (int)$_POST['is_resolved'] : 0;
 	$noerror = false;
 	
 	// Custom form validation
@@ -45,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	}
 	
 	// Create SQL statement
-	$sql = "UPDATE `tblstatus` SET `nameen` = '$snameen', `namefr` = '$snamefr', `dateupdated` = '$date_now', `updatedby` = '$updatedby' WHERE id='$productid'";
+	$sql = "UPDATE `tblstatus` SET `nameen` = '$snameen', `namefr` = '$snamefr', `is_resolved` = '$isResolved' WHERE id='$productid'";
 	//echo $sql;
 	mysqli_query($link,$sql);
 	
@@ -65,6 +64,10 @@ if(mysqli_num_rows($result2)>0){
 		$label_en = $is_french ? 'Nom du statut (anglais):' : 'Name of status (english):';
 		$label_fr = $is_french ? 'Nom du statut (français):' : 'Name of status (french):';
 		$required_label = $is_french ? 'requis' : 'required';
+		$is_resolved_label = $is_french ? 'Utiliser ce statut comme Résolu :' : 'Use this status as Resolved:';
+		$no_label = $is_french ? 'Non' : 'No';
+		$yes_label = $is_french ? 'Oui' : 'Yes';
+		$currentIsResolved = isset($row2['is_resolved']) ? (int)$row2['is_resolved'] : 0;
 		$save_btn = $is_french ? 'Sauvegarder' : 'Save';
 ?>
 <section id="filter-id" class="modal-dialog modal-content overlay-def">
@@ -80,6 +83,13 @@ if(mysqli_num_rows($result2)>0){
 		<div class="form-group">
 			<label for="pnamefr"><span class="field-name"><?php echo $label_fr ?> <strong>(<?php echo $required_label ?>)</strong></span></label>
 			<input type="text" class="form-control" id="snamefr" name="snamefr" value="<?php echo $row2['namefr'] ?>" required>
+		</div>
+		<div class="form-group">
+			<label for="is_resolved"><span class="field-name"><?php echo $is_resolved_label ?></span></label>
+			<select class="form-control" id="is_resolved" name="is_resolved">
+				<option value="0"<?php if($currentIsResolved === 0) echo " selected"; ?>><?php echo $no_label; ?></option>
+				<option value="1"<?php if($currentIsResolved === 1) echo " selected"; ?>><?php echo $yes_label; ?></option>
+			</select>
 		</div>
 		<div class="form-group form-buttons">
 			<button type="submit" class="btn btn-default"><?php echo $save_btn ?></button>

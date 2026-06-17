@@ -202,13 +202,13 @@ INSERT INTO `tblproducts` (`id`, `nameen`, `namefr`, `status`) VALUES
 (8, 'Tint & Track', 'Tint & Track', 1);
 
 -- Status values
-INSERT INTO `tblstatus` (`id`, `nameen`, `namefr`, `status`) VALUES
-(1, 'New', 'Nouveau', 1),
-(2, 'In Progress', 'En cours', 1),
-(3, 'Pending', 'En attente', 1),
-(4, 'Resolved', 'Résolu', 1),
-(5, 'Closed', 'Fermé', 1),
-(6, 'Cancelled', 'Annulé', 1);
+INSERT INTO `tblstatus` (`id`, `nameen`, `namefr`, `is_resolved`, `status`) VALUES
+(1, 'New', 'Nouveau', 0, 1),
+(2, 'In Progress', 'En cours', 0, 1),
+(3, 'Pending', 'En attente', 0, 1),
+(4, 'Resolved', 'Résolu', 1, 1),
+(5, 'Closed', 'Fermé', 0, 1),
+(6, 'Cancelled', 'Annulé', 0, 1);
 
 -- Teams
 INSERT INTO `tblteams` (`nameen`, `namefr`, `email`, `contactname`, `contactemail`, `escalationcontactname`, `escalationcontactemail`, `status`) VALUES

@@ -76,6 +76,7 @@ CREATE TABLE IF NOT EXISTS `tblstatus` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `nameen` varchar(100) NOT NULL,
   `namefr` varchar(100) NOT NULL,
+  `is_resolved` tinyint(1) DEFAULT 0,
   `status` tinyint(1) DEFAULT 1,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

@@ -21,6 +21,33 @@ $departmentagencyCommlogId = (int)getPostValue('departmentagency_commlogid', 0);
 $clientphone = getPostValue('clientphone');
 $sourceid = getPostValue('sourceid');
 $statusid = getPostValue('statusid');
+
+function isResolvedStatusId($link, $statusId) {
+    $statusId = (int)$statusId;
+    if ($statusId <= 0) {
+        return false;
+    }
+
+    $result = mysqli_query($link, "SELECT * FROM tblstatus WHERE id = '$statusId' LIMIT 1");
+    if (!$result || mysqli_num_rows($result) === 0) {
+        return false;
+    }
+
+    $row = mysqli_fetch_assoc($result);
+
+    // Prefer explicit admin configuration when available.
+    if (array_key_exists('is_resolved', $row)) {
+        return (int)$row['is_resolved'] === 1;
+    }
+
+    // Backward compatibility: infer from status names if flag is not present.
+    $nameEn = strtolower(trim((string)$row['nameen']));
+    $nameFr = strtolower(trim((string)$row['namefr']));
+
+    return $nameEn === 'resolved' || $nameFr === 'résolu' || $nameFr === 'resolu';
+}
+
+$isTargetResolved = isResolvedStatusId($link, $statusid);
 $datereceived = getPostValue('datereceived');
 $dateupdated = !empty($_POST['dateupdated']) ? getPostValue('dateupdated') : getTodayDate();
 
@@ -30,7 +57,7 @@ $daterequiredu = empty($daterequired);
 if ($daterequiredu) $daterequired = NULL;
 
 $dateresolved = getPostValue('dateresolved');
-if (empty($dateresolved) && $statusid == '2') {
+if (empty($dateresolved) && $isTargetResolved) {
     $dateresolved = getTodayDate();
 } elseif (empty($dateresolved)) {
     $dateresolvedu = true;
@@ -85,6 +112,7 @@ function upsertDepartmentAgencyInNotes($notes, $departmentValue, $lang) {
 $result2 = mysqli_query($link, "SELECT statusid FROM tbltriage WHERE id = '$requestuid'");
 $row2 = mysqli_fetch_assoc($result2);
 $cstatusid = $row2['statusid'];
+$isCurrentResolved = isResolvedStatusId($link, $cstatusid);
 
 if ($cstatusid != $statusid) {
     $exactTime = date('Y-m-d H:i:s');
@@ -219,7 +247,7 @@ $personalisation = [
 ];
 
 // Send emails based on status changes
-if ($cstatusid != 2 && $statusid == 2) {
+if (!$isCurrentResolved && $isTargetResolved) {
     // Queue one survey send for newly resolved requests only.
     mysqli_query($link, "UPDATE tbltriage SET cssurvey = 0 WHERE id = '$requestuid' AND (cssurvey IS NULL)");
 
@@ -408,7 +436,7 @@ if (isset($dateresolvedu)) {
 
 // Redirect on success.
 // When a request is newly resolved, send staff directly to manual survey links.
-if ($cstatusid != 2 && $statusid == 2) {
+if (!$isCurrentResolved && $isTargetResolved) {
     header("location:/client-survey-link.php?lang=$lang&erid=$redirectid");
     exit();
 }
