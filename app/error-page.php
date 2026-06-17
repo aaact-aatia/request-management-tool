@@ -11,31 +11,26 @@ http_response_code(404);
 <html class="no-js" lang="en" dir="ltr">
     <head>
         <meta charset="utf-8">
-        <title>Page not found - Canada.ca theme / Page non trouvée - Thème Canada.ca</title>
+        <title>Page not found / Page non trouvée - Request Management Tool (RMT)</title>
         <meta content="width=device-width, initial-scale=1" name="viewport">
         <meta name="robots" content="noindex, nofollow, noarchive">
-        <link href="https://wet-boew.github.io/themes-dist/GCWeb/GCWeb/assets/favicon.ico" rel="icon" type="image/x-icon">
-        <link rel="stylesheet" href="https://wet-boew.github.io/themes-dist/GCWeb/GCWeb/css/theme-srv.css">
-        <link rel="stylesheet" href="https://wet-boew.github.io/themes-dist/GCWeb/GCWeb/css/theme.min.css">
-        <noscript><link rel="stylesheet" href="https://wet-boew.github.io/themes-dist/GCWeb/wet-boew/css/noscript.css"></noscript>
+        <link rel="stylesheet" href="https://www.canada.ca/etc/designs/canada/wet-boew/css/wet-boew.min.css"/>
+        <link rel="stylesheet" href="https://www.canada.ca/etc/designs/canada/wet-boew/css/theme.min.css"/>
+        <noscript><link rel="stylesheet" href="https://www.canada.ca/etc/designs/canada/wet-boew/css/noscript.min.css"></noscript>
+        <link rel="stylesheet" href="includes/template/app.css">
     </head>
     <body class="cnt-wdth-lmtd" vocab="http://schema.org/" resource="#wb-webpage" typeof="WebPage">
         <header>
             <div id="wb-bnr" class="container">
                 <div class="row">
                     <div class="brand col-xs-9 col-sm-5 col-md-4" property="publisher" typeof="GovernmentOrganization">
-                        <a href="https://wet-boew.github.io/GCWeb/" property="url">
-                            <img src="https://wet-boew.github.io/themes-dist/GCWeb/GCWeb/assets/sig-blk-en.svg" alt="Government of Canada" property="logo">
-                            <span class="wb-inv"> / <span lang="fr">Gouvernement du Canada</span></span>
-                        </a>
+                        <img src="https://www.canada.ca/etc/designs/canada/wet-boew/assets/sig-blk-en.svg" alt="Government of Canada" property="logo">
+                        <span class="wb-inv"> / <span lang="fr">Gouvernement du Canada</span></span>
                         <meta property="name" content="Government of Canada">
                         <meta property="areaServed" typeof="Country" content="Canada">
-                        <link property="logo" href="https://wet-boew.github.io/themes-dist/GCWeb/GCWeb/assets/wmms-blk.svg">
+                        <link property="logo" href="https://www.canada.ca/etc/designs/canada/wet-boew/assets/wmms-blk.svg">
                     </div>
                 </div>
-            </div>
-            <div class="container">
-                <div class="row"></div>
             </div>
         </header>
 
@@ -61,14 +56,21 @@ http_response_code(404);
             </div>
         </main>
 
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js" integrity="sha384-rY/jv8mMhqDabXSo+UCggqKtdmBfd3qC2/KvyTDNQ6PcUJXaxK1tMepoQda4g5vB" crossorigin="anonymous"></script>
-        <script src="https://wet-boew.github.io/themes-dist/GCWeb/wet-boew/js/wet-boew.min.js"></script>
-        <script src="https://wet-boew.github.io/themes-dist/GCWeb/GCWeb/js/theme.min.js"></script>
+        <!--[if gte IE 9 | !IE ]><!-->
+        <script src="https://www.canada.ca/etc/designs/canada/wet-boew/js/jquery/2.2.4/jquery.min.js"></script>
+        <script src="https://www.canada.ca/etc/designs/canada/wet-boew/js/wet-boew.min.js"></script>
+        <!--<![endif]-->
+        <!--[if lt IE 9]>
+        <script src="https://www.canada.ca/etc/designs/canada/wet-boew/js/ie8-wet-boew2.min.js"></script>
+        <![endif]-->
+        <script src="https://www.canada.ca/etc/designs/canada/wet-boew/js/theme.min.js"></script>
 
-        <footer class="py-3">
-            <div class="container" property="publisher" resource="#wb-publisher" typeof="GovernmentOrganization">
-                <div class="align-self-end">
-                    <img id="wmms" src="https://wet-boew.github.io/themes-dist/GCWeb/GCWeb/assets/wmms-blk.svg" alt="Symbol of the Government of Canada" property="logo">
+        <footer id="wb-info" class="visible-sm visible-md visible-lg">
+            <div class="gc-sub-footer">
+                <div class="container">
+                    <div class="wtrmrk pull-right">
+                        <img src="https://www.canada.ca/etc/designs/canada/wet-boew/assets/wmms-blk.svg" alt="Symbol of the Government of Canada">
+                    </div>
                 </div>
             </div>
         </footer>
