@@ -220,6 +220,9 @@ $personalisation = [
 
 // Send emails based on status changes
 if ($cstatusid != 2 && $statusid == 2) {
+    // Queue one survey send for newly resolved requests only.
+    mysqli_query($link, "UPDATE tbltriage SET cssurvey = 0 WHERE id = '$requestuid' AND (cssurvey IS NULL)");
+
     // Request resolved
     sendEmail($teamemail, "5dc8291c-a0b4-4fa0-8733-40c28d3ddf6d", json_encode($personalisation));
     if ($teamemail != "daiu-anci@ssc-spc.gc.ca") {
@@ -403,7 +406,13 @@ if (isset($dateresolvedu)) {
     mysqli_query($link, "UPDATE `tbltriage` SET `dateresolved` = NULL WHERE id='$requestuid'");
 }
 
-// Redirect on success
+// Redirect on success.
+// When a request is newly resolved, send staff directly to manual survey links.
+if ($cstatusid != 2 && $statusid == 2) {
+    header("location:/client-survey-link.php?lang=$lang&erid=$redirectid");
+    exit();
+}
+
 header("location:/viewrequest.php?lang=$lang&erid=$redirectid&reqid=" . urlencode("a11y-" . $requestid) . "&status=success");
 exit();
 ?>

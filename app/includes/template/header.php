@@ -7,15 +7,15 @@
 require_once(__DIR__ . '/../config.php');
 
 $config = get_app_config();
-$lang = $_SESSION['lang'] ?? 'en';
-$otherLanguage = $lang === 'en' ? 'Français' : 'English';
-$otherLang = $lang === 'en' ? 'fr' : 'en';
+$langCode = $_SESSION['lang'] ?? 'en';
+$otherLanguage = $langCode === 'en' ? 'Français' : 'English';
+$otherLang = $langCode === 'en' ? 'fr' : 'en';
 $toggleUrl = get_language_toggle_url();
 $isAuthenticated = !empty($_SESSION['pid']);
 
-$appName = $config['app']['name'][$lang];
-$orgName = $config['app']['organization'][$lang];
-$orgUrl = $config['app']['organization_url'][$lang];
+$appName = $config['app']['name'][$langCode];
+$orgName = $config['app']['organization'][$langCode];
+$orgUrl = $config['app']['organization_url'][$langCode];
 
 // Header-specific language strings
 $headerTranslations = [
@@ -57,14 +57,14 @@ $headerTranslations = [
 	]
 ];
 
-	$headerLangStrings = $headerTranslations[$lang];
+	$headerLangStrings = $headerTranslations[$langCode];
 ?>
 <body vocab="https://schema.org/" typeof="WebPage">
 	<nav aria-label="<?= $headerLangStrings['skip_heading'] ?>">
 		<ul id="wb-tphp">
 			<li class="wb-slc"><a class="wb-sl" href="#wb-cont"><?= $headerLangStrings['skip_text'] ?></a></li>
 			<li class="wb-slc visible-xs visible-sm visible-md visible-lg"><a class="wb-sl" href="#wb-info"><?= $headerLangStrings['skip_about_text'] ?></a></li>
-			<li class="wb-slc"><a class="wb-sl" href="?lang=<?= $lang ?>&amp;wbdisable=true" rel="alternate"><?= $headerLangStrings['basic_text'] ?></a></li>
+			<li class="wb-slc"><a class="wb-sl" href="?lang=<?= $langCode ?>&amp;wbdisable=true" rel="alternate"><?= $headerLangStrings['basic_text'] ?></a></li>
 		</ul>
 	</nav>
 	<header aria-label="<?= $headerLangStrings['gc_text'] ?>">
@@ -84,8 +84,8 @@ $headerTranslations = [
 				</section>
 				<?php endif; ?>
 				<div class="brand col-xs-9 col-sm-5 col-md-4" property="publisher" typeof="GovernmentOrganization">
-					<img src="https://www.canada.ca/etc/designs/canada/wet-boew/assets/sig-blk-<?= $lang ?>.svg" alt="<?= htmlspecialchars($headerLangStrings['gc_text']) ?>" property="logo">
-					<span class="wb-inv"> / <span lang="<?= htmlspecialchars($otherLang) ?>"><?= $lang === 'en' ? 'Gouvernement du Canada' : 'Government of Canada' ?></span></span>
+					<img src="https://www.canada.ca/etc/designs/canada/wet-boew/assets/sig-blk-<?= $langCode ?>.svg" alt="<?= htmlspecialchars($headerLangStrings['gc_text']) ?>" property="logo">
+					<span class="wb-inv"> / <span lang="<?= htmlspecialchars($otherLang) ?>"><?= $langCode === 'en' ? 'Gouvernement du Canada' : 'Government of Canada' ?></span></span>
 					<meta property="name" content="<?= htmlspecialchars($headerLangStrings['gc_text']) ?>">
 					<meta property="areaServed" typeof="Country" content="Canada">
 					<link property="logo" href="https://www.canada.ca/etc/designs/canada/wet-boew/assets/wmms-blk.svg">
@@ -97,16 +97,16 @@ $headerTranslations = [
 				<div class="row">
 					<section class="col-xs-12 col-sm-7">
 						<h2 class="wb-inv"><?= htmlspecialchars($headerLangStrings['app_name_heading']) ?></h2>
-						<a class="app-name" href="/openrequest.php?lang=<?= $lang ?>"><?= htmlspecialchars($appName) ?></a>
+						<a class="app-name" href="/openrequest.php?lang=<?= $langCode ?>"><?= htmlspecialchars($appName) ?></a>
 					</section>
-					<nav class="col-sm-5 hidden-xs hidden-print" aria-ledby="cdts-hiddenAccountMenu">
+					<nav class="col-sm-5 hidden-xs hidden-print" aria-labelledby="cdts-hiddenAccountMenu">
 						<h2 class="wb-inv" id="cdts-hiddenAccountMenu"><?= htmlspecialchars($headerLangStrings['account_menu_heading']) ?></h2>
 						<ul class="app-list-account list-unstyled">
 							<?php if ($isAuthenticated): ?>
-							<li><a href="/settings.php?lang=<?= $lang ?>" class="btn"><span class="glyphicon glyphicon-cog" aria-hidden="true"></span> <?= htmlspecialchars($headerLangStrings['account_settings']) ?></a></li>
-							<li><a href="/signout.php?lang=<?= $lang ?>" id="cdts-signout-btn" class="btn"><span class="glyphicon glyphicon-off" aria-hidden="true"></span> <?= htmlspecialchars($headerLangStrings['sign_out']) ?></a></li>
+							<li><a href="/settings.php?lang=<?= $langCode ?>" class="btn"><span class="glyphicon glyphicon-cog" aria-hidden="true"></span> <?= htmlspecialchars($headerLangStrings['account_settings']) ?></a></li>
+							<li><a href="/signout.php?lang=<?= $langCode ?>" id="cdts-signout-btn" class="btn"><span class="glyphicon glyphicon-off" aria-hidden="true"></span> <?= htmlspecialchars($headerLangStrings['sign_out']) ?></a></li>
 							<?php else: ?>
-							<li><a href="/signin.php?lang=<?= $lang ?>" id="cdts-signout-btn" class="btn"><span class="glyphicon glyphicon-off" aria-hidden="true"></span> <?= htmlspecialchars($headerLangStrings['sign_in']) ?></a></li>
+							<li><a href="/signin.php?lang=<?= $langCode ?>" id="cdts-signout-btn" class="btn"><span class="glyphicon glyphicon-off" aria-hidden="true"></span> <?= htmlspecialchars($headerLangStrings['sign_in']) ?></a></li>
 							<?php endif; ?>
 						</ul>
 					</nav>
@@ -150,10 +150,10 @@ $headerTranslations = [
 				<h2 class="wb-inv" id="cdts-accountMenu"><?= htmlspecialchars($headerLangStrings['account_menu_heading']) ?></h2>
 				<ul class="app-list-account list-unstyled">
 					<?php if ($isAuthenticated): ?>
-				<li><a href="/settings.php?lang=<?= $lang ?>" class="btn"><span class="glyphicon glyphicon-cog" aria-hidden="true"></span> <?= htmlspecialchars($headerLangStrings['account_settings']) ?></a></li>
-					<li><a href="/signout.php?lang=<?= $lang ?>" id="cdts-signout-btn-mobile" class="btn"><span class="glyphicon glyphicon-off" aria-hidden="true"></span> <?= htmlspecialchars($headerLangStrings['sign_out']) ?></a></li>
+				<li><a href="/settings.php?lang=<?= $langCode ?>" class="btn"><span class="glyphicon glyphicon-cog" aria-hidden="true"></span> <?= htmlspecialchars($headerLangStrings['account_settings']) ?></a></li>
+					<li><a href="/signout.php?lang=<?= $langCode ?>" id="cdts-signout-btn-mobile" class="btn"><span class="glyphicon glyphicon-off" aria-hidden="true"></span> <?= htmlspecialchars($headerLangStrings['sign_out']) ?></a></li>
 					<?php else: ?>
-					<li><a href="/signin.php?lang=<?= $lang ?>" id="cdts-signout-btn" class="btn"><span class="glyphicon glyphicon-off" aria-hidden="true"></span> <?= htmlspecialchars($headerLangStrings['sign_in']) ?></a></li>
+					<li><a href="/signin.php?lang=<?= $langCode ?>" id="cdts-signout-btn" class="btn"><span class="glyphicon glyphicon-off" aria-hidden="true"></span> <?= htmlspecialchars($headerLangStrings['sign_in']) ?></a></li>
 					<?php endif; ?>
 				</ul>
 			</nav>
@@ -171,7 +171,7 @@ $headerTranslations = [
 						</a>
 					</li>
 					<li>
-						<a href="/openrequest.php?lang=<?= $lang ?>"><?= htmlspecialchars($appName) ?>
+						<a href="/openrequest.php?lang=<?= $langCode ?>"><?= htmlspecialchars($appName) ?>
 						</a>
 					</li>
 				</ol>
@@ -186,9 +186,9 @@ if (isset($cenvironment) && $cenvironment == 1):
 <div style="padding:15px;position:fixed;bottom:0;right:0;width:35%;z-index:9999999;background-color:#FFF;border-style:solid;">
     <div style="padding:5px;">
         <div class="alert alert-danger" style="margin:0 auto;">
-            <h3><?= $lang === 'en' ? 'Development environment' : 'Environnement de développement' ?></h3>
+			<h3><?= $langCode === 'en' ? 'Development environment' : 'Environnement de développement' ?></h3>
             <p>
-                <?= $lang === 'en' 
+				<?= $langCode === 'en' 
                     ? 'You are currently viewing the development environment, no changes will be made in production. Use account settings to switch back to production.'
                     : 'Vous consultez actuellement l\'environnement de développement, aucune modification ne sera apportée en production. Utilisez les paramètres du compte pour revenir à la production.'
                 ?>
@@ -204,17 +204,17 @@ if (!empty($_SESSION['pid'])):
 ?>
 <div class="container">
     <p>
-        <strong><?= $lang === 'en' ? 'You are logged in as:' : 'Vous êtes connecté en tant que :' ?></strong>
+		<strong><?= $langCode === 'en' ? 'You are logged in as:' : 'Vous êtes connecté en tant que :' ?></strong>
         <?= htmlspecialchars($_SESSION['firstname'] . ' (' . $_SESSION['email'] . ')') ?>
         <?php 
         if (isset($_SESSION['real_atype']) && $_SESSION['real_atype'] == 1 && $_SESSION['atype'] != $_SESSION['real_atype']) {
             // Get the current testing account type name
             $testAtype = $_SESSION['atype'];
-            $nameField = ($lang === 'fr') ? 'namefr' : 'nameen';
+			$nameField = ($langCode === 'fr') ? 'namefr' : 'nameen';
             $result = mysqli_query($link, "SELECT {$nameField} FROM tblaccounttype WHERE id = '{$testAtype}'");
             if ($row = mysqli_fetch_array($result)) {
                 echo ' <span style="color: #6d5003; font-weight: bold;">| 🔧 ';
-                echo ($lang === 'en' ? 'Testing as: ' : 'Tester en tant que : ');
+				echo ($langCode === 'en' ? 'Testing as: ' : 'Tester en tant que : ');
                 echo htmlspecialchars($row[$nameField]) . '</span>';
             }
         }

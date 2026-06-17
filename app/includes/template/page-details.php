@@ -16,7 +16,8 @@ $pageDetailsTranslations = [
 	]
 ];
 
-$pageDetailsLangStrings = $pageDetailsTranslations[$lang];
+$pageDetailsLangCode = $_SESSION['lang'] ?? 'en';
+$pageDetailsLangStrings = $pageDetailsTranslations[$pageDetailsLangCode];
 
 // Use provided date or default to today
 $dateModified = $dateModified ?? date('Y-m-d');

@@ -223,17 +223,17 @@ include 'includes/template/head.php';
                         <input type="text" class="form-control" id="name_fr" name="name_fr" required>
                     </div>
                     <div class="form-group">
-                        <label>
-                            <input type="checkbox" name="recurring" value="1">
-                            <?= $t['recurring'] ?>
-                        </label>
-                        <p class="help-block"><?= $t['recurring_help'] ?></p>
+                        <div class=\"checkbox\">
+                            <input type=\"checkbox\" id=\"recurring-holiday\" name=\"recurring\" value=\"1\">
+                            <label for=\"recurring-holiday\"><?= $t['recurring'] ?></label>
+                        </div>
+                        <p class=\"help-block\"><?= $t['recurring_help'] ?></p>
                     </div>
-                    <div class="form-group">
-                        <label>
-                            <input type="checkbox" name="status" value="1" checked>
-                            <?= $t['active'] ?>
-                        </label>
+                    <div class=\"form-group\">
+                        <div class=\"checkbox\">
+                            <input type=\"checkbox\" id=\"active-holiday\" name=\"status\" value=\"1\" checked>
+                            <label for=\"active-holiday\"><?= $t['active'] ?></label>
+                        </div>
                     </div>
                     <div class="form-group">
                         <button type="submit" class="btn btn-primary"><?= $t['add_button'] ?></button>

@@ -101,6 +101,14 @@ include 'includes/template/head.php';
 			
 			$result = mysqli_query($link,$sql);
 
+			$surveyAnsweredByRequest = [];
+			$surveyResult = mysqli_query($link, "SELECT DISTINCT requestid FROM tblcss WHERE status = 1");
+			if ($surveyResult) {
+				while ($surveyRow = mysqli_fetch_assoc($surveyResult)) {
+					$surveyAnsweredByRequest[(int)$surveyRow['requestid']] = true;
+				}
+			}
+
 			$statusOptions = [];
 			$statusOptResult = mysqli_query($link, "SELECT id, $nameColumn FROM tblstatus WHERE status = 1 AND id IN ($statusFilterList) ORDER BY id");
 			while ($sr = mysqli_fetch_assoc($statusOptResult)) {
@@ -145,6 +153,17 @@ include 'includes/template/head.php';
 										<option value="cat-<?= (int)$co['id'] ?>"><?= htmlspecialchars($co[$nameColumn]) ?></option>
 									<?php endforeach; ?>
 								</select>
+							</fieldset>
+						</div>
+					</div>
+				<div class="col-md-12">
+					<div class="form-group">
+						<fieldset class="gc-chckbxrdio">
+							<legend class="mrgn-bttm-0"><?= htmlspecialchars($langFile['indexresolved_filter_survey']) ?></legend>
+							<ul class="list-unstyled lst-spcd-2">
+								<li class="checkbox"><input type="checkbox" id="survey-sent-filter" name="survey-filter" class="wb-tagfilter-ctrl" value="survey-sent"><label for="survey-sent-filter"><?= htmlspecialchars($langFile['indexresolved_survey_sent']) ?></label></li>
+								<li class="checkbox"><input type="checkbox" id="survey-answered-filter" name="survey-filter" class="wb-tagfilter-ctrl" value="survey-answered"><label for="survey-answered-filter"><?= htmlspecialchars($langFile['indexresolved_survey_answered']) ?></label></li>
+							</ul>
 							</fieldset>
 						</div>
 					</div>
@@ -290,7 +309,16 @@ include 'includes/template/head.php';
 						$hasVisibleRows = true;
 						$suppressSlaWarning = in_array((int)$statusid, [4, 5, 6], true);
 
+						$hasSurveySent = ((int)($row['cssurvey'] ?? 0) > 0);
+						$hasSurveyAnswered = !empty($surveyAnsweredByRequest[(int)$row['id']]);
+
 						$cardTags = 'status-' . (int)$statusid . ' cat-' . (int)$catalogueid;
+						if ($hasSurveySent) {
+							$cardTags .= ' survey-sent';
+						}
+						if ($hasSurveyAnswered) {
+							$cardTags .= ' survey-answered';
+						}
 						if (!$suppressSlaWarning && ($doverdue || $overdue)) {
 							$cardTags .= ' sla-escalation';
 						} elseif (!$suppressSlaWarning && $closedue) {
@@ -371,7 +399,7 @@ include 'includes/template/head.php';
 
 						ob_start();
 						?>
-						<a class="btn btn-primary btn-block" href="editrequest.php?erid=<?= base64_encode($row['id']) ?>"><?= htmlspecialchars($langFile['indexresolved_edit']) ?> <span class="wb-inv">a11y-<?= htmlspecialchars($row['requestid']) ?> <?= htmlspecialchars($langFile['indexresolved_request']) ?></span></a>
+						<a class="btn btn-primary btn-block" href="editrequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?= base64_encode($row['id']) ?>&reqid=<?= urlencode('a11y-' . ($row['requestid'] ?? '')) ?>"><?= htmlspecialchars($langFile['indexresolved_edit']) ?> <span class="wb-inv">a11y-<?= htmlspecialchars($row['requestid']) ?> <?= htmlspecialchars($langFile['indexresolved_request']) ?></span></a>
 						<?php if ($_SESSION['atype']==1) { ?>
 							<a class="wb-lbx btn btn-primary btn-block" href="includes/delete-request.php?id=<?= $row['id'] ?>"><?= htmlspecialchars($langFile['indexresolved_delete']) ?><span class="wb-inv"> a11y-<?= htmlspecialchars($row['requestid']) ?> <?= htmlspecialchars($langFile['indexresolved_request']) ?></span></a>
 						<?php } ?>
@@ -390,6 +418,11 @@ include 'includes/template/head.php';
 							'statusPrefix' => $langFile['indexresolved_col_status'],
 							'statusText' => $statusname,
 							'statusLabelClass' => $statusLabelClass,
+							'surveyPrefix' => $langFile['indexresolved_col_survey'] ?? (($_SESSION['lang'] === 'fr') ? 'Sondage' : 'Survey'),
+							'surveySentLabel' => $langFile['indexresolved_survey_sent'] ?? (($_SESSION['lang'] === 'fr') ? 'Envoye' : 'Sent'),
+							'surveyAnsweredLabel' => $langFile['indexresolved_survey_answered'] ?? (($_SESSION['lang'] === 'fr') ? 'Repondu' : 'Answered'),
+							'showSurveySent' => $hasSurveySent,
+							'showSurveyAnswered' => $hasSurveyAnswered,
 							'slaLabel' => $slaLabel,
 							'slaAlertClass' => ($panelClass === 'panel-danger') ? 'alert-danger' : 'alert-warning',
 							'bodyHtml' => $cardBodyHtml,

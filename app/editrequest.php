@@ -105,7 +105,10 @@ $translations = [
         'reset_sla_timer' => 'Need to reset the SLA timer? Choose the new start date',
         'is_new_request' => 'Is this a new request ?',
         'update_request' => 'Update request',
-        'required' => 'required'
+        'required' => 'required',
+        'fieldset_request_details' => 'Request details',
+        'fieldset_client_info' => 'Client information',
+        'fieldset_dates' => 'Dates'
     ],
     'fr' => [
         'page_title' => 'Modifier la demande',
@@ -171,7 +174,10 @@ $translations = [
         'reset_sla_timer' => 'Besoin de réinitialiser la minuterie SLA? Choisissez la nouvelle date de début',
         'is_new_request' => 'C\'est une nouvelle requete ??',
         'update_request' => 'Mettre à jour',
-        'required' => 'requis'
+        'required' => 'requis',
+        'fieldset_request_details' => 'Détails de la demande',
+        'fieldset_client_info' => 'Renseignements sur le client',
+        'fieldset_dates' => 'Dates'
     ]
 ];
 
@@ -194,20 +200,13 @@ $result = mysqli_query($link, "SELECT requestid FROM tbltriage WHERE id = '$requ
 $row = mysqli_fetch_assoc($result);
 $requestid = $row['requestid'];
 
-?>
-<!DOCTYPE html>
-<html class="no-js" lang="<?php echo $lang; ?>" dir="ltr">
-<head>
-    <meta charset="utf-8">
-    <title><?php echo $t['page_title']; ?> - a11y-<?php echo $requestid; ?> - <?php echo $t['tool_name']; ?></title>
-    <meta content="width=device-width,initial-scale=1" name="viewport">
-    <meta name="description" content="">
-    <?php include 'includes/refTop.php'; ?>
-</head>
+$pageTitle = $t['page_title'] . ' - a11y-' . $requestid;
+$pageDescription = '';
 
-<body vocab="https://schema.org/" typeof="WebPage">
-    <div id="def-top"></div>
-    <?php include $lang === 'fr' ? 'includes/appTop-fr.php' : 'includes/appTop.php'; ?>
+include 'includes/template/head.php';
+
+?>
+<?php include 'includes/template/header.php'; ?>
     
     <main role="main" property="mainContentOfPage" class="container">
         <h1 property="name" id="wb-cont"><?php echo $t['page_title']; ?> - a11y-<?php echo $requestid; ?></h1>
@@ -247,155 +246,245 @@ $requestid = $row['requestid'];
         ?>
         
         <form method="POST" enctype="multipart/form-data" action="editrequest.php?lang=<?php echo $lang; ?>&id=<?php echo $row['id']; ?>">
-            
+
             <?php
-            // Request ID
             $readonly = !isAdmin();
-            echo renderTextInput('requestid', $t['request_id'], $row['requestid'], true, $readonly);
-            
-            // Request Title
-            echo renderTextInput('requesttitle', $t['request_title'], $row['title'], true);
-            
-            // Sprint fields (only for subserviceid 95)
-            if ($row['subserviceid'] == 95) {
-                echo renderDateInput('firstsprintstartdate', $t['first_sprint_start'], $row['firstsprintstartdate']);
-                echo renderDateInput('firstsprintenddate', $t['first_sprint_end'], $row['firstsprintenddate']);
-                echo renderTextInput('sprintschedule', $t['sprint_schedule'], $row['sprintschedule']);
-                echo renderTextInput('sprintdefects', $t['sprint_defects'], $row['sprintdefects']);
-            }
-            
-            // Client information
-            echo renderTextInput('clientlname', $t['client_lastname'], $row['clientlname']);
-            echo renderTextInput('clientfname', $t['client_firstname'], $row['clientfname']);
-            echo renderTextInput('clientemail', $t['client_email'], $row['clientemail'], false, false, 'email');
-            echo renderTextInput('departmentagency', $t['department_agency'], $departmentAgency);
-            echo renderTextInput('clientphone', $t['client_phone'], $row['clientphone'], false, false, 'tel', 'data-rule-phoneUS="true"');
-            echo '<input type="hidden" name="departmentagency_commlogid" value="' . $departmentAgencyCommlogId . '">';
-            
-            // Request Source - only for adaptive technology requests (catalogue 4)
             $serviceid = $row['serviceid'];
             $catalogueid = $row['catalogueid'];
-            if ($catalogueid == 4) {
-                $sources = getDropdownOptions($link, 'tblsources', $lang);
-                $sourceOptions = [];
-                while ($source = mysqli_fetch_assoc($sources)) {
-                    $sourceOptions[] = $source;
-                }
-                echo renderSelect('sourceid', $t['request_source'], $sourceOptions, $row['sourceid'], true, $t['select_source']);
-            }
-            
-            // Dates
             $dateRange = getDateRange(1);
-            echo renderDateInput('datereceived', $t['date_received'], $row['datereceived'], true, $dateRange['min'], $dateRange['max']);
-            echo renderDateInput('dateupdated', $t['date_updated'], $row['dateupdated'], false, $dateRange['min'], $dateRange['max']);
-            
             $dateRequiredLabel = ($catalogueid == 5 && $serviceid != 47) ? $t['coaching_session_date'] : $t['date_required'];
-            echo renderDateInput('daterequired', $dateRequiredLabel, $row['daterequired'], false, $dateRange['min'], $dateRange['max']);
-            
-            echo renderDateInput('dateresolved', $t['date_resolved'], $row['dateresolved'], false, $dateRange['min'], $dateRange['max']);
-            
-            // Status
-            $statuses = getDropdownOptions($link, 'tblstatus', $lang);
-            $statusOptions = [];
-            while ($status = mysqli_fetch_assoc($statuses)) {
-                $statusOptions[] = $status;
-            }
-            echo renderSelect('statusid', $t['status'], $statusOptions, $row['statusid'], true, $t['select_status']);
-            
-            // Audience (only for catalogues 8 or 9 with non-zero audienceid)
-            if (in_array($catalogueid, [8, 9]) && hasValue($row['audienceid'] ?? null)) {
-                $audiences = getDropdownOptions($link, 'tblaudience', $lang);
-                $audienceOptions = [];
-                while ($audience = mysqli_fetch_assoc($audiences)) {
-                    $audienceOptions[] = $audience;
+            ?>
+
+            <!-- Status (standalone row at top) -->
+            <div class="row">
+                <div class="col-md-6">
+                    <?php
+                    $statuses = getDropdownOptions($link, 'tblstatus', $lang);
+                    $statusOptions = [];
+                    while ($status = mysqli_fetch_assoc($statuses)) {
+                        $statusOptions[] = $status;
+                    }
+                    echo renderSelect('statusid', $t['status'], $statusOptions, $row['statusid'], true, $t['select_status']);
+                    ?>
+                </div>
+            </div>
+
+            <!-- Fieldset: Request Details -->
+            <fieldset>
+                <legend><?php echo $t['fieldset_request_details']; ?></legend>
+
+                <!-- Row: Request ID | Request Title -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <?php echo renderTextInput('requestid', $t['request_id'], $row['requestid'], true, $readonly); ?>
+                    </div>
+                    <div class="col-md-6">
+                        <?php echo renderTextInput('requesttitle', $t['request_title'], $row['title'], true); ?>
+                    </div>
+                </div>
+
+                <!-- Row: Catalogue | Service -->
+                <?php
+                $catalogues = getDropdownOptions($link, 'tblcatalogue', $lang);
+                $catalogueOptions = [];
+                while ($catalogue = mysqli_fetch_assoc($catalogues)) {
+                    $catalogueOptions[] = $catalogue;
                 }
-                echo renderSelect('audience', $t['intended_audience'], $audienceOptions, $row['audienceid'], true, $t['select_audience']);
-            }
-            
-            // Catalogue
-            $catalogues = getDropdownOptions($link, 'tblcatalogue', $lang);
-            $catalogueOptions = [];
-            while ($catalogue = mysqli_fetch_assoc($catalogues)) {
-                $catalogueOptions[] = $catalogue;
-            }
-            ?>
-            <div class="form-group">
-                <label for="catalogueid"><span class="field-name"><?php echo $t['catalogue_name']; ?>: <strong>(<?php echo $t['required']; ?>)</strong></span></label>
-                <select class="form-control" id="catalogueid" name="catalogueid" onchange="ajax1(this.value)" required>
-                    <option value=""><?php echo $t['select_catalogue']; ?></option>
-                    <?php foreach ($catalogueOptions as $option): ?>
-                    <option value="<?php echo $option['id']; ?>" <?php echo ($row['catalogueid'] == $option['id']) ? 'selected' : ''; ?>>
-                        <?php echo $option['name']; ?>
-                    </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-            
-            <?php
-            // Service dropdown (populated if catalogue is selected)
-            if (hasValue($row['catalogueid'])) {
-                $services = getServicesByCategory($link, $row['catalogueid'], $lang);
-            ?>
-            <div class="form-group divservice">
-                <label for="serviceid"><span class="field-name"><?php echo $t['service_name']; ?>:</span></label>
-                <select class="form-control" id="serviceid" name="serviceid" onchange="ajax2(this.value)">
-                    <option value=""><?php echo $t['select_service']; ?></option>
-                    <?php while ($service = mysqli_fetch_assoc($services)): ?>
-                    <option value="<?php echo $service['id']; ?>" <?php echo ($row['serviceid'] == $service['id']) ? 'selected' : ''; ?>>
-                        <?php echo $service['name']; ?>
-                    </option>
-                    <?php endwhile; ?>
-                </select>
-            </div>
-            <?php
-            } else {
-                echo '<div class="form-group divservice"></div>';
-            }
-            
-            // Subservice dropdown (populated if service has subservices)
-            if (hasValue($row['serviceid'])) {
-                $subservices = getSubservicesByService($link, $row['serviceid'], $lang);
-                if (mysqli_num_rows($subservices) > 0 && $row['subserviceid'] != 0) {
-            ?>
-            <div class="form-group divsubservice">
-                <label for="subserviceid"><span class="field-name"><?php echo $t['subservice_name']; ?>: <strong>(<?php echo $t['required']; ?>)</strong></span></label>
-                <select class="form-control" id="subserviceid" name="subserviceid" required>
-                    <option value=""><?php echo $t['select_subservice']; ?></option>
-                    <?php while ($subservice = mysqli_fetch_assoc($subservices)): ?>
-                    <option value="<?php echo $subservice['id']; ?>" <?php echo ($row['subserviceid'] == $subservice['id']) ? 'selected' : ''; ?>>
-                        <?php echo $subservice['name']; ?>
-                    </option>
-                    <?php endwhile; ?>
-                </select>
-            </div>
-            <?php
-                } else {
-                    echo '<div class="form-group divsubservice"></div>';
+                ?>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="catalogueid"><span class="field-name"><?php echo $t['catalogue_name']; ?>: <strong>(<?php echo $t['required']; ?>)</strong></span></label>
+                            <select class="form-control" id="catalogueid" name="catalogueid" onchange="ajax1(this.value)" required>
+                                <option value=""><?php echo $t['select_catalogue']; ?></option>
+                                <?php foreach ($catalogueOptions as $option): ?>
+                                <option value="<?php echo $option['id']; ?>" <?php echo ($row['catalogueid'] == $option['id']) ? 'selected' : ''; ?>>
+                                    <?php echo $option['name']; ?>
+                                </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <?php if (hasValue($row['catalogueid'])): ?>
+                        <?php $services = getServicesByCategory($link, $row['catalogueid'], $lang); ?>
+                        <div class="form-group divservice">
+                            <label for="serviceid"><span class="field-name"><?php echo $t['service_name']; ?>:</span></label>
+                            <select class="form-control" id="serviceid" name="serviceid" onchange="ajax2(this.value)">
+                                <option value=""><?php echo $t['select_service']; ?></option>
+                                <?php while ($service = mysqli_fetch_assoc($services)): ?>
+                                <option value="<?php echo $service['id']; ?>" <?php echo ($row['serviceid'] == $service['id']) ? 'selected' : ''; ?>>
+                                    <?php echo $service['name']; ?>
+                                </option>
+                                <?php endwhile; ?>
+                            </select>
+                        </div>
+                        <?php else: ?>
+                        <div class="form-group divservice"></div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <!-- Row: Subservice -->
+                <?php
+                if (hasValue($row['serviceid'])) {
+                    $subservices = getSubservicesByService($link, $row['serviceid'], $lang);
+                    if (mysqli_num_rows($subservices) > 0 && $row['subserviceid'] != 0) {
+                ?>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group divsubservice">
+                            <label for="subserviceid"><span class="field-name"><?php echo $t['subservice_name']; ?>: <strong>(<?php echo $t['required']; ?>)</strong></span></label>
+                            <select class="form-control" id="subserviceid" name="subserviceid" required>
+                                <option value=""><?php echo $t['select_subservice']; ?></option>
+                                <?php while ($subservice = mysqli_fetch_assoc($subservices)): ?>
+                                <option value="<?php echo $subservice['id']; ?>" <?php echo ($row['subserviceid'] == $subservice['id']) ? 'selected' : ''; ?>>
+                                    <?php echo $subservice['name']; ?>
+                                </option>
+                                <?php endwhile; ?>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <?php
+                    } else {
+                        echo '<div class="form-group divsubservice"></div>';
+                    }
                 }
-            }
-            
+                ?>
+
+                <?php if ($row['subserviceid'] == 95): ?>
+                <!-- Sprint fields (subserviceid 95 only) -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <?php echo renderDateInput('firstsprintstartdate', $t['first_sprint_start'], $row['firstsprintstartdate']); ?>
+                    </div>
+                    <div class="col-md-6">
+                        <?php echo renderDateInput('firstsprintenddate', $t['first_sprint_end'], $row['firstsprintenddate']); ?>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <?php echo renderTextInput('sprintschedule', $t['sprint_schedule'], $row['sprintschedule']); ?>
+                    </div>
+                    <div class="col-md-6">
+                        <?php echo renderTextInput('sprintdefects', $t['sprint_defects'], $row['sprintdefects']); ?>
+                    </div>
+                </div>
+                <?php endif; ?>
+
+            </fieldset>
+
+            <!-- Fieldset: Client Information -->
+            <fieldset>
+                <legend><?php echo $t['fieldset_client_info']; ?></legend>
+
+                <!-- Row: Client Last Name | Client First Name -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <?php echo renderTextInput('clientlname', $t['client_lastname'], $row['clientlname']); ?>
+                    </div>
+                    <div class="col-md-6">
+                        <?php echo renderTextInput('clientfname', $t['client_firstname'], $row['clientfname']); ?>
+                    </div>
+                </div>
+
+                <!-- Row: Client Email | Department/Agency -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <?php echo renderTextInput('clientemail', $t['client_email'], $row['clientemail'], false, false, 'email'); ?>
+                    </div>
+                    <div class="col-md-6">
+                        <?php echo renderTextInput('departmentagency', $t['department_agency'], $departmentAgency); ?>
+                        <input type="hidden" name="departmentagency_commlogid" value="<?php echo $departmentAgencyCommlogId; ?>">
+                    </div>
+                </div>
+
+                <!-- Row: Client Phone | Request Source (catalogue 4) | Audience (catalogues 8/9) -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <?php echo renderTextInput('clientphone', $t['client_phone'], $row['clientphone'], false, false, 'tel', 'data-rule-phoneUS="true"'); ?>
+                    </div>
+                    <?php if ($catalogueid == 4): ?>
+                    <div class="col-md-6">
+                        <?php
+                        $sources = getDropdownOptions($link, 'tblsources', $lang);
+                        $sourceOptions = [];
+                        while ($source = mysqli_fetch_assoc($sources)) {
+                            $sourceOptions[] = $source;
+                        }
+                        echo renderSelect('sourceid', $t['request_source'], $sourceOptions, $row['sourceid'], true, $t['select_source']);
+                        ?>
+                    </div>
+                    <?php elseif (in_array($catalogueid, [8, 9]) && hasValue($row['audienceid'] ?? null)): ?>
+                    <div class="col-md-6">
+                        <?php
+                        $audiences = getDropdownOptions($link, 'tblaudience', $lang);
+                        $audienceOptions = [];
+                        while ($audience = mysqli_fetch_assoc($audiences)) {
+                            $audienceOptions[] = $audience;
+                        }
+                        echo renderSelect('audience', $t['intended_audience'], $audienceOptions, $row['audienceid'], true, $t['select_audience']);
+                        ?>
+                    </div>
+                    <?php endif; ?>
+                </div>
+
+            </fieldset>
+
+            <!-- Fieldset: Dates -->
+            <fieldset>
+                <legend><?php echo $t['fieldset_dates']; ?></legend>
+
+                <!-- Row: Date Received | Date Updated -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <?php echo renderDateInput('datereceived', $t['date_received'], $row['datereceived'], true, $dateRange['min'], $dateRange['max']); ?>
+                    </div>
+                    <div class="col-md-6">
+                        <?php echo renderDateInput('dateupdated', $t['date_updated'], $row['dateupdated'], false, $dateRange['min'], $dateRange['max']); ?>
+                    </div>
+                </div>
+
+                <!-- Row: Date Required | Date Resolved -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <?php echo renderDateInput('daterequired', $dateRequiredLabel, $row['daterequired'], false, $dateRange['min'], $dateRange['max']); ?>
+                    </div>
+                    <div class="col-md-6">
+                        <?php echo renderDateInput('dateresolved', $t['date_resolved'], $row['dateresolved'], false, $dateRange['min'], $dateRange['max']); ?>
+                    </div>
+                </div>
+
+            </fieldset>
+
+            <?php
             // Attachments section
             $attach1 = $row['attach1'];
             $attach2 = $row['attach2'];
             $attach3 = $row['attach3'];
-            
-            if (hasValue($attach1) || hasValue($attach2) || hasValue($attach3)) {
-                echo "<h2>{$t['attachments_heading']}</h2>";
-                
-                for ($i = 1; $i <= 3; $i++) {
+
+            if (hasValue($attach1) || hasValue($attach2) || hasValue($attach3)):
+            ?>
+            <h2><?php echo $t['attachments_heading']; ?></h2>
+            <div class="row">
+                <?php for ($i = 1; $i <= 3; $i++):
                     $attachVar = "attach$i";
                     $attachValue = $$attachVar;
-                    $viewLink = hasValue($attachValue) ? 
-                        " - <a href=\"$attachValue\" target=\"_blank\"><span class=\"glyphicon glyphicon-file\"></span> {$t['view_attachment']} $i</a>" : '';
-                    
-                    echo "<div class=\"form-group\">";
-                    echo "<label for=\"attach$i\"><span class=\"field-name\">{$t['attachment']} $i ({$t['url_only']})</span>$viewLink</label>";
-                    echo "<input type=\"text\" autocomplete=\"url\" class=\"form-control\" id=\"attach$i\" name=\"attach$i\" value=\"$attachValue\">";
-                    echo "</div>";
-                }
-            }
-            ?>
-            
+                    $viewLink = hasValue($attachValue)
+                        ? ' - <a href="' . htmlspecialchars($attachValue, ENT_QUOTES, 'UTF-8') . '" target="_blank"><span class="glyphicon glyphicon-file"></span> ' . $t['view_attachment'] . ' ' . $i . '</a>'
+                        : '';
+                ?>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="attach<?php echo $i; ?>"><span class="field-name"><?php echo $t['attachment']; ?> <?php echo $i; ?> (<?php echo $t['url_only']; ?>)</span><?php echo $viewLink; ?></label>
+                        <input type="text" autocomplete="url" class="form-control" id="attach<?php echo $i; ?>" name="attach<?php echo $i; ?>" value="<?php echo htmlspecialchars($attachValue ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                    </div>
+                </div>
+                <?php endfor; ?>
+            </div>
+            <?php endif; ?>
+
             <?php include 'includes/editrequest-files-section.php'; ?>
             
             <?php include 'includes/editrequest-communications-section.php'; ?>
@@ -412,22 +501,14 @@ $requestid = $row['requestid'];
         <?php
         }
         ?>
-        
-        <div id="def-preFooter"></div>
-        <?php include 'includes/preFooter.php'; ?>
+        <?php include 'includes/template/page-details.php'; ?>
     </main>
-    
-    <div class="image-preview" id="imagePreview" role="dialog" aria-hidden="true">
-        <button class="close-btn" id="closePreview" aria-label="Close image preview">&times;</button>
-        <img id="previewImage" src="" alt="Preview">
-        <p id="imageAnnouncement" class="sr-only" aria-live="assertive"></p>
-    </div>
-    
-    <div id="def-footer"></div>
-    <?php include 'includes/appFooter.php'; ?>
-</body>
 
-<?php include 'includes/editrequest-scripts.php'; ?>
+    <?php include 'includes/template/footer.php'; ?>
+    <?php include 'includes/template/scripts.php'; ?>
+    <?php include 'includes/editrequest-scripts.php'; ?>
+
+    </body>
 
 </html>
 <?php mysqli_close($link); ?>

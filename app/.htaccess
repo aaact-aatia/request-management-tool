@@ -1,3 +1,5 @@
 <IfModule mod_headers.c>
 Header set Cache-Control "private"
 </IfModule>
+
+ErrorDocument 404 /error-page.php

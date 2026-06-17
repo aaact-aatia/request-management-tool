@@ -1,6 +1,6 @@
 <?php
 /**
- * CSS - Customer Satisfaction Survey Form
+ * Client Survey - Customer Satisfaction Survey Form
  */
 
 // Grab MySQL connection (includes session management)
@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 
 	// If error detected send user back to modal dialog
 	if ($noerror) {
-		header("location:/css.php?lang=" . $_SESSION['lang'] . "&status=incomplete&erid=$nrequestid"); 
+		header("location:/client-survey.php?lang=" . $_SESSION['lang'] . "&status=incomplete&erid=$nrequestid"); 
 		exit();
 	}
 	
@@ -56,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	mysqli_query($link,$sql);
 		
 	// Now redirect
-	header("location:/viewrequest.php?lang=" . $_SESSION['lang'] . "&erid=".$nrequestid."&reqid=" . urlencode("a11y-" . $requestid) . "&status=csscomplete"); 
+	header("location:/viewrequest.php?lang=" . $_SESSION['lang'] . "&erid=".$nrequestid."&reqid=" . urlencode("a11y-" . $requestid) . "&status=clientsurveycomplete"); 
 	exit();
 }
 
@@ -92,40 +92,40 @@ if(mysqli_num_rows($result)>0){
 require_once 'includes/config.php';
 
 // Page-specific metadata
-$pageTitle = $langFile['css_page_title'];
+$pageTitle = $langFile['client_survey_page_title'];
 $pageDescription = '';
 
 include 'includes/template/head.php';
 include 'includes/template/header.php';
 ?>
 		<main role="main" property="mainContentOfPage" class="container">
-			<h1 property="name" id="wb-cont"><?= htmlspecialchars($langFile['css_heading']) ?></h1>
+			<h1 property="name" id="wb-cont"><?= htmlspecialchars($langFile['client_survey_heading']) ?></h1>
 			
 			<?php 
 			if ($status == 'failed') {
 			?>
 			<section class="alert alert-danger">
-				<h2><?= htmlspecialchars($langFile['css_failed_heading']) ?></h2>
+				<h2><?= htmlspecialchars($langFile['client_survey_failed_heading']) ?></h2>
 				<ul>
-					<li><?= htmlspecialchars($langFile['css_failed_message']) ?></li>
+					<li><?= htmlspecialchars($langFile['client_survey_failed_message']) ?></li>
 				</ul>
 			</section>
 			<?php
 			} elseif ($status == 'incomplete') {
 			?>
 			<section class="alert alert-danger">
-				<h2><?= htmlspecialchars($langFile['css_failed_heading']) ?></h2>
+				<h2><?= htmlspecialchars($langFile['client_survey_failed_heading']) ?></h2>
 				<ul>
-					<li><?= htmlspecialchars($langFile['css_incomplete_message']) ?></li>
+					<li><?= htmlspecialchars($langFile['client_survey_incomplete_message']) ?></li>
 				</ul>
 			</section>
 			<?php
 			} elseif ($status == 'complete') {
 			?>
 			<section class="alert alert-danger">
-				<h2><?= htmlspecialchars($langFile['css_failed_heading']) ?></h2>
+				<h2><?= htmlspecialchars($langFile['client_survey_failed_heading']) ?></h2>
 				<ul>
-					<li><?= htmlspecialchars($langFile['css_complete_message']) ?></li>
+					<li><?= htmlspecialchars($langFile['client_survey_complete_message']) ?></li>
 				</ul>
 			</section>
 			<?php
@@ -145,17 +145,17 @@ include 'includes/template/header.php';
 			
 			<h2>a11y-<?php echo $rid ?> - <?php echo $rtitle ?></h2>
 			
-			<p><?= htmlspecialchars($langFile['css_intro']) ?></p>
+			<p><?= htmlspecialchars($langFile['client_survey_intro']) ?></p>
 			
-			<form method="post" action="/css.php?lang=<?= $_SESSION['lang'] ?>">
+			<form method="post" action="/client-survey.php?lang=<?= $_SESSION['lang'] ?>">
 				<input type="hidden" id="requestid" name="requestid" value="<?php echo $requestid ?>">
 			
 				<fieldset>
-				<legend><?= htmlspecialchars($langFile['css_legend']) ?></legend>
+				<legend><?= htmlspecialchars($langFile['client_survey_legend']) ?></legend>
 				<div class="form-group mrgn-tp-lg">
-					<label for="satisfaction"><?= htmlspecialchars($langFile['css_overall']) ?></label>
+					<label for="satisfaction"><?= htmlspecialchars($langFile['client_survey_overall']) ?></label>
 					<select class="form-control" id="satisfaction" name="satisfaction">
-						<option label="<?= htmlspecialchars($langFile['css_overall']) ?>"></option>
+						<option label="<?= htmlspecialchars($langFile['client_survey_overall']) ?>"></option>
 							<option value="1">1</option>
 							<option value="2">2</option>
 							<option value="3">3</option>
@@ -169,9 +169,9 @@ include 'includes/template/header.php';
 						</select>
 					</div>
 					<div class="form-group mrgn-tp-lg">
-					<label for="response"><?= htmlspecialchars($langFile['css_response_time']) ?></label>
+					<label for="response"><?= htmlspecialchars($langFile['client_survey_response_time']) ?></label>
 					<select class="form-control" name="response" id="response">
-						<option label="<?= htmlspecialchars($langFile['css_response_time']) ?>"></option>
+						<option label="<?= htmlspecialchars($langFile['client_survey_response_time']) ?>"></option>
 							<option value="1">1</option>
 							<option value="2">2</option>
 							<option value="3">3</option>
@@ -186,20 +186,20 @@ include 'includes/template/header.php';
 					</div>
 				</fieldset>
                 <div class="form-group mrgn-tp-lg">
-                    <label for="comments"><?= htmlspecialchars($langFile['css_comments_label']) ?></label>
+                    <label for="comments"><?= htmlspecialchars($langFile['client_survey_comments_label']) ?></label>
                     <textarea class="form-control full-width expand" name="comments" id="comments"></textarea>
                 </div>
 			
 				<div class="form-group form-buttons">
-					<button type="submit" class="btn btn-default"><?= htmlspecialchars($langFile['css_submit']) ?></button>
+					<button type="submit" class="btn btn-default"><?= htmlspecialchars($langFile['client_survey_submit']) ?></button>
 				</div>
 			</form>
 			<?php } else {
 			?>
 			<section class="alert alert-danger">
-				<h2><?= htmlspecialchars($langFile['css_failed_heading']) ?></h2>
+				<h2><?= htmlspecialchars($langFile['client_survey_failed_heading']) ?></h2>
 				<ul>
-					<li><?= htmlspecialchars($langFile['css_failed_message']) ?></li>
+					<li><?= htmlspecialchars($langFile['client_survey_failed_message']) ?></li>
 				</ul>
 			</section>
 			<?php	

@@ -72,6 +72,7 @@ $translations = [
 		'comments' => 'Comments',
 		'na' => 'N/A',
 		'css_send' => 'Please send the client satisfaction survey link to the client using the copy function below.',
+		'view_links' => 'View survey links',
 		'generate_email' => 'Generate email with survey link',
 		'survey_sent' => 'Survey was sent',
 		'resend' => 'resend?',
@@ -154,6 +155,7 @@ $translations = [
 		'comments' => 'Commentaires',
 		'na' => 'S.O.',
 		'css_send' => 'Veuillez envoyer le lien du sondage de satisfaction de la clientèle au client en utilisant la fonction de copie ci-dessous.',
+		'view_links' => 'Voir les liens du sondage',
 		'generate_email' => 'Générer un courriel avec le lien du sondage',
 		'survey_sent' => 'Le sondage a été envoyé',
 		'resend' => 'renvoyer?',
@@ -341,23 +343,12 @@ if(mysqli_num_rows($result)>0){
 			}
 		}
 ?>
-<!DOCTYPE html>
-<!--[if lt IE 9]><html class="no-js lt-ie9" lang="en" dir="ltr"><![endif]-->
-<!--[if gt IE 8]><!--><html class="no-js" lang="en" dir="ltr"><!--<![endif]-->
-	<head>
-		<meta charset="utf-8">
-		<!-- Web Experience Toolkit (WET) / Boîte à outils de l'expérience Web (BOEW) wet-boew.github.io/wet-boew/License-en.html / wet-boew.github.io/wet-boew/Licence-fr.html -->
-		<title><?= $t['page_title'] ?><?php echo $row['requestid'] ?><?= $t['title_suffix'] ?></title>
-		<meta content="width=device-width,initial-scale=1" name="viewport">
-		<!-- Meta data -->
-		<meta name="description" content="">
-		<!-- Meta data-->
-		<?php include 'includes/refTop.php';?>
-	</head>
-	<body vocab="https://schema.org/" typeof="WebPage">
-		<div id="def-top">
-		</div>
-		<?php include $lang == 'fr' ? 'includes/appTop-fr.php' : 'includes/appTop.php';?>
+	<?php
+	$pageTitle = $t['page_title'] . $row['requestid'];
+	$pageDescription = '';
+	include 'includes/template/head.php';
+	include 'includes/template/header.php';
+	?>
 		<main role="main" property="mainContentOfPage" class="container">
 			<h1 property="name" id="wb-cont"><?= $t['page_title'] ?><?php echo $row['requestid'] ?></h1>
 			
@@ -402,7 +393,7 @@ if(mysqli_num_rows($result)>0){
 				if ($canShowEditControls && ($_SESSION['atype']=='1' OR $_SESSION['atype']=='2')) {	
 			?>
 			<div class="pull-right">
-				<p><a class="btn btn-primary" href="editrequest.php?erid=<?php echo base64_encode($row['id']);?>">Edit <span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span></a><?php if ($_SESSION['atype']=='1') { ?> <a class="wb-lbx btn btn-primary" href="includes/delete-request.php?id=<?php echo $row['id'];?>">Delete<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span> </a><?php } ?></p>
+				<p><a class="btn btn-primary" href="editrequest.php?lang=<?php echo $lang; ?>&erid=<?php echo base64_encode($row['id']);?>&reqid=<?php echo urlencode('a11y-' . $row['requestid']); ?>">Edit <span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span></a><?php if ($_SESSION['atype']=='1') { ?> <a class="wb-lbx btn btn-primary" href="includes/delete-request.php?id=<?php echo $row['id'];?>">Delete<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span> </a><?php } ?></p>
 			</div>
 			<div class="clearfix"></div>
 			<?php
@@ -421,7 +412,7 @@ if(mysqli_num_rows($result)>0){
 					if(in_array($tarraycontactid, $tarray)) {
 			?>
 			<div class="pull-right">
-				<p><a class="btn btn-primary" href="editrequest.php?erid=<?php echo base64_encode($row['id']);?>">Edit <span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span></a><?php if ($_SESSION['atype']=='1') { ?> <a class="wb-lbx btn btn-primary" href="includes/delete-request.php?id=<?php echo $row['id'];?>">Delete<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span> </a><?php } ?></p>
+				<p><a class="btn btn-primary" href="editrequest.php?lang=<?php echo $lang; ?>&erid=<?php echo base64_encode($row['id']);?>&reqid=<?php echo urlencode('a11y-' . $row['requestid']); ?>">Edit <span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span></a><?php if ($_SESSION['atype']=='1') { ?> <a class="wb-lbx btn btn-primary" href="includes/delete-request.php?id=<?php echo $row['id'];?>">Delete<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span> </a><?php } ?></p>
 			</div>
 			<div class="clearfix"></div>
 			<?php 
@@ -777,52 +768,77 @@ $blobStorage = new AzureBlobStorageManager();
 			<?php if($_SESSION['pid']!=""){ ?>
 			<?php
 			// Check if status is resolved, if it is then display the client satisfaction survey link and results if available
-			if ($statusid==2){
-				// Status is resolved so first check if a CSS has been completed
-				$sqlcss = "SELECT * FROM tblcss WHERE requestid='$triageid' AND status=1";
-				$resultcss = mysqli_query($link,$sqlcss);
+			$resolvedStatusId = 2;
+			$resolvedStatusSql = "SELECT id FROM tblstatus WHERE LOWER(nameen) = 'resolved' AND status = '1' LIMIT 1";
+			$resolvedStatusResult = mysqli_query($link, $resolvedStatusSql);
+			if ($resolvedStatusResult && mysqli_num_rows($resolvedStatusResult) > 0) {
+				$resolvedStatusRow = mysqli_fetch_array($resolvedStatusResult);
+				$resolvedStatusId = (int)$resolvedStatusRow['id'];
+			}
+
+			if ((int)$statusid === $resolvedStatusId){
+			// First check if surveys are enabled for this catalogue
+			$catalogueSurveySql = "SELECT survey FROM tblcatalogue WHERE id = '$catalogueid'";
+			$catalogueSurveyResult = mysqli_query($link, $catalogueSurveySql);
+			$catalogueSurveyRow = mysqli_fetch_array($catalogueSurveyResult);
+			$surveyEnabled = $catalogueSurveyRow['survey'];
+			
+			if ($surveyEnabled == 1) {
+				// Status is resolved and surveys are enabled, so first check if a client survey has been completed.
+				$surveySql = "SELECT * FROM tblcss WHERE requestid='$triageid' AND status=1";
+				$surveyResult = mysqli_query($link,$surveySql);
 				//List it
-				if(mysqli_num_rows($resultcss)>0){
-					while($rowcss = mysqli_fetch_array($resultcss)){
-						$overall = $rowcss['overall'];
-						$response = $rowcss['response'];
-						$comments = $rowcss['comments'];
+				if(mysqli_num_rows($surveyResult)>0){
+					while($surveyRow = mysqli_fetch_array($surveyResult)){
+						$overall = $surveyRow['overall'];
+						$response = $surveyRow['response'];
+						$comments = $surveyRow['comments'];
 						if ($comments=="") {
 							$comments = "N/A";
 						}
 					}				
 			?>
-			<h2>Client satisfaction survey <span class="glyphicon glyphicon-ok"></span><span class="wb-inv">completed</span></h2>
-			
-			<dl>
-				<dt>Over-all satisfaction</dt>
-				<dd><?php echo $overall ?>/10</dd>
-				<dt>Response time</dt>
+			<h2><?= htmlspecialchars($t['css_completed']) ?> <span class="glyphicon glyphicon-ok"></span><span class="wb-inv"><?= htmlspecialchars($t['completed']) ?></span></h2>
+				<dt><?= htmlspecialchars($t['response_time']) ?></dt>
 				<dd><?php echo $response ?>/10</dd>
-				<dt>Comments</dt>
+				<dt><?= htmlspecialchars($t['comments']) ?></dt>
 				<dd><?php echo $comments ?></dd>
 			</dl>
 			<?php
 				} else {
 					// No results so display copy form link for triage agent
-					$cssurvey = $row['cssurvey'];
+				    $surveySentCount = $row['cssurvey'];
 			?>
-			<h2>Client satisfaction survey <span class="glyphicon glyphicon-remove"></span><span class="wb-inv">not completed</span></h2>
+			<h2><?= htmlspecialchars($t['css_completed']) ?> <span class="glyphicon glyphicon-remove"></span><span class="wb-inv"><?= htmlspecialchars($t['not_completed']) ?></span></h2>
 			
-			<p>Please send the client satisfaction survey link to the client using the copy function below.</p>
+			<p><?= htmlspecialchars($t['css_send']) ?></p>
 			
 			<?php
 			// Prepare email
 			$erequestnum = $row['requestid'];
 			$eclientemail = $row['clientemail'];
 			$esubject = "Sondage sur la satisfaction de la clientèle pour / Client satisfaction survey for a11y-".$erequestnum;
-			$ebody = "Bonjour,%0d%0a%0d%0aVotre demande d’accessibilité a été complété par un membre de notre équipe, serait-il possible pour vous de compléter sondage sur la satisfaction de la clientèle? Ce sondage nous aidera à mieux servir nos clients et ne prendra que 30 secondes à remplir.%0d%0a%0d%0ahttps://gcdc-ssc-ictaccess-linux-aaact-rmt-dev-asv.azurewebsites.net//css-fr.php?erid=".$nrequestid."%0d%0a%0d%0a**********************************************************%0d%0a%0d%0aHello,%0d%0a%0d%0aYour accessibility request has now been completed by one of our team members, could you please fill out the following client satisfaction survey? This survey will help us serve our clients better and will only take 30 seconds to complete.%0d%0a%0d%0ahttps://gcdc-ssc-ictaccess-linux-aaact-rmt-dev-asv.azurewebsites.net//css-en.php?erid=".$nrequestid."%0d%0a%0d%0aMerci / Thank you"
+			$erequestPublicId = urlencode('a11y-' . $erequestnum);
+			
+			// Build dynamic base URL using current server
+			$emailScheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+			$emailHost = isset($_SERVER['HTTP_HOST']) ? trim((string)$_SERVER['HTTP_HOST']) : '';
+			$emailBaseUrl = $emailHost !== '' ? ($emailScheme . '://' . $emailHost) : 'https://gcdc-ssc-ictaccess-linux-aaact-rmt-dev-asv.azurewebsites.net';
+			
+			$ebodyText = "Bonjour,\r\n\r\nVotre demande d’accessibilité a été complété par un membre de notre équipe, serait-il possible pour vous de compléter sondage sur la satisfaction de la clientèle? Ce sondage nous aidera à mieux servir nos clients et ne prendra que 30 secondes à remplir.\r\n\r\n"
+				. $emailBaseUrl . "/client-survey.php?lang=fr&erid=".$nrequestid."&reqid=".$erequestPublicId
+				. "\r\n\r\n**********************************************************\r\n\r\nHello,\r\n\r\nYour accessibility request has now been completed by one of our team members, could you please fill out the following client satisfaction survey? This survey will help us serve our clients better and will only take 30 seconds to complete.\r\n\r\n"
+				. $emailBaseUrl . "/client-survey.php?lang=en&erid=".$nrequestid."&reqid=".$erequestPublicId
+				. "\r\n\r\nMerci / Thank you";
+			$encodedSubject = rawurlencode($esubject);
+			$encodedBody = rawurlencode($ebodyText);
 			?>
 			
-			<p><a class="btn btn-primary" href="mailto:<?php echo $eclientemail ?>?subject=<?php echo $esubject ?>&body=<?php echo $ebody ?>">Generate email with survey link</a> <?php if ($cssurvey>=1) { ?><a class="wb-lbx btn btn-primary" href="includes/css-sent-en.php?id=<?php echo $row['id'];?>">Survey was sent (<?php echo $cssurvey ?>), resend? <span class="glyphicon glyphicon-ok"></span></a><?php } else {?><a class="wb-lbx btn btn-primary" href="includes/css-sent-en.php?id=<?php echo $row['id'];?>">Mark survey as sent</a><?php } ?></p>
+			<p><a class="btn btn-primary" href="/client-survey-link.php?lang=<?= htmlspecialchars($_SESSION['lang']) ?>&erid=<?php echo $nrequestid; ?>"><?= htmlspecialchars($t['view_links']) ?></a> <a class="btn btn-default" href="mailto:<?php echo htmlspecialchars($eclientemail) ?>?subject=<?php echo $encodedSubject ?>&body=<?php echo $encodedBody ?>"><?= htmlspecialchars($t['generate_email']) ?></a> <?php if ($surveySentCount>=1) { ?><a class="wb-lbx btn btn-primary" href="includes/client-survey-sent.php?id=<?php echo $row['id'];?>"><?= htmlspecialchars($t['survey_sent']) ?> (<?php echo $surveySentCount ?>), <?= htmlspecialchars($t['resend']) ?> <span class="glyphicon glyphicon-ok"></span></a><?php } else {?><a class="wb-lbx btn btn-primary" href="includes/client-survey-sent.php?id=<?php echo $row['id'];?>"><?= htmlspecialchars($t['mark_sent']) ?></a><?php } ?></p>
 			
 			<?php
 				}
+			}
 			}
 			?>			
 			<?php
@@ -844,7 +860,7 @@ $blobStorage = new AzureBlobStorageManager();
 			}
 			?>
 			
-			<h2>Client communications log</h2>
+			<h2><?= htmlspecialchars($t['client_comms']) ?></h2>
 			
 			<?php
 			// Construct SQL statement
@@ -870,22 +886,22 @@ $blobStorage = new AzureBlobStorageManager();
 					$nnotes = nl2br(htmlspecialchars($notes));
 				?>
 				
-				<dt><?php echo $dateadded ?><?php if ($_SESSION['atype']=='1') {?> <a class="wb-lbx" href="includes/delete-comms.php?t=c&id=<?php echo $row2['id'];?>&rid=<?php echo $triageid ?>"><span class="glyphicon glyphicon-trash"></span><span class="wb-inv"> Delete comment</span></a><?php } ?></dt>
+				<dt><?php echo $dateadded ?><?php if ($_SESSION['atype']=='1') {?> <a class="wb-lbx" href="includes/delete-comms.php?t=c&id=<?php echo $row2['id'];?>&rid=<?php echo $triageid ?>"><span class="glyphicon glyphicon-trash"></span><span class="wb-inv"> <?= htmlspecialchars($t['delete_comment']) ?></span></a><?php } ?></dt>
 				<dd><?php echo $nnotes ?></dd>
 				<?php } ?>
 			</dl>
 			<?php if (!$hasVisibleClientComms) { ?>
-			<p>No communications available!</p>
+			<p><?= htmlspecialchars($t['no_comms']) ?></p>
 			<?php } ?>
 			<?php } else { ?>
-			<p>No communications available!</p>
+			<p><?= htmlspecialchars($t['no_comms']) ?></p>
 			<?php } } ?>
 			
 			<?php
 			// Check if the account is admin level to show this option 
 			if ($_SESSION['atype']=='1' OR $_SESSION['atype']=='2' OR $_SESSION['atype']=='3' OR $_SESSION['atype']=='4' OR $_SESSION['atype'] == '6') {
 			?>			
-			<h2>AAACT communications log</h2>
+			<h2><?= htmlspecialchars($t['staff_comms']) ?></h2>
 			
 			<?php
 			// Construct SQL statement
@@ -910,23 +926,23 @@ $blobStorage = new AzureBlobStorageManager();
 					$cfname = $row3['firstname'];
 					$clname = $row3['lastname'];
 				?>
-				<dt><?php echo $dateadded ?><?php if($creatorid!=0) {?> - <?php echo $clname ?>, <?php echo $cfname ?><?php } ?><?php if ($_SESSION['atype']=='1') {?> <a class="wb-lbx" href="includes/delete-comms.php?t=a&id=<?php echo $row2['id'];?>&rid=<?php echo $triageid ?>"><span class="glyphicon glyphicon-trash"></span><span class="wb-inv"> Delete comment</span></a><?php } ?></dt>
+				<dt><?php echo $dateadded ?><?php if($creatorid!=0) {?> - <?php echo $clname ?>, <?php echo $cfname ?><?php } ?><?php if ($_SESSION['atype']=='1') {?> <a class="wb-lbx" href="includes/delete-comms.php?t=a&id=<?php echo $row2['id'];?>&rid=<?php echo $triageid ?>"><span class="glyphicon glyphicon-trash"></span><span class="wb-inv"> <?= htmlspecialchars($t['delete_comment']) ?></span></a><?php } ?></dt>
 				<dd><?php echo $annotes ?></dd>
 				<?php } ?>
 			</dl>
 			<?php } else { ?>
-			<p>No communications available!</p>
+			<p><?= htmlspecialchars($t['no_comms']) ?></p>
 			<?php } ?>
 			<?php } ?>
+			<?php include 'includes/template/page-details.php'; ?>
 		</main>
 		<div class="image-preview" id="imagePreview" role="dialog" aria-hidden="true" style="display:none">
         <button class="close-btn" id="closePreview" aria-label="Close image preview">&times;</button>
         <img id="previewImage" src="" alt="Preview">
         <p id="imageAnnouncement" class="sr-only" aria-live="assertive"></p>
     </div>
-		<div id="def-footer">
-		</div>
-		<?php include 'includes/appFooter.php';?>
+		<?php include 'includes/template/footer.php'; ?>
+		<?php include 'includes/template/scripts.php'; ?>
 		<script>
    document.getElementById('downloadAll').addEventListener('click', async function() {
     // Get only visible rows after search/filtering
@@ -1075,31 +1091,20 @@ document.querySelectorAll('.delete-btn').forEach(button => {
 } else { 
 // Wrong ID so display an error message
 ?>
-<!DOCTYPE html>
-<!--[if lt IE 9]><html class="no-js lt-ie9" lang="<?= $lang ?>" dir="ltr"><![endif]-->
-<!--[if gt IE 8]><!--><html class="no-js" lang="<?= $lang ?>" dir="ltr"><!--<![endif]-->
-	<head>
-		<meta charset="utf-8">
-		<!-- Web Experience Toolkit (WET) / Boîte à outils de l'expérience Web (BOEW) wet-boew.github.io/wet-boew/License-en.html / wet-boew.github.io/wet-boew/Licence-fr.html -->
-		<title><?= $t['title_suffix'] ?></title>
-		<meta content="width=device-width,initial-scale=1" name="viewport">
-		<!-- Meta data -->
-		<meta name="description" content="">
-		<!-- Meta data-->
-		<?php include 'includes/refTop.php';?>
-	</head>
-	<body vocab="https://schema.org/" typeof="WebPage">
-		<div id="def-top">
-		</div>
-		<?php include $lang == 'fr' ? 'includes/appTop-fr.php' : 'includes/appTop.php';?>
+	<?php
+	$pageTitle = $t['not_found_title'];
+	$pageDescription = '';
+	include 'includes/template/head.php';
+	include 'includes/template/header.php';
+	?>
 		<main role="main" property="mainContentOfPage" class="container">
 			<h1 property="name" id="wb-cont"><?= $t['not_found_title'] ?></h1>
 			
 			<p><?= $t['not_found_msg'] ?></p>
+			<?php include 'includes/template/page-details.php'; ?>
 		</main>
-		<div id="def-footer">
-		</div>
-		<?php include 'includes/appFooter.php';?>
+		<?php include 'includes/template/footer.php'; ?>
+		<?php include 'includes/template/scripts.php'; ?>
 	</body>
 </html>
 <?php

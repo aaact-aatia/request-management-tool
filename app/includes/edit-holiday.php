@@ -121,19 +121,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                        value="<?= htmlspecialchars($holiday['name_fr']) ?>" required>
             </div>
             <div class="form-group">
-                <label>
-                    <input type="checkbox" name="recurring" value="1" 
+                <div class="checkbox">
+                    <input type="checkbox" id="recurring-holiday-edit" name="recurring" value="1" 
                            <?= $holiday['recurring'] ? 'checked' : '' ?>>
-                    <?= $t['recurring'] ?>
-                </label>
+                    <label for="recurring-holiday-edit"><?= $t['recurring'] ?></label>
+                </div>
                 <p class="help-block"><?= $t['recurring_help'] ?></p>
             </div>
             <div class="form-group">
-                <label>
-                    <input type="checkbox" name="status" value="1" 
+                <div class="checkbox">
+                    <input type="checkbox" id="active-holiday-edit" name="status" value="1" 
                            <?= $holiday['status'] ? 'checked' : '' ?>>
-                    <?= $t['active'] ?>
-                </label>
+                    <label for="active-holiday-edit"><?= $t['active'] ?></label>
+                </div>
             </div>
             <div class="form-group">
                 <button type="submit" class="btn btn-primary"><?= $t['update_button'] ?></button>

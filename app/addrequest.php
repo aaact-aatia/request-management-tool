@@ -35,6 +35,11 @@ if (!isset($_SESSION['lang']) || !in_array($_SESSION['lang'], ['en', 'fr'])) {
 // Load language file
 $lang = require("lang/{$_SESSION['lang']}.php");
 
+$pageTitle = $lang['page_title'];
+$pageDescription = $lang['page_description'];
+
+include 'includes/template/head.php';
+
 // Security check (using session language)
 if ($_SESSION['lang'] === 'fr') {
 	require('includes/loggedincheck.php');
@@ -275,32 +280,9 @@ if (!empty($_GET['status'])){
 else{
 	$status = "";
 }
+
 ?>
-<!DOCTYPE html>
-<!--[if lt IE 9]><html class="no-js lt-ie9" lang="<?= $_SESSION['lang'] ?>" dir="ltr"><![endif]-->
-<!--[if gt IE 8]><!--><html class="no-js" lang="<?= $_SESSION['lang'] ?>" dir="ltr"><!--<![endif]-->
-	<head>
-		<meta charset="utf-8">
-		<!-- Web Experience Toolkit (WET) / Boîte à outils de l'expérience Web (BOEW) wet-boew.github.io/wet-boew/License-en.html / wet-boew.github.io/wet-boew/Licence-fr.html -->
-		<title><?= htmlspecialchars($lang['page_title']) ?></title>
-		<meta content="width=device-width,initial-scale=1" name="viewport">
-		<!-- Meta data -->
-		<meta name="description" content="<?= htmlspecialchars($lang['page_description']) ?>">
-		<!-- Meta data-->
-		<?php 
-		include 'includes/refTop.php';
-		?>
-	</head>
-	<body vocab="https://schema.org/" typeof="WebPage">
-		<div id="def-top">
-		</div>
-		<?php 
-		if ($_SESSION['lang'] == 'fr') {
-			include 'includes/appTop-fr.php';
-		} else {
-			include 'includes/appTop.php';
-		}
-		?>
+	<?php include 'includes/template/header.php'; ?>
 		<main role="main" property="mainContentOfPage" class="container">
 			<h1 property="name" id="wb-cont"><?= htmlspecialchars($lang['main_heading']) ?></h1>
 			<?php 
@@ -442,15 +424,10 @@ else{
 				<button type="submit" class="btn btn-default"><?= htmlspecialchars($lang['add_request']) ?></button>
 			</div>
 			</form>			
-			
-			<div id="def-preFooter">
-			</div>
-			<?php include 'includes/preFooter.php';?>
+			<?php include 'includes/template/page-details.php'; ?>
 		</main>
-		<div id="def-footer">
-		</div>
-		<?php include 'includes/appFooter.php';?>
-	</body>
+		<?php include 'includes/template/footer.php'; ?>
+		<?php include 'includes/template/scripts.php'; ?>
 	<script>
 	// Get current language from session
 	var currentLang = '<?= $_SESSION['lang'] ?>';
@@ -468,6 +445,7 @@ else{
 		$(".divsubservice").show();
 	}
 	</script>
+	</body>
 </html>
 <?php
 // Close connection

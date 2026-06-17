@@ -86,8 +86,9 @@ include 'includes/template/head.php';
 			<div class="row">
 				<div class="col-xs-6">
 					<div class="form-group">
-						<fieldset class="legend-brdr-bttm">
+						<fieldset class="gc-chckbxrdio">
 							<legend><?= htmlspecialchars($langFile['reports_catalogue_name']) ?> <strong>(<?= htmlspecialchars($langFile['reports_optional']) ?>)</strong></legend>
+							<ul class="list-unstyled lst-spcd-2">
 							<?php 
 							// Determine which name column to use based on language
 							$nameColumn = ($_SESSION['lang'] === 'fr') ? 'namefr' : 'nameen';
@@ -97,10 +98,14 @@ include 'includes/template/head.php';
 							$result2 = mysqli_query($link,$sql2);	
 							while($row2 = mysqli_fetch_array($result2)){
 							?>
-							<label><input name="catalogueid[]" id="<?php echo $row2['id']; ?>" type="checkbox" value="<?php echo $row2['id']; ?>"> <?php echo $row2[$nameColumn]; ?></label><br />
+								<li class="checkbox">
+									<input name="catalogueid[]" id="cat-<?php echo $row2['id']; ?>" type="checkbox" value="<?php echo $row2['id']; ?>" />
+									<label for="cat-<?php echo $row2['id']; ?>"><?php echo $row2[$nameColumn]; ?></label>
+								</li>
 							<?php
 							}
 							?>
+							</ul>
 						</fieldset>
 					</div>
 				</div>
@@ -110,10 +115,10 @@ include 'includes/template/head.php';
 			</div>
 			</form>
 			
-			<h2><?= htmlspecialchars($langFile['reports_css_heading']) ?></h2>
+			<h2><?= htmlspecialchars($langFile['reports_client_survey_heading']) ?></h2>
 			
 			<div class="pull-left">
-				<p><a class="btn btn-primary btn-block" href="css-results.php?lang=<?= $_SESSION['lang'] ?>"><?= htmlspecialchars($langFile['reports_css_view_results']) ?></a> <a class="btn btn-primary btn-block" href="css-pending.php?lang=<?= $_SESSION['lang'] ?>"><?= htmlspecialchars($langFile['reports_css_pending']) ?></a></p>
+				<p><a class="btn btn-primary btn-block" href="client-survey-results.php?lang=<?= $_SESSION['lang'] ?>"><?= htmlspecialchars($langFile['reports_client_survey_view_results']) ?></a> <a class="btn btn-primary btn-block" href="client-survey-pending.php?lang=<?= $_SESSION['lang'] ?>"><?= htmlspecialchars($langFile['reports_client_survey_pending']) ?></a></p>
 			</div>
 			
 			<?php include 'includes/template/page-details.php'; ?>
