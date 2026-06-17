@@ -56,46 +56,18 @@ if ($routerCatalogueQuery) {
 		$routerCatalogues[] = $row;
 	}
 }
-?>
 
-<!DOCTYPE html>
-<!--[if lt IE 9]><html class="no-js lt-ie9" lang="<?= $_SESSION['lang'] ?>" dir="ltr"><![endif]-->
-<!--[if gt IE 8]><!--><html class="no-js" lang="<?= $_SESSION['lang'] ?>" dir="ltr"><!--<![endif]-->
-	<head>
-		<meta charset="utf-8">
-		<!-- Web Experience Toolkit (WET) / Boîte à outils de l'expérience Web (BOEW) wet-boew.github.io/wet-boew/License-en.html / wet-boew.github.io/wet-boew/Licence-fr.html -->
-		<title><?= htmlspecialchars($lang['page_title']) ?></title>
-		<meta content="width=device-width,initial-scale=1" name="viewport">
-		<!-- Meta data -->
-		<meta name="description" content="<?= htmlspecialchars($lang['page_description']) ?>">
-		<!-- Meta data-->
-		<?php include 'includes/refTop.php'; ?>
-	</head>
-	<body vocab="https://schema.org/" typeof="WebPage">
-		<div id="def-top">
-		</div>
-		<!-- Write closure template -->
-		<script>
-			var defTop = document.getElementById("def-top");
-			defTop.outerHTML = wet.builder.appTop({
-				"appName": [{"text": "<?= $_SESSION['lang'] == 'fr' ? 'Outil de gestion des demandes (OGD)' : 'Request Management Tool (RMT)' ?>", "href": "/openrequest.php?lang=<?= $_SESSION['lang'] ?>"}],
-				<?php if(empty($_SESSION['pid'])){ ?>
-				"signIn": [{"href": "/signin.php?lang=<?= $_SESSION['lang'] ?>"}],
-				<?php } else { ?>
-				"signOut": [{"href": "/signout.php?lang=<?= $_SESSION['lang'] ?>"}],
-				"appSettings": [{"href": "/settings.php?lang=<?= $_SESSION['lang'] ?>"}],
-				<?php } ?>
-				"lngLinks": [{"lang": "<?= $_SESSION['lang'] == 'fr' ? 'en' : 'fr' ?>", "href": "/openrequest.php?lang=<?= $_SESSION['lang'] == 'fr' ? 'en' : 'fr' ?>", "text": "<?= $_SESSION['lang'] == 'fr' ? 'English' : 'Français' ?>"}],
-				"menuPath": "/includes/appmenu.php",
-				"breadcrumbs": [{
-					"title": "<?= $_SESSION['lang'] == 'fr' ? 'Accessibilité, adaptation et technologie informatique adaptée (AATIA)' : 'Accessibility, Accommodation and Adaptive Computer Technology (AAACT)' ?>",
-					"href": "<?= $_SESSION['lang'] == 'fr' ? 'https://www.canada.ca/fr/services-partages/services/employes-accessibilite/programme-aatia.html' : 'https://www.canada.ca/en/shared-services/services/employees-accessibility/aaact-program.html' ?>"
-				}, {
-					"title": "<?= $_SESSION['lang'] == 'fr' ? 'Outil de gestion des demandes' : 'Request Management Tool' ?>",
-					"href": "/openrequest.php?lang=<?= $_SESSION['lang'] ?>"
-				}]
-			});
-		</script>
+$pageTitle = $lang['main_heading'];
+$pageDescription = $lang['page_description'];
+
+include 'includes/template/head.php';
+?>
+	<?php
+	$langStrings = $lang;
+	include 'includes/template/header.php';
+	$lang = $langStrings;
+	unset($langStrings);
+	?>
 		<main role="main" property="mainContentOfPage" class="container">
 			<h1 property="name" id="wb-cont"><?= htmlspecialchars($lang['main_heading']) ?></h1>
 			<?php 
@@ -187,15 +159,10 @@ if ($routerCatalogueQuery) {
 				<div class="form-group divsubservice3">
 				</div>
 			</form>
-			
-			<div id="def-preFooter">
-			</div>
-			<?php include 'includes/preFooter.php';?>
+			<?php include 'includes/template/page-details.php'; ?>
 		</main>
-		<div id="def-footer">
-		</div>
-		<?php include 'includes/appFooter.php';?>
-	</body>
+		<?php include 'includes/template/footer.php'; ?>
+		<?php include 'includes/template/scripts.php'; ?>
 	<script>
 	// Phase 1 policy: workshops/learning is guidance-only.
 	// Future option: convert this branch to a lightweight tracked request.
@@ -342,6 +309,7 @@ if ($routerCatalogueQuery) {
 		$(".divsubservice3").show();
 	}
 	</script>
+	</body>
 </html>
 <?php
 // Close connection
