@@ -45,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	$sql = "INSERT INTO tblstatus(`nameen`, `namefr`, `is_resolved`, `status`) VALUES ('$snameen', '$snamefr', '$isResolved', '$status')";
 	//echo $sql;
 	//exit();
-	mysqli_query($link,$sql);
+	rmt_admin_query($link,$sql);
 	
 	// Now redirect
 	header("location:/status.php?lang={$lang_code}?status=success"); 

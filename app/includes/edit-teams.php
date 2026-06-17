@@ -52,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	// Create SQL statement
 	$sql = "UPDATE `tblteams` SET `nameen` = '$teamnameen', `namefr` = '$teamnamefr', `email` = '$teamemail', `contactname` = '$contactname', `contactemail` = '$contactemail', `escalationcontactname` = '$escalationcontactname', `escalationcontactemail` = '$escalationcontactemail', `dateupdated` = '$date_now', `updatedby` = '$updatedby' WHERE id='$contactid'";
 	//echo $sql;
-	mysqli_query($link,$sql);
+	rmt_admin_query($link,$sql);
 	
 	// Now redirect
 	header("location:/teams.php?lang={$lang_code}&status=success"); 
@@ -62,10 +62,10 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 // Construct SQL statement
 $sql2 = "SELECT * FROM tblteams WHERE id='$contactid'";
 
-$result2 = mysqli_query($link,$sql2);
+$result2 = rmt_admin_query($link,$sql2);
 //List it
-if(mysqli_num_rows($result2)>0){
-	while($row2 = mysqli_fetch_array($result2)){
+if(rmt_result_num_rows($result2)>0){
+	while($row2 = rmt_result_fetch_array($result2)){
 		$display_name = $lang_code === 'fr' ? $row2['namefr'] : $row2['nameen'];
 ?>
 <section id="filter-id" class="modal-dialog modal-content overlay-def">

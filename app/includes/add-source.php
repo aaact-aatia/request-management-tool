@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	$sql = "INSERT INTO tblsources(`nameen`, `namefr`, `dateadded`, `dateupdated`, `updatedby`, `status`) VALUES ('$snameen', '$snamefr', '$date_now', '$date_now', '$updatedby', '$status')";
 	//echo $sql;
 	//exit();
-	mysqli_query($link,$sql);
+	rmt_admin_query($link,$sql);
 	
 	// Now redirect
 	header("location:/sources.php?lang={$lang_code}?status=success"); 

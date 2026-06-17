@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	// Create SQL statement
 	$sql = "UPDATE `tblstatus` SET `nameen` = '$snameen', `namefr` = '$snamefr', `is_resolved` = '$isResolved' WHERE id='$productid'";
 	//echo $sql;
-	mysqli_query($link,$sql);
+	rmt_admin_query($link,$sql);
 	
 	// Now redirect
 	header("location:/status.php?lang=" . $lang . "?status=success"); 
@@ -56,10 +56,10 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 // Construct SQL statement
 $sql2 = "SELECT * FROM tblstatus WHERE id='$productid'";
 
-$result2 = mysqli_query($link,$sql2);
+$result2 = rmt_admin_query($link,$sql2);
 //List it
-if(mysqli_num_rows($result2)>0){
-	while($row2 = mysqli_fetch_array($result2)){
+if(rmt_result_num_rows($result2)>0){
+	while($row2 = rmt_result_fetch_array($result2)){
 		$title = $is_french ? ('Modifier le statut ' . $row2['namefr']) : ('Edit ' . $row2['nameen'] . ' status');
 		$label_en = $is_french ? 'Nom du statut (anglais):' : 'Name of status (english):';
 		$label_fr = $is_french ? 'Nom du statut (français):' : 'Name of status (french):';

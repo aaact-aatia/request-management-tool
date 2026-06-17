@@ -4,6 +4,10 @@ require_once(__DIR__ . '/../sql.php');
 
 // Set language
 $lang_code = $_SESSION['lang'] ?? 'en';
+if (!in_array($lang_code, ['en', 'fr'], true)) {
+	$lang_code = 'en';
+}
+$html_lang = htmlspecialchars($lang_code, ENT_QUOTES, 'UTF-8');
 
 // Menu text translations
 $menu_text = [
@@ -50,7 +54,7 @@ $menu_text = [
 $t = $menu_text[$lang_code];
 ?>
 <!DOCTYPE html>
-<html lang="<?= $lang_code ?>">
+<html class="no-js" lang="<?= $html_lang ?>" xml:lang="<?= $html_lang ?>" dir="ltr">
 	<!-- Application templates - Sample menu -->
 	<!-- DataAjaxFragmentStart -->
 	<div class="pnl-strt container nvbar">

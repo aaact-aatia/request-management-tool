@@ -12,6 +12,10 @@ require_once(__DIR__ . '/../config.php');
 
 $config = get_app_config();
 $langCode = $_SESSION['lang'] ?? 'en';
+if (!in_array($langCode, ['en', 'fr'], true)) {
+	$langCode = 'en';
+}
+$htmlLang = htmlspecialchars($langCode, ENT_QUOTES, 'UTF-8');
 $pageDescription = $pageDescription ?? '';
 $otherLang = $langCode === 'en' ? 'fr' : 'en';
 
@@ -21,7 +25,7 @@ $orgName = $config['app']['organization'][$langCode];
 $fullPageTitle = $pageTitle . ' - ' . $appName . ' - ' . $orgName;
 ?>
 <!DOCTYPE html>
-<html class="no-js" lang="<?= $langCode ?>" dir="ltr">
+<html class="no-js" lang="<?= $htmlLang ?>" xml:lang="<?= $htmlLang ?>" dir="ltr">
 	<head>
 		<meta charset="utf-8">
 
@@ -49,6 +53,6 @@ $fullPageTitle = $pageTitle . ' - ' . $appName . ' - ' . $orgName;
 		<!-- Dublin Core Metadata -->
 		<meta name="dcterms.title" content="<?= htmlspecialchars($fullPageTitle) ?>" />
 		<meta name="dcterms.description" content="<?= htmlspecialchars($pageDescription) ?>" />
-		<meta name="dcterms.language" content="<?= $langCode ?>" />
+		<meta name="dcterms.language" content="<?= $htmlLang ?>" />
 		<meta name="dcterms.modified" content="<?= date('Y-m-d') ?>" />
 	</head>

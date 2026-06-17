@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	$sql = "INSERT INTO tblteams(`nameen`, `namefr`, `email`, `contactname`, `contactemail`, `escalationcontactname`, `escalationcontactemail`, `dateadded`, `dateupdated`, `updatedby`, `status`) VALUES ('$teamnameen', '$teamnamefr', '$teamemail', '$contactname', '$contactemail', '$escalationcontactname', '$escalationcontactemail', '$date_now', '$date_now', '$updatedby', '$status')";
 	//echo $sql;
 	//exit();
-	mysqli_query($link,$sql);
+	rmt_admin_query($link,$sql);
 	
 	// Now redirect
 	header("location:/teams.php?lang={$lang_code}&status=success"); 

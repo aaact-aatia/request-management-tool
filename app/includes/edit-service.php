@@ -48,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	// Create SQL statement
 	$sql = "UPDATE `tblservices` SET `nameen` = '$nameen', `namefr` = '$namefr', `contactid` = '$contactid', `sds` = '$sds' WHERE id='$serviceid'";
 	//echo $sql;
-	mysqli_query($link,$sql);
+	rmt_admin_query($link,$sql);
 	
 	// Now redirect
 	header("location:/catalogue-mgmt.php?lang={$lang_code}&id=$catalogueid&status=success"); 
@@ -58,10 +58,10 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 // Construct SQL statement
 $sql2 = "SELECT * FROM tblservices WHERE id='$serviceid'";
 
-$result2 = mysqli_query($link,$sql2);
+$result2 = rmt_admin_query($link,$sql2);
 //List it
-if(mysqli_num_rows($result2)>0){
-	while($row2 = mysqli_fetch_array($result2)){
+if(rmt_result_num_rows($result2)>0){
+	while($row2 = rmt_result_fetch_array($result2)){
 		$display_name = $lang_code === 'fr' ? $row2['namefr'] : $row2['nameen'];
 ?>
 <section id="filter-id" class="modal-dialog modal-content overlay-def">
@@ -84,8 +84,8 @@ if(mysqli_num_rows($result2)>0){
 				<?php 
 				$sort_field = $lang_code === 'fr' ? 'namefr' : 'nameen';
 				$sql3 = "SELECT * FROM tblteams WHERE status='1' ORDER BY {$sort_field} ASC";
-				$result3 = mysqli_query($link,$sql3);	
-				while($row3 = mysqli_fetch_array($result3)){
+				$result3 = rmt_admin_query($link,$sql3);	
+				while($row3 = rmt_result_fetch_array($result3)){
 					$team_name = $lang_code === 'fr' ? $row3['namefr'] : $row3['nameen'];
 				?>
 					<option value="<?php echo $row3['id']; ?>"<?php if($row3['id'] == $row2['contactid']) echo " selected"; ?>><?php echo htmlspecialchars($team_name); ?></option>

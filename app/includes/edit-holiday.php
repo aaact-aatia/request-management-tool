@@ -61,9 +61,9 @@ if (empty($id)) {
 
 // Fetch holiday
 $sql = "SELECT * FROM tblholidays WHERE id = '$id'";
-$result = mysqli_query($link, $sql);
+$result = rmt_admin_query($link, $sql);
 
-if (mysqli_num_rows($result) == 0) {
+if (rmt_result_num_rows($result) == 0) {
     header("Location: ../holidays-mgmt.php?lang=$lang");
     exit();
 }
@@ -86,13 +86,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                       status = $status 
                   WHERE id = '$id'";
     
-    if (mysqli_query($link, $updateSql)) {
+    if (rmt_admin_query($link, $updateSql)) {
         // Log admin action
         $adminNote = ($lang == 'fr' ? "Mis à jour le jour férié : " : "Updated holiday: ") . "$name_en / $name_fr " . ($lang == 'fr' ? "le " : "on ") . "$holiday_date";
         $userId = $_SESSION['pid'];
         $logSql = "INSERT INTO tbladminlog (triageid, dateadded, notes, creatorid, status) 
                    VALUES (0, NOW(), '$adminNote', $userId, 1)";
-        mysqli_query($link, $logSql);
+        rmt_admin_query($link, $logSql);
         
         echo '<script>window.parent.location.href = "../holidays-mgmt.php?lang=' . $lang . '&status=updated";</script>';
         exit();

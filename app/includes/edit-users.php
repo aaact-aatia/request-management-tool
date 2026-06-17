@@ -97,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 		$sql = "UPDATE `tblusers` SET `firstname` = '$firstname', `lastname` = '$lastname', `email` = '$email', `atype` = '$accounttype', `team` = '$teamstring' WHERE id='$userid'";
 	}		
 	//echo $sql;
-	mysqli_query($link,$sql);
+	rmt_admin_query($link,$sql);
 	
 	// Now redirect
 	header("location:/users.php?lang=" . $lang . "&status=success"); 
@@ -107,10 +107,10 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 // Construct SQL statement
 $sql2 = "SELECT * FROM tblusers WHERE id='$userid'";
 
-$result2 = mysqli_query($link,$sql2);
+$result2 = rmt_admin_query($link,$sql2);
 //List it
-if(mysqli_num_rows($result2)>0){
-	while($row2 = mysqli_fetch_array($result2)){
+if(rmt_result_num_rows($result2)>0){
+	while($row2 = rmt_result_fetch_array($result2)){
 		$title = $is_french ? ('Modifier l\'utilisateur ' . $row2['firstname'] . ' ' . $row2['lastname']) : ('Edit user ' . $row2['firstname'] . ' ' . $row2['lastname']);
 		$label_firstname = $is_french ? 'Prénom:' : 'First name:';
 		$label_lastname = $is_french ? 'Nom:' : 'Last name:';
@@ -160,8 +160,8 @@ if(mysqli_num_rows($result2)>0){
 			<select class="form-control" id="accounttype" name="accounttype" required>
 				<?php 
 				$sql3 = "SELECT * FROM tblaccounttype WHERE status='1' ORDER BY $sort_field ASC";
-				$result3 = mysqli_query($link,$sql3);	
-				while($row3 = mysqli_fetch_array($result3)){
+				$result3 = rmt_admin_query($link,$sql3);	
+				while($row3 = rmt_result_fetch_array($result3)){
 				?>
 					<option value="<?php echo $row3['id']; ?>"<?php if($row3['id'] == $row2['atype']) echo " selected"; ?>><?php echo $row3[$name_field]; ?></option>
 				<?php
@@ -180,8 +180,8 @@ if(mysqli_num_rows($result2)>0){
 				$tarray = explode(",",$teams);
 				
 				$sql3 = "SELECT * FROM tblteams ORDER BY $team_sort ASC";
-				$result3 = mysqli_query($link,$sql3);	
-				while($row3 = mysqli_fetch_array($result3)){
+				$result3 = rmt_admin_query($link,$sql3);	
+				while($row3 = rmt_result_fetch_array($result3)){
 				?>
 					<li class="checkbox">
 						<input type="checkbox" class="team-option" name="teams[]" value="<?php echo $row3['id']; ?>" id="team-<?php echo $row3['id']; ?>"<?php if(in_array((string)$row3['id'], $tarray)) {?> checked="checked"<?php } ?> />

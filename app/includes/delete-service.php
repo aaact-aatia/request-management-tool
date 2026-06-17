@@ -28,11 +28,11 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	
 	// Now we have a service id we need to check if we have sub services
 	$sql = "UPDATE `tblsubservices` SET `status` = '0' WHERE serviceid='$serviceid'";
-	mysqli_query($link,$sql);
+	rmt_admin_query($link,$sql);
 	
 	// Now set all the services to status = 0
 	$sql = "UPDATE `tblservices` SET `status` = '0' WHERE id='$serviceid'";
-	mysqli_query($link,$sql);
+	rmt_admin_query($link,$sql);
 	
 	// Now redirect
 	header("location:/catalogue-mgmt.php?lang=$lang?id=$catalogueid&status=success"); 
@@ -42,10 +42,10 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 // Construct SQL statement
 $sql2 = "SELECT * FROM tblservices WHERE id='$serviceid'";
 
-$result2 = mysqli_query($link,$sql2);
+$result2 = rmt_admin_query($link,$sql2);
 // List it
-if(mysqli_num_rows($result2)>0){
-	while($row2 = mysqli_fetch_array($result2)){
+if(rmt_result_num_rows($result2)>0){
+	while($row2 = rmt_result_fetch_array($result2)){
 		$name = ($lang == 'fr') ? $row2['namefr'] : $row2['nameen'];
 		$title = ($lang == 'fr') ? "Supprimer l'élément service $name" : "Delete $name service item";
 		$question = ($lang == 'fr') ? "Voulez-vous vraiment supprimer cet élément de service?" : "Are you sure you wish to delete this service item?";

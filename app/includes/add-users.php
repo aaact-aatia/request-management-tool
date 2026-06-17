@@ -82,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	$sql = "INSERT INTO tblusers(`firstname`, `lastname`, `email`, `password`, `atype`, `team`, `status`, `environment`) VALUES ('$firstname', '$lastname', '$email', '$npassword', '$accounttype', '$teamstring', '$status', 1)";
 	//echo $sql;
 	//exit();
-	mysqli_query($link,$sql);
+	rmt_admin_query($link,$sql);
 	
 	// Now redirect
 	header("location:/users.php?lang={$lang_code}&status=success"); 
@@ -152,8 +152,8 @@ $t = $translations[$lang_code];
 			<select class="form-control" id="accounttype" name="accounttype" required>
 				<?php 
 				$sql2 = "SELECT * FROM tblaccounttype WHERE status='1' ORDER BY {$t['account_sort_field']} ASC";
-				$result2 = mysqli_query($link,$sql2);	
-				while($row2 = mysqli_fetch_array($result2)){
+				$result2 = rmt_admin_query($link,$sql2);	
+				while($row2 = rmt_result_fetch_array($result2)){
 					$accountname = ($lang_code === 'fr') ? $row2['namefr'] : $row2['nameen'];
 				?>
 					<option value="<?= htmlspecialchars($row2['id']) ?>"><?= htmlspecialchars($accountname) ?></option>
@@ -169,8 +169,8 @@ $t = $translations[$lang_code];
 				<ul class="list-unstyled lst-spcd-2">
 				<?php
 				$sql3 = "SELECT * FROM tblteams ORDER BY {$t['team_sort_field']} ASC";
-				$result3 = mysqli_query($link,$sql3);	
-				while($row3 = mysqli_fetch_array($result3)){
+				$result3 = rmt_admin_query($link,$sql3);	
+				while($row3 = rmt_result_fetch_array($result3)){
 					$teamname = ($lang_code === 'fr') ? $row3['namefr'] : $row3['nameen'];
 				?>
 					<li class="checkbox">

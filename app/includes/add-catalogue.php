@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	$sql = "INSERT INTO tblcatalogue(`nameen`, `namefr`, `status`) VALUES ('$nameen', '$namefr', '$status')";
 	//echo $sql;
 	//exit();
-	mysqli_query($link,$sql);
+	rmt_admin_query($link,$sql);
 	
 	// Now redirect
 	header("location:/catalogue.php?lang={$lang_code}&status=success"); 

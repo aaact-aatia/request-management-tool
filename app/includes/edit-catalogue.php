@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	// Create SQL statement
 	$sql = "UPDATE `tblcatalogue` SET `nameen` = '$nameen', `namefr` = '$namefr', `survey` = '$survey' WHERE id='$catalogueid'";
 	//echo $sql;
-	mysqli_query($link,$sql);
+	rmt_admin_query($link,$sql);
 	
 	// Now redirect
 	header("location:/catalogue.php?lang={$lang_code}&status=success"); 
@@ -56,10 +56,10 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 // Construct SQL statement
 $sql2 = "SELECT * FROM tblcatalogue WHERE id='$catalogueid'";
 
-$result2 = mysqli_query($link,$sql2);
+$result2 = rmt_admin_query($link,$sql2);
 //List it
-if(mysqli_num_rows($result2)>0){
-	while($row2 = mysqli_fetch_array($result2)){
+if(rmt_result_num_rows($result2)>0){
+	while($row2 = rmt_result_fetch_array($result2)){
 		$display_name = $lang_code === 'fr' ? $row2['namefr'] : $row2['nameen'];
 ?>
 <section id="filter-id" class="modal-dialog modal-content overlay-def">

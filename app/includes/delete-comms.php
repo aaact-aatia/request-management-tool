@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 		$sql = "UPDATE `tbladminlog` SET `status` = '0' WHERE id='$commentid'";
 	}
 	//echo $sql;
-	mysqli_query($link,$sql);
+	rmt_admin_query($link,$sql);
 	
 	// Now redirect
 	header("location:/viewrequest-$lang.php?rid=$triageid"); 
