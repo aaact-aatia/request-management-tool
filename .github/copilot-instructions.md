@@ -159,7 +159,7 @@ All pages use Government of Canada's **Web Experience Toolkit v4**:
 <!-- Web Experience Toolkit (WET) / Boîte à outils de l'expérience Web (BOEW) -->
 ```
 - Uses WET4 CSS classes: `form-control`, `btn btn-primary`, `alert alert-danger`
-- Includes standard GC templates via `includes/refTop.php`, `includes/appTop.php`
+- Includes shared templates via `includes/template/head.php`, `includes/template/header.php`, `includes/template/page-details.php`, `includes/template/footer.php`, `includes/template/scripts.php`
 - Do not use Bootstrap standalone classes - use WET4 equivalents
 
 ### Helper Functions
