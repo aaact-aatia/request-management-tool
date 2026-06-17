@@ -7,6 +7,8 @@
 require('sql.php');
 /** @var mysqli $link */
 
+require('includes/helpers.php');
+
 // Handle language from query string or session
 if (isset($_GET['lang']) && in_array($_GET['lang'], ['en', 'fr'])) {
 	$_SESSION['lang'] = $_GET['lang'];
@@ -47,9 +49,16 @@ include 'includes/template/header.php';
 			$row = mysqli_fetch_array($result);
 			$latestid = $row[0];
 			$chkid = $latestid - 500;
+			$resolvedStatusIds = rmt_get_resolved_status_ids($link);
+			$resolvedStatusList = !empty($resolvedStatusIds) ? implode(',', array_map('intval', $resolvedStatusIds)) : '0';
 			
 			// Construct SQL statement
-			$sql = "SELECT * FROM tbltriage WHERE id > '$chkid' AND statusid = '2' AND (cssurvey IS NULL OR cssurvey = 0) ORDER BY id DESC LIMIT 250";
+			$sql = "SELECT tr.*
+			        FROM tbltriage tr
+			        WHERE tr.id > '$chkid'
+			          AND tr.statusid IN ($resolvedStatusList)
+			          AND (tr.cssurvey IS NULL OR tr.cssurvey = 0)
+			        ORDER BY tr.id DESC LIMIT 250";
 			
 			$result = mysqli_query($link,$sql);
 			//List it

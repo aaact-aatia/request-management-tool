@@ -74,6 +74,59 @@ function getSubservicesByService($link, $serviceid, $lang = 'en') {
     );
 }
 
+function rmt_table_has_column($link, string $tableName, string $columnName): bool {
+    $tableName = mysqli_real_escape_string($link, $tableName);
+    $columnName = mysqli_real_escape_string($link, $columnName);
+
+    $sql = "SELECT 1
+            FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME = '$tableName'
+              AND COLUMN_NAME = '$columnName'
+            LIMIT 1";
+    $result = mysqli_query($link, $sql);
+
+    return ($result && mysqli_num_rows($result) > 0);
+}
+
+function rmt_get_resolved_status_ids($link): array {
+    static $resolvedStatusIds = null;
+
+    if (is_array($resolvedStatusIds)) {
+        return $resolvedStatusIds;
+    }
+
+    $resolvedStatusIds = [];
+    $hasResolvedFlag = rmt_table_has_column($link, 'tblstatus', 'is_resolved');
+
+    if ($hasResolvedFlag) {
+        $sql = "SELECT id FROM tblstatus WHERE status = '1' AND is_resolved = '1' ORDER BY id ASC";
+    } else {
+        $sql = "SELECT id FROM tblstatus
+                WHERE status = '1'
+                  AND (LOWER(nameen) = 'resolved' OR LOWER(namefr) IN ('résolu', 'resolu'))
+                ORDER BY id ASC";
+    }
+
+    $result = mysqli_query($link, $sql);
+    if ($result) {
+        while ($row = mysqli_fetch_assoc($result)) {
+            $resolvedStatusIds[] = (int)$row['id'];
+        }
+    }
+
+    return $resolvedStatusIds;
+}
+
+function rmt_is_resolved_status_id($link, $statusId): bool {
+    $statusId = (int)$statusId;
+    if ($statusId <= 0) {
+        return false;
+    }
+
+    return in_array($statusId, rmt_get_resolved_status_ids($link), true);
+}
+
 function getTeamMembersByContact($link, $contactid) {
     $contactid = mysqli_real_escape_string($link, $contactid);
     

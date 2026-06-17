@@ -768,15 +768,7 @@ $blobStorage = new AzureBlobStorageManager();
 			<?php if($_SESSION['pid']!=""){ ?>
 			<?php
 			// Check if status is resolved, if it is then display the client satisfaction survey link and results if available
-			$resolvedStatusId = 2;
-			$resolvedStatusSql = "SELECT id FROM tblstatus WHERE LOWER(nameen) = 'resolved' AND status = '1' LIMIT 1";
-			$resolvedStatusResult = mysqli_query($link, $resolvedStatusSql);
-			if ($resolvedStatusResult && mysqli_num_rows($resolvedStatusResult) > 0) {
-				$resolvedStatusRow = mysqli_fetch_array($resolvedStatusResult);
-				$resolvedStatusId = (int)$resolvedStatusRow['id'];
-			}
-
-			if ((int)$statusid === $resolvedStatusId){
+			if (rmt_is_resolved_status_id($link, $statusid)){
 			// First check if surveys are enabled for this catalogue
 			$catalogueSurveySql = "SELECT survey FROM tblcatalogue WHERE id = '$catalogueid'";
 			$catalogueSurveyResult = mysqli_query($link, $catalogueSurveySql);

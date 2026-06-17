@@ -22,6 +22,8 @@ require('includes/httpscheck.php');
 // Include file for calculating business days
 require('includes/calculate-bdays.php');
 
+require('includes/helpers.php');
+
 // Grab MySQL connection
 require('sql.php');
 /** @var mysqli $link */
@@ -559,7 +561,8 @@ include 'includes/template/head.php';
 					// Check if request is resolved and calculate from that day
 					// Grab the status id
 					$statusid = $row['statusid'];
-					if ($statusid=='2') {
+					$isResolvedStatus = rmt_is_resolved_status_id($link, $statusid);
+					if ($isResolvedStatus) {
 						// Get the date resolved
 						$dateresolved = $row['dateresolved'];
 						if (!empty($dateresolved) && strtotime($dateresolved) !== false) {
@@ -594,9 +597,9 @@ include 'includes/template/head.php';
 						$closedue = true;
 					}
 			?>
-				<?php if ($statusid == 2) { ?>
-				<tr <?php if ($doverdue OR $overdue) { ?> style="background-color: #e87d88;"<?php } ?>>
-				<?php } else { ?>
+					<?php if ($isResolvedStatus) { ?>
+					<tr>
+					<?php } else { ?>
 				<tr <?php if ($doverdue) { ?> style="background-color: #e87d88;"<?php } elseif($overdue) { ?> style="background-color: #f5c6cb;"<?php } elseif ($closedue) { ?> style="background-color: #ffeeba;"<?php } ?>>
 				<?php } ?>
 				<td>
@@ -616,8 +619,7 @@ include 'includes/template/head.php';
 					?>
 						<?php echo $statusname; ?>
 						
-						<?php if ($statusid=='2') { ?>
-						<?php if ($doverdue OR $overdue) { ?><br /><span class="glyphicon glyphicon-warning-sign"></span> <?= htmlspecialchars($langFile['asearch_request_closed_past_sla']) ?><?php } ?>
+						<?php if ($isResolvedStatus) { ?>
 						<?php } else { ?>
 						<?php if ($doverdue) { ?><br /><span class="glyphicon glyphicon-warning-sign"></span> <?= htmlspecialchars($langFile['asearch_escalation_required']) ?><?php } elseif ($overdue) { ?><br /><span class="glyphicon glyphicon-warning-sign"></span> <?= htmlspecialchars($langFile['asearch_request_past_sla']) ?><?php } elseif ($closedue) { ?><br /><span class="glyphicon glyphicon-warning-sign"></span> <?= htmlspecialchars($langFile['asearch_request_close_sla']) ?><?php } ?>
 						<?php } ?>
@@ -634,7 +636,7 @@ include 'includes/template/head.php';
 					
 						<a class="btn btn-primary btn-block" href="editrequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?php echo base64_encode($row['id']);?>&reqid=<?php echo urlencode('a11y-' . $row['requestid']); ?>"><?= htmlspecialchars($langFile['asearch_edit']) ?> &nbsp;<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> <?= htmlspecialchars($langFile['asearch_request']) ?></span></a><?php if ($_SESSION['atype']=='1') { ?> <a class="wb-lbx btn btn-primary btn-block" href="includes/delete-request.php?id=<?php echo $row['id'];?>"><?= htmlspecialchars($langFile['asearch_delete']) ?> &nbsp;<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> <?= htmlspecialchars($langFile['asearch_request']) ?></span></a><?php } ?>
 						<?php if(in_array('1', $_SESSION['team'])){?><a class="btn btn-primary btn-block" href="clonerequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?php echo base64_encode($row['id']);?>&toClose=2"><?= htmlspecialchars($langFile['asearch_clone']) ?> &nbsp;<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> <?= htmlspecialchars($langFile['asearch_request']) ?></span></a>
-						<?php if($statusid != 2 and $statusid != '2'){?><a class="btn btn-primary btn-block" href="clonerequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?php echo base64_encode($row['id']);?>&toClose=1"><?= htmlspecialchars($langFile['asearch_clone_close']) ?> &nbsp;<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> <?= htmlspecialchars($langFile['asearch_request']) ?></span></a><?php }}?>
+						<?php if(!$isResolvedStatus){?><a class="btn btn-primary btn-block" href="clonerequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?php echo base64_encode($row['id']);?>&toClose=1"><?= htmlspecialchars($langFile['asearch_clone_close']) ?> &nbsp;<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> <?= htmlspecialchars($langFile['asearch_request']) ?></span></a><?php }}?>
 					</td>
 					<?php
 						} else  {
@@ -649,7 +651,7 @@ include 'includes/template/head.php';
 					?>
 						<a class="btn btn-primary btn-block" href="editrequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?php echo base64_encode($row['id']);?>&reqid=<?php echo urlencode('a11y-' . $row['requestid']); ?>"><?= htmlspecialchars($langFile['asearch_edit']) ?> &nbsp;<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> <?= htmlspecialchars($langFile['asearch_request']) ?></span></a><?php if ($_SESSION['atype']=='1') { ?> <a class="wb-lbx btn btn-primary btn-block" href="includes/delete-request.php?id=<?php echo $row['id'];?>"><?= htmlspecialchars($langFile['asearch_delete']) ?> &nbsp;<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> <?= htmlspecialchars($langFile['asearch_request']) ?></span></a><?php } ?>
 						<?php if(in_array('1', $_SESSION['team'])){?><a class="btn btn-primary btn-block" href="clonerequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?php echo base64_encode($row['id']);?>&toClose=2"><?= htmlspecialchars($langFile['asearch_clone']) ?> &nbsp;<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> <?= htmlspecialchars($langFile['asearch_request']) ?></span></a>
-						<?php if($statusid != 2 and $statusid != '2'){?><a class="btn btn-primary btn-block" href="clonerequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?php echo base64_encode($row['id']);?>&toClose=1"><?= htmlspecialchars($langFile['asearch_clone_close']) ?> &nbsp;<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> <?= htmlspecialchars($langFile['asearch_request']) ?></span></a><?php }}?>
+						<?php if(!$isResolvedStatus){?><a class="btn btn-primary btn-block" href="clonerequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?php echo base64_encode($row['id']);?>&toClose=1"><?= htmlspecialchars($langFile['asearch_clone_close']) ?> &nbsp;<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> <?= htmlspecialchars($langFile['asearch_request']) ?></span></a><?php }}?>
 					<?php 
 							} else {
 					?>

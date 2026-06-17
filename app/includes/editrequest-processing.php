@@ -21,33 +21,7 @@ $departmentagencyCommlogId = (int)getPostValue('departmentagency_commlogid', 0);
 $clientphone = getPostValue('clientphone');
 $sourceid = getPostValue('sourceid');
 $statusid = getPostValue('statusid');
-
-function isResolvedStatusId($link, $statusId) {
-    $statusId = (int)$statusId;
-    if ($statusId <= 0) {
-        return false;
-    }
-
-    $result = mysqli_query($link, "SELECT * FROM tblstatus WHERE id = '$statusId' LIMIT 1");
-    if (!$result || mysqli_num_rows($result) === 0) {
-        return false;
-    }
-
-    $row = mysqli_fetch_assoc($result);
-
-    // Prefer explicit admin configuration when available.
-    if (array_key_exists('is_resolved', $row)) {
-        return (int)$row['is_resolved'] === 1;
-    }
-
-    // Backward compatibility: infer from status names if flag is not present.
-    $nameEn = strtolower(trim((string)$row['nameen']));
-    $nameFr = strtolower(trim((string)$row['namefr']));
-
-    return $nameEn === 'resolved' || $nameFr === 'résolu' || $nameFr === 'resolu';
-}
-
-$isTargetResolved = isResolvedStatusId($link, $statusid);
+$isTargetResolved = rmt_is_resolved_status_id($link, $statusid);
 $datereceived = getPostValue('datereceived');
 $dateupdated = !empty($_POST['dateupdated']) ? getPostValue('dateupdated') : getTodayDate();
 
@@ -112,7 +86,7 @@ function upsertDepartmentAgencyInNotes($notes, $departmentValue, $lang) {
 $result2 = mysqli_query($link, "SELECT statusid FROM tbltriage WHERE id = '$requestuid'");
 $row2 = mysqli_fetch_assoc($result2);
 $cstatusid = $row2['statusid'];
-$isCurrentResolved = isResolvedStatusId($link, $cstatusid);
+$isCurrentResolved = rmt_is_resolved_status_id($link, $cstatusid);
 
 if ($cstatusid != $statusid) {
     $exactTime = date('Y-m-d H:i:s');
