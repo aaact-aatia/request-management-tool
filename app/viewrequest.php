@@ -343,23 +343,12 @@ if(mysqli_num_rows($result)>0){
 			}
 		}
 ?>
-<!DOCTYPE html>
-<!--[if lt IE 9]><html class="no-js lt-ie9" lang="en" dir="ltr"><![endif]-->
-<!--[if gt IE 8]><!--><html class="no-js" lang="en" dir="ltr"><!--<![endif]-->
-	<head>
-		<meta charset="utf-8">
-		<!-- Web Experience Toolkit (WET) / Boîte à outils de l'expérience Web (BOEW) wet-boew.github.io/wet-boew/License-en.html / wet-boew.github.io/wet-boew/Licence-fr.html -->
-		<title><?= $t['page_title'] ?><?php echo $row['requestid'] ?><?= $t['title_suffix'] ?></title>
-		<meta content="width=device-width,initial-scale=1" name="viewport">
-		<!-- Meta data -->
-		<meta name="description" content="">
-		<!-- Meta data-->
-		<?php include 'includes/refTop.php';?>
-	</head>
-	<body vocab="https://schema.org/" typeof="WebPage">
-		<div id="def-top">
-		</div>
-		<?php include 'includes/appTop.php'; ?>
+	<?php
+	$pageTitle = $t['page_title'] . $row['requestid'];
+	$pageDescription = '';
+	include 'includes/template/head.php';
+	include 'includes/template/header.php';
+	?>
 		<main role="main" property="mainContentOfPage" class="container">
 			<h1 property="name" id="wb-cont"><?= $t['page_title'] ?><?php echo $row['requestid'] ?></h1>
 			
@@ -945,15 +934,15 @@ $blobStorage = new AzureBlobStorageManager();
 			<p><?= htmlspecialchars($t['no_comms']) ?></p>
 			<?php } ?>
 			<?php } ?>
+			<?php include 'includes/template/page-details.php'; ?>
 		</main>
 		<div class="image-preview" id="imagePreview" role="dialog" aria-hidden="true" style="display:none">
         <button class="close-btn" id="closePreview" aria-label="Close image preview">&times;</button>
         <img id="previewImage" src="" alt="Preview">
         <p id="imageAnnouncement" class="sr-only" aria-live="assertive"></p>
     </div>
-		<div id="def-footer">
-		</div>
-		<?php include 'includes/appFooter.php';?>
+		<?php include 'includes/template/footer.php'; ?>
+		<?php include 'includes/template/scripts.php'; ?>
 		<script>
    document.getElementById('downloadAll').addEventListener('click', async function() {
     // Get only visible rows after search/filtering
@@ -1102,31 +1091,20 @@ document.querySelectorAll('.delete-btn').forEach(button => {
 } else { 
 // Wrong ID so display an error message
 ?>
-<!DOCTYPE html>
-<!--[if lt IE 9]><html class="no-js lt-ie9" lang="<?= $lang ?>" dir="ltr"><![endif]-->
-<!--[if gt IE 8]><!--><html class="no-js" lang="<?= $lang ?>" dir="ltr"><!--<![endif]-->
-	<head>
-		<meta charset="utf-8">
-		<!-- Web Experience Toolkit (WET) / Boîte à outils de l'expérience Web (BOEW) wet-boew.github.io/wet-boew/License-en.html / wet-boew.github.io/wet-boew/Licence-fr.html -->
-		<title><?= $t['title_suffix'] ?></title>
-		<meta content="width=device-width,initial-scale=1" name="viewport">
-		<!-- Meta data -->
-		<meta name="description" content="">
-		<!-- Meta data-->
-		<?php include 'includes/refTop.php';?>
-	</head>
-	<body vocab="https://schema.org/" typeof="WebPage">
-		<div id="def-top">
-		</div>
-		<?php include 'includes/appTop.php'; ?>
+	<?php
+	$pageTitle = $t['not_found_title'];
+	$pageDescription = '';
+	include 'includes/template/head.php';
+	include 'includes/template/header.php';
+	?>
 		<main role="main" property="mainContentOfPage" class="container">
 			<h1 property="name" id="wb-cont"><?= $t['not_found_title'] ?></h1>
 			
 			<p><?= $t['not_found_msg'] ?></p>
+			<?php include 'includes/template/page-details.php'; ?>
 		</main>
-		<div id="def-footer">
-		</div>
-		<?php include 'includes/appFooter.php';?>
+		<?php include 'includes/template/footer.php'; ?>
+		<?php include 'includes/template/scripts.php'; ?>
 	</body>
 </html>
 <?php

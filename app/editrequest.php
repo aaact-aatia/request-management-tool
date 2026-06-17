@@ -200,20 +200,13 @@ $result = mysqli_query($link, "SELECT requestid FROM tbltriage WHERE id = '$requ
 $row = mysqli_fetch_assoc($result);
 $requestid = $row['requestid'];
 
-?>
-<!DOCTYPE html>
-<html class="no-js" lang="<?php echo $lang; ?>" dir="ltr">
-<head>
-    <meta charset="utf-8">
-    <title><?php echo $t['page_title']; ?> - a11y-<?php echo $requestid; ?> - <?php echo $t['tool_name']; ?></title>
-    <meta content="width=device-width,initial-scale=1" name="viewport">
-    <meta name="description" content="">
-    <?php include 'includes/refTop.php'; ?>
-</head>
+$pageTitle = $t['page_title'] . ' - a11y-' . $requestid;
+$pageDescription = '';
 
-<body vocab="https://schema.org/" typeof="WebPage">
-    <div id="def-top"></div>
-    <?php include 'includes/appTop.php'; ?>
+include 'includes/template/head.php';
+
+?>
+<?php include 'includes/template/header.php'; ?>
     
     <main role="main" property="mainContentOfPage" class="container">
         <h1 property="name" id="wb-cont"><?php echo $t['page_title']; ?> - a11y-<?php echo $requestid; ?></h1>
@@ -508,16 +501,14 @@ $requestid = $row['requestid'];
         <?php
         }
         ?>
-        
-        <div id="def-preFooter"></div>
-        <?php include 'includes/preFooter.php'; ?>
+        <?php include 'includes/template/page-details.php'; ?>
     </main>
-    
-    <div id="def-footer"></div>
-    <?php include 'includes/appFooter.php'; ?>
-</body>
 
-<?php include 'includes/editrequest-scripts.php'; ?>
+    <?php include 'includes/template/footer.php'; ?>
+    <?php include 'includes/template/scripts.php'; ?>
+    <?php include 'includes/editrequest-scripts.php'; ?>
+
+    </body>
 
 </html>
 <?php mysqli_close($link); ?>

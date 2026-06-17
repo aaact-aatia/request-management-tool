@@ -53,26 +53,13 @@ if(mysqli_num_rows($result)>0) {
 		$cataloguename = $row[$nameColumn];
 	}
 }
+
+$pageTitle = $cataloguename . ' - ' . $lang['catalogue_mgmt_heading_suffix'];
+$pageDescription = '';
+
+include 'includes/template/head.php';
 ?>
-<!DOCTYPE html>
-<!--[if lt IE 9]><html class="no-js lt-ie9" lang="<?= $_SESSION['lang'] ?>" dir="ltr"><![endif]-->
-<!--[if gt IE 8]><!--><html class="no-js" lang="<?= $_SESSION['lang'] ?>" dir="ltr"><!--<![endif]-->
-	<head>
-		<meta charset="utf-8">
-		<!-- Web Experience Toolkit (WET) / Boîte à outils de l'expérience Web (BOEW) wet-boew.github.io/wet-boew/License-en.html / wet-boew.github.io/wet-boew/Licence-fr.html -->
-		<title><?php echo htmlspecialchars($cataloguename) ?> - <?= htmlspecialchars($lang['catalogue_mgmt_title_suffix']) ?></title>
-		<meta content="width=device-width,initial-scale=1" name="viewport">
-		<!-- Meta data -->
-		<meta name="description" content="">
-		<!-- Meta data-->
-		<?php 
-		include 'includes/refTop.php';
-		?>
-	</head>
-	<body vocab="https://schema.org/" typeof="WebPage">
-		<div id="def-top">
-		</div>
-		<?php include 'includes/appTop.php'; ?>
+	<?php include 'includes/template/header.php'; ?>
 		<main role="main" property="mainContentOfPage" class="container">
 			<h1 property="name" id="wb-cont"><?php echo htmlspecialchars($cataloguename) ?> - <?= htmlspecialchars($lang['catalogue_mgmt_heading_suffix']) ?></h1>
 			
@@ -158,14 +145,10 @@ if(mysqli_num_rows($result)>0) {
 			<?php } ?>
 			
 			<div class="mrgn-tp-md"><a class="btn btn-primary" href="/catalogue.php?lang=<?= $_SESSION['lang'] ?>"><?= htmlspecialchars($lang['catalogue_mgmt_back_button']) ?></a></div>
-			
-			<div id="def-preFooter">
-			</div>
-			<?php include 'includes/preFooter.php';?>
+			<?php include 'includes/template/page-details.php'; ?>
 		</main>
-		<div id="def-footer">
-		</div>
-		<?php include 'includes/appFooter.php';?>
+		<?php include 'includes/template/footer.php'; ?>
+		<?php include 'includes/template/scripts.php'; ?>
 	</body>
 </html>
 <?php

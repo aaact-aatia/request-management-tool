@@ -12,27 +12,17 @@ require('includes/httpscheck.php');
 require('sql.php');
 /** @var mysqli $link */
 
+$_SESSION['lang'] = 'en';
+
 // Security check
 require('includes/loggedincheck-en.php');
+
+$pageTitle = 'Latest survey results';
+$pageDescription = '';
+
+include 'includes/template/head.php';
 ?>
-<!DOCTYPE html>
-<!--[if lt IE 9]><html class="no-js lt-ie9" lang="en" dir="ltr"><![endif]-->
-<!--[if gt IE 8]><!--><html class="no-js" lang="en" dir="ltr"><!--<![endif]-->
-	<head>
-		<meta charset="utf-8">
-		<!-- Web Experience Toolkit (WET) / Boîte à outils de l'expérience Web (BOEW) wet-boew.github.io/wet-boew/License-en.html / wet-boew.github.io/wet-boew/Licence-fr.html -->
-		<title>Client satisfaction surveys - Request Management Tool - IT Accessibility Office</title>
-		<meta content="width=device-width,initial-scale=1" name="viewport">
-		<!-- Meta data -->
-		<meta name="description" content="">
-		<!-- Meta data-->
-		<?php include 'includes/refTop.php';?>
-		
-	</head>
-	<body vocab="https://schema.org/" typeof="WebPage">
-		<div id="def-top">
-		</div>
-		<?php include 'includes/appTop.php';?>
+	<?php include 'includes/template/header.php'; ?>
 		<main role="main" property="mainContentOfPage" class="container">
 			<h1 property="name" id="wb-cont">Latest survey results</h1>
 			
@@ -99,14 +89,10 @@ require('includes/loggedincheck-en.php');
 			<?php } else { ?>
 			<p><strong>No surveys available!</strong></p>
 			<?php } ?>
-			
-			<div id="def-preFooter">
-			</div>
-			<?php include 'includes/preFooter.php';?>
+			<?php include 'includes/template/page-details.php'; ?>
 		</main>
-		<div id="def-footer">
-		</div>
-		<?php include 'includes/appFooter.php';?>
+		<?php include 'includes/template/footer.php'; ?>
+		<?php include 'includes/template/scripts.php'; ?>
 	</body>
 </html>
 <?php

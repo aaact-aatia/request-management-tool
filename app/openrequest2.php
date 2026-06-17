@@ -363,21 +363,13 @@ $serviceid = (int)$serviceid;
 $subserviceid = (int)$subserviceid;
 $reauditFlag = (int)$reauditFlag;
 
-?>
-<!DOCTYPE html>
-<html class="no-js" lang="<?php echo $lang; ?>" dir="ltr">
-<head>
-    <meta charset="utf-8">
-    <title><?php echo $t['page_title']; ?> - <?php echo $t['tool_name']; ?></title>
-    <meta content="width=device-width,initial-scale=1" name="viewport">
-    <?php 
-    include 'includes/refTop.php';
-    ?>
-</head>
+$pageTitle = $t['page_title'];
+$pageDescription = '';
 
-<body vocab="https://schema.org/" typeof="WebPage">
-    <div id="def-top"></div>
-    <?php include 'includes/appTop.php'; ?>
+include 'includes/template/head.php';
+
+?>
+<?php include 'includes/template/header.php'; ?>
     
     <main role="main" property="mainContentOfPage" class="container">
         <h1 property="name" id="wb-cont"><?php echo $t['page_title']; ?></h1>
@@ -435,13 +427,11 @@ $reauditFlag = (int)$reauditFlag;
                 <button type="submit" class="btn btn-primary"><?php echo $t['submit']; ?></button>
             </div>
         </form>
-        
-        <div id="def-preFooter"></div>
-        <?php include 'includes/preFooter.php'; ?>
+        <?php include 'includes/template/page-details.php'; ?>
     </main>
-    
-    <div id="def-footer"></div>
-    <?php include 'includes/appFooter.php'; ?>
+
+    <?php include 'includes/template/footer.php'; ?>
+    <?php include 'includes/template/scripts.php'; ?>
 </body>
 </html>
 <?php mysqli_close($link); ?>
