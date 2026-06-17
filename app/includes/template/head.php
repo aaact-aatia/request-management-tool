@@ -36,10 +36,8 @@ $fullPageTitle = $pageTitle . ' - ' . $appName . ' - ' . $orgName;
 		
 		<!-- WET4 Stylesheets -->
 		<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous"/>
+		<link rel="stylesheet" href="https://www.canada.ca/etc/designs/canada/wet-boew/css/wet-boew.min.css"/>
 		<link rel="stylesheet" href="https://www.canada.ca/etc/designs/canada/wet-boew/css/theme.min.css"/>
-		<!-- Temporary: Will be removing these CDTS stylesheets later -->
-		<link rel="stylesheet" href="https://www.canada.ca/etc/designs/canada/cdts/gcweb/v5_0_2/cdts/cdtsfixes.css">
-		<link rel="stylesheet" href="https://www.canada.ca/etc/designs/canada/cdts/gcweb/v5_0_2/cdts/cdtsapps.css">
 		<link rel="stylesheet" href="includes/template/app.css">
 
 		<?php if (!empty($extraStyles)): ?>

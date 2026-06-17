@@ -36,7 +36,7 @@ $footerLangStrings = $footerTranslations[$footerLang];
 				</ul>
 			</nav>
 			<div class="wtrmrk align-self-end">
-				<img src="https://www.canada.ca/etc/designs/canada/cdts/gcweb/v5_0_2/wet-boew/assets/wmms-blk.svg" alt="<?= $footerLangStrings['gc_symbol'] ?>">
+				<img src="https://www.canada.ca/etc/designs/canada/wet-boew/assets/wmms-blk.svg" alt="<?= $footerLangStrings['gc_symbol'] ?>">
 			</div>
 		</div>
 	</div>
