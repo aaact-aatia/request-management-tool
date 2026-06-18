@@ -254,14 +254,7 @@ echo '</tbody></table>';
 //     . number_format($overallAverages["avgOverallDaysPerRequest"], 2)
 //     . ' days (from ' . $overallAverages["totalRequests"] . ' requests).</div>';
 ?>
-<script>
-					$(document).ready(function() {
-  $('.wb-tables').DataTable({
-    ordering: false
-  });
-});
-
-					</script>
+<script src="/public/js/report-status.js"></script>
 			<?php
 			// Display only if cSearch is false
 			if ($cSearch==false) {

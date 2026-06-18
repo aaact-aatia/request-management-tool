@@ -187,51 +187,7 @@ $t = $translations[$lang_code];
 			<button type="submit" class="btn btn-default"><?= htmlspecialchars($t['add_button']) ?></button>
 			<button type="button" class="btn btn-default popup-modal-dismiss"><?= $lang_code === 'fr' ? 'Annuler' : 'Cancel' ?></button>
 		</div>
-		<script>
-		(function () {
-			var accountType = document.getElementById('accounttype');
-			var teamBoxes = document.querySelectorAll('.team-option');
-			function updateTeamSelectionRules() {
-				var role = accountType.value;
-				var noTeamRoles = ['1', '2', '6'];
-				var singleTeamRoles = ['4', '5'];
-
-				if (noTeamRoles.indexOf(role) !== -1) {
-					teamBoxes.forEach(function (cb) {
-						cb.checked = false;
-						cb.disabled = true;
-					});
-					return;
-				}
-
-				teamBoxes.forEach(function (cb) {
-					cb.disabled = false;
-				});
-
-				if (singleTeamRoles.indexOf(role) !== -1) {
-					var checked = Array.prototype.filter.call(teamBoxes, function (cb) { return cb.checked; });
-					if (checked.length > 1) {
-						checked.slice(1).forEach(function (cb) { cb.checked = false; });
-					}
-				}
-			}
-
-			teamBoxes.forEach(function (cb) {
-				cb.addEventListener('change', function () {
-					if (['4', '5'].indexOf(accountType.value) !== -1) {
-						teamBoxes.forEach(function (other) {
-							if (other !== cb) {
-								other.checked = false;
-							}
-						});
-					}
-				});
-			});
-
-			accountType.addEventListener('change', updateTeamSelectionRules);
-			updateTeamSelectionRules();
-		})();
-		</script>
+		<script src="/public/js/user-teams.js"></script>
 		</form>
 	</div>
 </section>

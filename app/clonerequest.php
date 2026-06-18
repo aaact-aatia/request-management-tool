@@ -302,27 +302,7 @@ include 'includes/template/scripts.php';
 
 }
 ?>
-<script>
-function ajax1(val1) {
-    $.ajax({
-        url: "addrequest-ajax1.php?v1=" + val1,
-        success: function(result) {
-            $(".divservice").html(result);
-        }
-    });
-    $(".divsubservice").hide();
-}
-
-function ajax2(val1) {
-    $.ajax({
-        url: "addrequest-ajax2.php?v1=" + val1,
-        success: function(result) {
-            $(".divsubservice").html(result);
-        }
-    });
-    $(".divsubservice").show();
-}
-</script>
+<script src="/public/js/ajax-dropdowns.js"></script>
 <?php
 // Close connection
 mysqli_close($link);
