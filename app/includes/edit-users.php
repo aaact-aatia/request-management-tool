@@ -66,14 +66,10 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	if ($accounttype == '1' || $accounttype == '2' || $accounttype == '6') {
 		$teamstring = "";
 	} elseif ($accounttype == '5') {
-		if (count($selectedTeams) !== 1) {
+		if (count($selectedTeams) > 1) {
 			$noerror = true;
 		} else {
-			$teamstring = (string)$selectedTeams[0];
-			$teamLeadCheck = rmt_admin_query($link, "SELECT id FROM tblteams WHERE id='" . (int)$selectedTeams[0] . "' AND status='1' AND team_lead_user_id IS NOT NULL LIMIT 1");
-			if (!rmt_result_num_rows($teamLeadCheck)) {
-				$noerror = true;
-			}
+			$teamstring = !empty($selectedTeams) ? (string)$selectedTeams[0] : "";
 		}
 	} elseif ($accounttype == '4') {
 		if (count($selectedTeams) < 1) {
@@ -142,7 +138,7 @@ if(rmt_result_num_rows($result2)>0){
 		$team_sort = $is_french ? 'namefr' : 'nameen';
 		$team_name = $is_french ? 'namefr' : 'nameen';
 		$hint_none = $is_french ? 'Aucune équipe n\'est assignée aux comptes Administrateur, Super administrateur et Externe.' : 'No team is assigned for Admin, Super Admin, and External accounts.';
-		$hint_single = $is_french ? 'Un Employé doit avoir exactement une équipe. Un Chef d\'équipe et un Gestionnaire peuvent avoir plusieurs équipes.' : 'Employee must have exactly one team. Team Lead and Manager can have multiple teams.';
+		$hint_single = $is_french ? 'Un Employé peut avoir zero ou une équipe. Un Chef d\'équipe et un Gestionnaire peuvent avoir plusieurs équipes.' : 'Employee can have zero or one team. Team Lead and Manager can have multiple teams.';
 ?>
 <section id="filter-id" class="modal-dialog modal-content overlay-def">
 	<header class="modal-header">

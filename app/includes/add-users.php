@@ -55,14 +55,10 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	if ($accounttype == '1' || $accounttype == '2' || $accounttype == '6') {
 		$teamstring = "";
 	} elseif ($accounttype == '5') {
-		if (count($selectedTeams) !== 1) {
+		if (count($selectedTeams) > 1) {
 			$noerror = true;
 		} else {
-			$teamstring = (string)$selectedTeams[0];
-			$teamLeadCheck = rmt_admin_query($link, "SELECT id FROM tblteams WHERE id='" . (int)$selectedTeams[0] . "' AND status='1' AND team_lead_user_id IS NOT NULL LIMIT 1");
-			if (!rmt_result_num_rows($teamLeadCheck)) {
-				$noerror = true;
-			}
+			$teamstring = !empty($selectedTeams) ? (string)$selectedTeams[0] : "";
 		}
 	} elseif ($accounttype == '4') {
 		if (count($selectedTeams) < 1) {
@@ -114,7 +110,7 @@ $translations = [
 		'account_sort_field' => 'nameen',
 		'team_sort_field' => 'nameen',
 		'team_none_hint' => 'No team is assigned for Admin, Super Admin, and External accounts.',
-		'team_single_hint' => 'Employee must have exactly one team. Team Lead and Manager can have multiple teams.'
+		'team_single_hint' => 'Employee can have zero or one team. Team Lead and Manager can have multiple teams.'
 	],
 	'fr' => [
 		'modal_title' => 'Ajouter un nouvel utilisateur',
@@ -129,7 +125,7 @@ $translations = [
 		'account_sort_field' => 'namefr',
 		'team_sort_field' => 'namefr',
 		'team_none_hint' => 'Aucune équipe n\'est assignée aux comptes Administrateur, Super administrateur et Externe.',
-		'team_single_hint' => 'Un Employé doit avoir exactement une équipe. Un Chef d\'équipe et un Gestionnaire peuvent avoir plusieurs équipes.'
+		'team_single_hint' => 'Un Employé peut avoir zero ou une équipe. Un Chef d\'équipe et un Gestionnaire peuvent avoir plusieurs équipes.'
 	]
 ];
 
