@@ -30,7 +30,6 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	$email = strtolower(mysqli_real_escape_string($link,$_POST['email']));
 	$password = mysqli_real_escape_string($link,$_POST['password']);
 	$accounttype = mysqli_real_escape_string($link,$_POST['accounttype']);
-	$managerid = 0;
 	$selectedTeams = [];
 	if (!empty($_POST['teams']) && is_array($_POST['teams'])) {
 		foreach ($_POST['teams'] as $teamid) {
@@ -55,7 +54,6 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 
 	if ($accounttype == '1' || $accounttype == '2' || $accounttype == '6') {
 		$teamstring = "";
-		$managerid = 0;
 	} elseif ($accounttype == '5') {
 		if (count($selectedTeams) !== 1) {
 			$noerror = true;
@@ -66,7 +64,6 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 				$noerror = true;
 			}
 		}
-		$managerid = 0;
 	} elseif ($accounttype == '4') {
 		if (count($selectedTeams) < 1) {
 			$noerror = true;
@@ -79,7 +76,6 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 		} else {
 			$teamstring = implode(',', $selectedTeams);
 		}
-		$managerid = 0;
 	} else {
 		$noerror = true;
 	}
