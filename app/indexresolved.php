@@ -303,7 +303,7 @@ include 'includes/template/head.php';
 					$tarray = explode(",",$teams);
 					
 					// Admins see everything, other users only see requests for their teams
-					$showRequest = ($_SESSION['atype'] == '1') || in_array($tarraycontactid, $tarray);
+					$showRequest = ($_SESSION['atype'] == '1' || $_SESSION['atype'] == '6') || in_array($tarraycontactid, $tarray);
 					
 					if($showRequest) {
 						$hasVisibleRows = true;

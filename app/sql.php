@@ -90,7 +90,18 @@ if (!function_exists('rmt_admin_query')) {
 	 * Execute an admin query and handle schema drift with a friendly message.
 	 */
 	function rmt_admin_query($dbLink, string $query, ?string $langCode = null) {
-		$result = mysqli_query($dbLink, $query);
+		try {
+			$result = mysqli_query($dbLink, $query);
+		} catch (mysqli_sql_exception $e) {
+			$schemaErrorCodes = [1050, 1051, 1054, 1091, 1146];
+			if (in_array((int)$e->getCode(), $schemaErrorCodes, true)) {
+				rmt_render_schema_error($langCode);
+				exit();
+			}
+
+			throw $e;
+		}
+
 		if ($result === false && rmt_is_schema_mismatch_error($dbLink)) {
 			rmt_render_schema_error($langCode);
 			exit();

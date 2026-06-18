@@ -34,6 +34,11 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	$password = mysqli_real_escape_string($link,$_POST['password']);
 	$password2 = mysqli_real_escape_string($link,$_POST['password2']);
 	$accounttype = mysqli_real_escape_string($link,$_POST['accounttype']);
+	$managerPosted = isset($_POST['manager_id']);
+	$managerid = 0;
+	if ($managerPosted && $_POST['manager_id'] !== '') {
+		$managerid = (int)$_POST['manager_id'];
+	}
 	$selectedTeams = [];
 	if (!empty($_POST['teams']) && is_array($_POST['teams'])) {
 		foreach ($_POST['teams'] as $teamid) {
@@ -65,11 +70,29 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 
 	if ($accounttype == '1' || $accounttype == '2' || $accounttype == '6') {
 		$teamstring = "";
-	} elseif ($accounttype == '4' || $accounttype == '5') {
+		$managerid = 0;
+	} elseif ($accounttype == '5') {
 		if (count($selectedTeams) !== 1) {
 			$noerror = true;
 		} else {
 			$teamstring = (string)$selectedTeams[0];
+			$teamLeadCheck = rmt_admin_query($link, "SELECT id FROM tblteams WHERE id='" . (int)$selectedTeams[0] . "' AND status='1' AND team_lead_user_id IS NOT NULL LIMIT 1");
+			if (!rmt_result_num_rows($teamLeadCheck)) {
+				$noerror = true;
+			}
+		}
+		$managerid = 0;
+	} elseif ($accounttype == '4') {
+		if (count($selectedTeams) < 1) {
+			$noerror = true;
+		} else {
+			$teamstring = implode(',', $selectedTeams);
+		}
+		if ($managerid > 0) {
+			$managerCheck = rmt_admin_query($link, "SELECT id FROM tblusers WHERE id='" . $managerid . "' AND atype='3' AND status='1' LIMIT 1");
+			if (!rmt_result_num_rows($managerCheck)) {
+				$noerror = true;
+			}
 		}
 	} elseif ($accounttype == '3') {
 		if (count($selectedTeams) < 1) {
@@ -77,6 +100,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 		} else {
 			$teamstring = implode(',', $selectedTeams);
 		}
+		$managerid = 0;
 	} else {
 		$noerror = true;
 	}
@@ -91,11 +115,16 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	}
 	
 	// Create SQL statement
+	$managerClause = "";
+	if ($managerPosted || in_array($accounttype, ['1', '2', '3', '5', '6'], true)) {
+		$managerClause = ", `manager_id` = " . ($managerid > 0 ? (string)$managerid : "NULL");
+	}
+
 	if ($password!="") {
-		$sql = "UPDATE `tblusers` SET `firstname` = '$firstname', `lastname` = '$lastname', `email` = '$email', `password` = '$npassword', `atype` = '$accounttype', `team` = '$teamstring' WHERE id='$userid'";
+		$sql = "UPDATE `tblusers` SET `firstname` = '$firstname', `lastname` = '$lastname', `email` = '$email', `password` = '$npassword', `atype` = '$accounttype'" . $managerClause . ", `team` = '$teamstring' WHERE id='$userid'";
 	} else {
-		$sql = "UPDATE `tblusers` SET `firstname` = '$firstname', `lastname` = '$lastname', `email` = '$email', `atype` = '$accounttype', `team` = '$teamstring' WHERE id='$userid'";
-	}		
+		$sql = "UPDATE `tblusers` SET `firstname` = '$firstname', `lastname` = '$lastname', `email` = '$email', `atype` = '$accounttype'" . $managerClause . ", `team` = '$teamstring' WHERE id='$userid'";
+	}
 	//echo $sql;
 	rmt_admin_query($link,$sql);
 	
@@ -127,7 +156,7 @@ if(rmt_result_num_rows($result2)>0){
 		$team_sort = $is_french ? 'namefr' : 'nameen';
 		$team_name = $is_french ? 'namefr' : 'nameen';
 		$hint_none = $is_french ? 'Aucune équipe n\'est assignée aux comptes Administrateur, Super administrateur et Externe.' : 'No team is assigned for Admin, Super Admin, and External accounts.';
-		$hint_single = $is_french ? 'Un Chef d\'équipe et un Employé doivent avoir exactement une équipe. Un Gestionnaire peut avoir plusieurs équipes.' : 'Team Lead and Employee must have exactly one team. Manager can have multiple teams.';
+		$hint_single = $is_french ? 'Un Employé doit avoir exactement une équipe. Un Chef d\'équipe et un Gestionnaire peuvent avoir plusieurs équipes.' : 'Employee must have exactly one team. Team Lead and Manager can have multiple teams.';
 ?>
 <section id="filter-id" class="modal-dialog modal-content overlay-def">
 	<header class="modal-header">

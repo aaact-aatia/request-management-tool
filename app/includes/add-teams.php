@@ -19,6 +19,7 @@ if ($_SESSION['atype'] != 1) {
 
 // Grab MySQL connection
 require('../sql.php');
+/** @var mysqli $link */
 
 // Process the add product form
 if ($_SERVER['REQUEST_METHOD']=='POST'){
@@ -31,6 +32,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	$contactemail = mysqli_real_escape_string($link,$_POST['contactemail']);
 	$escalationcontactname = mysqli_real_escape_string($link,$_POST['escalationcontactname']);
 	$escalationcontactemail = mysqli_real_escape_string($link,$_POST['escalationcontactemail']);
+	$teamLeadUserId = !empty($_POST['team_lead_user_id']) ? (int)$_POST['team_lead_user_id'] : 0;
 	$date_now = date("Y-m-d H:i:s");
 	$updatedby = $_SESSION['pid'];
 	$status = 1;
@@ -41,6 +43,14 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 		$noerror = true;
 	}
 
+	if (!$noerror && $teamLeadUserId > 0) {
+		$leadCheckSql = "SELECT id FROM tblusers WHERE id='" . $teamLeadUserId . "' AND atype='4' AND status='1' LIMIT 1";
+		$leadCheckResult = rmt_admin_query($link, $leadCheckSql);
+		if (!rmt_result_num_rows($leadCheckResult)) {
+			$noerror = true;
+		}
+	}
+
 	// If error detected send user back to modal dialog
 	if ($noerror) {
 		header("location:/teams.php?lang={$lang_code}&status=failed"); 
@@ -48,7 +58,8 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	}
 	
 	// Create SQL statement
-	$sql = "INSERT INTO tblteams(`nameen`, `namefr`, `email`, `contactname`, `contactemail`, `escalationcontactname`, `escalationcontactemail`, `dateadded`, `dateupdated`, `updatedby`, `status`) VALUES ('$teamnameen', '$teamnamefr', '$teamemail', '$contactname', '$contactemail', '$escalationcontactname', '$escalationcontactemail', '$date_now', '$date_now', '$updatedby', '$status')";
+	$teamLeadSqlValue = ($teamLeadUserId > 0) ? (string)$teamLeadUserId : "NULL";
+	$sql = "INSERT INTO tblteams(`nameen`, `namefr`, `email`, `contactname`, `contactemail`, `escalationcontactname`, `escalationcontactemail`, `team_lead_user_id`, `dateadded`, `dateupdated`, `updatedby`, `status`) VALUES ('$teamnameen', '$teamnamefr', '$teamemail', '$contactname', '$contactemail', '$escalationcontactname', '$escalationcontactemail', $teamLeadSqlValue, '$date_now', '$date_now', '$updatedby', '$status')";
 	//echo $sql;
 	//exit();
 	rmt_admin_query($link,$sql);
@@ -69,6 +80,10 @@ $translations = [
 		'contact_email' => 'Contact email:',
 		'escalation_contact_name' => 'Escalation contact name:',
 		'escalation_contact_email' => 'Escalation contact email:',
+		'team_lead' => 'Team lead:',
+		'team_lead_hint' => 'Optional now: you can assign a Team Lead later.',
+		'team_lead_select' => 'Select a team lead',
+		'team_lead_none' => 'No team lead assigned',
 		'required' => '(required)',
 		'add_button' => 'Add'
 	],
@@ -81,6 +96,10 @@ $translations = [
 		'contact_email' => 'Courriel du contact:',
 		'escalation_contact_name' => 'Nom du contact d\'escalade:',
 		'escalation_contact_email' => 'Courriel du contact d\'escalade:',
+		'team_lead' => 'Chef d\'équipe:',
+		'team_lead_hint' => 'Optionnel: vous pouvez assigner un Chef d\'équipe plus tard.',
+		'team_lead_select' => 'Sélectionner un chef d\'équipe',
+		'team_lead_none' => 'Aucun chef d\'équipe assigné',
 		'required' => '(requis)',
 		'add_button' => 'Ajouter'
 	]
@@ -121,6 +140,22 @@ $t = $translations[$lang_code];
 		<div class="form-group">
 			<label for="escalationcontactemail"><span class="field-name"><?= htmlspecialchars($t['escalation_contact_email']) ?> <strong><?= htmlspecialchars($t['required']) ?></strong></span></label>
 			<input type="email" class="form-control" id="escalationcontactemail" name="escalationcontactemail" value="" required>
+		</div>
+		<div class="form-group">
+			<label for="team_lead_user_id"><span class="field-name"><?= htmlspecialchars($t['team_lead']) ?></span></label>
+			<select class="form-control" id="team_lead_user_id" name="team_lead_user_id">
+				<option value=""><?= htmlspecialchars($t['team_lead_none']) ?></option>
+				<?php
+				$leadSql = "SELECT id, firstname, lastname FROM tblusers WHERE atype='4' AND status='1' ORDER BY lastname ASC, firstname ASC";
+				$leadResult = rmt_admin_query($link, $leadSql);
+				while ($leadRow = rmt_result_fetch_array($leadResult)) {
+				?>
+					<option value="<?= (int)$leadRow['id'] ?>"><?= htmlspecialchars($leadRow['lastname'] . ', ' . $leadRow['firstname']) ?></option>
+				<?php
+				}
+				?>
+			</select>
+			<p class="small"><?= htmlspecialchars($t['team_lead_hint']) ?></p>
 		</div>
 		<div class="form-group form-buttons">
 			<button type="submit" class="btn btn-default"><?= htmlspecialchars($t['add_button']) ?></button>

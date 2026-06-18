@@ -27,8 +27,15 @@ require('includes/sla-calculator.php');
 // Include file for calculating business days
 require('includes/calculate-bdays.php');
 
+require('includes/helpers.php');
+
 // Check login
 require('includes/loggedincheck.php');
+
+if (!canViewReports()) {
+	header("location:/openrequest.php?lang=" . $_SESSION['lang'] . "&status=accessdenied");
+	exit();
+}
 
 if (!empty($_GET['status'])){
 	$status = $_GET['status'];
@@ -40,6 +47,8 @@ else{
 // Initialize date variables
 $sdate = "";
 $edate = "";
+$cSearch = false;
+$strCat = "";
 
 // Process the add product form
 if ($_SERVER['REQUEST_METHOD']=='POST'){

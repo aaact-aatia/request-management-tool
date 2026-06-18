@@ -127,6 +127,7 @@ include 'includes/template/head.php';
 					<tr>
 						<th><?= htmlspecialchars($langFile['teams_name_column']) ?></th>
 						<th><?= htmlspecialchars($langFile['teams_email_column']) ?></th>
+						<th><?= $_SESSION['lang'] === 'fr' ? 'Chef d\'équipe' : 'Team Lead' ?></th>
 						<?php if ($_SESSION['atype'] == 1) { ?>
 						<th><?= htmlspecialchars($langFile['teams_actions']) ?></th>
 						<?php } ?>
@@ -139,6 +140,20 @@ include 'includes/template/head.php';
 					<tr>
 						<td><?php echo $row[$teamNameField];?></td>
 						<td><?php echo $row['email'];?></td>
+						<td>
+							<?php
+							$leadName = '—';
+							$leadId = (int)($row['team_lead_user_id'] ?? 0);
+							if ($leadId > 0) {
+								$leadResult = mysqli_query($link, "SELECT lastname, firstname FROM tblusers WHERE id='" . $leadId . "' AND status='1' LIMIT 1");
+								$leadRow = mysqli_fetch_assoc($leadResult);
+								if (!empty($leadRow)) {
+									$leadName = $leadRow['lastname'] . ', ' . $leadRow['firstname'];
+								}
+							}
+							echo htmlspecialchars($leadName);
+							?>
+						</td>
 						<?php if ($_SESSION['atype'] == 1) { ?>
 						<td>
 							<a class="wb-lbx btn btn-primary btn-block" href="includes/edit-teams.php?id=<?php echo $row['id'];?>&lang=<?php echo $lang;?>"><?= htmlspecialchars($langFile['teams_edit']) ?><span class="wb-inv"> <?php echo $row[$teamNameField] ?></span> <?= htmlspecialchars($langFile['teams_team_label']) ?></a><?php if ($_SESSION['atype']=='1') {?> <a class="wb-lbx btn btn-primary btn-block" href="includes/delete-teams.php?id=<?php echo $row['id'];?>&lang=<?php echo $lang;?>"><?= htmlspecialchars($langFile['teams_delete']) ?><span class="wb-inv"> <?php echo $row[$teamNameField] ?></span> <?= htmlspecialchars($langFile['teams_team_label']) ?></a><?php } ?>

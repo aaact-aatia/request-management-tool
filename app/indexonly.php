@@ -233,7 +233,7 @@ include 'includes/template/head.php';
 						$teams = $row2[0];
 					}
 					$tarray = explode(",",$teams);
-					if(in_array($tarraycontactid, $tarray) OR $userid == $row['workerid']) {
+					if ($_SESSION['atype'] == '1' || $_SESSION['atype'] == '6' || in_array($tarraycontactid, $tarray) OR $userid == $row['workerid']) {
 						$hasVisibleRows = true;
 
 						// Build tags for client-side filter

@@ -30,6 +30,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	$email = strtolower(mysqli_real_escape_string($link,$_POST['email']));
 	$password = mysqli_real_escape_string($link,$_POST['password']);
 	$accounttype = mysqli_real_escape_string($link,$_POST['accounttype']);
+	$managerid = 0;
 	$selectedTeams = [];
 	if (!empty($_POST['teams']) && is_array($_POST['teams'])) {
 		foreach ($_POST['teams'] as $teamid) {
@@ -54,11 +55,23 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 
 	if ($accounttype == '1' || $accounttype == '2' || $accounttype == '6') {
 		$teamstring = "";
-	} elseif ($accounttype == '4' || $accounttype == '5') {
+		$managerid = 0;
+	} elseif ($accounttype == '5') {
 		if (count($selectedTeams) !== 1) {
 			$noerror = true;
 		} else {
 			$teamstring = (string)$selectedTeams[0];
+			$teamLeadCheck = rmt_admin_query($link, "SELECT id FROM tblteams WHERE id='" . (int)$selectedTeams[0] . "' AND status='1' AND team_lead_user_id IS NOT NULL LIMIT 1");
+			if (!rmt_result_num_rows($teamLeadCheck)) {
+				$noerror = true;
+			}
+		}
+		$managerid = 0;
+	} elseif ($accounttype == '4') {
+		if (count($selectedTeams) < 1) {
+			$noerror = true;
+		} else {
+			$teamstring = implode(',', $selectedTeams);
 		}
 	} elseif ($accounttype == '3') {
 		if (count($selectedTeams) < 1) {
@@ -66,6 +79,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 		} else {
 			$teamstring = implode(',', $selectedTeams);
 		}
+		$managerid = 0;
 	} else {
 		$noerror = true;
 	}
@@ -79,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	$npassword = password_hash($password, PASSWORD_DEFAULT);
 	
 	// Create SQL statement
-	$sql = "INSERT INTO tblusers(`firstname`, `lastname`, `email`, `password`, `atype`, `team`, `status`, `environment`) VALUES ('$firstname', '$lastname', '$email', '$npassword', '$accounttype', '$teamstring', '$status', 1)";
+	$sql = "INSERT INTO tblusers(`firstname`, `lastname`, `email`, `password`, `atype`, `manager_id`, `team`, `status`, `environment`) VALUES ('$firstname', '$lastname', '$email', '$npassword', '$accounttype', NULL, '$teamstring', '$status', 1)";
 	//echo $sql;
 	//exit();
 	rmt_admin_query($link,$sql);
@@ -104,7 +118,7 @@ $translations = [
 		'account_sort_field' => 'nameen',
 		'team_sort_field' => 'nameen',
 		'team_none_hint' => 'No team is assigned for Admin, Super Admin, and External accounts.',
-		'team_single_hint' => 'Team Lead and Employee must have exactly one team. Manager can have multiple teams.'
+		'team_single_hint' => 'Employee must have exactly one team. Team Lead and Manager can have multiple teams.'
 	],
 	'fr' => [
 		'modal_title' => 'Ajouter un nouvel utilisateur',
@@ -119,7 +133,7 @@ $translations = [
 		'account_sort_field' => 'namefr',
 		'team_sort_field' => 'namefr',
 		'team_none_hint' => 'Aucune équipe n\'est assignée aux comptes Administrateur, Super administrateur et Externe.',
-		'team_single_hint' => 'Un Chef d\'équipe et un Employé doivent avoir exactement une équipe. Un Gestionnaire peut avoir plusieurs équipes.'
+		'team_single_hint' => 'Un Employé doit avoir exactement une équipe. Un Chef d\'équipe et un Gestionnaire peuvent avoir plusieurs équipes.'
 	]
 ];
 

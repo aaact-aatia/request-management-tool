@@ -24,6 +24,14 @@ function isReadOnly() {
     return isset($_SESSION['atype']) && $_SESSION['atype'] == 6;
 }
 
+function canViewAllRequests() {
+    return isset($_SESSION['atype']) && in_array($_SESSION['atype'], [1, 6]);
+}
+
+function canViewReports() {
+    return isset($_SESSION['atype']) && in_array($_SESSION['atype'], [1, 2, 3, 4, 5, 6]);
+}
+
 // ============================================================================
 // VALUE HELPERS
 // ============================================================================

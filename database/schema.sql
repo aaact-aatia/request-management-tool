@@ -24,11 +24,13 @@ CREATE TABLE IF NOT EXISTS `tblusers` (
   `email` varchar(255) NOT NULL UNIQUE,
   `password` varchar(255) NOT NULL,
   `atype` int(11) NOT NULL,
+  `manager_id` int(11) DEFAULT NULL,
   `team` varchar(100) DEFAULT NULL,
   `status` tinyint(1) DEFAULT 1,
   `environment` tinyint(1) DEFAULT 0 COMMENT '0=prod, 1=dev',
   PRIMARY KEY (`id`),
-  KEY `atype` (`atype`)
+  KEY `atype` (`atype`),
+  KEY `manager_id` (`manager_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `tblcatalogue` (
@@ -186,12 +188,14 @@ CREATE TABLE IF NOT EXISTS `tblteams` (
   `contactemail` varchar(255) NOT NULL,
   `escalationcontactname` varchar(200) DEFAULT NULL,
   `escalationcontactemail` varchar(255) DEFAULT NULL,
+  `team_lead_user_id` int(11) DEFAULT NULL,
   `dateadded` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `dateupdated` timestamp NULL DEFAULT NULL,
   `updatedby` int(11) DEFAULT NULL,
   `status` tinyint(1) DEFAULT 1,
   PRIMARY KEY (`id`),
-  KEY `status` (`status`)
+  KEY `status` (`status`),
+  KEY `team_lead_user_id` (`team_lead_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `tblcss` (
