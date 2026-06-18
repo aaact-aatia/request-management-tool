@@ -534,14 +534,14 @@ if(mysqli_num_rows($result)>0){
 				if ($_SESSION['atype'] == '1' OR $_SESSION['atype'] == '2' OR $_SESSION['atype'] == '3' OR $_SESSION['atype'] == '4' OR $_SESSION['atype'] == '5') {
 					$workerid = $row['workerid'];
 					if ($workerid != 0 AND $workerid != "") {
-						$result2 = mysqli_query($link, "SELECT lastname,firstname FROM tblusers WHERE id = '$workerid'");
+						$result2 = mysqli_query($link, "SELECT firstname, lastname FROM tblusers WHERE id = '$workerid'");
 						$row2 = mysqli_fetch_array($result2);
-						$ulastname = $row2[0];
-						$ufirstname = $row2[1];
+						$ufirstname = $row2[0];
+						$ulastname = $row2[1];
 				?>
 				<div style="break-inside: avoid;">
 					<dt><?= $t['assigned_member'] ?></dt>
-					<dd><?php echo $ulastname ?>, <?php echo $ufirstname ?></dd>
+					<dd><?php echo $ufirstname ?> <?php echo $ulastname ?></dd>
 				</div>
 				<?php
 					}
@@ -552,16 +552,16 @@ if(mysqli_num_rows($result)>0){
 			<?php if ($_SESSION['pid'] != "") { ?>
 			<h2><?= htmlspecialchars($t['fieldset_client_info']) ?></h2>
 			<dl class="colcount-sm-2">
-				<?php if ($row['clientlname'] != "") { ?>
-				<div style="break-inside: avoid;">
-					<dt><?= $t['last_name'] ?></dt>
-					<dd><?php echo htmlspecialchars($row['clientlname']) ?></dd>
-				</div>
-				<?php } ?>
 				<?php if ($row['clientfname'] != "") { ?>
 				<div style="break-inside: avoid;">
 					<dt><?= $t['first_name'] ?></dt>
 					<dd><?php echo htmlspecialchars($row['clientfname']) ?></dd>
+				</div>
+				<?php } ?>
+				<?php if ($row['clientlname'] != "") { ?>
+				<div style="break-inside: avoid;">
+					<dt><?= $t['last_name'] ?></dt>
+					<dd><?php echo htmlspecialchars($row['clientlname']) ?></dd>
 				</div>
 				<?php } ?>
 				<?php if ($row['clientemail'] != "") { ?>
@@ -917,7 +917,7 @@ $blobStorage = new AzureBlobStorageManager();
 					$cfname = $row3['firstname'];
 					$clname = $row3['lastname'];
 				?>
-				<dt><?php echo $dateadded ?><?php if($creatorid!=0) {?> - <?php echo $clname ?>, <?php echo $cfname ?><?php } ?><?php if ($_SESSION['atype']=='1') {?> <a class="wb-lbx" href="includes/delete-comms.php?t=a&id=<?php echo $row2['id'];?>&rid=<?php echo $triageid ?>"><span class="glyphicon glyphicon-trash"></span><span class="wb-inv"> <?= htmlspecialchars($t['delete_comment']) ?></span></a><?php } ?></dt>
+				<dt><?php echo $dateadded ?><?php if($creatorid!=0) {?> - <?php echo $cfname ?> <?php echo $clname ?><?php } ?><?php if ($_SESSION['atype']=='1') {?> <a class="wb-lbx" href="includes/delete-comms.php?t=a&id=<?php echo $row2['id'];?>&rid=<?php echo $triageid ?>"><span class="glyphicon glyphicon-trash"></span><span class="wb-inv"> <?= htmlspecialchars($t['delete_comment']) ?></span></a><?php } ?></dt>
 				<dd><?php echo $annotes ?></dd>
 				<?php } ?>
 			</dl>

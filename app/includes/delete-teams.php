@@ -47,7 +47,7 @@ if(rmt_result_num_rows($result2)>0){
 		$question = ($lang == 'fr') ? "Voulez-vous vraiment supprimer l'équipe <strong>" . htmlspecialchars($teamname) . "</strong>?" : "Are you sure you wish to delete the <strong>" . htmlspecialchars($teamname) . "</strong> team?";
 		$buttonText = ($lang == 'fr') ? "Oui" : "Yes";
 	// Check for users assigned to this team
-	$userCheckSql = "SELECT firstname, lastname FROM tblusers WHERE team='$contactid' ORDER BY lastname ASC";
+	$userCheckSql = "SELECT firstname, lastname FROM tblusers WHERE team='$contactid' ORDER BY firstname ASC, lastname ASC";
 	$userCheckResult = rmt_admin_query($link, $userCheckSql);
 	$assignedUserCount = rmt_result_num_rows($userCheckResult);
 

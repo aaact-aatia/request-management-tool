@@ -146,11 +146,11 @@ $t = $translations[$lang_code];
 			<select class="form-control" id="team_lead_user_id" name="team_lead_user_id">
 				<option value=""><?= htmlspecialchars($t['team_lead_none']) ?></option>
 				<?php
-				$leadSql = "SELECT id, firstname, lastname FROM tblusers WHERE atype='4' AND status='1' ORDER BY lastname ASC, firstname ASC";
+				$leadSql = "SELECT id, firstname, lastname FROM tblusers WHERE atype='4' AND status='1' ORDER BY firstname ASC, lastname ASC";
 				$leadResult = rmt_admin_query($link, $leadSql);
 				while ($leadRow = rmt_result_fetch_array($leadResult)) {
 				?>
-					<option value="<?= (int)$leadRow['id'] ?>"><?= htmlspecialchars($leadRow['lastname'] . ', ' . $leadRow['firstname']) ?></option>
+					<option value="<?= (int)$leadRow['id'] ?>"><?= htmlspecialchars($leadRow['firstname'] . ' ' . $leadRow['lastname']) ?></option>
 				<?php
 				}
 				?>

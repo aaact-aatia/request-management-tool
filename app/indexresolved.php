@@ -204,7 +204,7 @@ include 'includes/template/head.php';
 					$servicename = "";
 					$cataloguename = "";
 					if (!empty($clientfname) AND !empty($clientlname)) {
-						$clientname = $clientlname . ", " . $clientfname;
+						$clientname = $clientfname . " " . $clientlname;
 					}					
 					// We need to calculate if ticket is close to SLA (or on the date) or if past SLA and grab the names
 					$subserviceid = $row['subserviceid'];
@@ -356,19 +356,19 @@ include 'includes/template/head.php';
 
 						$lastUpdatedByName = '';
 						if (!empty($row['updaterid'])) {
-							$result2 = mysqli_query($link, "SELECT lastname,firstname FROM tblusers WHERE id = '" . $row['updaterid'] . "'");
+							$result2 = mysqli_query($link, "SELECT firstname, lastname FROM tblusers WHERE id = '" . $row['updaterid'] . "'");
 							$row2 = mysqli_fetch_array($result2);
 							if (!empty($row2)) {
-								$lastUpdatedByName = htmlspecialchars($row2[0] . ', ' . $row2[1]);
+								$lastUpdatedByName = htmlspecialchars($row2[0] . ' ' . $row2[1]);
 							}
 						}
 
 						$workerName = '';
 						if (!empty($row['workerid'])) {
-							$result2 = mysqli_query($link, "SELECT lastname,firstname FROM tblusers WHERE id = '" . $row['workerid'] . "'");
+							$result2 = mysqli_query($link, "SELECT firstname, lastname FROM tblusers WHERE id = '" . $row['workerid'] . "'");
 							$row2 = mysqli_fetch_array($result2);
 							if (!empty($row2)) {
-								$workerName = htmlspecialchars($row2[0] . ', ' . $row2[1]);
+								$workerName = htmlspecialchars($row2[0] . ' ' . $row2[1]);
 							}
 						}
 

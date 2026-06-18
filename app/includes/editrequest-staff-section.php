@@ -31,7 +31,7 @@
         }
 
         // Show employees (atype 1-5) filtered by team contact if known, otherwise all
-        $result2 = mysqli_query($link, "SELECT * FROM tblusers WHERE status='1' AND atype <= 5 ORDER BY lastname ASC");
+        $result2 = mysqli_query($link, "SELECT * FROM tblusers WHERE status='1' AND atype <= 5 ORDER BY firstname ASC, lastname ASC");
         while ($row2 = mysqli_fetch_array($result2)) {
             $tarray = array_filter(explode(",", $row2['team']));
             if ($contactid && !in_array($contactid, $tarray)) {
@@ -39,7 +39,7 @@
             }
         ?>
         <option value="<?php echo $row2['id']; ?>" <?php if ($row['workerid'] == $row2['id']) { ?>selected<?php } ?>>
-            <?php echo $row2['lastname']; ?>, <?php echo $row2['firstname']; ?>
+            <?php echo $row2['firstname']; ?> <?php echo $row2['lastname']; ?>
         </option>
         <?php
             }

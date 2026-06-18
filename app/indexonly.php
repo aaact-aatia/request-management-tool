@@ -138,7 +138,7 @@ include 'includes/template/head.php';
 					$clientlname = $row['clientlname'];
 					$clientname = "";
 					if (!empty($clientfname) AND !empty($clientlname)) {
-						$clientname = $clientlname . ", " . $clientfname;
+						$clientname = $clientfname . " " . $clientlname;
 					}					
 					// We need to calculate if ticket is close to SLA (or on the date) or if past SLA and grab the names
 					$subserviceid = $row['subserviceid'];
@@ -280,10 +280,10 @@ include 'includes/template/head.php';
 
 						$workerName = '';
 						if (!empty($row['workerid'])) {
-							$result2 = mysqli_query($link, "SELECT lastname,firstname FROM tblusers WHERE id = '" . $row['workerid'] . "'");
+							$result2 = mysqli_query($link, "SELECT firstname, lastname FROM tblusers WHERE id = '" . $row['workerid'] . "'");
 							$row2 = mysqli_fetch_array($result2);
 							if (!empty($row2)) {
-								$workerName = htmlspecialchars($row2[0] . ', ' . $row2[1]);
+								$workerName = htmlspecialchars($row2[0] . ' ' . $row2[1]);
 							}
 						}
 				?>

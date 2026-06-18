@@ -118,13 +118,13 @@ if(rmt_result_num_rows($result2)>0){
 			<select class="form-control" id="team_lead_user_id" name="team_lead_user_id">
 				<option value=""><?php echo $lang_code === 'en' ? 'No team lead assigned' : 'Aucun chef d\'équipe assigné'; ?></option>
 				<?php
-				$leadSql = "SELECT id, firstname, lastname FROM tblusers WHERE atype='4' AND status='1' ORDER BY lastname ASC, firstname ASC";
+				$leadSql = "SELECT id, firstname, lastname FROM tblusers WHERE atype='4' AND status='1' ORDER BY firstname ASC, lastname ASC";
 				$leadResult = rmt_admin_query($link, $leadSql);
 				while ($leadRow = rmt_result_fetch_array($leadResult)) {
 					$leadId = (int)$leadRow['id'];
 					$currentLeadId = (int)($row2['team_lead_user_id'] ?? 0);
 				?>
-					<option value="<?php echo $leadId; ?>"<?php if ($leadId === $currentLeadId) echo ' selected'; ?>><?php echo htmlspecialchars($leadRow['lastname'] . ', ' . $leadRow['firstname']); ?></option>
+					<option value="<?php echo $leadId; ?>"<?php if ($leadId === $currentLeadId) echo ' selected'; ?>><?php echo htmlspecialchars($leadRow['firstname'] . ' ' . $leadRow['lastname']); ?></option>
 				<?php
 				}
 				?>

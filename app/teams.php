@@ -145,10 +145,10 @@ include 'includes/template/head.php';
 							$leadName = '—';
 							$leadId = (int)($row['team_lead_user_id'] ?? 0);
 							if ($leadId > 0) {
-								$leadResult = mysqli_query($link, "SELECT lastname, firstname FROM tblusers WHERE id='" . $leadId . "' AND status='1' LIMIT 1");
+								$leadResult = mysqli_query($link, "SELECT firstname, lastname FROM tblusers WHERE id='" . $leadId . "' AND status='1' LIMIT 1");
 								$leadRow = mysqli_fetch_assoc($leadResult);
 								if (!empty($leadRow)) {
-									$leadName = $leadRow['lastname'] . ', ' . $leadRow['firstname'];
+									$leadName = $leadRow['firstname'] . ' ' . $leadRow['lastname'];
 								}
 							}
 							echo htmlspecialchars($leadName);

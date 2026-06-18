@@ -141,7 +141,7 @@ function getTeamMembersByContact($link, $contactid) {
     $result = mysqli_query($link,
         "SELECT id, firstname, lastname, team FROM tblusers 
          WHERE status='1' 
-         ORDER BY lastname ASC"
+         ORDER BY firstname ASC, lastname ASC"
     );
     
     $members = [];

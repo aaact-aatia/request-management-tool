@@ -95,7 +95,7 @@ include 'includes/template/head.php';
 			
 			<?php
 			// Construct SQL statement
-			$sql = "SELECT * FROM tblusers ORDER BY lastname ASC";
+			$sql = "SELECT * FROM tblusers ORDER BY firstname ASC, lastname ASC";
 			//echo $sql;
 			
 			$result = mysqli_query($link,$sql);
@@ -150,14 +150,14 @@ include 'includes/template/head.php';
 					$employeeTeamId = (int)($row['team'] ?? 0);
 					$relationshipName = $unassignedText;
 					if ($employeeTeamId > 0) {
-						$leadLookup = mysqli_query($link, "SELECT u.lastname, u.firstname
+						$leadLookup = mysqli_query($link, "SELECT u.firstname, u.lastname
 							FROM tblteams t
 							LEFT JOIN tblusers u ON u.id = t.team_lead_user_id
 							WHERE t.id='" . $employeeTeamId . "' AND t.status='1' AND u.status='1'
 							LIMIT 1");
 						$leadRow = mysqli_fetch_assoc($leadLookup);
 						if (!empty($leadRow)) {
-							$relationshipName = $leadRow['lastname'] . ', ' . $leadRow['firstname'];
+							$relationshipName = $leadRow['firstname'] . ' ' . $leadRow['lastname'];
 						}
 					}
 				} else {
@@ -166,10 +166,10 @@ include 'includes/template/head.php';
 					}
 					$managerId = (int)($row['manager_id'] ?? 0);
 					if ($managerId > 0) {
-						$managerResult = mysqli_query($link, "SELECT lastname, firstname FROM tblusers WHERE id='" . $managerId . "' AND status='1' LIMIT 1");
+						$managerResult = mysqli_query($link, "SELECT firstname, lastname FROM tblusers WHERE id='" . $managerId . "' AND status='1' LIMIT 1");
 						$managerRow = mysqli_fetch_assoc($managerResult);
 						if (!empty($managerRow)) {
-							$relationshipName = $managerRow['lastname'] . ', ' . $managerRow['firstname'];
+								$relationshipName = $managerRow['firstname'] . ' ' . $managerRow['lastname'];
 						}
 					}
 
@@ -183,7 +183,7 @@ include 'includes/template/head.php';
 						}
 
 						if (!empty($leadTeamIds)) {
-							$managerLookup = mysqli_query($link, "SELECT lastname, firstname, team FROM tblusers WHERE atype='3' AND status='1' ORDER BY lastname ASC, firstname ASC");
+							$managerLookup = mysqli_query($link, "SELECT firstname, lastname, team FROM tblusers WHERE atype='3' AND status='1' ORDER BY firstname ASC, lastname ASC");
 							while ($managerCandidate = mysqli_fetch_assoc($managerLookup)) {
 								$candidateTeams = array_filter(explode(',', (string)($managerCandidate['team'] ?? '')));
 								$matchesTeam = false;
@@ -196,7 +196,7 @@ include 'includes/template/head.php';
 								}
 
 								if ($matchesTeam) {
-									$relationshipName = $managerCandidate['lastname'] . ', ' . $managerCandidate['firstname'];
+									$relationshipName = $managerCandidate['firstname'] . ' ' . $managerCandidate['lastname'];
 									break;
 								}
 							}
@@ -205,7 +205,7 @@ include 'includes/template/head.php';
 				}
 				?>
 				<tr>
-					<td><?php echo $row['lastname'];?>, <?php echo $row['firstname'];?></td>
+					<td><?php echo $row['firstname'];?> <?php echo $row['lastname'];?></td>
 					<td><?php echo $row['email'];?></td>
 					<td><?php echo $accounttypename ?></td>
 					<td><?php echo !empty($teamNames) ? htmlspecialchars(implode(', ', $teamNames)) : '—'; ?><?php if ($showRelationship) { ?><br><small><?php echo htmlspecialchars($relationshipLabel); ?>: <?php echo htmlspecialchars($relationshipName); ?></small><?php } ?></td>

@@ -47,7 +47,7 @@ if (!empty($triageid)) {
 				$cfname = htmlspecialchars($row3['firstname']);
 				$clname = htmlspecialchars($row3['lastname']);
 			?>
-			<dt><?php echo $dateadded ?><?php if($creatorid!=0) {?> - <?php echo $clname ?>, <?php echo $cfname ?><?php } ?></dt>
+			<dt><?php echo $dateadded ?><?php if($creatorid!=0) {?> - <?php echo $cfname ?> <?php echo $clname ?><?php } ?></dt>
 			<dd><?php echo ($annotes) ?></dd>
 			<?php } ?>
 		</dl>
