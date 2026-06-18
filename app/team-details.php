@@ -36,8 +36,7 @@ if ($teamId <= 0) {
     exit();
 }
 
-$teamNameField = ($lang === 'fr') ? 'namefr' : 'nameen';
-$teamSql = "SELECT id, {$teamNameField} AS team_name, email, team_lead_user_id FROM tblteams WHERE id='{$teamId}' LIMIT 1";
+$teamSql = "SELECT id, nameen, namefr, email, contactname, contactemail, escalationcontactname, escalationcontactemail, team_lead_user_id FROM tblteams WHERE id='{$teamId}' LIMIT 1";
 $teamResult = mysqli_query($link, $teamSql);
 $team = $teamResult ? mysqli_fetch_assoc($teamResult) : null;
 
@@ -119,12 +118,32 @@ include 'includes/template/head.php';
 
         <dl class="colcount-sm-2">
             <div style="break-inside: avoid;">
-                <dt><?= htmlspecialchars($langFile['teams_details_name']) ?></dt>
-                <dd><?= htmlspecialchars($team['team_name']) ?></dd>
+                <dt><?= htmlspecialchars($langFile['teams_details_name_en']) ?></dt>
+                <dd><?= htmlspecialchars($team['nameen'] ?? '—') ?></dd>
+            </div>
+            <div style="break-inside: avoid;">
+                <dt><?= htmlspecialchars($langFile['teams_details_name_fr']) ?></dt>
+                <dd><?= htmlspecialchars($team['namefr'] ?? '—') ?></dd>
             </div>
             <div style="break-inside: avoid;">
                 <dt><?= htmlspecialchars($langFile['teams_details_email']) ?></dt>
                 <dd><?= htmlspecialchars($team['email']) ?></dd>
+            </div>
+            <div style="break-inside: avoid;">
+                <dt><?= htmlspecialchars($langFile['teams_details_contact_name']) ?></dt>
+                <dd><?= htmlspecialchars($team['contactname'] ?? '—') ?></dd>
+            </div>
+            <div style="break-inside: avoid;">
+                <dt><?= htmlspecialchars($langFile['teams_details_contact_email']) ?></dt>
+                <dd><?= htmlspecialchars($team['contactemail'] ?? '—') ?></dd>
+            </div>
+            <div style="break-inside: avoid;">
+                <dt><?= htmlspecialchars($langFile['teams_details_escalation_contact_name']) ?></dt>
+                <dd><?= htmlspecialchars($team['escalationcontactname'] ?? '—') ?></dd>
+            </div>
+            <div style="break-inside: avoid;">
+                <dt><?= htmlspecialchars($langFile['teams_details_escalation_contact_email']) ?></dt>
+                <dd><?= htmlspecialchars($team['escalationcontactemail'] ?? '—') ?></dd>
             </div>
             <div style="break-inside: avoid;">
                 <dt><?= htmlspecialchars($langFile['teams_details_lead']) ?></dt>
