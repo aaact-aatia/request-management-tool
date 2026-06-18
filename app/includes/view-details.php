@@ -15,6 +15,7 @@ require('../sql.php');
 // Include file for calculating business days
 require('calculate-bdays.php');
 require('sla-calculator.php');
+require_once('helpers.php');
 // Now first get the ID
 $triageid = $_GET['id'];
 
@@ -90,25 +91,16 @@ if(mysqli_num_rows($result)>0){
 		<h2 class="modal-title"><?php echo $translations['view_details_title'] ?? ($lang === 'fr' ? 'Détails' : 'Details'); ?> - a11y-<?php echo $row['requestid'] ?><?php if (!$suppressSlaWarning && $overdue) { ?> - <span class="glyphicon glyphicon-warning-sign"></span> <?php echo $sla_past; ?><?php } elseif (!$suppressSlaWarning && $closedue) { ?> - <span class="glyphicon glyphicon-warning-sign"></span> <?php echo $sla_close; ?><?php } ?></h2>
 	</header>
 	<div class="modal-body">
+		<?php
+		$sectionRequestDetails = $lang === 'fr' ? 'Détails de la demande' : 'Request details';
+		$sectionClientInfo = $lang === 'fr' ? 'Renseignements sur le client' : 'Client information';
+		$sectionDates = $lang === 'fr' ? 'Dates' : 'Dates';
+		?>
+
+		<h3><?php echo $sectionRequestDetails; ?></h3>
 		<dl class="colcount-sm-2">
 			<dt><?php echo $translations['view_details_title_label'] ?? ($lang === 'fr' ? 'Titre' : 'Title'); ?></dt>
 			<dd><?php echo $row['title'] ?></dd>
-			<?php if ($row['clientlname']!="") { ?>
-			<dt><?php echo $translations['view_details_lname'] ?? ($lang === 'fr' ? 'Nom' : 'Last name'); ?></dt>			
-			<dd><?php echo $row['clientlname'] ?></dd>
-			<?php } ?>
-			<?php if ($row['clientfname']!="") { ?>
-			<dt><?php echo $translations['view_details_fname'] ?? ($lang === 'fr' ? 'Prénom' : 'First name'); ?></dt>
-			<dd><?php echo $row['clientfname'] ?></dd>
-			<?php } ?>
-			<?php if ($row['clientemail']!="") { ?>
-			<dt><?php echo $translations['view_details_email'] ?? ($lang === 'fr' ? 'Courriel client' : 'Client email'); ?></dt>
-			<dd><?php echo $row['clientemail'] ?></dd>
-			<?php } ?>
-			<?php if ($row['clientphone']!="") { ?>
-			<dt><?php echo $translations['view_details_phone'] ?? ($lang === 'fr' ? 'Numéro de téléphone client' : 'Client phone #'); ?></dt>
-			<dd><?php echo $row['clientphone'] ?></dd>
-			<?php } ?>
 			<?php if ($row['productid']!=0) { ?>
 			<dt><?php echo $translations['view_details_product'] ?? ($lang === 'fr' ? 'Produit' : 'Product'); ?></dt>
 			<?php
@@ -123,26 +115,14 @@ if(mysqli_num_rows($result)>0){
 			<?php
 			// Grab the source name
 			$sourceid = $row['sourceid'];
-			$result2 = mysqli_query($link, "SELECT $nameField FROM tblsources WHERE id = '$sourceid'");
-			$row2 = mysqli_fetch_array($result2);
-			$sourcename = $row2[0];
+			if ($sourceid != 0) {
+				$result2 = mysqli_query($link, "SELECT $nameField FROM tblsources WHERE id = '$sourceid'");
+				$row2 = mysqli_fetch_array($result2);
+				$sourcename = $row2[0] ?? '';
+			} else {
+				$sourcename = '';
+			}
 			?>
-			<dt><?php echo $translations['view_details_source'] ?? ($lang === 'fr' ? 'Source' : 'Source'); ?></dt>
-			<dd><?php echo $sourcename ?></dd>
-			<dt><?php echo $translations['view_details_date_received'] ?? ($lang === 'fr' ? 'Date reçu' : 'Date received'); ?></dt>
-			<dd><?php echo $row['datereceived'] ?></dd>
-			<?php if ($row['dateupdated']!="") { ?>
-			<dt><?php echo $translations['view_details_date_updated'] ?? ($lang === 'fr' ? 'Date mise à jour' : 'Date updated'); ?></dt>
-			<dd><?php echo $row['dateupdated'] ?></dd>
-			<?php } ?>
-			<?php if ($row['daterequired']!="") { ?>
-			<dt><?php echo $translations['view_details_date_required'] ?? ($lang === 'fr' ? 'Date requis' : 'Date required'); ?></dt>
-			<dd><?php echo $row['daterequired'] ?></dd>
-			<?php } ?>
-			<?php if ($row['dateresolved']!="") { ?>
-			<dt><?php echo $translations['view_details_date_resolved'] ?? ($lang === 'fr' ? 'Date résolue' : 'Date resolved'); ?></dt>
-			<dd><?php echo $row['dateresolved'] ?></dd>
-			<?php } ?>
 			<?php
 			// Grab the source name
 			$statusid = $row['statusid'];
@@ -152,6 +132,10 @@ if(mysqli_num_rows($result)>0){
 			?>
 			<dt><?php echo $translations['view_details_status'] ?? ($lang === 'fr' ? 'Statut' : 'Status'); ?></dt>
 			<dd><?php echo $statusname ?></dd>
+			<?php if ($sourcename !== '') { ?>
+			<dt><?php echo $translations['view_details_source'] ?? ($lang === 'fr' ? 'Source' : 'Source'); ?></dt>
+			<dd><?php echo $sourcename ?></dd>
+			<?php } ?>
 			<?php 
 			if ($catalogueid!=0) {
 			?>
@@ -172,6 +156,44 @@ if(mysqli_num_rows($result)>0){
 			<?php
 			}
 			?>
+		</dl>
+
+		<h3><?php echo $sectionClientInfo; ?></h3>
+		<dl class="colcount-sm-2">
+			<?php if ($row['clientlname']!="") { ?>
+			<dt><?php echo $translations['view_details_lname'] ?? ($lang === 'fr' ? 'Nom' : 'Last name'); ?></dt>
+			<dd><?php echo $row['clientlname'] ?></dd>
+			<?php } ?>
+			<?php if ($row['clientfname']!="") { ?>
+			<dt><?php echo $translations['view_details_fname'] ?? ($lang === 'fr' ? 'Prénom' : 'First name'); ?></dt>
+			<dd><?php echo $row['clientfname'] ?></dd>
+			<?php } ?>
+			<?php if ($row['clientemail']!="") { ?>
+			<dt><?php echo $translations['view_details_email'] ?? ($lang === 'fr' ? 'Courriel client' : 'Client email'); ?></dt>
+			<dd><?php echo $row['clientemail'] ?></dd>
+			<?php } ?>
+			<?php if ($row['clientphone']!="") { ?>
+			<dt><?php echo $translations['view_details_phone'] ?? ($lang === 'fr' ? 'Numéro de téléphone client' : 'Client phone #'); ?></dt>
+			<dd><?php echo $row['clientphone'] ?></dd>
+			<?php } ?>
+		</dl>
+
+		<h3><?php echo $sectionDates; ?></h3>
+		<dl class="colcount-sm-2">
+			<dt><?php echo $translations['view_details_date_received'] ?? ($lang === 'fr' ? 'Date reçu' : 'Date received'); ?></dt>
+			<dd><?php echo $row['datereceived'] ?></dd>
+			<?php if ($row['dateupdated']!="") { ?>
+			<dt><?php echo $translations['view_details_date_updated'] ?? ($lang === 'fr' ? 'Date mise à jour' : 'Date updated'); ?></dt>
+			<dd><?php echo $row['dateupdated'] ?></dd>
+			<?php } ?>
+			<?php if ($row['daterequired']!="") { ?>
+			<dt><?php echo $translations['view_details_date_required'] ?? ($lang === 'fr' ? 'Date requis' : 'Date required'); ?></dt>
+			<dd><?php echo $row['daterequired'] ?></dd>
+			<?php } ?>
+			<?php if ($row['dateresolved']!="") { ?>
+			<dt><?php echo $translations['view_details_date_resolved'] ?? ($lang === 'fr' ? 'Date résolue' : 'Date resolved'); ?></dt>
+			<dd><?php echo $row['dateresolved'] ?></dd>
+			<?php } ?>
 		</dl>
 	</div>
 </section>

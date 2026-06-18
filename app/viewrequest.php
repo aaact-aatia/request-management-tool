@@ -22,6 +22,9 @@ $translations = [
 		'past_sla' => 'Request is now past SLA!',
 		'close_to_sla' => 'Request is close to SLA!',
 		'urgent_review' => 'New request needs urgent review to determine proper service catalogue selection!',
+		'fieldset_request_details' => 'Request details',
+		'fieldset_client_info' => 'Client information',
+		'fieldset_dates' => 'Dates',
 		'title' => 'Title',
 		'last_name' => 'Last name',
 		'first_name' => 'First name',
@@ -105,6 +108,9 @@ $translations = [
 		'past_sla' => 'La demande a dépassé le NdS!',
 		'close_to_sla' => 'La demande est proche de la NPS!',
 		'urgent_review' => 'Une nouvelle demande nécessite un examen urgent pour déterminer la sélection appropriée du catalogue de services!',
+		'fieldset_request_details' => 'Détails de la demande',
+		'fieldset_client_info' => 'Renseignements sur le client',
+		'fieldset_dates' => 'Dates',
 		'title' => 'Titre',
 		'last_name' => 'Nom',
 		'first_name' => 'Prénom',
@@ -442,45 +448,9 @@ if(mysqli_num_rows($result)>0){
 			<?php } ?>
 			<?php } ?>
 
-			<dl class="colcount-sm-2">
-				<div style="break-inside: avoid;">
-				<dt><?= $t['title'] ?></dt> 
-			<dd><?php echo htmlspecialchars($row['title'] ?? '') ?></dd>
-				</div>
-				<?php if($_SESSION['pid']!=""){ ?>
-				<?php if ($row['clientlname']!="") { ?>
-				<div style="break-inside: avoid;">
-				<dt><?= $t['last_name'] ?></dt>			
-				<dd><?php echo htmlspecialchars ($row['clientlname']) ?></dd>
-				</div>
-				<?php } ?>
-				<?php if ($row['clientfname']!="") { ?>
-				<div style="break-inside: avoid;">
-				<dt><?= $t['first_name'] ?></dt>
-				<dd><?php echo htmlspecialchars ($row['clientfname']) ?></dd>
-				</div>
-				<?php } ?>
-				<?php if ($row['clientemail']!="") { ?>
-				<div style="break-inside: avoid;">
-				<dt><?= $t['client_email'] ?></dt>
-				<dd><a href="mailto:<?php echo htmlspecialchars ($row['clientemail']) ?>?Subject=a11y-<?php echo $row['requestid'] ?> - <?php echo htmlspecialchars ($row['title']) ?>"><?php echo htmlspecialchars ($row['clientemail']) ?> <span class="glyphicon glyphicon-envelope"></span><span class="wb-inv">- <?= $t['send_email'] ?></span></a></dd>
-				</div>
-				<?php } ?>
-				<?php if ($row['clientphone']!="") { ?>
-				<div style="break-inside: avoid;">
-				<dt><?= $t['client_phone'] ?></dt>
-				<dd><?php echo htmlspecialchars ($row['clientphone']) ?></dd>
-				</div>
-				<?php } ?>
-				<?php if ($departmentAgency!="") { ?>
-				<div style="break-inside: avoid;">
-				<dt><?= $t['department_agency'] ?></dt>
-				<dd><?php echo htmlspecialchars($departmentAgency, ENT_QUOTES, 'UTF-8'); ?></dd>
-				</div>
-				<?php } } ?>
-				<?php
-				// Grab the source name
-				$sourceid = $row['sourceid'];
+			<?php
+			// Grab the source name
+			$sourceid = $row['sourceid'];
 			if ($sourceid) {
 				$result2 = mysqli_query($link, "SELECT $nameField FROM tblsources WHERE id = '$sourceid'");
 				$row2 = mysqli_fetch_array($result2);
@@ -488,157 +458,185 @@ if(mysqli_num_rows($result)>0){
 			} else {
 				$sourcename = '';
 			}
-			if ($sourcename) {
+
+			// Grab the status name
+			$result2 = mysqli_query($link, "SELECT $nameField FROM tblstatus WHERE id = '$statusid'");
+			$row2 = mysqli_fetch_array($result2);
+			$statusname = $row2 ? $row2[0] : '';
 			?>
-			<div>
-			<dt><?= $t['source'] ?></dt>
-			<dd><?php echo $sourcename ?></dd>
-			</div>
+
+			<h2><?= htmlspecialchars($t['fieldset_request_details']) ?></h2>
+			<dl class="colcount-sm-2">
+				<div style="break-inside: avoid;">
+					<dt><?= $t['title'] ?></dt>
+					<dd><?php echo htmlspecialchars($row['title'] ?? '') ?></dd>
+				</div>
+				<div style="break-inside: avoid;">
+					<dt><?= $t['status'] ?></dt>
+					<dd><?php echo $statusname ?></dd>
+				</div>
+				<?php if ($catalogueid != 0) { ?>
+				<div style="break-inside: avoid;">
+					<dt><?= $t['catalogue_name'] ?></dt>
+					<dd><?php echo $cataloguename ?></dd>
+				</div>
+				<?php } ?>
+				<?php if ($serviceid != 0) { ?>
+				<div style="break-inside: avoid;">
+					<dt><?= $t['service_name'] ?></dt>
+					<dd><?php echo $servicename; ?></dd>
+				</div>
+				<?php } ?>
+				<?php if ($subserviceid != 0 && !empty($subservicename)) { ?>
+				<div style="break-inside: avoid;">
+					<dt><?= $t['subservice_name'] ?></dt>
+					<dd><?php echo $subservicename ?></dd>
+				</div>
+				<?php } ?>
+				<?php if ($sourcename) { ?>
+				<div style="break-inside: avoid;">
+					<dt><?= $t['source'] ?></dt>
+					<dd><?php echo $sourcename ?></dd>
+				</div>
+				<?php } ?>
+				<?php if ($catalogueid == 9 && $audienceid != 0 && $audienceid != null) { ?>
+				<div style="break-inside: avoid;">
+					<dt><?= $t['audience'] ?></dt>
+					<dd><?php echo $audiencename ?></dd>
+				</div>
+				<?php } ?>
+				<?php if ($row['firstsprintstartdate'] != "") { ?>
+				<div style="break-inside: avoid;">
+					<dt><?= $t['sprint_start'] ?></dt>
+					<dd><?php echo htmlspecialchars($row['firstsprintstartdate']) ?></dd>
+				</div>
+				<?php } ?>
+				<?php if ($row['firstsprintenddate'] != "") { ?>
+				<div style="break-inside: avoid;">
+					<dt><?= $t['sprint_end'] ?></dt>
+					<dd><?php echo htmlspecialchars($row['firstsprintenddate']) ?></dd>
+				</div>
+				<?php } ?>
+				<?php if (isset($row['sprintschedule']) && $row['sprintschedule'] != "") { ?>
+				<div style="break-inside: avoid;">
+					<dt><?= $t['sprint_schedule'] ?></dt>
+					<dd><a href="<?php echo htmlspecialchars($row['sprintschedule']) ?>"><?= $t['view_sprint_schedule'] ?></a></dd>
+				</div>
+				<?php } ?>
+				<?php if (isset($row['sprintdefects']) && $row['sprintdefects'] != "") { ?>
+				<div style="break-inside: avoid;">
+					<dt><?= $t['sprint_defect'] ?></dt>
+					<dd><a href="<?php echo htmlspecialchars($row['sprintdefects']) ?>"><?= $t['view_sprint_defect'] ?></a></dd>
+				</div>
+				<?php } ?>
+				<?php
+				// Check if the account is admin level to show the assigned member.
+				if ($_SESSION['atype'] == '1' OR $_SESSION['atype'] == '2' OR $_SESSION['atype'] == '3' OR $_SESSION['atype'] == '4' OR $_SESSION['atype'] == '5') {
+					$workerid = $row['workerid'];
+					if ($workerid != 0 AND $workerid != "") {
+						$result2 = mysqli_query($link, "SELECT lastname,firstname FROM tblusers WHERE id = '$workerid'");
+						$row2 = mysqli_fetch_array($result2);
+						$ulastname = $row2[0];
+						$ufirstname = $row2[1];
+				?>
+				<div style="break-inside: avoid;">
+					<dt><?= $t['assigned_member'] ?></dt>
+					<dd><?php echo $ulastname ?>, <?php echo $ufirstname ?></dd>
+				</div>
+				<?php
+					}
+				}
+				?>
+			</dl>
+
+			<?php if ($_SESSION['pid'] != "") { ?>
+			<h2><?= htmlspecialchars($t['fieldset_client_info']) ?></h2>
+			<dl class="colcount-sm-2">
+				<?php if ($row['clientlname'] != "") { ?>
+				<div style="break-inside: avoid;">
+					<dt><?= $t['last_name'] ?></dt>
+					<dd><?php echo htmlspecialchars($row['clientlname']) ?></dd>
+				</div>
+				<?php } ?>
+				<?php if ($row['clientfname'] != "") { ?>
+				<div style="break-inside: avoid;">
+					<dt><?= $t['first_name'] ?></dt>
+					<dd><?php echo htmlspecialchars($row['clientfname']) ?></dd>
+				</div>
+				<?php } ?>
+				<?php if ($row['clientemail'] != "") { ?>
+				<div style="break-inside: avoid;">
+					<dt><?= $t['client_email'] ?></dt>
+					<dd><a href="mailto:<?php echo htmlspecialchars($row['clientemail']) ?>?Subject=a11y-<?php echo $row['requestid'] ?> - <?php echo htmlspecialchars($row['title']) ?>"><?php echo htmlspecialchars($row['clientemail']) ?> <span class="glyphicon glyphicon-envelope"></span><span class="wb-inv">- <?= $t['send_email'] ?></span></a></dd>
+				</div>
+				<?php } ?>
+				<?php if ($row['clientphone'] != "") { ?>
+				<div style="break-inside: avoid;">
+					<dt><?= $t['client_phone'] ?></dt>
+					<dd><?php echo htmlspecialchars($row['clientphone']) ?></dd>
+				</div>
+				<?php } ?>
+				<?php if ($departmentAgency != "") { ?>
+				<div style="break-inside: avoid;">
+					<dt><?= $t['department_agency'] ?></dt>
+					<dd><?php echo htmlspecialchars($departmentAgency, ENT_QUOTES, 'UTF-8'); ?></dd>
+				</div>
+				<?php } ?>
+			</dl>
 			<?php } ?>
-			
-			
-			<?php if ($row['firstsprintstartdate']!="") { ?>
-				<div style="break-inside: avoid;">
-				<dt><?= $t['sprint_start'] ?></dt>
-				<dd><?php echo htmlspecialchars ($row['firstsprintstartdate']) ?></dd>
-				</div>
-				<?php } ?>
 
-				<?php if ($row['firstsprintenddate']!="") { ?>
+			<h2><?= htmlspecialchars($t['fieldset_dates']) ?></h2>
+			<dl class="colcount-sm-2">
 				<div style="break-inside: avoid;">
-				<dt><?= $t['sprint_end'] ?></dt>
-				<dd><?php echo htmlspecialchars ($row['firstsprintenddate']) ?></dd>
+					<dt><?= $t['date_received'] ?></dt>
+					<dd><?php echo htmlspecialchars($row['datereceived']) ?></dd>
 				</div>
-				<?php } ?>
-
-<?php if (isset($row['sprintschedule']) && $row['sprintschedule']!="") { ?>
-			<div style="break-inside: avoid;">
-			<dt><?= $t['sprint_schedule'] ?><dt>
-			<dd><a href="<?php echo htmlspecialchars ($row['sprintschedule']) ?>"><?= $t['view_sprint_schedule'] ?></a></dd>
-			</div>
-			<?php } ?>
-
-			<?php if (isset($row['sprintdefects']) && $row['sprintdefects']!="") { ?>
-				<div style="break-inside: avoid;">
-				<dt><?= $t['sprint_defect'] ?></dt>
-				<dd><a href="<?php echo htmlspecialchars ($row['sprintdefects']) ?>"><?= $t['view_sprint_defect'] ?></a></dd>
-				</div>
-				<?php } ?>
-
-				<div style="break-inside: avoid;">
-				<dt><?= $t['date_received'] ?></dt>
-				<dd><?php echo htmlspecialchars ($row['datereceived']) ?></dd>
-				</div>
-				<?php if ($sla > 0 && $statusid != 4 && $statusid != 5) { 
-					// Load SLA calculator functions for holiday checking
+				<?php if ($sla > 0 && $statusid != 4 && $statusid != 5) {
 					require_once('includes/sla-calculator.php');
-					
-					// Calculate SLA due date by adding business days to start date
 					$businessDaysAdded = 0;
 					$currentDate = date('Y-m-d', strtotime($datereceived));
-					
+
 					while ($businessDaysAdded < $sla) {
 						$currentDate = date('Y-m-d', strtotime($currentDate . ' +1 day'));
-						if (isBusinessDay($currentDate, $link)) { // Check weekday and holidays
+						if (isBusinessDay($currentDate, $link)) {
 							$businessDaysAdded++;
 						}
 					}
 					$slaDueDate = $currentDate;
 				?>
 				<div style="break-inside: avoid;">
-				<dt><?= $t['sla_days_required'] ?></dt>
-				<dd><?php echo $sla; ?> <?= $t['business_days'] ?></dd>
+					<dt><?= $t['sla_days_required'] ?></dt>
+					<dd><?php echo $sla; ?> <?= $t['business_days'] ?></dd>
 				</div>
 				<div style="break-inside: avoid;">
-				<dt><?= $t['sla_due_date'] ?></dt>
-				<dd><?php echo date('Y-m-d', strtotime($slaDueDate)); ?> <?php $daysRemaining = getWorkingDays(date('Y-m-d'), $slaDueDate, $holidays); if ($daysRemaining > 0) { echo '<span class="text-muted">(' . $daysRemaining . ' ' . $t['business_days'] . ')</span>'; } elseif ($daysRemaining == 0) { echo '<span class="label label-warning">' . ($nameField === 'namefr' ? 'Dû aujourd\'hui' : 'Due today') . '</span>'; } else { echo '<span class="label label-danger">' . ($nameField === 'namefr' ? 'En retard' : 'Overdue') . '</span>'; } ?></dd>
+					<dt><?= $t['sla_due_date'] ?></dt>
+					<dd><?php echo date('Y-m-d', strtotime($slaDueDate)); ?> <?php $daysRemaining = getWorkingDays(date('Y-m-d'), $slaDueDate, $holidays); if ($daysRemaining > 0) { echo '<span class="text-muted">(' . $daysRemaining . ' ' . $t['business_days'] . ')</span>'; } elseif ($daysRemaining == 0) { echo '<span class="label label-warning">' . ($nameField === 'namefr' ? 'Dû aujourd\'hui' : 'Due today') . '</span>'; } else { echo '<span class="label label-danger">' . ($nameField === 'namefr' ? 'En retard' : 'Overdue') . '</span>'; } ?></dd>
 				</div>
 				<?php } ?>
-				<?php if ($row['dateupdated']!="") { ?>
+				<?php if ($row['dateupdated'] != "") { ?>
 				<div style="break-inside: avoid;">
-				<dt><?= $t['date_updated'] ?></dt>
-				<dd><?php echo htmlspecialchars ($row['dateupdated']) ?></dd>
+					<dt><?= $t['date_updated'] ?></dt>
+					<dd><?php echo htmlspecialchars($row['dateupdated']) ?></dd>
 				</div>
 				<?php } ?>
-				<?php if ($row['daterequired']!="") { ?>
+				<?php if ($row['daterequired'] != "") { ?>
 				<div style="break-inside: avoid;">
-				<dt><?php if(($catalogueid==5) AND ($serviceid!=47)){ ?><?= $t['coaching_date'] ?><?php } else { ?><?= $t['date_required'] ?><?php } ?></dt>
-				<dd><?php echo htmlspecialchars ($row['daterequired']) ?></dd>
+					<dt><?php if (($catalogueid == 5) AND ($serviceid != 47)) { ?><?= $t['coaching_date'] ?><?php } else { ?><?= $t['date_required'] ?><?php } ?></dt>
+					<dd><?php echo htmlspecialchars($row['daterequired']) ?></dd>
 				</div>
 				<?php } ?>
-				<?php if ($row['dateresolved']!="") { ?>
+				<?php if ($row['dateresolved'] != "") { ?>
 				<div style="break-inside: avoid;">
-				<dt><?= $t['date_resolved'] ?></dt>
-				<dd><?php echo htmlspecialchars ($row['dateresolved']) ?></dd>
+					<dt><?= $t['date_resolved'] ?></dt>
+					<dd><?php echo htmlspecialchars($row['dateresolved']) ?></dd>
 				</div>
 				<?php } ?>
-				<?php
-				// Grab the status name
-				$result2 = mysqli_query($link, "SELECT $nameField FROM tblstatus WHERE id = '$statusid'");
-				$row2 = mysqli_fetch_array($result2);
-				$statusname = $row2 ? $row2[0] : '';
-				?>
-				<div style="break-inside: avoid;">
-					<dt><?= $t['status'] ?></dt>
-					<dd><?php echo $statusname ?></dd>
-				</div>
-				<?php if ($catalogueid==9 && $audienceid != 0 && $audienceid != null) { ?>
-				<div>
-					<?php ?>
-					<dt><?= $t['audience'] ?></dt>
-					<dd><?php echo $audiencename ?></dd>
-				</div>
-				<?php } ?>
-				<?php 
-				if ($catalogueid!=0) {
-				?>
-				<div style="break-inside: avoid;">
-					<dt><?= $t['catalogue_name'] ?></dt>
-					<dd><?php echo $cataloguename ?></dd>
-				</div>
-				<?php
-				}
-				if ($serviceid!=0) {
-				?>
-				<div style="break-inside: avoid;">
-					<dt><?= $t['service_name'] ?></dt>
-					<dd><?php echo $servicename; ?></dd>
-				</div>
-				<?php
-				}
-				if ($subserviceid!=0 && !empty($subservicename)) {
-				?>
-				<div tyle="break-inside: avoid;">
-					<dt><?= $t['subservice_name'] ?></dt>
-					<dd><?php echo $subservicename ?></dd>
-				</div>
-
-				
-				<?php
-				}
-				?>
-				<?php
-				// Check if the account is admin level to show this option 
-				if ($_SESSION['atype']=='1' OR $_SESSION['atype']=='2' OR $_SESSION['atype']=='3' OR $_SESSION['atype']=='4' OR $_SESSION['atype']=='5') {
-					$workerid = $row['workerid'];
-					if ($workerid!=0 AND $workerid!="") {
-						// Check the name
-						$result2 = mysqli_query($link, "SELECT lastname,firstname FROM tblusers WHERE id = '$workerid'");
-						$row2 = mysqli_fetch_array($result2);
-						$ulastname = $row2[0];
-						$ufirstname = $row2[1];
-				?>
-				<div tyle="break-inside: avoid;">
-					<dt>Assigned AAACT team member</dt>
-					<dd><?php echo $ulastname ?>, <?php echo $ufirstname ?></dd>
-				</div>
-				<?php
-					}
-				}
-				if ($_SESSION['atype']==1 OR $_SESSION['atype']==2 OR $_SESSION['atype']==5 OR $_SESSION['atype']==3 OR $_SESSION['atype']==4 OR $_SESSION['atype'] == 6) 
-{
-				?>
 			</dl>
+
+			<?php
+			if ($_SESSION['atype'] == 1 OR $_SESSION['atype'] == 2 OR $_SESSION['atype'] == 5 OR $_SESSION['atype'] == 3 OR $_SESSION['atype'] == 4 OR $_SESSION['atype'] == 6)
+			{
+			?>
 			
 			
 			<style>

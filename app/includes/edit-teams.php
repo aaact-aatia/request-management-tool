@@ -104,6 +104,7 @@ if(rmt_result_num_rows($result2)>0){
 		</div>
 		<div class="form-group form-buttons">
 			<button type="submit" class="btn btn-default"><?php echo $lang_code === 'en' ? 'Save' : 'Sauvegarder'; ?></button>
+			<button type="button" class="btn btn-default popup-modal-dismiss"><?= $lang_code === 'fr' ? 'Annuler' : 'Cancel' ?></button>
 		</div>
 		</form>
 	</div>

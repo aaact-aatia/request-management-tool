@@ -56,6 +56,7 @@ if(rmt_result_num_rows($result2)>0){
 		<p tabindex="0"><?php echo $question ?></p>
 		<div class="form-group form-buttons">
 			<button type="submit" class="btn btn-default"><?php echo $buttonText ?></button>
+			<button type="button" class="btn btn-default popup-modal-dismiss"><?= $lang === 'fr' ? 'Non' : 'No' ?></button>
 		</div>
 		</form>
 	</div>
