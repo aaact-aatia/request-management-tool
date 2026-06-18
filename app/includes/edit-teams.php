@@ -12,7 +12,8 @@ $lang_code = $_SESSION['lang'] ?? 'en';
 require("../lang/{$lang_code}.php");
 
 // Check if the user has the right priv's
-if ($_SESSION['atype'] != 1) {
+$canEditTeams = in_array((int)($_SESSION['atype'] ?? 0), [1, 2, 3, 4], true);
+if (!$canEditTeams) {
 	header("location:/openrequest.php?lang={$lang_code}&status=accessdenied"); 
 	exit();
 }

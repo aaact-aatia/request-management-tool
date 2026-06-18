@@ -409,6 +409,17 @@ return [
     'teams_delete' => 'Supprimer',
     'teams_team_label' => 'equipe',
     'teams_no_teams' => 'Aucune equipe disponible',
+    'teams_details_heading' => 'Details de l\'equipe',
+    'teams_details_back' => 'Retour aux equipes',
+    'teams_details_name' => 'Nom de l\'equipe',
+    'teams_details_email' => 'Courriel de l\'equipe',
+    'teams_details_lead' => 'Chef d\'equipe',
+    'teams_details_manager' => 'Gestionnaire',
+    'teams_details_members' => 'Membres de l\'equipe',
+    'teams_details_no_lead' => 'Aucun chef d\'equipe assigne',
+    'teams_details_no_manager' => 'Non assigne',
+    'teams_details_no_members' => 'Aucun membre assigne',
+    'teams_details_not_found' => 'Equipe introuvable.',
     
     // Sign in page (signin.php)
     'signin_page_title' => 'Connectez-vous à l\'Outil de gestion des demandes - Bureau de l\'accessibilité de la TI',

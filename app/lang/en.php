@@ -409,6 +409,17 @@ return [
     'teams_delete' => 'Delete',
     'teams_team_label' => 'team',
     'teams_no_teams' => 'No teams available',
+    'teams_details_heading' => 'Team details',
+    'teams_details_back' => 'Back to teams',
+    'teams_details_name' => 'Team name',
+    'teams_details_email' => 'Team email',
+    'teams_details_lead' => 'Team lead',
+    'teams_details_manager' => 'Manager',
+    'teams_details_members' => 'Team members',
+    'teams_details_no_lead' => 'No team lead assigned',
+    'teams_details_no_manager' => 'Unassigned',
+    'teams_details_no_members' => 'No team members assigned',
+    'teams_details_not_found' => 'Team not found.',
     
     // Sign in page (signin.php)
     'signin_page_title' => 'Sign in to the Request Management Tool - IT Accessibility Office',

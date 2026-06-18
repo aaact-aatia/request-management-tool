@@ -113,6 +113,7 @@ include 'includes/template/head.php';
 			<?php
 			// Determine which field to use for team name based on language
 			$teamNameField = ($_SESSION['lang'] === 'fr') ? 'namefr' : 'nameen';
+			$canEditTeams = in_array((int)($_SESSION['atype'] ?? 0), [1, 2, 3, 4], true);
 			
 			// Construct SQL statement
 			$sql = "SELECT * FROM tblteams ORDER BY $teamNameField ASC";
@@ -128,7 +129,7 @@ include 'includes/template/head.php';
 						<th><?= htmlspecialchars($langFile['teams_name_column']) ?></th>
 						<th><?= htmlspecialchars($langFile['teams_email_column']) ?></th>
 						<th><?= $_SESSION['lang'] === 'fr' ? 'Chef d\'équipe' : 'Team Lead' ?></th>
-						<?php if ($_SESSION['atype'] == 1) { ?>
+						<?php if ($canEditTeams) { ?>
 						<th><?= htmlspecialchars($langFile['teams_actions']) ?></th>
 						<?php } ?>
 					</tr>
@@ -138,7 +139,7 @@ include 'includes/template/head.php';
 					while($row = mysqli_fetch_array($result)){
 				?>
 					<tr>
-						<td><?php echo $row[$teamNameField];?></td>
+						<td><a href="team-details.php?lang=<?php echo urlencode($lang); ?>&id=<?php echo (int)$row['id']; ?>"><?php echo htmlspecialchars($row[$teamNameField]); ?></a></td>
 						<td><?php echo $row['email'];?></td>
 						<td>
 							<?php
@@ -154,7 +155,7 @@ include 'includes/template/head.php';
 							echo htmlspecialchars($leadName);
 							?>
 						</td>
-						<?php if ($_SESSION['atype'] == 1) { ?>
+						<?php if ($canEditTeams) { ?>
 						<td>
 							<a class="wb-lbx btn btn-primary btn-block" href="includes/edit-teams.php?id=<?php echo $row['id'];?>&lang=<?php echo $lang;?>"><?= htmlspecialchars($langFile['teams_edit']) ?><span class="wb-inv"> <?php echo $row[$teamNameField] ?></span> <?= htmlspecialchars($langFile['teams_team_label']) ?></a><?php if ($_SESSION['atype']=='1') {?> <a class="wb-lbx btn btn-primary btn-block" href="includes/delete-teams.php?id=<?php echo $row['id'];?>&lang=<?php echo $lang;?>"><?= htmlspecialchars($langFile['teams_delete']) ?><span class="wb-inv"> <?php echo $row[$teamNameField] ?></span> <?= htmlspecialchars($langFile['teams_team_label']) ?></a><?php } ?>
 						</td>
