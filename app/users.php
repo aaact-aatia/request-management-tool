@@ -141,12 +141,14 @@ include 'includes/template/head.php';
 				<?php
 				$relationshipLabel = ($_SESSION['lang'] === 'fr') ? 'Gestionnaire' : 'Manager';
 				$relationshipName = '—';
+				$unassignedText = ($_SESSION['lang'] === 'fr') ? 'Non assigne' : 'Unassigned';
 				$userTypeId = (int)$row['atype'];
 				$showRelationship = true;
 
 				if ($userTypeId === 5) {
 					$relationshipLabel = ($_SESSION['lang'] === 'fr') ? 'Chef d\'équipe' : 'Team Lead';
 					$employeeTeamId = (int)($row['team'] ?? 0);
+					$relationshipName = $unassignedText;
 					if ($employeeTeamId > 0) {
 						$leadLookup = mysqli_query($link, "SELECT u.lastname, u.firstname
 							FROM tblteams t
