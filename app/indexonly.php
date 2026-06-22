@@ -81,8 +81,9 @@ include 'includes/template/head.php';
 		<main role="main" property="mainContentOfPage" class="container">
 			<h1 property="name" id="wb-cont"><?= htmlspecialchars($langFile['indexonly_heading']) ?></h1>
 			<?php
+			$userid = (int)($_SESSION['pid'] ?? 0);
 			// Construct SQL statement
-			$sql = "SELECT * FROM tbltriage WHERE status = '1' AND (statusid='1' OR statusid='3' OR statusid='5' OR statusid='6' OR statusid='7' OR statusid='10' OR statusid='11' OR statusid='12') ORDER BY requestid DESC";
+			$sql = "SELECT * FROM tbltriage WHERE status = '1' AND workerid = '$userid' AND (statusid='1' OR statusid='3' OR statusid='5' OR statusid='6' OR statusid='7' OR statusid='10' OR statusid='11' OR statusid='12') ORDER BY requestid DESC";
 			
 			$result = mysqli_query($link,$sql);
 			$surveyAnsweredByRequest = [];
@@ -225,15 +226,8 @@ include 'includes/template/head.php';
 
 					$suppressSlaWarning = rmt_is_resolved_status_id($link, $statusid) || in_array((int)$statusid, [5, 6], true);
 					
-					// Now we need to check if this should be displayed
-					$userid = $_SESSION['pid'];
-					$result2 = mysqli_query($link, "SELECT team FROM tblusers WHERE id = '$userid'");
-					$row2 = mysqli_fetch_array($result2);
-					if (!empty($row2)){
-						$teams = $row2[0];
-					}
-					$tarray = explode(",",$teams);
-					if ($_SESSION['atype'] == '1' || $_SESSION['atype'] == '6' || in_array($tarraycontactid, $tarray) OR $userid == $row['workerid']) {
+					// indexonly is a personal queue: show only tickets assigned to logged-in user.
+					if ($userid === (int)$row['workerid']) {
 						$hasVisibleRows = true;
 
 						// Build tags for client-side filter
