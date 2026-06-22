@@ -49,7 +49,7 @@ $t = $translations[$lang];
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 	// Create SQL statement
 	$sql = "UPDATE `tbltriage` SET `status` = '0' WHERE id='$requestuid'";
-	mysqli_query($link, $sql);
+	rmt_admin_query($link, $sql);
 	
 	// Now redirect
 	header("location:/index.php?lang=$lang&status=dsuccess"); 
@@ -58,11 +58,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 // Construct SQL statement
 $sql2 = "SELECT * FROM tbltriage WHERE id='$requestuid'";
-$result2 = mysqli_query($link, $sql2);
+$result2 = rmt_admin_query($link, $sql2);
 
 // List it
-if (mysqli_num_rows($result2) > 0) {
-	while ($row2 = mysqli_fetch_array($result2)) {
+if (rmt_result_num_rows($result2) > 0) {
+	while ($row2 = rmt_result_fetch_array($result2)) {
 		$requestid = $row2['requestid'];
 ?>
 <section id="filter-id" class="modal-dialog modal-content overlay-def">
@@ -74,6 +74,7 @@ if (mysqli_num_rows($result2) > 0) {
 		<p tabindex="0"><?php echo htmlspecialchars($t['confirm_message']); ?></p>
 		<div class="form-group form-buttons">
 			<button type="submit" class="btn btn-default"><?php echo htmlspecialchars($t['yes']); ?></button>
+			<button type="button" class="btn btn-default popup-modal-dismiss"><?= $lang === 'fr' ? 'Non' : 'No' ?></button>
 		</div>
 		</form>
 	</div>

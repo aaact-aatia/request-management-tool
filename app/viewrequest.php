@@ -22,6 +22,9 @@ $translations = [
 		'past_sla' => 'Request is now past SLA!',
 		'close_to_sla' => 'Request is close to SLA!',
 		'urgent_review' => 'New request needs urgent review to determine proper service catalogue selection!',
+		'fieldset_request_details' => 'Request details',
+		'fieldset_client_info' => 'Client information',
+		'fieldset_dates' => 'Dates',
 		'title' => 'Title',
 		'last_name' => 'Last name',
 		'first_name' => 'First name',
@@ -105,6 +108,9 @@ $translations = [
 		'past_sla' => 'La demande a dépassé le NdS!',
 		'close_to_sla' => 'La demande est proche de la NPS!',
 		'urgent_review' => 'Une nouvelle demande nécessite un examen urgent pour déterminer la sélection appropriée du catalogue de services!',
+		'fieldset_request_details' => 'Détails de la demande',
+		'fieldset_client_info' => 'Renseignements sur le client',
+		'fieldset_dates' => 'Dates',
 		'title' => 'Titre',
 		'last_name' => 'Nom',
 		'first_name' => 'Prénom',
@@ -341,6 +347,7 @@ if(mysqli_num_rows($result)>0){
 			if ($cBdays >= $sla2) {
 				$closedue = true;
 			}
+			$suppressSlaWarning = rmt_is_resolved_status_id($link, $row['statusid']) || in_array((int)$row['statusid'], [5, 6], true);
 		}
 ?>
 	<?php
@@ -420,7 +427,7 @@ if(mysqli_num_rows($result)>0){
 				}
 			?>
 			
-			<?php if ($row['statusid']!=2) { ?>
+			<?php if (!$suppressSlaWarning) { ?>
 			<?php if ($doverdue) { ?>
 			<div class="alert alert-danger">
 				<p><?= $t['escalation_required'] ?></p>
@@ -441,45 +448,9 @@ if(mysqli_num_rows($result)>0){
 			<?php } ?>
 			<?php } ?>
 
-			<dl class="colcount-sm-2">
-				<div style="break-inside: avoid;">
-				<dt><?= $t['title'] ?></dt> 
-			<dd><?php echo htmlspecialchars($row['title'] ?? '') ?></dd>
-				</div>
-				<?php if($_SESSION['pid']!=""){ ?>
-				<?php if ($row['clientlname']!="") { ?>
-				<div style="break-inside: avoid;">
-				<dt><?= $t['last_name'] ?></dt>			
-				<dd><?php echo htmlspecialchars ($row['clientlname']) ?></dd>
-				</div>
-				<?php } ?>
-				<?php if ($row['clientfname']!="") { ?>
-				<div style="break-inside: avoid;">
-				<dt><?= $t['first_name'] ?></dt>
-				<dd><?php echo htmlspecialchars ($row['clientfname']) ?></dd>
-				</div>
-				<?php } ?>
-				<?php if ($row['clientemail']!="") { ?>
-				<div style="break-inside: avoid;">
-				<dt><?= $t['client_email'] ?></dt>
-				<dd><a href="mailto:<?php echo htmlspecialchars ($row['clientemail']) ?>?Subject=a11y-<?php echo $row['requestid'] ?> - <?php echo htmlspecialchars ($row['title']) ?>"><?php echo htmlspecialchars ($row['clientemail']) ?> <span class="glyphicon glyphicon-envelope"></span><span class="wb-inv">- <?= $t['send_email'] ?></span></a></dd>
-				</div>
-				<?php } ?>
-				<?php if ($row['clientphone']!="") { ?>
-				<div style="break-inside: avoid;">
-				<dt><?= $t['client_phone'] ?></dt>
-				<dd><?php echo htmlspecialchars ($row['clientphone']) ?></dd>
-				</div>
-				<?php } ?>
-				<?php if ($departmentAgency!="") { ?>
-				<div style="break-inside: avoid;">
-				<dt><?= $t['department_agency'] ?></dt>
-				<dd><?php echo htmlspecialchars($departmentAgency, ENT_QUOTES, 'UTF-8'); ?></dd>
-				</div>
-				<?php } } ?>
-				<?php
-				// Grab the source name
-				$sourceid = $row['sourceid'];
+			<?php
+			// Grab the source name
+			$sourceid = $row['sourceid'];
 			if ($sourceid) {
 				$result2 = mysqli_query($link, "SELECT $nameField FROM tblsources WHERE id = '$sourceid'");
 				$row2 = mysqli_fetch_array($result2);
@@ -487,157 +458,185 @@ if(mysqli_num_rows($result)>0){
 			} else {
 				$sourcename = '';
 			}
-			if ($sourcename) {
+
+			// Grab the status name
+			$result2 = mysqli_query($link, "SELECT $nameField FROM tblstatus WHERE id = '$statusid'");
+			$row2 = mysqli_fetch_array($result2);
+			$statusname = $row2 ? $row2[0] : '';
 			?>
-			<div>
-			<dt><?= $t['source'] ?></dt>
-			<dd><?php echo $sourcename ?></dd>
-			</div>
+
+			<h2><?= htmlspecialchars($t['fieldset_request_details']) ?></h2>
+			<dl class="colcount-sm-2">
+				<div style="break-inside: avoid;">
+					<dt><?= $t['title'] ?></dt>
+					<dd><?php echo htmlspecialchars($row['title'] ?? '') ?></dd>
+				</div>
+				<div style="break-inside: avoid;">
+					<dt><?= $t['status'] ?></dt>
+					<dd><?php echo $statusname ?></dd>
+				</div>
+				<?php if ($catalogueid != 0) { ?>
+				<div style="break-inside: avoid;">
+					<dt><?= $t['catalogue_name'] ?></dt>
+					<dd><?php echo $cataloguename ?></dd>
+				</div>
+				<?php } ?>
+				<?php if ($serviceid != 0) { ?>
+				<div style="break-inside: avoid;">
+					<dt><?= $t['service_name'] ?></dt>
+					<dd><?php echo $servicename; ?></dd>
+				</div>
+				<?php } ?>
+				<?php if ($subserviceid != 0 && !empty($subservicename)) { ?>
+				<div style="break-inside: avoid;">
+					<dt><?= $t['subservice_name'] ?></dt>
+					<dd><?php echo $subservicename ?></dd>
+				</div>
+				<?php } ?>
+				<?php if ($sourcename) { ?>
+				<div style="break-inside: avoid;">
+					<dt><?= $t['source'] ?></dt>
+					<dd><?php echo $sourcename ?></dd>
+				</div>
+				<?php } ?>
+				<?php if ($catalogueid == 9 && $audienceid != 0 && $audienceid != null) { ?>
+				<div style="break-inside: avoid;">
+					<dt><?= $t['audience'] ?></dt>
+					<dd><?php echo $audiencename ?></dd>
+				</div>
+				<?php } ?>
+				<?php if ($row['firstsprintstartdate'] != "") { ?>
+				<div style="break-inside: avoid;">
+					<dt><?= $t['sprint_start'] ?></dt>
+					<dd><?php echo htmlspecialchars($row['firstsprintstartdate']) ?></dd>
+				</div>
+				<?php } ?>
+				<?php if ($row['firstsprintenddate'] != "") { ?>
+				<div style="break-inside: avoid;">
+					<dt><?= $t['sprint_end'] ?></dt>
+					<dd><?php echo htmlspecialchars($row['firstsprintenddate']) ?></dd>
+				</div>
+				<?php } ?>
+				<?php if (isset($row['sprintschedule']) && $row['sprintschedule'] != "") { ?>
+				<div style="break-inside: avoid;">
+					<dt><?= $t['sprint_schedule'] ?></dt>
+					<dd><a href="<?php echo htmlspecialchars($row['sprintschedule']) ?>"><?= $t['view_sprint_schedule'] ?></a></dd>
+				</div>
+				<?php } ?>
+				<?php if (isset($row['sprintdefects']) && $row['sprintdefects'] != "") { ?>
+				<div style="break-inside: avoid;">
+					<dt><?= $t['sprint_defect'] ?></dt>
+					<dd><a href="<?php echo htmlspecialchars($row['sprintdefects']) ?>"><?= $t['view_sprint_defect'] ?></a></dd>
+				</div>
+				<?php } ?>
+				<?php
+				// Check if the account is admin level to show the assigned member.
+				if ($_SESSION['atype'] == '1' OR $_SESSION['atype'] == '2' OR $_SESSION['atype'] == '3' OR $_SESSION['atype'] == '4' OR $_SESSION['atype'] == '5') {
+					$workerid = $row['workerid'];
+					if ($workerid != 0 AND $workerid != "") {
+						$result2 = mysqli_query($link, "SELECT firstname, lastname FROM tblusers WHERE id = '$workerid'");
+						$row2 = mysqli_fetch_array($result2);
+						$ufirstname = $row2[0];
+						$ulastname = $row2[1];
+				?>
+				<div style="break-inside: avoid;">
+					<dt><?= $t['assigned_member'] ?></dt>
+					<dd><?php echo $ufirstname ?> <?php echo $ulastname ?></dd>
+				</div>
+				<?php
+					}
+				}
+				?>
+			</dl>
+
+			<?php if ($_SESSION['pid'] != "") { ?>
+			<h2><?= htmlspecialchars($t['fieldset_client_info']) ?></h2>
+			<dl class="colcount-sm-2">
+				<?php if ($row['clientfname'] != "") { ?>
+				<div style="break-inside: avoid;">
+					<dt><?= $t['first_name'] ?></dt>
+					<dd><?php echo htmlspecialchars($row['clientfname']) ?></dd>
+				</div>
+				<?php } ?>
+				<?php if ($row['clientlname'] != "") { ?>
+				<div style="break-inside: avoid;">
+					<dt><?= $t['last_name'] ?></dt>
+					<dd><?php echo htmlspecialchars($row['clientlname']) ?></dd>
+				</div>
+				<?php } ?>
+				<?php if ($row['clientemail'] != "") { ?>
+				<div style="break-inside: avoid;">
+					<dt><?= $t['client_email'] ?></dt>
+					<dd><a href="mailto:<?php echo htmlspecialchars($row['clientemail']) ?>?Subject=a11y-<?php echo $row['requestid'] ?> - <?php echo htmlspecialchars($row['title']) ?>"><?php echo htmlspecialchars($row['clientemail']) ?> <span class="glyphicon glyphicon-envelope"></span><span class="wb-inv">- <?= $t['send_email'] ?></span></a></dd>
+				</div>
+				<?php } ?>
+				<?php if ($row['clientphone'] != "") { ?>
+				<div style="break-inside: avoid;">
+					<dt><?= $t['client_phone'] ?></dt>
+					<dd><?php echo htmlspecialchars($row['clientphone']) ?></dd>
+				</div>
+				<?php } ?>
+				<?php if ($departmentAgency != "") { ?>
+				<div style="break-inside: avoid;">
+					<dt><?= $t['department_agency'] ?></dt>
+					<dd><?php echo htmlspecialchars($departmentAgency, ENT_QUOTES, 'UTF-8'); ?></dd>
+				</div>
+				<?php } ?>
+			</dl>
 			<?php } ?>
-			
-			
-			<?php if ($row['firstsprintstartdate']!="") { ?>
-				<div style="break-inside: avoid;">
-				<dt><?= $t['sprint_start'] ?></dt>
-				<dd><?php echo htmlspecialchars ($row['firstsprintstartdate']) ?></dd>
-				</div>
-				<?php } ?>
 
-				<?php if ($row['firstsprintenddate']!="") { ?>
+			<h2><?= htmlspecialchars($t['fieldset_dates']) ?></h2>
+			<dl class="colcount-sm-2">
 				<div style="break-inside: avoid;">
-				<dt><?= $t['sprint_end'] ?></dt>
-				<dd><?php echo htmlspecialchars ($row['firstsprintenddate']) ?></dd>
+					<dt><?= $t['date_received'] ?></dt>
+					<dd><?php echo htmlspecialchars($row['datereceived']) ?></dd>
 				</div>
-				<?php } ?>
-
-<?php if (isset($row['sprintschedule']) && $row['sprintschedule']!="") { ?>
-			<div style="break-inside: avoid;">
-			<dt><?= $t['sprint_schedule'] ?><dt>
-			<dd><a href="<?php echo htmlspecialchars ($row['sprintschedule']) ?>"><?= $t['view_sprint_schedule'] ?></a></dd>
-			</div>
-			<?php } ?>
-
-			<?php if (isset($row['sprintdefects']) && $row['sprintdefects']!="") { ?>
-				<div style="break-inside: avoid;">
-				<dt><?= $t['sprint_defect'] ?></dt>
-				<dd><a href="<?php echo htmlspecialchars ($row['sprintdefects']) ?>"><?= $t['view_sprint_defect'] ?></a></dd>
-				</div>
-				<?php } ?>
-
-				<div style="break-inside: avoid;">
-				<dt><?= $t['date_received'] ?></dt>
-				<dd><?php echo htmlspecialchars ($row['datereceived']) ?></dd>
-				</div>
-				<?php if ($sla > 0 && $statusid != 4 && $statusid != 5) { 
-					// Load SLA calculator functions for holiday checking
+				<?php if ($sla > 0 && $statusid != 4 && $statusid != 5) {
 					require_once('includes/sla-calculator.php');
-					
-					// Calculate SLA due date by adding business days to start date
 					$businessDaysAdded = 0;
 					$currentDate = date('Y-m-d', strtotime($datereceived));
-					
+
 					while ($businessDaysAdded < $sla) {
 						$currentDate = date('Y-m-d', strtotime($currentDate . ' +1 day'));
-						if (isBusinessDay($currentDate, $link)) { // Check weekday and holidays
+						if (isBusinessDay($currentDate, $link)) {
 							$businessDaysAdded++;
 						}
 					}
 					$slaDueDate = $currentDate;
 				?>
 				<div style="break-inside: avoid;">
-				<dt><?= $t['sla_days_required'] ?></dt>
-				<dd><?php echo $sla; ?> <?= $t['business_days'] ?></dd>
+					<dt><?= $t['sla_days_required'] ?></dt>
+					<dd><?php echo $sla; ?> <?= $t['business_days'] ?></dd>
 				</div>
 				<div style="break-inside: avoid;">
-				<dt><?= $t['sla_due_date'] ?></dt>
-				<dd><?php echo date('Y-m-d', strtotime($slaDueDate)); ?> <?php $daysRemaining = getWorkingDays(date('Y-m-d'), $slaDueDate, $holidays); if ($daysRemaining > 0) { echo '<span class="text-muted">(' . $daysRemaining . ' ' . $t['business_days'] . ')</span>'; } elseif ($daysRemaining == 0) { echo '<span class="label label-warning">' . ($nameField === 'namefr' ? 'Dû aujourd\'hui' : 'Due today') . '</span>'; } else { echo '<span class="label label-danger">' . ($nameField === 'namefr' ? 'En retard' : 'Overdue') . '</span>'; } ?></dd>
+					<dt><?= $t['sla_due_date'] ?></dt>
+					<dd><?php echo date('Y-m-d', strtotime($slaDueDate)); ?> <?php $daysRemaining = getWorkingDays(date('Y-m-d'), $slaDueDate, $holidays); if ($daysRemaining > 0) { echo '<span class="text-muted">(' . $daysRemaining . ' ' . $t['business_days'] . ')</span>'; } elseif ($daysRemaining == 0) { echo '<span class="label label-warning">' . ($nameField === 'namefr' ? 'Dû aujourd\'hui' : 'Due today') . '</span>'; } else { echo '<span class="label label-danger">' . ($nameField === 'namefr' ? 'En retard' : 'Overdue') . '</span>'; } ?></dd>
 				</div>
 				<?php } ?>
-				<?php if ($row['dateupdated']!="") { ?>
+				<?php if ($row['dateupdated'] != "") { ?>
 				<div style="break-inside: avoid;">
-				<dt><?= $t['date_updated'] ?></dt>
-				<dd><?php echo htmlspecialchars ($row['dateupdated']) ?></dd>
+					<dt><?= $t['date_updated'] ?></dt>
+					<dd><?php echo htmlspecialchars($row['dateupdated']) ?></dd>
 				</div>
 				<?php } ?>
-				<?php if ($row['daterequired']!="") { ?>
+				<?php if ($row['daterequired'] != "") { ?>
 				<div style="break-inside: avoid;">
-				<dt><?php if(($catalogueid==5) AND ($serviceid!=47)){ ?><?= $t['coaching_date'] ?><?php } else { ?><?= $t['date_required'] ?><?php } ?></dt>
-				<dd><?php echo htmlspecialchars ($row['daterequired']) ?></dd>
+					<dt><?php if (($catalogueid == 5) AND ($serviceid != 47)) { ?><?= $t['coaching_date'] ?><?php } else { ?><?= $t['date_required'] ?><?php } ?></dt>
+					<dd><?php echo htmlspecialchars($row['daterequired']) ?></dd>
 				</div>
 				<?php } ?>
-				<?php if ($row['dateresolved']!="") { ?>
+				<?php if ($row['dateresolved'] != "") { ?>
 				<div style="break-inside: avoid;">
-				<dt><?= $t['date_resolved'] ?></dt>
-				<dd><?php echo htmlspecialchars ($row['dateresolved']) ?></dd>
+					<dt><?= $t['date_resolved'] ?></dt>
+					<dd><?php echo htmlspecialchars($row['dateresolved']) ?></dd>
 				</div>
 				<?php } ?>
-				<?php
-				// Grab the status name
-				$result2 = mysqli_query($link, "SELECT $nameField FROM tblstatus WHERE id = '$statusid'");
-				$row2 = mysqli_fetch_array($result2);
-				$statusname = $row2 ? $row2[0] : '';
-				?>
-				<div style="break-inside: avoid;">
-					<dt><?= $t['status'] ?></dt>
-					<dd><?php echo $statusname ?></dd>
-				</div>
-				<?php if ($catalogueid==9 && $audienceid != 0 && $audienceid != null) { ?>
-				<div>
-					<?php ?>
-					<dt><?= $t['audience'] ?></dt>
-					<dd><?php echo $audiencename ?></dd>
-				</div>
-				<?php } ?>
-				<?php 
-				if ($catalogueid!=0) {
-				?>
-				<div style="break-inside: avoid;">
-					<dt><?= $t['catalogue_name'] ?></dt>
-					<dd><?php echo $cataloguename ?></dd>
-				</div>
-				<?php
-				}
-				if ($serviceid!=0) {
-				?>
-				<div style="break-inside: avoid;">
-					<dt><?= $t['service_name'] ?></dt>
-					<dd><?php echo $servicename; ?></dd>
-				</div>
-				<?php
-				}
-				if ($subserviceid!=0 && !empty($subservicename)) {
-				?>
-				<div tyle="break-inside: avoid;">
-					<dt><?= $t['subservice_name'] ?></dt>
-					<dd><?php echo $subservicename ?></dd>
-				</div>
-
-				
-				<?php
-				}
-				?>
-				<?php
-				// Check if the account is admin level to show this option 
-				if ($_SESSION['atype']=='1' OR $_SESSION['atype']=='2' OR $_SESSION['atype']=='3' OR $_SESSION['atype']=='4' OR $_SESSION['atype']=='5') {
-					$workerid = $row['workerid'];
-					if ($workerid!=0 AND $workerid!="") {
-						// Check the name
-						$result2 = mysqli_query($link, "SELECT lastname,firstname FROM tblusers WHERE id = '$workerid'");
-						$row2 = mysqli_fetch_array($result2);
-						$ulastname = $row2[0];
-						$ufirstname = $row2[1];
-				?>
-				<div tyle="break-inside: avoid;">
-					<dt>Assigned AAACT team member</dt>
-					<dd><?php echo $ulastname ?>, <?php echo $ufirstname ?></dd>
-				</div>
-				<?php
-					}
-				}
-				if ($_SESSION['atype']==1 OR $_SESSION['atype']==2 OR $_SESSION['atype']==5 OR $_SESSION['atype']==3 OR $_SESSION['atype']==4 OR $_SESSION['atype'] == 6) 
-{
-				?>
 			</dl>
+
+			<?php
+			if ($_SESSION['atype'] == 1 OR $_SESSION['atype'] == 2 OR $_SESSION['atype'] == 5 OR $_SESSION['atype'] == 3 OR $_SESSION['atype'] == 4 OR $_SESSION['atype'] == 6)
+			{
+			?>
 			
 			
 			<style>
@@ -768,15 +767,7 @@ $blobStorage = new AzureBlobStorageManager();
 			<?php if($_SESSION['pid']!=""){ ?>
 			<?php
 			// Check if status is resolved, if it is then display the client satisfaction survey link and results if available
-			$resolvedStatusId = 2;
-			$resolvedStatusSql = "SELECT id FROM tblstatus WHERE LOWER(nameen) = 'resolved' AND status = '1' LIMIT 1";
-			$resolvedStatusResult = mysqli_query($link, $resolvedStatusSql);
-			if ($resolvedStatusResult && mysqli_num_rows($resolvedStatusResult) > 0) {
-				$resolvedStatusRow = mysqli_fetch_array($resolvedStatusResult);
-				$resolvedStatusId = (int)$resolvedStatusRow['id'];
-			}
-
-			if ((int)$statusid === $resolvedStatusId){
+			if (rmt_is_resolved_status_id($link, $statusid)){
 			// First check if surveys are enabled for this catalogue
 			$catalogueSurveySql = "SELECT survey FROM tblcatalogue WHERE id = '$catalogueid'";
 			$catalogueSurveyResult = mysqli_query($link, $catalogueSurveySql);
@@ -926,7 +917,7 @@ $blobStorage = new AzureBlobStorageManager();
 					$cfname = $row3['firstname'];
 					$clname = $row3['lastname'];
 				?>
-				<dt><?php echo $dateadded ?><?php if($creatorid!=0) {?> - <?php echo $clname ?>, <?php echo $cfname ?><?php } ?><?php if ($_SESSION['atype']=='1') {?> <a class="wb-lbx" href="includes/delete-comms.php?t=a&id=<?php echo $row2['id'];?>&rid=<?php echo $triageid ?>"><span class="glyphicon glyphicon-trash"></span><span class="wb-inv"> <?= htmlspecialchars($t['delete_comment']) ?></span></a><?php } ?></dt>
+				<dt><?php echo $dateadded ?><?php if($creatorid!=0) {?> - <?php echo $cfname ?> <?php echo $clname ?><?php } ?><?php if ($_SESSION['atype']=='1') {?> <a class="wb-lbx" href="includes/delete-comms.php?t=a&id=<?php echo $row2['id'];?>&rid=<?php echo $triageid ?>"><span class="glyphicon glyphicon-trash"></span><span class="wb-inv"> <?= htmlspecialchars($t['delete_comment']) ?></span></a><?php } ?></dt>
 				<dd><?php echo $annotes ?></dd>
 				<?php } ?>
 			</dl>
@@ -943,146 +934,7 @@ $blobStorage = new AzureBlobStorageManager();
     </div>
 		<?php include 'includes/template/footer.php'; ?>
 		<?php include 'includes/template/scripts.php'; ?>
-		<script>
-   document.getElementById('downloadAll').addEventListener('click', async function() {
-    // Get only visible rows after search/filtering
-    const visibleRows = document.querySelectorAll('#fileTable tbody tr:not(.hidden)');
-
-
-    for (const row of visibleRows) {
-        const downloadBtn = row.querySelector('.download-btn');
-        const checkbox = row.querySelector('.fileCheckbox');
-        if (downloadBtn && checkbox.checked) {
-            await downloadFile(downloadBtn.getAttribute('data-file'),  downloadBtn.getAttribute('data-name'));
-        }
-    }
-});
-
-
-document.querySelectorAll('.download-btn').forEach(button => {
-    button.addEventListener('click', async function(event) {
-        event.preventDefault();
-
-        await downloadFile(this.getAttribute('data-file'), this.getAttribute('data-name'));
-    });
-});
-
-document.getElementById('selectAll').addEventListener('change', function() {
-    var checkboxes = document.querySelectorAll('.fileCheckbox');
-    for (var checkbox of checkboxes) {
-        checkbox.checked = this.checked;
-    }
-});
-
-
-document.querySelectorAll('.image-link').forEach(link => {
-    link.addEventListener('click', function(event) {
-        event.preventDefault();
-        const imagePreview = document.getElementById('imagePreview');
-        const previewImage = document.getElementById('previewImage');
-        const imageAnnouncement = document.getElementById('imageAnnouncement');
-
-        previewImage.src = this.dataset.src;
-        imagePreview.style.display = 'flex';
-        imagePreview.setAttribute('aria-hidden', 'false');
-
-        // Announce to screen readers
-        imageAnnouncement.textContent = "Image preview opened.";
-
-        // Focus the close button for better keyboard navigation
-        document.getElementById('closePreview').focus();
-    });
-});
-
-function closePreview() {
-    const imagePreview = document.getElementById('imagePreview');
-    imagePreview.style.display = 'none';
-    imagePreview.setAttribute('aria-hidden', 'true');
-
-    // Clear announcement text
-    document.getElementById('imageAnnouncement').textContent = "";
-}
-
-async function downloadFile(code, name) {
-    try {
-        const response = await fetch(`download.php?code=${encodeURIComponent(code)}`);
-        
-        if (!response.ok) {
-            alert('File not found!');
-            return;
-        }
-
-        const blob = await response.blob();  // Get the content as a Blob (binary data)
-        const sanitizedFileName = sanitizeFileName(name); // Optional: sanitize the file name
-
-        // Create a download link
-        const downloadLink = document.createElement('a');
-        downloadLink.href = URL.createObjectURL(blob);  // Create a URL from the Blob
-        downloadLink.download = sanitizedFileName;  // Set the filename for download
-
-        // Append the link to the DOM, trigger the click, and remove it afterward
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
-
-        // Revoke the object URL to free up resources
-        URL.revokeObjectURL(downloadLink.href);
-    } catch (error) {
-        console.error('Error downloading the file:', error);
-        alert('Failed to download file.');
-    }
-}
-
-
-// Utility function (optional) to sanitize locally if needed
-function sanitizeFileName(fileName) {
-    return fileName.replace(/[^\w.-]/g, '_'); // Replace invalid characters with underscores
-}
-
-
-// Close when clicking on overlay or button
-document.getElementById('imagePreview').addEventListener('click', closePreview);
-document.getElementById('closePreview').addEventListener('click', closePreview);
-
-// Close on Escape key press
-document.addEventListener('keydown', function(event) {
-    if (event.key === "Escape") {
-        closePreview();
-    }
-});
-
-// Function to delete a file using its code
-async function deleteFile(fileCode) {
-    // Confirm with the user before deleting
-    if (confirm("Are you sure you want to delete this file?")) {
-        // Make an AJAX call to the PHP delete script
-        fetch(`delete-file.php?code=${fileCode}`, {
-            method: 'GET',
-        })
-        .then(response => response.text())
-        .then(data => {
-            // Handle the response from the server
-            console.log(data);
-            alert("File deleted successfully!");
-        })
-    }
-}
-
-// Add event listener to all buttons with the class 'delete-btn'
-document.querySelectorAll('.delete-btn').forEach(button => {
-    button.addEventListener('click', async function () {
-        // Get the file code from the button's data-file attribute
-        const fileCode = this.getAttribute('data-file');
-
-        // Call the deleteFile function with the file code
-        await deleteFile(fileCode);
-		location.reload();
-    });
-});
-
-
-
-    </script>
+		<script src="/public/js/file-manager.js"></script>
 	</body>
 
 </html>

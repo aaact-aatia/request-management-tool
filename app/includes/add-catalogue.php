@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	$sql = "INSERT INTO tblcatalogue(`nameen`, `namefr`, `status`) VALUES ('$nameen', '$namefr', '$status')";
 	//echo $sql;
 	//exit();
-	mysqli_query($link,$sql);
+	rmt_admin_query($link,$sql);
 	
 	// Now redirect
 	header("location:/catalogue.php?lang={$lang_code}&status=success"); 
@@ -67,6 +67,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 		</div>
 		<div class="form-group form-buttons">
 			<button type="submit" class="btn btn-default"><?= htmlspecialchars($lang['add_button'] ?? 'Add') ?></button>
+			<button type="button" class="btn btn-default popup-modal-dismiss"><?= $lang_code === 'fr' ? 'Annuler' : 'Cancel' ?></button>
 		</div>
 		</form>
 	</div>

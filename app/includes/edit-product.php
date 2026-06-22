@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	// Create SQL statement
 	$sql = "UPDATE `tblproducts` SET `nameen` = '$pnameen', `namefr` = '$pnamefr', `dateupdated` = '$date_now', `updatedby` = '$updatedby' WHERE id='$productid'";
 	//echo $sql;
-	mysqli_query($link,$sql);
+	rmt_admin_query($link,$sql);
 	
 	// Now redirect
 	header("location:/products.php?lang={$lang_code}&status=success"); 
@@ -57,10 +57,10 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 // Construct SQL statement
 $sql2 = "SELECT * FROM tblproducts WHERE id='$productid'";
 
-$result2 = mysqli_query($link,$sql2);
+$result2 = rmt_admin_query($link,$sql2);
 //List it
-if(mysqli_num_rows($result2)>0){
-	while($row2 = mysqli_fetch_array($result2)){
+if(rmt_result_num_rows($result2)>0){
+	while($row2 = rmt_result_fetch_array($result2)){
 		$display_name = $lang_code === 'fr' ? $row2['namefr'] : $row2['nameen'];
 ?>
 <section id="filter-id" class="modal-dialog modal-content overlay-def">
@@ -79,6 +79,7 @@ if(mysqli_num_rows($result2)>0){
 		</div>
 		<div class="form-group form-buttons">
 			<button type="submit" class="btn btn-default"><?php echo $lang_code === 'en' ? 'Save' : 'Sauvegarder'; ?></button>
+			<button type="button" class="btn btn-default popup-modal-dismiss"><?= $lang_code === 'fr' ? 'Annuler' : 'Cancel' ?></button>
 		</div>
 		</form>
 	</div>

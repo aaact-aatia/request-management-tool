@@ -180,10 +180,20 @@ The application's data model consists of the following tables:
 6.  **tblcss**: Stores feedback collected from the RMT tool.
 7.  **tblservices**: Contains details about various services offered or managed by the application. In some cases, the data from this table populates the second dropdown on the "New Request" page.
 8.  **tblsources**: Relates to sub-services used within the application. In some cases, the data from this table populates the third dropdown on the "New Request" page.
-9.  **tblstatus**: Stores a list of possible states or statuses that an RMT request can have.
+9.  **tblstatus**: Stores a list of possible states or statuses that an RMT request can have, including an admin-configurable `is_resolved` flag used by request workflow logic.
 10.  **tblsubservices**: Contains information about sub-services of the main services offered by the application. The data from this table populates the second dropdown on the "New Request" page.
 11.  **tbltriage**: Used for triaging or prioritizing tasks, issues, or requests within the application.
 12.  **tblusers**: Stores user account information and authentication data for the application's users.
+
+### Status Admin Option: Resolved Trigger
+
+In Status Admin (`status.php`), administrators can mark a status as the resolved trigger via the **Use this status as Resolved** option when adding or editing a status.
+
+This setting controls request workflow behavior in edit processing, including:
+- whether setting that status auto-populates the resolved date when empty
+- whether transitioning into that status triggers the survey-link flow
+
+By default in seed/reference data, the "Resolved / Résolu" row is configured as the resolved trigger.
 
 This documentation provides an overview of the purpose and usage of each table within the application's data model. It serves as a reference for understanding the relationships between different data entities and their roles in supporting the application's functionality.
 

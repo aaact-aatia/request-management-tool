@@ -55,6 +55,7 @@ if(mysqli_num_rows($result2)>0){
 		<p tabindex="0"><?php echo $translations['client_survey_sent_confirm'] ?? ($lang === 'fr' ? 'Voulez-vous vraiment marquer le sondage comme envoyée?' : 'Are you sure you want to mark this survey as sent?'); ?></p>
 		<div class="form-group form-buttons">
 			<button type="submit" class="btn btn-default"><?php echo $translations['yes'] ?? ($lang === 'fr' ? 'Oui' : 'Yes'); ?></button>
+			<button type="button" class="btn btn-default popup-modal-dismiss"><?= $lang === 'fr' ? 'Non' : 'No' ?></button>
 		</div>
 		</form>
 	</div>

@@ -54,11 +54,17 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 
 	if ($accounttype == '1' || $accounttype == '2' || $accounttype == '6') {
 		$teamstring = "";
-	} elseif ($accounttype == '4' || $accounttype == '5') {
-		if (count($selectedTeams) !== 1) {
+	} elseif ($accounttype == '5') {
+		if (count($selectedTeams) > 1) {
 			$noerror = true;
 		} else {
-			$teamstring = (string)$selectedTeams[0];
+			$teamstring = !empty($selectedTeams) ? (string)$selectedTeams[0] : "";
+		}
+	} elseif ($accounttype == '4') {
+		if (count($selectedTeams) < 1) {
+			$noerror = true;
+		} else {
+			$teamstring = implode(',', $selectedTeams);
 		}
 	} elseif ($accounttype == '3') {
 		if (count($selectedTeams) < 1) {
@@ -79,10 +85,10 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	$npassword = password_hash($password, PASSWORD_DEFAULT);
 	
 	// Create SQL statement
-	$sql = "INSERT INTO tblusers(`firstname`, `lastname`, `email`, `password`, `atype`, `team`, `status`, `environment`) VALUES ('$firstname', '$lastname', '$email', '$npassword', '$accounttype', '$teamstring', '$status', 1)";
+	$sql = "INSERT INTO tblusers(`firstname`, `lastname`, `email`, `password`, `atype`, `manager_id`, `team`, `status`, `environment`) VALUES ('$firstname', '$lastname', '$email', '$npassword', '$accounttype', NULL, '$teamstring', '$status', 1)";
 	//echo $sql;
 	//exit();
-	mysqli_query($link,$sql);
+	rmt_admin_query($link,$sql);
 	
 	// Now redirect
 	header("location:/users.php?lang={$lang_code}&status=success"); 
@@ -104,7 +110,7 @@ $translations = [
 		'account_sort_field' => 'nameen',
 		'team_sort_field' => 'nameen',
 		'team_none_hint' => 'No team is assigned for Admin, Super Admin, and External accounts.',
-		'team_single_hint' => 'Team Lead and Employee must have exactly one team. Manager can have multiple teams.'
+		'team_single_hint' => 'Employee can have zero or one team. Team Lead and Manager can have multiple teams.'
 	],
 	'fr' => [
 		'modal_title' => 'Ajouter un nouvel utilisateur',
@@ -119,7 +125,7 @@ $translations = [
 		'account_sort_field' => 'namefr',
 		'team_sort_field' => 'namefr',
 		'team_none_hint' => 'Aucune équipe n\'est assignée aux comptes Administrateur, Super administrateur et Externe.',
-		'team_single_hint' => 'Un Chef d\'équipe et un Employé doivent avoir exactement une équipe. Un Gestionnaire peut avoir plusieurs équipes.'
+		'team_single_hint' => 'Un Employé peut avoir zero ou une équipe. Un Chef d\'équipe et un Gestionnaire peuvent avoir plusieurs équipes.'
 	]
 ];
 
@@ -152,8 +158,8 @@ $t = $translations[$lang_code];
 			<select class="form-control" id="accounttype" name="accounttype" required>
 				<?php 
 				$sql2 = "SELECT * FROM tblaccounttype WHERE status='1' ORDER BY {$t['account_sort_field']} ASC";
-				$result2 = mysqli_query($link,$sql2);	
-				while($row2 = mysqli_fetch_array($result2)){
+				$result2 = rmt_admin_query($link,$sql2);	
+				while($row2 = rmt_result_fetch_array($result2)){
 					$accountname = ($lang_code === 'fr') ? $row2['namefr'] : $row2['nameen'];
 				?>
 					<option value="<?= htmlspecialchars($row2['id']) ?>"><?= htmlspecialchars($accountname) ?></option>
@@ -169,8 +175,8 @@ $t = $translations[$lang_code];
 				<ul class="list-unstyled lst-spcd-2">
 				<?php
 				$sql3 = "SELECT * FROM tblteams ORDER BY {$t['team_sort_field']} ASC";
-				$result3 = mysqli_query($link,$sql3);	
-				while($row3 = mysqli_fetch_array($result3)){
+				$result3 = rmt_admin_query($link,$sql3);	
+				while($row3 = rmt_result_fetch_array($result3)){
 					$teamname = ($lang_code === 'fr') ? $row3['namefr'] : $row3['nameen'];
 				?>
 					<li class="checkbox">
@@ -185,52 +191,9 @@ $t = $translations[$lang_code];
 		</div>
 		<div class="form-group form-buttons">
 			<button type="submit" class="btn btn-default"><?= htmlspecialchars($t['add_button']) ?></button>
+			<button type="button" class="btn btn-default popup-modal-dismiss"><?= $lang_code === 'fr' ? 'Annuler' : 'Cancel' ?></button>
 		</div>
-		<script>
-		(function () {
-			var accountType = document.getElementById('accounttype');
-			var teamBoxes = document.querySelectorAll('.team-option');
-			function updateTeamSelectionRules() {
-				var role = accountType.value;
-				var noTeamRoles = ['1', '2', '6'];
-				var singleTeamRoles = ['4', '5'];
-
-				if (noTeamRoles.indexOf(role) !== -1) {
-					teamBoxes.forEach(function (cb) {
-						cb.checked = false;
-						cb.disabled = true;
-					});
-					return;
-				}
-
-				teamBoxes.forEach(function (cb) {
-					cb.disabled = false;
-				});
-
-				if (singleTeamRoles.indexOf(role) !== -1) {
-					var checked = Array.prototype.filter.call(teamBoxes, function (cb) { return cb.checked; });
-					if (checked.length > 1) {
-						checked.slice(1).forEach(function (cb) { cb.checked = false; });
-					}
-				}
-			}
-
-			teamBoxes.forEach(function (cb) {
-				cb.addEventListener('change', function () {
-					if (['4', '5'].indexOf(accountType.value) !== -1) {
-						teamBoxes.forEach(function (other) {
-							if (other !== cb) {
-								other.checked = false;
-							}
-						});
-					}
-				});
-			});
-
-			accountType.addEventListener('change', updateTeamSelectionRules);
-			updateTeamSelectionRules();
-		})();
-		</script>
+		<script src="/public/js/user-teams.js"></script>
 		</form>
 	</div>
 </section>

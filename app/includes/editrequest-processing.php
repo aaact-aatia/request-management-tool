@@ -21,6 +21,7 @@ $departmentagencyCommlogId = (int)getPostValue('departmentagency_commlogid', 0);
 $clientphone = getPostValue('clientphone');
 $sourceid = getPostValue('sourceid');
 $statusid = getPostValue('statusid');
+$isTargetResolved = rmt_is_resolved_status_id($link, $statusid);
 $datereceived = getPostValue('datereceived');
 $dateupdated = !empty($_POST['dateupdated']) ? getPostValue('dateupdated') : getTodayDate();
 
@@ -30,7 +31,7 @@ $daterequiredu = empty($daterequired);
 if ($daterequiredu) $daterequired = NULL;
 
 $dateresolved = getPostValue('dateresolved');
-if (empty($dateresolved) && $statusid == '2') {
+if (empty($dateresolved) && $isTargetResolved) {
     $dateresolved = getTodayDate();
 } elseif (empty($dateresolved)) {
     $dateresolvedu = true;
@@ -85,6 +86,7 @@ function upsertDepartmentAgencyInNotes($notes, $departmentValue, $lang) {
 $result2 = mysqli_query($link, "SELECT statusid FROM tbltriage WHERE id = '$requestuid'");
 $row2 = mysqli_fetch_assoc($result2);
 $cstatusid = $row2['statusid'];
+$isCurrentResolved = rmt_is_resolved_status_id($link, $cstatusid);
 
 if ($cstatusid != $statusid) {
     $exactTime = date('Y-m-d H:i:s');
@@ -219,7 +221,7 @@ $personalisation = [
 ];
 
 // Send emails based on status changes
-if ($cstatusid != 2 && $statusid == 2) {
+if (!$isCurrentResolved && $isTargetResolved) {
     // Queue one survey send for newly resolved requests only.
     mysqli_query($link, "UPDATE tbltriage SET cssurvey = 0 WHERE id = '$requestuid' AND (cssurvey IS NULL)");
 
@@ -408,7 +410,7 @@ if (isset($dateresolvedu)) {
 
 // Redirect on success.
 // When a request is newly resolved, send staff directly to manual survey links.
-if ($cstatusid != 2 && $statusid == 2) {
+if (!$isCurrentResolved && $isTargetResolved) {
     header("location:/client-survey-link.php?lang=$lang&erid=$redirectid");
     exit();
 }

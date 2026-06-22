@@ -24,11 +24,13 @@ CREATE TABLE IF NOT EXISTS `tblusers` (
   `email` varchar(255) NOT NULL UNIQUE,
   `password` varchar(255) NOT NULL,
   `atype` int(11) NOT NULL,
+  `manager_id` int(11) DEFAULT NULL,
   `team` varchar(100) DEFAULT NULL,
   `status` tinyint(1) DEFAULT 1,
   `environment` tinyint(1) DEFAULT 0 COMMENT '0=prod, 1=dev',
   PRIMARY KEY (`id`),
-  KEY `atype` (`atype`)
+  KEY `atype` (`atype`),
+  KEY `manager_id` (`manager_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `tblcatalogue` (
@@ -76,6 +78,7 @@ CREATE TABLE IF NOT EXISTS `tblstatus` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `nameen` varchar(100) NOT NULL,
   `namefr` varchar(100) NOT NULL,
+  `is_resolved` tinyint(1) DEFAULT 0,
   `status` tinyint(1) DEFAULT 1,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -185,12 +188,14 @@ CREATE TABLE IF NOT EXISTS `tblteams` (
   `contactemail` varchar(255) NOT NULL,
   `escalationcontactname` varchar(200) DEFAULT NULL,
   `escalationcontactemail` varchar(255) DEFAULT NULL,
+  `team_lead_user_id` int(11) DEFAULT NULL,
   `dateadded` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `dateupdated` timestamp NULL DEFAULT NULL,
   `updatedby` int(11) DEFAULT NULL,
   `status` tinyint(1) DEFAULT 1,
   PRIMARY KEY (`id`),
-  KEY `status` (`status`)
+  KEY `status` (`status`),
+  KEY `team_lead_user_id` (`team_lead_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `tblcss` (
@@ -247,21 +252,21 @@ INSERT INTO `tblaccounttype` (`id`, `nameen`, `namefr`, `status`) VALUES
 
 -- Users (password is 'password' hashed with bcrypt)
 -- team field stores comma-separated tblcontacts IDs: 1=IT Accessibility Office, 2=Development Team
-INSERT INTO `tblusers` (`id`, `firstname`, `lastname`, `email`, `password`, `atype`, `team`, `status`, `environment`) VALUES
-(1, 'Super', 'Admin', 'superadmin@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 1, '1', 1, 0),
-(2, 'Admin', 'User', 'admin@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 2, '1', 1, 0),
-(3, 'Manager', 'User', 'manager@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 3, '1', 1, 0),
-(4, 'Team', 'Lead', 'tl@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 4, '1', 1, 0),
-(5, 'Employee', 'User', 'employee@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 5, '2', 1, 0),
-(6, 'External', 'User', 'external@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 6, '', 1, 0),
+INSERT INTO `tblusers` (`id`, `firstname`, `lastname`, `email`, `password`, `atype`, `manager_id`, `team`, `status`, `environment`) VALUES
+(1, 'Super', 'Admin', 'superadmin@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 1, NULL, '1', 1, 0),
+(2, 'Admin', 'User', 'admin@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 2, NULL, '1', 1, 0),
+(3, 'Manager', 'User', 'manager@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 3, NULL, '1', 1, 0),
+(4, 'Team', 'Lead', 'tl@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 4, 3, '1', 1, 0),
+(5, 'Employee', 'User', 'employee@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 5, 3, '2', 1, 0),
+(6, 'External', 'User', 'external@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 6, NULL, '', 1, 0),
 -- IT Accessibility Office employees (team contact ID 1)
-(7, 'Alice', 'Tremblay', 'alice.tremblay@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 5, '1', 1, 0),
-(8, 'Marcus', 'Okafor', 'marcus.okafor@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 5, '1', 1, 0),
-(9, 'Sophie', 'Leblanc', 'sophie.leblanc@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 5, '1', 1, 0),
+(7, 'Alice', 'Tremblay', 'alice.tremblay@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 5, 3, '1', 1, 0),
+(8, 'Marcus', 'Okafor', 'marcus.okafor@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 5, 3, '1', 1, 0),
+(9, 'Sophie', 'Leblanc', 'sophie.leblanc@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 5, 3, '1', 1, 0),
 -- Development Team employees (team contact ID 2)
-(10, 'Jordan', 'Park', 'jordan.park@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 5, '2', 1, 0),
-(11, 'Priya', 'Sharma', 'priya.sharma@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 5, '2', 1, 0),
-(12, 'Devon', 'Walsh', 'devon.walsh@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 5, '2', 1, 0);
+(10, 'Jordan', 'Park', 'jordan.park@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 5, 3, '2', 1, 0),
+(11, 'Priya', 'Sharma', 'priya.sharma@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 5, 3, '2', 1, 0),
+(12, 'Devon', 'Walsh', 'devon.walsh@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 5, 3, '2', 1, 0);
 
 -- Catalogue (matching openrequest.php options)
 INSERT INTO `tblcatalogue` (`id`, `nameen`, `namefr`, `status`) VALUES
@@ -452,13 +457,13 @@ INSERT INTO `tblproducts` (`id`, `nameen`, `namefr`, `status`) VALUES
 (8, 'Tint & Track', 'Tint & Track', 1);
 
 -- Status values
-INSERT INTO `tblstatus` (`id`, `nameen`, `namefr`, `status`) VALUES
-(1, 'New', 'Nouveau', 1),
-(2, 'In Progress', 'En cours', 1),
-(3, 'Pending', 'En attente', 1),
-(4, 'Resolved', 'Résolu', 1),
-(5, 'Closed', 'Fermé', 1),
-(6, 'Cancelled', 'Annulé', 1);
+INSERT INTO `tblstatus` (`id`, `nameen`, `namefr`, `is_resolved`, `status`) VALUES
+(1, 'New', 'Nouveau', 0, 1),
+(2, 'In Progress', 'En cours', 0, 1),
+(3, 'Pending', 'En attente', 0, 1),
+(4, 'Resolved', 'Résolu', 1, 1),
+(5, 'Closed', 'Fermé', 0, 1),
+(6, 'Cancelled', 'Annulé', 0, 1);
 
 -- Contacts
 INSERT INTO `tblcontacts` (`teamnameen`, `teamnamefr`, `teamemail`, `contactname`, `contactemail`, `escalationcontactname`, `escalationcontactemail`, `status`) VALUES
@@ -466,9 +471,9 @@ INSERT INTO `tblcontacts` (`teamnameen`, `teamnamefr`, `teamemail`, `contactname
 ('Development Team', 'Équipe de développement', 'dev.team@example.com', 'Alice Developer', 'alice.dev@example.com', 'Bob Tech Lead', 'bob.techlead@example.com', 1);
 
 -- Teams
-INSERT INTO `tblteams` (`id`, `nameen`, `namefr`, `email`, `contactname`, `contactemail`, `escalationcontactname`, `escalationcontactemail`, `status`) VALUES
-(1, 'IT Accessibility Office', 'Bureau de l''accessibilite des TI', 'accessibility@example.com', 'John Doe', 'john.doe@example.com', 'Jane Manager', 'jane.manager@example.com', 1),
-(2, 'Development Team', 'Equipe de developpement', 'dev.team@example.com', 'Alice Developer', 'alice.dev@example.com', 'Bob Tech Lead', 'bob.techlead@example.com', 1);
+INSERT INTO `tblteams` (`id`, `nameen`, `namefr`, `email`, `contactname`, `contactemail`, `escalationcontactname`, `escalationcontactemail`, `team_lead_user_id`, `status`) VALUES
+(1, 'IT Accessibility Office', 'Bureau de l''accessibilite des TI', 'accessibility@example.com', 'John Doe', 'john.doe@example.com', 'Jane Manager', 'jane.manager@example.com', 4, 1),
+(2, 'Development Team', 'Equipe de developpement', 'dev.team@example.com', 'Alice Developer', 'alice.dev@example.com', 'Bob Tech Lead', 'bob.techlead@example.com', 4, 1);
 
 -- Sample request
 INSERT INTO `tbltriage` (`requestid`, `title`, `clientfname`, `clientlname`, `clientemail`, `catalogueid`, `serviceid`, `subserviceid`, `statusid`, `datereceived`, `creatorid`, `updaterid`, `status`) VALUES

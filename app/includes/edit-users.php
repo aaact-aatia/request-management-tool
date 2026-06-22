@@ -65,11 +65,17 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 
 	if ($accounttype == '1' || $accounttype == '2' || $accounttype == '6') {
 		$teamstring = "";
-	} elseif ($accounttype == '4' || $accounttype == '5') {
-		if (count($selectedTeams) !== 1) {
+	} elseif ($accounttype == '5') {
+		if (count($selectedTeams) > 1) {
 			$noerror = true;
 		} else {
-			$teamstring = (string)$selectedTeams[0];
+			$teamstring = !empty($selectedTeams) ? (string)$selectedTeams[0] : "";
+		}
+	} elseif ($accounttype == '4') {
+		if (count($selectedTeams) < 1) {
+			$noerror = true;
+		} else {
+			$teamstring = implode(',', $selectedTeams);
 		}
 	} elseif ($accounttype == '3') {
 		if (count($selectedTeams) < 1) {
@@ -91,13 +97,18 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	}
 	
 	// Create SQL statement
+	$managerClause = "";
+	if (in_array($accounttype, ['1', '2', '3', '5', '6'], true)) {
+		$managerClause = ", `manager_id` = NULL";
+	}
+
 	if ($password!="") {
-		$sql = "UPDATE `tblusers` SET `firstname` = '$firstname', `lastname` = '$lastname', `email` = '$email', `password` = '$npassword', `atype` = '$accounttype', `team` = '$teamstring' WHERE id='$userid'";
+		$sql = "UPDATE `tblusers` SET `firstname` = '$firstname', `lastname` = '$lastname', `email` = '$email', `password` = '$npassword', `atype` = '$accounttype'" . $managerClause . ", `team` = '$teamstring' WHERE id='$userid'";
 	} else {
-		$sql = "UPDATE `tblusers` SET `firstname` = '$firstname', `lastname` = '$lastname', `email` = '$email', `atype` = '$accounttype', `team` = '$teamstring' WHERE id='$userid'";
-	}		
+		$sql = "UPDATE `tblusers` SET `firstname` = '$firstname', `lastname` = '$lastname', `email` = '$email', `atype` = '$accounttype'" . $managerClause . ", `team` = '$teamstring' WHERE id='$userid'";
+	}
 	//echo $sql;
-	mysqli_query($link,$sql);
+	rmt_admin_query($link,$sql);
 	
 	// Now redirect
 	header("location:/users.php?lang=" . $lang . "&status=success"); 
@@ -107,10 +118,10 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 // Construct SQL statement
 $sql2 = "SELECT * FROM tblusers WHERE id='$userid'";
 
-$result2 = mysqli_query($link,$sql2);
+$result2 = rmt_admin_query($link,$sql2);
 //List it
-if(mysqli_num_rows($result2)>0){
-	while($row2 = mysqli_fetch_array($result2)){
+if(rmt_result_num_rows($result2)>0){
+	while($row2 = rmt_result_fetch_array($result2)){
 		$title = $is_french ? ('Modifier l\'utilisateur ' . $row2['firstname'] . ' ' . $row2['lastname']) : ('Edit user ' . $row2['firstname'] . ' ' . $row2['lastname']);
 		$label_firstname = $is_french ? 'Prénom:' : 'First name:';
 		$label_lastname = $is_french ? 'Nom:' : 'Last name:';
@@ -127,7 +138,7 @@ if(mysqli_num_rows($result2)>0){
 		$team_sort = $is_french ? 'namefr' : 'nameen';
 		$team_name = $is_french ? 'namefr' : 'nameen';
 		$hint_none = $is_french ? 'Aucune équipe n\'est assignée aux comptes Administrateur, Super administrateur et Externe.' : 'No team is assigned for Admin, Super Admin, and External accounts.';
-		$hint_single = $is_french ? 'Un Chef d\'équipe et un Employé doivent avoir exactement une équipe. Un Gestionnaire peut avoir plusieurs équipes.' : 'Team Lead and Employee must have exactly one team. Manager can have multiple teams.';
+		$hint_single = $is_french ? 'Un Employé peut avoir zero ou une équipe. Un Chef d\'équipe et un Gestionnaire peuvent avoir plusieurs équipes.' : 'Employee can have zero or one team. Team Lead and Manager can have multiple teams.';
 ?>
 <section id="filter-id" class="modal-dialog modal-content overlay-def">
 	<header class="modal-header">
@@ -160,8 +171,8 @@ if(mysqli_num_rows($result2)>0){
 			<select class="form-control" id="accounttype" name="accounttype" required>
 				<?php 
 				$sql3 = "SELECT * FROM tblaccounttype WHERE status='1' ORDER BY $sort_field ASC";
-				$result3 = mysqli_query($link,$sql3);	
-				while($row3 = mysqli_fetch_array($result3)){
+				$result3 = rmt_admin_query($link,$sql3);	
+				while($row3 = rmt_result_fetch_array($result3)){
 				?>
 					<option value="<?php echo $row3['id']; ?>"<?php if($row3['id'] == $row2['atype']) echo " selected"; ?>><?php echo $row3[$name_field]; ?></option>
 				<?php
@@ -180,8 +191,8 @@ if(mysqli_num_rows($result2)>0){
 				$tarray = explode(",",$teams);
 				
 				$sql3 = "SELECT * FROM tblteams ORDER BY $team_sort ASC";
-				$result3 = mysqli_query($link,$sql3);	
-				while($row3 = mysqli_fetch_array($result3)){
+				$result3 = rmt_admin_query($link,$sql3);	
+				while($row3 = rmt_result_fetch_array($result3)){
 				?>
 					<li class="checkbox">
 						<input type="checkbox" class="team-option" name="teams[]" value="<?php echo $row3['id']; ?>" id="team-<?php echo $row3['id']; ?>"<?php if(in_array((string)$row3['id'], $tarray)) {?> checked="checked"<?php } ?> />
@@ -195,53 +206,9 @@ if(mysqli_num_rows($result2)>0){
 		</div>
 		<div class="form-group form-buttons">
 			<button type="submit" class="btn btn-default"><?php echo $save_btn ?></button>
+			<button type="button" class="btn btn-default popup-modal-dismiss"><?= $is_french ? 'Annuler' : 'Cancel' ?></button>
 		</div>
-		<script>
-		(function () {
-			var accountType = document.getElementById('accounttype');
-			var teamBoxes = document.querySelectorAll('.team-option');
-
-			function updateTeamSelectionRules() {
-				var role = accountType.value;
-				var noTeamRoles = ['1', '2', '6'];
-				var singleTeamRoles = ['4', '5'];
-
-				if (noTeamRoles.indexOf(role) !== -1) {
-					teamBoxes.forEach(function (cb) {
-						cb.checked = false;
-						cb.disabled = true;
-					});
-					return;
-				}
-
-				teamBoxes.forEach(function (cb) {
-					cb.disabled = false;
-				});
-
-				if (singleTeamRoles.indexOf(role) !== -1) {
-					var checked = Array.prototype.filter.call(teamBoxes, function (cb) { return cb.checked; });
-					if (checked.length > 1) {
-						checked.slice(1).forEach(function (cb) { cb.checked = false; });
-					}
-				}
-			}
-
-			teamBoxes.forEach(function (cb) {
-				cb.addEventListener('change', function () {
-					if (['4', '5'].indexOf(accountType.value) !== -1) {
-						teamBoxes.forEach(function (other) {
-							if (other !== cb) {
-								other.checked = false;
-							}
-						});
-					}
-				});
-			});
-
-			accountType.addEventListener('change', updateTeamSelectionRules);
-			updateTeamSelectionRules();
-		})();
-		</script>
+		<script src="/public/js/user-teams.js"></script>
 		</form>
 	</div>
 </section>

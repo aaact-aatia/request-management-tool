@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	$sql = "INSERT INTO tblservices(`nameen`, `namefr`, `catalogueid`, `contactid`, `sds`, `status`) VALUES ('$nameen', '$namefr', '$catalogueid', '$contactid', '$sds', '$status')";
 	//echo $sql;
 	//exit();
-	mysqli_query($link,$sql);
+	rmt_admin_query($link,$sql);
 	
 	// Now redirect
 	header("location:/catalogue-mgmt.php?lang={$lang_code}?id=$catalogueid&status=success"); 
@@ -58,9 +58,9 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 
 // Grab the catalogue name
 $sql = "SELECT * FROM tblcatalogue WHERE id='$catalogueid'";
-$result = mysqli_query($link,$sql);
-if(mysqli_num_rows($result)>0) {
-	while($row = mysqli_fetch_array($result)) {
+$result = rmt_admin_query($link,$sql);
+if(rmt_result_num_rows($result)>0) {
+	while($row = rmt_result_fetch_array($result)) {
 		$cataloguename = ($lang_code === 'fr') ? $row['namefr'] : $row['nameen'];
 	}
 }
@@ -112,8 +112,8 @@ $t = $translations[$lang_code];
 			<select class="form-control" id="contactid" name="contactid" required>
 				<?php 
 				$sql2 = "SELECT * FROM tblteams WHERE status='1' ORDER BY {$t['team_sort_field']} ASC";
-				$result2 = mysqli_query($link,$sql2);	
-				while($row2 = mysqli_fetch_array($result2)){
+				$result2 = rmt_admin_query($link,$sql2);	
+				while($row2 = rmt_result_fetch_array($result2)){
 					$teamname = ($lang_code === 'fr') ? $row2['namefr'] : $row2['nameen'];
 				?>
 					<option value="<?= htmlspecialchars($row2['id']) ?>"><?= htmlspecialchars($teamname) ?></option>
@@ -136,6 +136,7 @@ $t = $translations[$lang_code];
 		</div>
 		<div class="form-group form-buttons">
 			<button type="submit" class="btn btn-default"><?= htmlspecialchars($t['add_button']) ?></button>
+			<button type="button" class="btn btn-default popup-modal-dismiss"><?= $lang_code === 'fr' ? 'Annuler' : 'Cancel' ?></button>
 		</div>
 		</form>
 	</div>

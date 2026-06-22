@@ -95,7 +95,7 @@ include 'includes/template/head.php';
 			
 			<?php
 			// Construct SQL statement
-			$sql = "SELECT * FROM tblusers ORDER BY lastname ASC";
+			$sql = "SELECT * FROM tblusers ORDER BY firstname ASC, lastname ASC";
 			//echo $sql;
 			
 			$result = mysqli_query($link,$sql);
@@ -138,11 +138,77 @@ include 'includes/template/head.php';
 					}
 				}
 				?>
+				<?php
+				$relationshipLabel = ($_SESSION['lang'] === 'fr') ? 'Gestionnaire' : 'Manager';
+				$relationshipName = '—';
+				$unassignedText = ($_SESSION['lang'] === 'fr') ? 'Non assigne' : 'Unassigned';
+				$userTypeId = (int)$row['atype'];
+				$showRelationship = true;
+
+				if ($userTypeId === 5) {
+					$relationshipLabel = ($_SESSION['lang'] === 'fr') ? 'Chef d\'équipe' : 'Team Lead';
+					$employeeTeamId = (int)($row['team'] ?? 0);
+					$relationshipName = $unassignedText;
+					if ($employeeTeamId > 0) {
+						$leadLookup = mysqli_query($link, "SELECT u.firstname, u.lastname
+							FROM tblteams t
+							LEFT JOIN tblusers u ON u.id = t.team_lead_user_id
+							WHERE t.id='" . $employeeTeamId . "' AND t.status='1' AND u.status='1'
+							LIMIT 1");
+						$leadRow = mysqli_fetch_assoc($leadLookup);
+						if (!empty($leadRow)) {
+							$relationshipName = $leadRow['firstname'] . ' ' . $leadRow['lastname'];
+						}
+					}
+				} else {
+					if ($userTypeId === 3) {
+						$showRelationship = false;
+					}
+					$managerId = (int)($row['manager_id'] ?? 0);
+					if ($managerId > 0) {
+						$managerResult = mysqli_query($link, "SELECT firstname, lastname FROM tblusers WHERE id='" . $managerId . "' AND status='1' LIMIT 1");
+						$managerRow = mysqli_fetch_assoc($managerResult);
+						if (!empty($managerRow)) {
+								$relationshipName = $managerRow['firstname'] . ' ' . $managerRow['lastname'];
+						}
+					}
+
+					if ($userTypeId === 4 && $relationshipName === '—' && !empty($row['team'])) {
+						$leadTeamIds = [];
+						foreach (array_filter(explode(',', (string)$row['team'])) as $leadTid) {
+							$leadTid = (int)$leadTid;
+							if ($leadTid > 0) {
+								$leadTeamIds[$leadTid] = true;
+							}
+						}
+
+						if (!empty($leadTeamIds)) {
+							$managerLookup = mysqli_query($link, "SELECT firstname, lastname, team FROM tblusers WHERE atype='3' AND status='1' ORDER BY firstname ASC, lastname ASC");
+							while ($managerCandidate = mysqli_fetch_assoc($managerLookup)) {
+								$candidateTeams = array_filter(explode(',', (string)($managerCandidate['team'] ?? '')));
+								$matchesTeam = false;
+								foreach ($candidateTeams as $candidateTidRaw) {
+									$candidateTid = (int)$candidateTidRaw;
+									if ($candidateTid > 0 && isset($leadTeamIds[$candidateTid])) {
+										$matchesTeam = true;
+										break;
+									}
+								}
+
+								if ($matchesTeam) {
+									$relationshipName = $managerCandidate['firstname'] . ' ' . $managerCandidate['lastname'];
+									break;
+								}
+							}
+						}
+					}
+				}
+				?>
 				<tr>
-					<td><?php echo $row['lastname'];?>, <?php echo $row['firstname'];?></td>
+					<td><?php echo $row['firstname'];?> <?php echo $row['lastname'];?></td>
 					<td><?php echo $row['email'];?></td>
 					<td><?php echo $accounttypename ?></td>
-					<td><?php echo !empty($teamNames) ? htmlspecialchars(implode(', ', $teamNames)) : '—'; ?></td>
+					<td><?php echo !empty($teamNames) ? htmlspecialchars(implode(', ', $teamNames)) : '—'; ?><?php if ($showRelationship) { ?><br><small><?php echo htmlspecialchars($relationshipLabel); ?>: <?php echo htmlspecialchars($relationshipName); ?></small><?php } ?></td>
 					<td>
 						<a class="wb-lbx btn btn-primary btn-block" href="includes/edit-users.php?id=<?php echo $row['id'];?>&lang=<?php echo $lang;?>"><?= htmlspecialchars($langFile['users_edit_button']) ?><span class="wb-inv"> <?php echo htmlspecialchars($row['firstname'] . ' ' . $row['lastname']); ?></span></a> <a class="wb-lbx btn btn-primary btn-block" href="includes/delete-users.php?id=<?php echo $row['id'];?>&lang=<?php echo $lang;?>"><?= htmlspecialchars($langFile['users_delete_button']) ?><span class="wb-inv"> <?php echo htmlspecialchars($row['firstname'] . ' ' . $row['lastname']); ?></span></a>
 					</td>

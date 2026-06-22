@@ -27,24 +27,24 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	
 	// We need to delete all services and sub-services
 	$sql2 = "SELECT * FROM tblservices WHERE catalogueid = '$catalogueid'";
-	$result2 = mysqli_query($link,$sql2);	
-	if(mysqli_num_rows($result2)>0){
-		while($row2 = mysqli_fetch_array($result2)){
+	$result2 = rmt_admin_query($link,$sql2);	
+	if(rmt_result_num_rows($result2)>0){
+		while($row2 = rmt_result_fetch_array($result2)){
 			// Get service id
 			$serviceid = $row2['id'];
 			// Now we have a service id we need to check if we have sub services
 			$sql = "UPDATE `tblsubservices` SET `status` = '0' WHERE serviceid='$serviceid'";
-			mysqli_query($link,$sql);
+			rmt_admin_query($link,$sql);
 		}
 	}
 	
 	// Now set all the services to status = 0
 	$sql = "UPDATE `tblservices` SET `status` = '0' WHERE catalogueid='$catalogueid'";
-	mysqli_query($link,$sql);
+	rmt_admin_query($link,$sql);
 	
 	// Now update catalogue to status = 0
 	$sql = "UPDATE `tblcatalogue` SET `status` = '0' WHERE id='$catalogueid'";
-	mysqli_query($link,$sql);
+	rmt_admin_query($link,$sql);
 	
 	// Now redirect
 	header("location:/catalogue.php?lang=$lang?status=success"); 
@@ -54,10 +54,10 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 // Construct SQL statement
 $sql2 = "SELECT * FROM tblcatalogue WHERE id='$catalogueid'";
 
-$result2 = mysqli_query($link,$sql2);
+$result2 = rmt_admin_query($link,$sql2);
 //List it
-if(mysqli_num_rows($result2)>0){
-	while($row2 = mysqli_fetch_array($result2)){
+if(rmt_result_num_rows($result2)>0){
+	while($row2 = rmt_result_fetch_array($result2)){
 		$name = ($lang == 'fr') ? $row2['namefr'] : $row2['nameen'];
 		$title = ($lang == 'fr') ? "Supprimer l'élément de catalogue $name" : "Delete $name catalogue item";
 		$question = ($lang == 'fr') ? "Voulez-vous vraiment supprimer cet article de catalogue?" : "Are you sure you wish to delete this catalogue item?";
@@ -72,6 +72,7 @@ if(mysqli_num_rows($result2)>0){
 		<p tabindex="0"><?php echo $question ?></p>
 		<div class="form-group form-buttons">
 			<button type="submit" class="btn btn-default"><?php echo $buttonText ?></button>
+			<button type="button" class="btn btn-default popup-modal-dismiss"><?= $lang === 'fr' ? 'Non' : 'No' ?></button>
 		</div>
 		</form>
 	</div>

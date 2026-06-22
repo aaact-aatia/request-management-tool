@@ -27,8 +27,15 @@ require('includes/sla-calculator.php');
 // Include file for calculating business days
 require('includes/calculate-bdays.php');
 
+require('includes/helpers.php');
+
 // Check login
 require('includes/loggedincheck.php');
+
+if (!canViewReports()) {
+	header("location:/openrequest.php?lang=" . $_SESSION['lang'] . "&status=accessdenied");
+	exit();
+}
 
 if (!empty($_GET['status'])){
 	$status = $_GET['status'];
@@ -40,6 +47,8 @@ else{
 // Initialize date variables
 $sdate = "";
 $edate = "";
+$cSearch = false;
+$strCat = "";
 
 // Process the add product form
 if ($_SERVER['REQUEST_METHOD']=='POST'){
@@ -254,14 +263,7 @@ echo '</tbody></table>';
 //     . number_format($overallAverages["avgOverallDaysPerRequest"], 2)
 //     . ' days (from ' . $overallAverages["totalRequests"] . ' requests).</div>';
 ?>
-<script>
-					$(document).ready(function() {
-  $('.wb-tables').DataTable({
-    ordering: false
-  });
-});
-
-					</script>
+<script src="/public/js/report-status.js"></script>
 			<?php
 			// Display only if cSearch is false
 			if ($cSearch==false) {

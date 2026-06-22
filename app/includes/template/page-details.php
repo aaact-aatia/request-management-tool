@@ -19,8 +19,15 @@ $pageDetailsTranslations = [
 $pageDetailsLangCode = $_SESSION['lang'] ?? 'en';
 $pageDetailsLangStrings = $pageDetailsTranslations[$pageDetailsLangCode];
 
-// Use provided date or default to today
-$dateModified = $dateModified ?? date('Y-m-d');
+// Use provided date or derive it from the executing page file
+if (!isset($dateModified)) {
+	$pageDetailsSourceFile = $_SERVER['SCRIPT_FILENAME'] ?? '';
+	if ($pageDetailsSourceFile !== '' && is_file($pageDetailsSourceFile)) {
+		$dateModified = date('Y-m-d', filemtime($pageDetailsSourceFile));
+	} else {
+		$dateModified = date('Y-m-d');
+	}
+}
 ?>
 <section class="pagedetails">
 	<h2 class="wb-inv"><?= $pageDetailsLangStrings['page_details'] ?></h2>
@@ -28,7 +35,7 @@ $dateModified = $dateModified ?? date('Y-m-d');
 		<div class="col-xs-12">
 			<dl id="wb-dtmd">
 				<dt><?= $pageDetailsLangStrings['date_modified'] ?></dt>
-				<dd><time property="dateModified"><?= $dateModified ?></time></dd>
+				<dd><time property="dateModified" datetime="<?= htmlspecialchars($dateModified, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($dateModified, ENT_QUOTES, 'UTF-8') ?></time></dd>
 			</dl>
 		</div>
 	</div>

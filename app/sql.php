@@ -41,6 +41,88 @@ require_once 'db.php';
 
 /** @var mysqli $link */
 
+if (!function_exists('rmt_is_schema_mismatch_error')) {
+	/**
+	 * Detect common MySQL schema drift errors (missing table/column/index).
+	 */
+	function rmt_is_schema_mismatch_error($dbLink): bool {
+		if (!($dbLink instanceof mysqli)) {
+			return false;
+		}
+
+		$schemaErrorCodes = [
+			1050, // Table already exists
+			1051, // Unknown table
+			1054, // Unknown column
+			1091, // Can't drop/check that column/key
+			1146, // Table doesn't exist
+		];
+
+		return in_array(mysqli_errno($dbLink), $schemaErrorCodes, true);
+	}
+}
+
+if (!function_exists('rmt_render_schema_error')) {
+	/**
+	 * Render a friendly schema error for admin forms instead of hard failing.
+	 */
+	function rmt_render_schema_error(?string $langCode = null): void {
+		if ($langCode === null || $langCode === '') {
+			$langCode = (isset($_SESSION['lang']) && in_array($_SESSION['lang'], ['en', 'fr'], true)) ? $_SESSION['lang'] : 'en';
+		}
+
+		$isFrench = ($langCode === 'fr');
+		$title = $isFrench ? 'Mise a jour requise' : 'Update required';
+		$message = $isFrench
+			? 'Cette fonction d\'administration est temporairement indisponible parce que la base de donnees ne correspond pas a la version attendue de l\'application. Veuillez contacter l\'equipe de support pour appliquer les mises a jour de schema requises.'
+			: 'This admin form is temporarily unavailable because the database schema does not match the expected application version. Please contact support to apply the required database updates.';
+
+		http_response_code(500);
+		echo '<section id="filter-id" class="modal-dialog modal-content overlay-def">';
+		echo '<header class="modal-header"><h2 class="modal-title">' . htmlspecialchars($title, ENT_QUOTES, 'UTF-8') . '</h2></header>';
+		echo '<div class="modal-body"><p>' . htmlspecialchars($message, ENT_QUOTES, 'UTF-8') . '</p></div>';
+		echo '</section>';
+	}
+}
+
+if (!function_exists('rmt_admin_query')) {
+	/**
+	 * Execute an admin query and handle schema drift with a friendly message.
+	 */
+	function rmt_admin_query($dbLink, string $query, ?string $langCode = null) {
+		try {
+			$result = mysqli_query($dbLink, $query);
+		} catch (mysqli_sql_exception $e) {
+			$schemaErrorCodes = [1050, 1051, 1054, 1091, 1146];
+			if (in_array((int)$e->getCode(), $schemaErrorCodes, true)) {
+				rmt_render_schema_error($langCode);
+				exit();
+			}
+
+			throw $e;
+		}
+
+		if ($result === false && rmt_is_schema_mismatch_error($dbLink)) {
+			rmt_render_schema_error($langCode);
+			exit();
+		}
+
+		return $result;
+	}
+}
+
+if (!function_exists('rmt_result_num_rows')) {
+	function rmt_result_num_rows($result): int {
+		return ($result instanceof mysqli_result) ? mysqli_num_rows($result) : 0;
+	}
+}
+
+if (!function_exists('rmt_result_fetch_array')) {
+	function rmt_result_fetch_array($result) {
+		return ($result instanceof mysqli_result) ? mysqli_fetch_array($result) : false;
+	}
+}
+
 // Check which environment is being used
 // Grab logged in user
 $cenvironment = 0; // Default to production

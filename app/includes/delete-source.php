@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	// Create SQL statement
 	$sql = "UPDATE `tblsources` SET `status` = '0' WHERE id='$sourceid'";
 	//echo $sql;
-	mysqli_query($link,$sql);
+	rmt_admin_query($link,$sql);
 	
 	// Now redirect
 	header("location:/sources.php?lang=$lang?status=success"); 
@@ -38,10 +38,10 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 // Construct SQL statement
 $sql2 = "SELECT * FROM tblsources WHERE id='$sourceid'";
 
-$result2 = mysqli_query($link,$sql2);
+$result2 = rmt_admin_query($link,$sql2);
 //List it
-if(mysqli_num_rows($result2)>0){
-	while($row2 = mysqli_fetch_array($result2)){
+if(rmt_result_num_rows($result2)>0){
+	while($row2 = rmt_result_fetch_array($result2)){
 		$name = ($lang == 'fr') ? $row2['namefr'] : $row2['nameen'];
 		$title = ($lang == 'fr') ? "Supprimer la source $name" : "Delete $name source";
 		$question = ($lang == 'fr') ? "Voulez-vous vraiment supprimer cette source?" : "Are you sure you wish to delete this source?";
@@ -56,6 +56,7 @@ if(mysqli_num_rows($result2)>0){
 		<p tabindex="0"><?php echo $question ?></p>
 		<div class="form-group form-buttons">
 			<button type="submit" class="btn btn-default"><?php echo $buttonText ?></button>
+			<button type="button" class="btn btn-default popup-modal-dismiss"><?= $lang === 'fr' ? 'Non' : 'No' ?></button>
 		</div>
 		</form>
 	</div>

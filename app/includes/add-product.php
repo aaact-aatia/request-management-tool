@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	$sql = "INSERT INTO tblproducts(`nameen`, `namefr`, `dateadded`, `dateupdated`, `updatedby`, `status`) VALUES ('$pnameen', '$pnamefr', '$date_now', '$date_now', '$updatedby', '$status')";
 	//echo $sql;
 	//exit();
-	mysqli_query($link,$sql);
+	rmt_admin_query($link,$sql);
 	
 	// Now redirect
 	header("location:/products.php?lang={$lang_code}&status=success"); 
@@ -89,6 +89,7 @@ $t = $translations[$lang_code];
 		</div>
 		<div class="form-group form-buttons">
 			<button type="submit" class="btn btn-default"><?= htmlspecialchars($t['add_button']) ?></button>
+			<button type="button" class="btn btn-default popup-modal-dismiss"><?= $lang_code === 'fr' ? 'Annuler' : 'Cancel' ?></button>
 		</div>
 		</form>
 	</div>

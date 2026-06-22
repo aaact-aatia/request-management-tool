@@ -26,8 +26,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	// Grab form elements
 	$snameen = mysqli_real_escape_string($link,$_POST['snameen']);
 	$snamefr = mysqli_real_escape_string($link,$_POST['snamefr']);
-	$date_now = date("Y-m-d H:i:s");
-	$updatedby = $_SESSION['pid'];
+	$isResolved = isset($_POST['is_resolved']) ? (int)$_POST['is_resolved'] : 0;
 	$status = 1;
 	$noerror = false;
 	
@@ -43,10 +42,10 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	}
 	
 	// Create SQL statement
-	$sql = "INSERT INTO tblstatus(`nameen`, `namefr`, `dateadded`, `dateupdated`, `updatedby`, `status`) VALUES ('$snameen', '$snamefr', '$date_now', '$date_now', '$updatedby', '$status')";
+	$sql = "INSERT INTO tblstatus(`nameen`, `namefr`, `is_resolved`, `status`) VALUES ('$snameen', '$snamefr', '$isResolved', '$status')";
 	//echo $sql;
 	//exit();
-	mysqli_query($link,$sql);
+	rmt_admin_query($link,$sql);
 	
 	// Now redirect
 	header("location:/status.php?lang={$lang_code}?status=success"); 
@@ -59,6 +58,9 @@ $translations = [
 		'modal_title' => 'Add new status',
 		'name_en' => 'Name of status (english):',
 		'name_fr' => 'Name of status (french):',
+		'is_resolved' => 'Use this status as Resolved:',
+		'no' => 'No',
+		'yes' => 'Yes',
 		'required' => '(required)',
 		'add_button' => 'Add'
 	],
@@ -66,6 +68,9 @@ $translations = [
 		'modal_title' => 'Ajouter un nouveau statut',
 		'name_en' => 'Nom du statut (anglais):',
 		'name_fr' => 'Nom du statut (français):',
+		'is_resolved' => 'Utiliser ce statut comme Résolu :',
+		'no' => 'Non',
+		'yes' => 'Oui',
 		'required' => '(requis)',
 		'add_button' => 'Ajouter'
 	]
@@ -87,8 +92,16 @@ $t = $translations[$lang_code];
 			<label for="snamefr"><span class="field-name"><?= htmlspecialchars($t['name_fr']) ?> <strong><?= htmlspecialchars($t['required']) ?></strong></span></label>
 			<input type="text" class="form-control" id="snamefr" name="snamefr" value="" required>
 		</div>
+		<div class="form-group">
+			<label for="is_resolved"><span class="field-name"><?= htmlspecialchars($t['is_resolved']) ?></span></label>
+			<select class="form-control" id="is_resolved" name="is_resolved">
+				<option value="0"><?= htmlspecialchars($t['no']) ?></option>
+				<option value="1"><?= htmlspecialchars($t['yes']) ?></option>
+			</select>
+		</div>
 		<div class="form-group form-buttons">
 			<button type="submit" class="btn btn-default"><?= htmlspecialchars($t['add_button']) ?></button>
+			<button type="button" class="btn btn-default popup-modal-dismiss"><?= $lang_code === 'fr' ? 'Annuler' : 'Cancel' ?></button>
 		</div>
 		</form>
 	</div>
