@@ -24,6 +24,8 @@ CREATE TABLE IF NOT EXISTS `tblusers` (
   `email` varchar(255) NOT NULL UNIQUE,
   `password` varchar(255) NOT NULL,
   `atype` int(11) NOT NULL,
+  `is_superuser` tinyint(1) DEFAULT 0,
+  `is_admin` tinyint(1) DEFAULT 0,
   `manager_id` int(11) DEFAULT NULL,
   `team` varchar(100) DEFAULT NULL,
   `status` tinyint(1) DEFAULT 1,

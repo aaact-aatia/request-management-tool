@@ -30,6 +30,22 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	$email = strtolower(mysqli_real_escape_string($link,$_POST['email']));
 	$password = mysqli_real_escape_string($link,$_POST['password']);
 	$accounttype = mysqli_real_escape_string($link,$_POST['accounttype']);
+	$isSuperuserRole = !empty($_POST['is_superuser_role']) ? 1 : 0;
+	$isAdminRole = !empty($_POST['is_admin_role']) ? 1 : 0;
+	if ($isSuperuserRole === 1) {
+		$isAdminRole = 1;
+	}
+
+	// Legacy compatibility: treat primary atype 1/2 as manager with elevated role flags.
+	if ($accounttype === '1') {
+		$accounttype = '3';
+		$isSuperuserRole = 1;
+		$isAdminRole = 1;
+	} elseif ($accounttype === '2') {
+		$accounttype = '3';
+		$isAdminRole = 1;
+	}
+
 	$selectedTeams = [];
 	if (!empty($_POST['teams']) && is_array($_POST['teams'])) {
 		foreach ($_POST['teams'] as $teamid) {
@@ -52,7 +68,10 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 		$noerror = true;
 	}
 
-	if ($accounttype == '1' || $accounttype == '2' || $accounttype == '6') {
+	if ($isSuperuserRole === 1) {
+		// A superuser can use manager as primary role without team assignments.
+		$teamstring = "";
+	} elseif ($accounttype == '1' || $accounttype == '2' || $accounttype == '6') {
 		$teamstring = "";
 	} elseif ($accounttype == '5') {
 		if (count($selectedTeams) > 1) {
@@ -85,7 +104,21 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	$npassword = password_hash($password, PASSWORD_DEFAULT);
 	
 	// Create SQL statement
-	$sql = "INSERT INTO tblusers(`firstname`, `lastname`, `email`, `password`, `atype`, `manager_id`, `team`, `status`, `environment`) VALUES ('$firstname', '$lastname', '$email', '$npassword', '$accounttype', NULL, '$teamstring', '$status', 1)";
+	$hasSuperRoleColumn = rmt_db_column_exists($link, 'tblusers', 'is_superuser');
+	$hasAdminRoleColumn = rmt_db_column_exists($link, 'tblusers', 'is_admin');
+
+	$insertColumns = "`firstname`, `lastname`, `email`, `password`, `atype`, `manager_id`, `team`, `status`, `environment`";
+	$insertValues = "'$firstname', '$lastname', '$email', '$npassword', '$accounttype', NULL, '$teamstring', '$status', 1";
+	if ($hasSuperRoleColumn) {
+		$insertColumns .= ", `is_superuser`";
+		$insertValues .= ", '$isSuperuserRole'";
+	}
+	if ($hasAdminRoleColumn) {
+		$insertColumns .= ", `is_admin`";
+		$insertValues .= ", '$isAdminRole'";
+	}
+
+	$sql = "INSERT INTO tblusers($insertColumns) VALUES ($insertValues)";
 	//echo $sql;
 	//exit();
 	rmt_admin_query($link,$sql);
@@ -110,7 +143,11 @@ $translations = [
 		'account_sort_field' => 'nameen',
 		'team_sort_field' => 'nameen',
 		'team_none_hint' => 'No team is assigned for Admin, Super Admin, and External accounts.',
-		'team_single_hint' => 'Employee can have zero or one team. Team Lead and Manager can have multiple teams.'
+		'team_single_hint' => 'Employee can have zero or one team. Team Lead and Manager can have multiple teams.',
+		'extra_roles' => 'Extra permissions:',
+		'extra_superuser' => 'Super Admin privileges',
+		'extra_admin' => 'Admin privileges',
+		'extra_roles_hint' => 'Only a Super Admin can assign these privileges. Super Admin overrides Admin.'
 	],
 	'fr' => [
 		'modal_title' => 'Ajouter un nouvel utilisateur',
@@ -125,7 +162,11 @@ $translations = [
 		'account_sort_field' => 'namefr',
 		'team_sort_field' => 'namefr',
 		'team_none_hint' => 'Aucune équipe n\'est assignée aux comptes Administrateur, Super administrateur et Externe.',
-		'team_single_hint' => 'Un Employé peut avoir zero ou une équipe. Un Chef d\'équipe et un Gestionnaire peuvent avoir plusieurs équipes.'
+		'team_single_hint' => 'Un Employé peut avoir zero ou une équipe. Un Chef d\'équipe et un Gestionnaire peuvent avoir plusieurs équipes.',
+		'extra_roles' => 'Permissions supplémentaires :',
+		'extra_superuser' => 'Privilèges de Super administrateur',
+		'extra_admin' => 'Privilèges d\'administrateur',
+		'extra_roles_hint' => 'Seul un Super administrateur peut attribuer ces privilèges. Super administrateur remplace administrateur.'
 	]
 ];
 
@@ -167,6 +208,22 @@ $t = $translations[$lang_code];
 				}
 				?>
 			</select>
+		</div>
+		<div class="form-group">
+			<fieldset class="gc-chckbxrdio">
+				<legend><?= htmlspecialchars($t['extra_roles']) ?></legend>
+				<p class="small"><?= htmlspecialchars($t['extra_roles_hint']) ?></p>
+				<ul class="list-unstyled lst-spcd-2">
+					<li class="checkbox">
+						<input type="checkbox" name="is_superuser_role" value="1" id="is-superuser-role" />
+						<label for="is-superuser-role"><?= htmlspecialchars($t['extra_superuser']) ?></label>
+					</li>
+					<li class="checkbox">
+						<input type="checkbox" name="is_admin_role" value="1" id="is-admin-role" />
+						<label for="is-admin-role"><?= htmlspecialchars($t['extra_admin']) ?></label>
+					</li>
+				</ul>
+			</fieldset>
 		</div>
 		<div class="form-group">
 			<fieldset class="gc-chckbxrdio">

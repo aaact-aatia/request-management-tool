@@ -94,6 +94,8 @@ include 'includes/template/head.php';
 			<div class="clearfix"></div>
 			
 			<?php
+			$hasSuperRoleColumn = rmt_db_column_exists($link, 'tblusers', 'is_superuser');
+			$hasAdminRoleColumn = rmt_db_column_exists($link, 'tblusers', 'is_admin');
 			// Construct SQL statement
 			$sql = "SELECT * FROM tblusers ORDER BY firstname ASC, lastname ASC";
 			//echo $sql;
@@ -116,6 +118,7 @@ include 'includes/template/head.php';
 					
 					// Get account type id
 					$accounttypeid = $row['atype'];
+					$accounttypename = '';
 					
 					// Grab account type name
 					$accounttypeField = ($_SESSION['lang'] === 'fr') ? 'namefr' : 'nameen';
@@ -125,6 +128,19 @@ include 'includes/template/head.php';
 						while($row2 = mysqli_fetch_array($result2)){
 							$accounttypename = $row2[$accounttypeField];
 						}
+					}
+					$extraRoleLabels = [];
+					$isSuperRole = $hasSuperRoleColumn ? ((int)($row['is_superuser'] ?? 0) === 1) : ((int)$accounttypeid === 1);
+					$isAdminRole = $hasAdminRoleColumn ? ((int)($row['is_admin'] ?? 0) === 1) : in_array((int)$accounttypeid, [1, 2], true);
+
+					if ($isSuperRole) {
+						$extraRoleLabels[] = ($_SESSION['lang'] === 'fr') ? 'Super administrateur' : 'Super Admin';
+					} elseif ($isAdminRole) {
+						$extraRoleLabels[] = ($_SESSION['lang'] === 'fr') ? 'Administrateur' : 'Admin';
+					}
+
+					if (!empty($extraRoleLabels)) {
+						$accounttypename = trim($accounttypename . ' + ' . implode(' + ', $extraRoleLabels));
 					}
 				// Resolve team names from contact IDs stored in tblusers.team
 				$teamNames = [];
