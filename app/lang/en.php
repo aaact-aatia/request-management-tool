@@ -108,6 +108,7 @@ return [
     'contacts_contact' => 'team',
     'contacts_no_contacts' => 'No teams available',
     'failed_heading' => 'Failed',
+    'warning_heading' => 'Warning',
     
     // Password reset page (passwordreset.php)
     'passwordreset_page_title' => 'Password reset - Request Management Tool - IT Accessibility Office',
@@ -395,6 +396,32 @@ return [
     'users_edit_button' => 'Edit user',
     'users_delete_button' => 'Delete user',
     'users_no_users' => 'No users available',
+
+    // Admin CSV tools (admin-csv.php)
+    'admin_csv_heading' => 'Administration CSV import/export',
+    'admin_csv_intro' => 'Export and import administration reference data using CSV files.',
+    'admin_csv_export_heading' => 'Export CSV',
+    'admin_csv_import_heading' => 'Import CSV',
+    'admin_csv_table_label' => 'Administration table',
+    'admin_csv_file_label' => 'CSV file',
+    'admin_csv_export_button' => 'Download CSV export',
+    'admin_csv_import_button' => 'Import CSV data',
+    'admin_csv_expected_columns_heading' => 'Expected CSV columns',
+    'admin_csv_expected_columns_intro' => 'The file header must exactly match this column order:',
+    'admin_csv_columns_warning' => 'Do not modify the column headings in the exported file. The import will fail if the headings are changed or reordered.',
+    'admin_csv_import_success' => 'Import completed. %d row(s) were processed successfully.',
+    'admin_csv_import_partial' => 'Import completed with warnings. %d row(s) succeeded, %d row(s) failed.',
+    'admin_csv_import_failed' => 'Import failed. No rows were processed.',
+    'admin_csv_no_file' => 'Please choose a CSV file before importing.',
+    'admin_csv_invalid_table' => 'Invalid administration table selected.',
+    'admin_csv_header_mismatch' => 'CSV header mismatch. Export a template first, then re-import with the same columns.',
+    'admin_csv_table_teams' => 'Teams',
+    'admin_csv_table_catalogue' => 'Service catalogue',
+    'admin_csv_table_services' => 'Services',
+    'admin_csv_table_subservices' => 'Sub-services',
+    'admin_csv_table_sources' => 'Sources',
+    'admin_csv_table_status' => 'Status values',
+    'admin_csv_table_holidays' => 'Holidays',
 
     // Teams management page (teams.php)
     'teams_page_title' => 'Teams management - Request Management Tool - IT Accessibility Office',

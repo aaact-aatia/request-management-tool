@@ -78,6 +78,46 @@ include 'includes/template/head.php';
 				</ul>
 			</section>
 			<?php
+			} elseif ($status == 'import_success') {
+			?>
+			<section class="alert alert-success">
+				<h2><?= htmlspecialchars($langFile['success_heading']) ?></h2>
+				<ul>
+					<li><?= htmlspecialchars(sprintf($langFile['admin_csv_import_success'] ?? 'Imported %d record(s)', $_GET['count'] ?? 0)) ?></li>
+				</ul>
+			</section>
+			<?php
+			} elseif ($status == 'import_partial') {
+			?>
+			<section class="alert alert-warning">
+				<h2><?= htmlspecialchars($langFile['warning_heading'] ?? 'Warning') ?></h2>
+				<ul>
+					<li><?= htmlspecialchars(sprintf($langFile['admin_csv_import_partial'] ?? 'Imported %d record(s) with %d error(s)', $_GET['ok'] ?? 0, $_GET['fail'] ?? 0)) ?></li>
+				</ul>
+			</section>
+			<?php
+			} elseif ($status == 'import_failed' || $status == 'header_mismatch' || $status == 'no_file' || $status == 'invalid_table') {
+			?>
+			<section class="alert alert-danger">
+				<h2><?= htmlspecialchars($langFile['failed_heading'] ?? $langFile['alert_failed_heading']) ?></h2>
+				<ul>
+					<?php
+					if ($status == 'header_mismatch') {
+						echo '<li>' . htmlspecialchars($langFile['admin_csv_header_mismatch'] ?? 'CSV header mismatch. Export a template first, then re-import with the same columns.') . '</li>';
+					} elseif ($status == 'no_file') {
+						echo '<li>' . htmlspecialchars($langFile['admin_csv_no_file'] ?? 'Please choose a CSV file before importing.') . '</li>';
+					} elseif ($status == 'invalid_table') {
+						echo '<li>' . htmlspecialchars($langFile['admin_csv_invalid_table'] ?? 'Invalid administration table selected.') . '</li>';
+					} elseif ($status == 'import_failed') {
+						echo '<li>' . htmlspecialchars($langFile['admin_csv_import_failed'] ?? 'Import failed. Please check the CSV file format.') . '</li>';
+						if (!empty($_GET['error'])) {
+							echo '<li><strong>Details:</strong> ' . htmlspecialchars($_GET['error']) . '</li>';
+						}
+					}
+					?>
+				</ul>
+			</section>
+			<?php
 			} elseif ($status == 'failed') {
 			?>
 			<section class="alert alert-danger">
@@ -90,7 +130,7 @@ include 'includes/template/head.php';
 			}
 			?>
 			
-			<div class="pull-right"><a class="wb-lbx btn btn-primary mrgn-bttm-md" href="includes/add-users.php"><?= htmlspecialchars($langFile['users_add_button']) ?></a></div>
+<div class="pull-right"><a class="wb-lbx btn btn-primary mrgn-bttm-md" href="includes/add-users.php"><?= htmlspecialchars($langFile['users_add_button']) ?></a></div>
 			<div class="clearfix"></div>
 			
 			<?php
@@ -232,6 +272,7 @@ include 'includes/template/head.php';
 			<?php } ?>
 			</tbody>
 			</table>
+			<?php $tableName = 'tblusers'; include('includes/admin-csv-buttons.php'); ?>
 			
 			<?php } else { ?>
 			<p><strong><?= htmlspecialchars($langFile['users_no_users']) ?></strong></p>
