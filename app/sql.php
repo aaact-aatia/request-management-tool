@@ -32,6 +32,9 @@ if (!isset($_SESSION["pid"]))
 {
 	$_SESSION["pid"] = null;
 	$_SESSION["atype"] = null;
+	$_SESSION["primary_atype"] = null;
+	$_SESSION["is_superuser"] = 0;
+	$_SESSION["is_admin"] = 0;
 	$_SESSION["email"] = null;
 	$_SESSION["firstname"] = null;
 	$_SESSION["team"] = null;
@@ -40,6 +43,30 @@ if (!isset($_SESSION["pid"]))
 require_once 'db.php';
 
 /** @var mysqli $link */
+
+if (!function_exists('rmt_db_column_exists')) {
+	/**
+	 * Check if a table column exists in the current database.
+	 */
+	function rmt_db_column_exists($dbLink, string $tableName, string $columnName): bool {
+		if (!($dbLink instanceof mysqli)) {
+			return false;
+		}
+
+		$tableName = mysqli_real_escape_string($dbLink, $tableName);
+		$columnName = mysqli_real_escape_string($dbLink, $columnName);
+
+		$sql = "SELECT 1
+				FROM INFORMATION_SCHEMA.COLUMNS
+				WHERE TABLE_SCHEMA = DATABASE()
+				  AND TABLE_NAME = '$tableName'
+				  AND COLUMN_NAME = '$columnName'
+				LIMIT 1";
+		$result = mysqli_query($dbLink, $sql);
+
+		return ($result instanceof mysqli_result) && mysqli_num_rows($result) > 0;
+	}
+}
 
 if (!function_exists('rmt_is_schema_mismatch_error')) {
 	/**

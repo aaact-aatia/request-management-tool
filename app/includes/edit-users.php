@@ -34,6 +34,22 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	$password = mysqli_real_escape_string($link,$_POST['password']);
 	$password2 = mysqli_real_escape_string($link,$_POST['password2']);
 	$accounttype = mysqli_real_escape_string($link,$_POST['accounttype']);
+	$isSuperuserRole = !empty($_POST['is_superuser_role']) ? 1 : 0;
+	$isAdminRole = !empty($_POST['is_admin_role']) ? 1 : 0;
+	if ($isSuperuserRole === 1) {
+		$isAdminRole = 1;
+	}
+
+	// Legacy compatibility: treat primary atype 1/2 as manager with elevated role flags.
+	if ($accounttype === '1') {
+		$accounttype = '3';
+		$isSuperuserRole = 1;
+		$isAdminRole = 1;
+	} elseif ($accounttype === '2') {
+		$accounttype = '3';
+		$isAdminRole = 1;
+	}
+
 	$selectedTeams = [];
 	if (!empty($_POST['teams']) && is_array($_POST['teams'])) {
 		foreach ($_POST['teams'] as $teamid) {
@@ -63,7 +79,10 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 		}
 	}
 
-	if ($accounttype == '1' || $accounttype == '2' || $accounttype == '6') {
+	if ($isSuperuserRole === 1) {
+		// A superuser can use manager as primary role without team assignments.
+		$teamstring = "";
+	} elseif ($accounttype == '1' || $accounttype == '2' || $accounttype == '6') {
 		$teamstring = "";
 	} elseif ($accounttype == '5') {
 		if (count($selectedTeams) > 1) {
@@ -101,11 +120,20 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	if (in_array($accounttype, ['1', '2', '3', '5', '6'], true)) {
 		$managerClause = ", `manager_id` = NULL";
 	}
+	$hasSuperRoleColumn = rmt_db_column_exists($link, 'tblusers', 'is_superuser');
+	$hasAdminRoleColumn = rmt_db_column_exists($link, 'tblusers', 'is_admin');
+	$extraRoleClause = "";
+	if ($hasSuperRoleColumn) {
+		$extraRoleClause .= ", `is_superuser` = '$isSuperuserRole'";
+	}
+	if ($hasAdminRoleColumn) {
+		$extraRoleClause .= ", `is_admin` = '$isAdminRole'";
+	}
 
 	if ($password!="") {
-		$sql = "UPDATE `tblusers` SET `firstname` = '$firstname', `lastname` = '$lastname', `email` = '$email', `password` = '$npassword', `atype` = '$accounttype'" . $managerClause . ", `team` = '$teamstring' WHERE id='$userid'";
+		$sql = "UPDATE `tblusers` SET `firstname` = '$firstname', `lastname` = '$lastname', `email` = '$email', `password` = '$npassword', `atype` = '$accounttype'" . $managerClause . ", `team` = '$teamstring'" . $extraRoleClause . " WHERE id='$userid'";
 	} else {
-		$sql = "UPDATE `tblusers` SET `firstname` = '$firstname', `lastname` = '$lastname', `email` = '$email', `atype` = '$accounttype'" . $managerClause . ", `team` = '$teamstring' WHERE id='$userid'";
+		$sql = "UPDATE `tblusers` SET `firstname` = '$firstname', `lastname` = '$lastname', `email` = '$email', `atype` = '$accounttype'" . $managerClause . ", `team` = '$teamstring'" . $extraRoleClause . " WHERE id='$userid'";
 	}
 	//echo $sql;
 	rmt_admin_query($link,$sql);
@@ -131,6 +159,12 @@ if(rmt_result_num_rows($result2)>0){
 		$label_password2 = $is_french ? 'Confirmation du mot de passe:' : 'Confirm password:';
 		$label_accounttype = $is_french ? 'Type de compte:' : 'Account type:';
 		$label_teams = $is_french ? 'Équipe(s):' : 'Team(s):';
+		$label_extra_roles = $is_french ? 'Permissions supplémentaires:' : 'Extra permissions:';
+		$label_superuser = $is_french ? 'Privilèges de Super administrateur' : 'Super Admin privileges';
+		$label_admin = $is_french ? 'Privilèges d\'administrateur' : 'Admin privileges';
+		$label_extra_roles_hint = $is_french
+			? 'Seul un Super administrateur peut attribuer ces privilèges. Super administrateur remplace administrateur.'
+			: 'Only a Super Admin can assign these privileges. Super Admin overrides Admin.';
 		$required_label = $is_french ? 'requis' : 'required';
 		$save_btn = $is_french ? 'Sauvegarder' : 'Save';
 		$sort_field = $is_french ? 'namefr' : 'nameen';
@@ -139,6 +173,10 @@ if(rmt_result_num_rows($result2)>0){
 		$team_name = $is_french ? 'namefr' : 'nameen';
 		$hint_none = $is_french ? 'Aucune équipe n\'est assignée aux comptes Administrateur, Super administrateur et Externe.' : 'No team is assigned for Admin, Super Admin, and External accounts.';
 		$hint_single = $is_french ? 'Un Employé peut avoir zero ou une équipe. Un Chef d\'équipe et un Gestionnaire peuvent avoir plusieurs équipes.' : 'Employee can have zero or one team. Team Lead and Manager can have multiple teams.';
+		$hasSuperRoleColumn = rmt_db_column_exists($link, 'tblusers', 'is_superuser');
+		$hasAdminRoleColumn = rmt_db_column_exists($link, 'tblusers', 'is_admin');
+		$currentIsSuperRole = $hasSuperRoleColumn ? ((int)($row2['is_superuser'] ?? 0) === 1) : ((int)$row2['atype'] === 1);
+		$currentIsAdminRole = $hasAdminRoleColumn ? ((int)($row2['is_admin'] ?? 0) === 1) : in_array((int)$row2['atype'], [1, 2], true);
 ?>
 <section id="filter-id" class="modal-dialog modal-content overlay-def">
 	<header class="modal-header">
@@ -179,6 +217,22 @@ if(rmt_result_num_rows($result2)>0){
 				}
 				?>
 			</select>
+		</div>
+		<div class="form-group">
+			<fieldset class="gc-chckbxrdio">
+				<legend><?php echo htmlspecialchars($label_extra_roles); ?></legend>
+				<p class="small"><?php echo htmlspecialchars($label_extra_roles_hint); ?></p>
+				<ul class="list-unstyled lst-spcd-2">
+					<li class="checkbox">
+						<input type="checkbox" name="is_superuser_role" value="1" id="is-superuser-role"<?php echo $currentIsSuperRole ? ' checked="checked"' : ''; ?> />
+						<label for="is-superuser-role"><?php echo htmlspecialchars($label_superuser); ?></label>
+					</li>
+					<li class="checkbox">
+						<input type="checkbox" name="is_admin_role" value="1" id="is-admin-role"<?php echo ($currentIsAdminRole || $currentIsSuperRole) ? ' checked="checked"' : ''; ?> />
+						<label for="is-admin-role"><?php echo htmlspecialchars($label_admin); ?></label>
+					</li>
+				</ul>
+			</fieldset>
 		</div>
 		<div class="form-group">
 			<fieldset class="gc-chckbxrdio">

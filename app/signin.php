@@ -55,7 +55,12 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 		$username .= "@ssc-spc.gc.ca";
 	}
 	
-	$sql = "SELECT id,firstname,email,password,atype,team FROM tblusers WHERE email='$username' AND status = '1'";
+	$hasSuperRoleColumn = rmt_db_column_exists($link, 'tblusers', 'is_superuser');
+	$hasAdminRoleColumn = rmt_db_column_exists($link, 'tblusers', 'is_admin');
+	$superRoleSelect = $hasSuperRoleColumn ? ', is_superuser' : '';
+	$adminRoleSelect = $hasAdminRoleColumn ? ', is_admin' : '';
+
+	$sql = "SELECT id,firstname,email,password,atype,team$superRoleSelect$adminRoleSelect FROM tblusers WHERE email='$username' AND status = '1'";
 	$result = mysqli_query($link,$sql);	
 	while($row = mysqli_fetch_array($result)){
 		// Check password
@@ -65,16 +70,34 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 			$loginfailed = true;
 		} else {
 			// Password correct
-			$_SESSION['pid']=$row['id'];
-		$_SESSION['atype']=$row['atype'];
+			$primaryAtype = (int)$row['atype'];
+			$isSuperuser = $hasSuperRoleColumn ? ((int)($row['is_superuser'] ?? 0) === 1) : ($primaryAtype === 1);
+			$isAdmin = $hasAdminRoleColumn ? ((int)($row['is_admin'] ?? 0) === 1) : in_array($primaryAtype, [1, 2], true);
+			if ($isSuperuser) {
+				$isAdmin = true;
+			}
+
+			$_SESSION['pid'] = $row['id'];
+			$_SESSION['primary_atype'] = $primaryAtype;
+			$_SESSION['is_superuser'] = $isSuperuser ? 1 : 0;
+			$_SESSION['is_admin'] = $isAdmin ? 1 : 0;
+			if ($isSuperuser) {
+				$_SESSION['atype'] = 1;
+			} elseif ($isAdmin) {
+				$_SESSION['atype'] = 2;
+			} else {
+				$_SESSION['atype'] = $primaryAtype;
+			}
 			$_SESSION['firstname']=$row['firstname'];
 			$_SESSION['email']=$row['email'];
 			$team = $row['team'];
 			$_SESSION['team'] = explode(',', $team);
 			
 			// Store real account type for dev mode testing (if superadmin)
-			if ($row['atype'] == 1) {
-				$_SESSION['real_atype'] = $row['atype'];
+			if ($isSuperuser) {
+				$_SESSION['real_atype'] = 1;
+			} else {
+				unset($_SESSION['real_atype']);
 			}
 			
 			// Check if user has any assigned requests
