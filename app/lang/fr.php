@@ -107,8 +107,7 @@ return [
     'contacts_delete' => 'Supprimer',
     'contacts_contact' => 'équipe',
     'contacts_no_contacts' => 'Aucune équipe disponible',
-    'failed_heading' => 'Échec',
-    
+    'failed_heading' => 'Échec',    'warning_heading' => 'Avertissement',    
     // Password reset page (passwordreset.php)
     'passwordreset_page_title' => 'Réinitialisation du mot de passe - Outil de gestion des demandes - Bureau de l\'accessibilité de la TI',
     'passwordreset_heading' => 'Réinitialisation du mot de passe',
@@ -395,6 +394,32 @@ return [
     'users_edit_button' => 'Modifier l\'utilisateur',
     'users_delete_button' => 'Supprimer l\'utilisateur',
     'users_no_users' => 'Aucun utilisateur disponible',
+
+    // Outils CSV d'administration (admin-csv.php)
+    'admin_csv_heading' => 'Import/export CSV d\'administration',
+    'admin_csv_intro' => 'Exportez et importez les données de référence d\'administration avec des fichiers CSV.',
+    'admin_csv_export_heading' => 'Exporter CSV',
+    'admin_csv_import_heading' => 'Importer CSV',
+    'admin_csv_table_label' => 'Table d\'administration',
+    'admin_csv_file_label' => 'Fichier CSV',
+    'admin_csv_export_button' => 'Télécharger l\'export CSV',
+    'admin_csv_import_button' => 'Importer les données CSV',
+    'admin_csv_expected_columns_heading' => 'Colonnes CSV attendues',
+    'admin_csv_expected_columns_intro' => 'L\'en-tête du fichier doit correspondre exactement à cet ordre de colonnes :',
+    'admin_csv_columns_warning' => 'Ne modifiez pas les en-têtes de colonnes dans le fichier exporté. L\'importation échouera si les en-têtes sont modifiés ou réordonnés.',
+    'admin_csv_import_success' => 'Import terminé. %d ligne(s) ont été traitées avec succès.',
+    'admin_csv_import_partial' => 'Import terminé avec avertissements. %d ligne(s) réussies, %d ligne(s) en échec.',
+    'admin_csv_import_failed' => 'Échec de l\'import. Aucune ligne n\'a été traitée.',
+    'admin_csv_no_file' => 'Veuillez choisir un fichier CSV avant d\'importer.',
+    'admin_csv_invalid_table' => 'Table d\'administration invalide sélectionnée.',
+    'admin_csv_header_mismatch' => 'L\'en-tête CSV ne correspond pas. Exportez d\'abord un modèle puis réimportez avec les mêmes colonnes.',
+    'admin_csv_table_teams' => 'Équipes',
+    'admin_csv_table_catalogue' => 'Catalogue de services',
+    'admin_csv_table_services' => 'Services',
+    'admin_csv_table_subservices' => 'Sous-services',
+    'admin_csv_table_sources' => 'Sources',
+    'admin_csv_table_status' => 'Valeurs de statut',
+    'admin_csv_table_holidays' => 'Jours fériés',
 
     // Teams management page (teams.php)
     'teams_page_title' => 'Gestion des équipes - Outil de gestion des demandes - Bureau de l\'accessibilité de la TI',

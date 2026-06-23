@@ -38,6 +38,7 @@ $menu_text = [
 		'sources' => 'Sources',
 		'status' => 'Status',
 		'users' => 'Users',
+		'csv_tools' => 'CSV import/export',
 		'help' => 'Help',
 		'version' => 'Version History'
 	],
@@ -57,6 +58,7 @@ $menu_text = [
 		'sources' => 'Sources',
 		'status' => 'Statuts',
 		'users' => 'Utilisateurs',
+		'csv_tools' => 'Import/export CSV',
 		'help' => 'Aide',
 		'version' => 'Historique des versions'
 	]
