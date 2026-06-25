@@ -155,8 +155,8 @@ if ($hasSearchParams){
 		$nosearch = false;
 		$SQLSV .= " sourceid = '$sourceid' AND";
 	}
-	$datereceived = mysqli_real_escape_string($link,$_GET['datereceived']);
-	$datereceived2 = mysqli_real_escape_string($link,$_GET['datereceived2']);
+	$datereceived = mysqli_real_escape_string($link, $_GET['datereceived'] ?? '');
+	$datereceived2 = mysqli_real_escape_string($link, $_GET['datereceived2'] ?? '');
 	if ($datereceived!="" && $datereceived2!="") {
 		$nosearch = false;
 		$SQLSV .= " (datereceived BETWEEN '$datereceived' AND '$datereceived2') AND";
@@ -167,8 +167,8 @@ if ($hasSearchParams){
 		$nosearch = false;
 		$SQLSV .= " datereceived = '$datereceived2' AND";
 	}
-	$dateupdated = mysqli_real_escape_string($link,$_GET['dateupdated']);
-	$dateupdated2 = mysqli_real_escape_string($link,$_GET['dateupdated2']);
+	$dateupdated = mysqli_real_escape_string($link, $_GET['dateupdated'] ?? '');
+	$dateupdated2 = mysqli_real_escape_string($link, $_GET['dateupdated2'] ?? '');
 	if ($dateupdated!="" && $dateupdated2!="") {
 		$nosearch = false;
 		$SQLSV .= " (dateupdated BETWEEN '$dateupdated' AND '$dateupdated2') AND";
@@ -179,8 +179,8 @@ if ($hasSearchParams){
 		$nosearch = false;
 		$SQLSV .= " dateupdated = '$dateupdated2' AND";
 	}
-	$daterequired = mysqli_real_escape_string($link,$_GET['daterequired']);
-	$daterequired2 = mysqli_real_escape_string($link,$_GET['daterequired2']);
+	$daterequired = mysqli_real_escape_string($link, $_GET['daterequired'] ?? '');
+	$daterequired2 = mysqli_real_escape_string($link, $_GET['daterequired2'] ?? '');
 	if ($daterequired!="" && $daterequired2!="") {
 		$nosearch = false;
 		$SQLSV .= " (daterequired BETWEEN '$daterequired' AND '$daterequired2') AND";
@@ -191,8 +191,8 @@ if ($hasSearchParams){
 		$nosearch = false;
 		$SQLSV .= " daterequired = '$daterequired2' AND";
 	}
-	$dateresolved = mysqli_real_escape_string($link,$_GET['dateresolved']);
-	$dateresolved2 = mysqli_real_escape_string($link,$_GET['dateresolved2']);
+	$dateresolved = mysqli_real_escape_string($link, $_GET['dateresolved'] ?? '');
+	$dateresolved2 = mysqli_real_escape_string($link, $_GET['dateresolved2'] ?? '');
 	if ($dateresolved!="" && $dateresolved2!="") {
 		$nosearch = false;
 		$SQLSV .= " (dateresolved BETWEEN '$dateresolved' AND '$dateresolved2') AND";
@@ -203,12 +203,12 @@ if ($hasSearchParams){
 		$nosearch = false;
 		$SQLSV .= " dateresolved = '$dateresolved2' AND";
 	}
-	$statusid = mysqli_real_escape_string($link,$_GET['statusid']);
+	$statusid = mysqli_real_escape_string($link, $_GET['statusid'] ?? '');
 		if ($statusid!="") {
 		$nosearch = false;
 		$SQLSV .= " statusid = '$statusid' AND";
 	}
-	$catalogueid = mysqli_real_escape_string($link,$_GET['catalogueid']);
+	$catalogueid = mysqli_real_escape_string($link, $_GET['catalogueid'] ?? '');
 	if ($catalogueid!="") {
 		$nosearch = false;
 		$SQLSV .= " catalogueid = '$catalogueid' AND";
@@ -283,7 +283,9 @@ include 'includes/template/head.php';
 			}
 			?>
 		
-			<form method="get" action="/asearch.php">		<input type="hidden" name="lang" value="<?= $_SESSION['lang'] ?>">			<div class="row">
+			<form method="get" action="/asearch.php" onsubmit="removeEmptyFields(event)">
+			<input type="hidden" name="lang" value="<?= $_SESSION['lang'] ?>">
+			<div class="row">
 				<div class="col-xs-6">
 					<div class="form-group">
 						<label for="requestid"><span class="field-name"><?= htmlspecialchars($langFile['asearch_request_id']) ?></span></label>
@@ -667,6 +669,7 @@ include 'includes/template/head.php';
 	
 	<?php include 'includes/template/footer.php'; include 'includes/template/scripts.php'; ?>
 
+	<script src="/public/js/remove-empty-fields.js"></script>
 	<script src="/public/js/ajax-dropdowns.js"></script>
 </body>
 </html>
