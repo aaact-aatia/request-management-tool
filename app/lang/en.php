@@ -148,6 +148,7 @@ return [
     'asearch_no' => 'No',
     'asearch_yes' => 'Yes',
     'asearch_button' => 'Search',
+    'asearch_clear' => 'Clear',
     'asearch_results_heading' => 'Advanced search results',
     'asearch_last_1000' => 'Last 1000 entries',
     'asearch_entries' => 'entries',

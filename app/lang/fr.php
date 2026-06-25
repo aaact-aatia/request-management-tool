@@ -146,6 +146,7 @@ return [
     'asearch_no' => 'Non',
     'asearch_yes' => 'Oui',
     'asearch_button' => 'Recherche',
+    'asearch_clear' => 'Effacer',
     'asearch_results_heading' => 'Résultats de recherche avancée',
     'asearch_last_1000' => '1000 dernières entrées',
     'asearch_entries' => 'entrées',

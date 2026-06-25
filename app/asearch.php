@@ -41,54 +41,54 @@ $langFile = require("lang/{$_SESSION['lang']}.php");
 // Set variable to show form or results
 $showform = true;
 
-if (!empty($_POST['clientlname'] ))
+if (!empty($_GET['clientlname'] ))
 {
-	$clientlname = mysqli_real_escape_string($link,strtolower($_POST['clientlname']));
+	$clientlname = mysqli_real_escape_string($link,strtolower($_GET['clientlname']));
 }
 else
 {
 	$clientlname = "";
 }
 
-if (!empty($_POST['clientfname'] ))
+if (!empty($_GET['clientfname'] ))
 {
-	$clientfname = mysqli_real_escape_string($link,strtolower($_POST['clientfname']));
+	$clientfname = mysqli_real_escape_string($link,strtolower($_GET['clientfname']));
 }
 else
 {
 	$clientfname = "";
 }
 
-if (!empty($_POST['clientemail'] ))
+if (!empty($_GET['clientemail'] ))
 {
-	$clientemail = mysqli_real_escape_string($link,strtolower($_POST['clientemail']));
+	$clientemail = mysqli_real_escape_string($link,strtolower($_GET['clientemail']));
 }
 else
 {
 	$clientemail = "";
 }
 
-if (!empty($_POST['clientphone'] ))
+if (!empty($_GET['clientphone'] ))
 {
-	$clientphone = mysqli_real_escape_string($link,$_POST['clientphone']);
+	$clientphone = mysqli_real_escape_string($link,$_GET['clientphone']);
 }
 else
 {
 	$clientphone = "";
 }
 
-if (!empty($_POST['serviceid'] ))
+if (!empty($_GET['serviceid'] ))
 {
-	$serviceid = mysqli_real_escape_string($link,$_POST['serviceid']);
+	$serviceid = mysqli_real_escape_string($link,$_GET['serviceid']);
 }
 else
 {
 	$serviceid = "";
 }
 
-if (!empty($_POST['subserviceid'] ))
+if (!empty($_GET['subserviceid'] ))
 {
-	$subserviceid = mysqli_real_escape_string($link,$_POST['subserviceid']);
+	$subserviceid = mysqli_real_escape_string($link,$_GET['subserviceid']);
 }
 else
 {
@@ -103,22 +103,29 @@ else{
 	$status = "";
 }
 
-// Process the add product form
-if ($_SERVER['REQUEST_METHOD']=='POST'){
+// Process search if any parameters are submitted
+$hasSearchParams = !empty($_GET['requestid']) || !empty($_GET['requesttitle']) || !empty($clientlname) || !empty($clientfname) || 
+                    !empty($clientemail) || !empty($clientphone) || !empty($_GET['sourceid']) || !empty($_GET['datereceived']) || 
+                    !empty($_GET['datereceived2']) || !empty($_GET['dateupdated']) || !empty($_GET['dateupdated2']) || 
+                    !empty($_GET['daterequired']) || !empty($_GET['daterequired2']) || !empty($_GET['dateresolved']) || 
+                    !empty($_GET['dateresolved2']) || !empty($_GET['statusid']) || !empty($_GET['catalogueid']) || 
+                    !empty($serviceid) || !empty($subserviceid);
+
+if ($hasSearchParams){
 	// Set no search value
 	$showform = false;
 	$nosearch = true;
 	$SQLSV = "";
 	
 	// Grab form elements	
-	if (!empty($_POST['requestid'])) {
-		$requestid = mysqli_real_escape_string($link,$_POST['requestid']);
+	if (!empty($_GET['requestid'])) {
+		$requestid = mysqli_real_escape_string($link,$_GET['requestid']);
 		$nosearch = false;
 		$SQLSV .= " requestid = '$requestid' AND";
 	}
 	
-	if (!empty($_POST['requesttitle'])) {
-		$requesttitle = mysqli_real_escape_string($link,strtolower($_POST['requesttitle']));
+	if (!empty($_GET['requesttitle'])) {
+		$requesttitle = mysqli_real_escape_string($link,strtolower($_GET['requesttitle']));
 		$nosearch = false;
 		$SQLSV .= " LOWER(title) LIKE '%$requesttitle%' AND";
 	}
@@ -143,13 +150,13 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 		$SQLSV .= " clientphone LIKE '%$clientphone%' AND";
 	}
 	
-	if (!empty($_POST['sourceid'])) {
-		$sourceid = mysqli_real_escape_string($link,$_POST['sourceid']);
+	if (!empty($_GET['sourceid'])) {
+		$sourceid = mysqli_real_escape_string($link,$_GET['sourceid']);
 		$nosearch = false;
 		$SQLSV .= " sourceid = '$sourceid' AND";
 	}
-	$datereceived = mysqli_real_escape_string($link,$_POST['datereceived']);
-	$datereceived2 = mysqli_real_escape_string($link,$_POST['datereceived2']);
+	$datereceived = mysqli_real_escape_string($link,$_GET['datereceived']);
+	$datereceived2 = mysqli_real_escape_string($link,$_GET['datereceived2']);
 	if ($datereceived!="" && $datereceived2!="") {
 		$nosearch = false;
 		$SQLSV .= " (datereceived BETWEEN '$datereceived' AND '$datereceived2') AND";
@@ -160,8 +167,8 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 		$nosearch = false;
 		$SQLSV .= " datereceived = '$datereceived2' AND";
 	}
-	$dateupdated = mysqli_real_escape_string($link,$_POST['dateupdated']);
-	$dateupdated2 = mysqli_real_escape_string($link,$_POST['dateupdated2']);
+	$dateupdated = mysqli_real_escape_string($link,$_GET['dateupdated']);
+	$dateupdated2 = mysqli_real_escape_string($link,$_GET['dateupdated2']);
 	if ($dateupdated!="" && $dateupdated2!="") {
 		$nosearch = false;
 		$SQLSV .= " (dateupdated BETWEEN '$dateupdated' AND '$dateupdated2') AND";
@@ -172,8 +179,8 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 		$nosearch = false;
 		$SQLSV .= " dateupdated = '$dateupdated2' AND";
 	}
-	$daterequired = mysqli_real_escape_string($link,$_POST['daterequired']);
-	$daterequired2 = mysqli_real_escape_string($link,$_POST['daterequired2']);
+	$daterequired = mysqli_real_escape_string($link,$_GET['daterequired']);
+	$daterequired2 = mysqli_real_escape_string($link,$_GET['daterequired2']);
 	if ($daterequired!="" && $daterequired2!="") {
 		$nosearch = false;
 		$SQLSV .= " (daterequired BETWEEN '$daterequired' AND '$daterequired2') AND";
@@ -184,8 +191,8 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 		$nosearch = false;
 		$SQLSV .= " daterequired = '$daterequired2' AND";
 	}
-	$dateresolved = mysqli_real_escape_string($link,$_POST['dateresolved']);
-	$dateresolved2 = mysqli_real_escape_string($link,$_POST['dateresolved2']);
+	$dateresolved = mysqli_real_escape_string($link,$_GET['dateresolved']);
+	$dateresolved2 = mysqli_real_escape_string($link,$_GET['dateresolved2']);
 	if ($dateresolved!="" && $dateresolved2!="") {
 		$nosearch = false;
 		$SQLSV .= " (dateresolved BETWEEN '$dateresolved' AND '$dateresolved2') AND";
@@ -196,12 +203,12 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 		$nosearch = false;
 		$SQLSV .= " dateresolved = '$dateresolved2' AND";
 	}
-	$statusid = mysqli_real_escape_string($link,$_POST['statusid']);
-	if ($statusid!="") {
+	$statusid = mysqli_real_escape_string($link,$_GET['statusid']);
+		if ($statusid!="") {
 		$nosearch = false;
 		$SQLSV .= " statusid = '$statusid' AND";
 	}
-	$catalogueid = mysqli_real_escape_string($link,$_POST['catalogueid']);
+	$catalogueid = mysqli_real_escape_string($link,$_GET['catalogueid']);
 	if ($catalogueid!="") {
 		$nosearch = false;
 		$SQLSV .= " catalogueid = '$catalogueid' AND";
@@ -276,18 +283,17 @@ include 'includes/template/head.php';
 			}
 			?>
 		
-			<form method="post" action="/asearch.php?lang=<?= $_SESSION['lang'] ?>">
-			<div class="row">
+			<form method="get" action="/asearch.php">		<input type="hidden" name="lang" value="<?= $_SESSION['lang'] ?>">			<div class="row">
 				<div class="col-xs-6">
 					<div class="form-group">
 						<label for="requestid"><span class="field-name"><?= htmlspecialchars($langFile['asearch_request_id']) ?></span></label>
-						<input type="text" class="form-control" id="requestid" name="requestid" value="">
+						<input type="text" class="form-control" id="requestid" name="requestid" value="<?= htmlspecialchars($_GET['requestid'] ?? '') ?>">
 					</div>
 				</div>
 				<div class="col-xs-6">
 					<div class="form-group">
 						<label for="requesttitle"><span class="field-name"><?= htmlspecialchars($langFile['request_title']) ?></span></label>
-						<input type="text" class="form-control" id="requesttitle" name="requesttitle" value="">
+						<input type="text" class="form-control" id="requesttitle" name="requesttitle" value="<?= htmlspecialchars($_GET['requesttitle'] ?? '') ?>">
 					</div>
 				</div>
 			</div>
@@ -296,13 +302,13 @@ include 'includes/template/head.php';
 				<div class="col-xs-6">				
 					<div class="form-group">
 						<label for="clientlname"><span class="field-name"><?= htmlspecialchars($langFile['client_lname']) ?></span></label>
-						<input type="text" class="form-control" id="clientlname" name="clientlname" value="">
+						<input type="text" class="form-control" id="clientlname" name="clientlname" value="<?= htmlspecialchars($_GET['clientlname'] ?? '') ?>">
 					</div>
 				</div>
 				<div class="col-xs-6">				
 					<div class="form-group">
 						<label for="clientfname"><span class="field-name"><?= htmlspecialchars($langFile['client_fname']) ?></span></label>
-						<input type="text" class="form-control" id="clientfname" name="clientfname" value="">
+						<input type="text" class="form-control" id="clientfname" name="clientfname" value="<?= htmlspecialchars($_GET['clientfname'] ?? '') ?>">
 					</div>
 				</div>
 			</div>
@@ -310,13 +316,13 @@ include 'includes/template/head.php';
 				<div class="col-xs-6">
 					<div class="form-group">
 						<label for="clientemail"><span class="field-name"><?= htmlspecialchars($langFile['client_email']) ?></span></label>
-						<input type="email" class="form-control" id="clientemail" name="clientemail" value="">
+						<input type="email" class="form-control" id="clientemail" name="clientemail" value="<?= htmlspecialchars($_GET['clientemail'] ?? '') ?>">
 					</div>
 				</div>
 				<div class="col-xs-6">
 					<div class="form-group">
 						<label for="clientphone"><span class="field-name"><?= htmlspecialchars($langFile['asearch_client_phone']) ?></span></label>
-						<input type="tel" data-rule-phoneUS="true" class="form-control" id="clientphone" name="clientphone" value="">
+						<input type="tel" data-rule-phoneUS="true" class="form-control" id="clientphone" name="clientphone" value="<?= htmlspecialchars($_GET['clientphone'] ?? '') ?>">
 					</div>
 				</div>
 			</div>
@@ -345,13 +351,13 @@ include 'includes/template/head.php';
 				<div class="col-xs-6">
 					<div class="form-group">
 						<label for="datereceived"><span class="field-name"><?= htmlspecialchars($langFile['asearch_date_received_from']) ?></span></label>
-						<input type="date" class="form-control" id="datereceived" name="datereceived"  max="<?php echo date('Y-m-d', strtotime('+1 years'));?>" />
+						<input type="date" class="form-control" id="datereceived" name="datereceived" value="<?= htmlspecialchars($_GET['datereceived'] ?? '') ?>" max="<?php echo date('Y-m-d', strtotime('+1 years'));?>" />
 					</div>
 				</div>
 				<div class="col-xs-6">
 					<div class="form-group">
 						<label for="datereceived2"><span class="field-name"><?= htmlspecialchars($langFile['asearch_date_received_to']) ?></span></label>
-						<input type="date" class="form-control" id="datereceived2" name="datereceived2"  max="<?php echo date('Y-m-d', strtotime('+1 years'));?>" />
+						<input type="date" class="form-control" id="datereceived2" name="datereceived2" value="<?= htmlspecialchars($_GET['datereceived2'] ?? '') ?>" max="<?php echo date('Y-m-d', strtotime('+1 years'));?>" />
 					</div>
 				</div>
 			</div>
@@ -359,13 +365,13 @@ include 'includes/template/head.php';
 				<div class="col-xs-6">
 					<div class="form-group">
 						<label for="dateupdated"><span class="field-name"><?= htmlspecialchars($langFile['asearch_date_updated_from']) ?></span></label>
-						<input type="date" class="form-control" id="dateupdated" name="dateupdated"  max="<?php echo date('Y-m-d', strtotime('+1 years'));?>" />
+						<input type="date" class="form-control" id="dateupdated" name="dateupdated" value="<?= htmlspecialchars($_GET['dateupdated'] ?? '') ?>" max="<?php echo date('Y-m-d', strtotime('+1 years'));?>" />
 					</div>
 				</div>
 				<div class="col-xs-6">
 					<div class="form-group">
 						<label for="dateupdated2"><span class="field-name"><?= htmlspecialchars($langFile['asearch_date_updated_to']) ?></span></label>
-						<input type="date" class="form-control" id="dateupdated2" name="dateupdated2" max="<?php echo date('Y-m-d', strtotime('+1 years'));?>" />
+						<input type="date" class="form-control" id="dateupdated2" name="dateupdated2" value="<?= htmlspecialchars($_GET['dateupdated2'] ?? '') ?>" max="<?php echo date('Y-m-d', strtotime('+1 years'));?>" />
 					</div>
 				</div>
 			</div>
@@ -373,13 +379,13 @@ include 'includes/template/head.php';
 				<div class="col-xs-6">
 					<div class="form-group">
 						<label for="daterequired"><span class="field-name"><?= htmlspecialchars($langFile['asearch_date_required_from']) ?></span></label>
-						<input type="date" class="form-control" id="daterequired" name="daterequired"  max="<?php echo date('Y-m-d', strtotime('+1 years'));?>" />
+						<input type="date" class="form-control" id="daterequired" name="daterequired" value="<?= htmlspecialchars($_GET['daterequired'] ?? '') ?>" max="<?php echo date('Y-m-d', strtotime('+1 years'));?>" />
 					</div>
 				</div>
 				<div class="col-xs-6">
 					<div class="form-group">
 						<label for="daterequired2"><span class="field-name"><?= htmlspecialchars($langFile['asearch_date_required_to']) ?></span></label>
-						<input type="date" class="form-control" id="daterequired2" name="daterequired2" max="<?php echo date('Y-m-d', strtotime('+1 years'));?>" />
+						<input type="date" class="form-control" id="daterequired2" name="daterequired2" value="<?= htmlspecialchars($_GET['daterequired2'] ?? '') ?>" max="<?php echo date('Y-m-d', strtotime('+1 years'));?>" />
 					</div>
 				</div>
 			</div>
@@ -387,13 +393,13 @@ include 'includes/template/head.php';
 				<div class="col-xs-6">
 					<div class="form-group">
 						<label for="dateresolved"><span class="field-name"><?= htmlspecialchars($langFile['asearch_date_resolved_from']) ?></span></label>
-						<input type="date" class="form-control" id="dateresolved" name="dateresolved"  max="<?php echo date('Y-m-d', strtotime('+1 years'));?>" />
+						<input type="date" class="form-control" id="dateresolved" name="dateresolved" value="<?= htmlspecialchars($_GET['dateresolved'] ?? '') ?>" max="<?php echo date('Y-m-d', strtotime('+1 years'));?>" />
 					</div>
 				</div>
 				<div class="col-xs-6">
 					<div class="form-group">
 						<label for="dateresolved2"><span class="field-name"><?= htmlspecialchars($langFile['asearch_date_resolved_to']) ?></span></label>
-						<input type="date" class="form-control" id="dateresolved2" name="dateresolved2" max="<?php echo date('Y-m-d', strtotime('+1 years'));?>" />
+						<input type="date" class="form-control" id="dateresolved2" name="dateresolved2" value="<?= htmlspecialchars($_GET['dateresolved2'] ?? '') ?>" max="<?php echo date('Y-m-d', strtotime('+1 years'));?>" />
 					</div>
 				</div>
 			</div>
@@ -442,8 +448,7 @@ include 'includes/template/head.php';
 			</div>
 			
 			<div class="form-group form-buttons">
-				<button type="submit" class="btn btn-default"><?= htmlspecialchars($langFile['asearch_button']) ?></button>
-			</div>
+				<button type="submit" class="btn btn-default"><?= htmlspecialchars($langFile['asearch_button']) ?></button>			<button type="reset" class="btn btn-default"><?= htmlspecialchars($langFile['asearch_clear']) ?></button>			</div>
 			</form>
 			<?php
 			} elseif ($showform==false) {
