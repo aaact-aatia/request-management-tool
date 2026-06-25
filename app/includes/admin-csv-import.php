@@ -51,7 +51,31 @@ if ($handle === false) {
 }
 
 $columns = $csvTables[$table]['columns'];
-$header = fgetcsv($handle);
+
+// Skip comment rows and UTF-8 BOM
+$header = null;
+while (($header = fgetcsv($handle)) !== false) {
+	if (!empty($header)) {
+		// Trim and remove UTF-8 BOM from first cell
+		$firstCell = trim((string)($header[0] ?? ''));
+		$firstCell = preg_replace('/^\xEF\xBB\xBF/', '', $firstCell);
+		
+		// Skip comment rows (start with #)
+		if (strpos($firstCell, '#') === 0) {
+			continue;
+		}
+		
+		// Skip completely empty rows
+		if (empty($firstCell)) {
+			continue;
+		}
+		
+		// Found the header row
+		$header[0] = $firstCell;
+		break;
+	}
+}
+
 if ($header === false) {
 	fclose($handle);
 	$sep = (strpos($referrer, '?') === false) ? '?' : '&';
@@ -60,11 +84,10 @@ if ($header === false) {
 }
 
 $header = array_map('trim', $header);
-if (!empty($header[0])) {
-	$header[0] = preg_replace('/^\xEF\xBB\xBF/', '', $header[0]);
-}
 
-if ($header !== $columns) {
+// Check that all required columns are present (allow extra descriptive columns)
+$missingColumns = array_diff($columns, $header);
+if (!empty($missingColumns)) {
 	fclose($handle);
 	$sep = (strpos($referrer, '?') === false) ? '?' : '&';
 	header("location:$referrer{$sep}lang=" . urlencode($lang) . "&status=header_mismatch");
@@ -76,16 +99,24 @@ $failCount = 0;
 $errorDetails = [];
 
 while (($row = fgetcsv($handle)) !== false) {
+	// Skip empty rows and comment rows
 	if (count($row) === 1 && trim((string)$row[0]) === '') {
 		continue;
 	}
-	if (count($row) !== count($columns)) {
+	if (!empty($row[0]) && strpos(trim((string)$row[0]), '#') === 0) {
+		continue;
+	}
+	
+	// Allow rows with extra columns (descriptive columns), but require at least the required columns
+	if (count($row) < count($columns)) {
 		$failCount++;
-		$errorDetails[] = "Row has " . count($row) . " columns, expected " . count($columns);
+		$errorDetails[] = "Row has " . count($row) . " columns, expected at least " . count($columns);
 		continue;
 	}
 
-	$assoc = array_combine($columns, $row);
+	// Extract only the required columns from the row
+	$rowValues = array_slice($row, 0, count($columns));
+	$assoc = array_combine($columns, $rowValues);
 	if ($assoc === false) {
 		$failCount++;
 		$errorDetails[] = "Failed to combine columns with values";
