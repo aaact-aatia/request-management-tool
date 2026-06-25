@@ -19,11 +19,8 @@ if (isset($_SERVER['SCRIPT_FILENAME']) && realpath(__FILE__) === realpath((strin
 $lang_code = $_SESSION['lang'] ?? 'en';
 
 // Resolve effective account type for menu permissions.
-// If the user is a superadmin in dev-account-switcher mode, keep superadmin menu access.
+// Use the current switched role (atype) to test menu visibility for different roles.
 $effective_atype = isset($_SESSION['atype']) ? (int) $_SESSION['atype'] : null;
-if (isset($_SESSION['real_atype']) && (int) $_SESSION['real_atype'] === 1) {
-	$effective_atype = 1;
-}
 
 // Menu text translations
 $menu_text = [
@@ -99,7 +96,7 @@ $menuLangStrings = $menu_text[$lang_code];
 				<?php
 				}
 				// Only Super admins can access admin options
-				if ($effective_atype === 1 || $effective_atype === 2) {
+				if ($effective_atype === 1) {
 				?>
 					<li><a href="#s2" class="item"><?= htmlspecialchars($menuLangStrings['admin']) ?></a>
 						<ul class="sm list-unstyled" id="s2" role="menu">

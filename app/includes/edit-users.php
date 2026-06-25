@@ -76,29 +76,29 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 		}
 	}
 
-	if ($isSuperuserRole === 1) {
-		// A superuser can use manager as primary role without team assignments.
-		$teamstring = "";
-	} elseif ($accounttype == '1' || $accounttype == '2' || $accounttype == '6') {
+	// Team assignment logic by account type
+	// Note: Superuser role doesn't prevent team assignments; it's an additional privilege
+	if ($accounttype == '1' || $accounttype == '2' || $accounttype == '6') {
+		// Super Admin, Admin, External: no teams
 		$teamstring = "";
 	} elseif ($accounttype == '5') {
+		// Employee: 0 or 1 team
 		if (count($selectedTeams) > 1) {
 			$noerror = true;
 		} else {
 			$teamstring = !empty($selectedTeams) ? (string)$selectedTeams[0] : "";
 		}
 	} elseif ($accounttype == '4') {
+		// Team Lead: must have at least 1 team
 		if (count($selectedTeams) < 1) {
 			$noerror = true;
 		} else {
 			$teamstring = implode(',', $selectedTeams);
 		}
 	} elseif ($accounttype == '3') {
-		if (count($selectedTeams) < 1) {
-			$noerror = true;
-		} else {
-			$teamstring = implode(',', $selectedTeams);
-		}
+		// Manager: can optionally have multiple teams
+		// (If superuser role is set, they can manage globally or per-team)
+		$teamstring = !empty($selectedTeams) ? implode(',', $selectedTeams) : "";
 	} else {
 		$noerror = true;
 	}

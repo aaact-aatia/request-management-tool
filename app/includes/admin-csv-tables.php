@@ -41,6 +41,11 @@ if (!function_exists('rmt_get_admin_csv_tables')) {
 				'columns' => ['id', 'holiday_date', 'name_en', 'name_fr', 'recurring', 'status'],
 				'order_by' => 'holiday_date ASC, id ASC',
 			],
+			'tblusers' => [
+				'label_key' => 'admin_csv_table_users',
+				'columns' => ['id', 'firstname', 'lastname', 'email', 'atype', 'is_superuser', 'is_admin', 'manager_id', 'team', 'status'],
+				'order_by' => 'id ASC',
+			],
 		];
 	}
 }
