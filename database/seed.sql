@@ -186,10 +186,6 @@ CREATE TABLE IF NOT EXISTS `tblteams` (
   `nameen` varchar(100) NOT NULL,
   `namefr` varchar(100) NOT NULL,
   `email` varchar(255) NOT NULL,
-  `contactname` varchar(200) NOT NULL,
-  `contactemail` varchar(255) NOT NULL,
-  `escalationcontactname` varchar(200) DEFAULT NULL,
-  `escalationcontactemail` varchar(255) DEFAULT NULL,
   `team_lead_user_id` int(11) DEFAULT NULL,
   `dateadded` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `dateupdated` timestamp NULL DEFAULT NULL,
@@ -473,9 +469,9 @@ INSERT INTO `tblcontacts` (`teamnameen`, `teamnamefr`, `teamemail`, `contactname
 ('Development Team', 'Équipe de développement', 'dev.team@example.com', 'Alice Developer', 'alice.dev@example.com', 'Bob Tech Lead', 'bob.techlead@example.com', 1);
 
 -- Teams
-INSERT INTO `tblteams` (`id`, `nameen`, `namefr`, `email`, `contactname`, `contactemail`, `escalationcontactname`, `escalationcontactemail`, `team_lead_user_id`, `status`) VALUES
-(1, 'IT Accessibility Office', 'Bureau de l''accessibilite des TI', 'accessibility@example.com', 'John Doe', 'john.doe@example.com', 'Jane Manager', 'jane.manager@example.com', 4, 1),
-(2, 'Development Team', 'Equipe de developpement', 'dev.team@example.com', 'Alice Developer', 'alice.dev@example.com', 'Bob Tech Lead', 'bob.techlead@example.com', 4, 1);
+INSERT INTO `tblteams` (`id`, `nameen`, `namefr`, `email`, `team_lead_user_id`, `status`) VALUES
+(1, 'IT Accessibility Office', 'Bureau de l''accessibilite des TI', 'accessibility@example.com', 4, 1),
+(2, 'Development Team', 'Equipe de developpement', 'dev.team@example.com', 4, 1);
 
 -- Sample request
 INSERT INTO `tbltriage` (`requestid`, `title`, `clientfname`, `clientlname`, `clientemail`, `catalogueid`, `serviceid`, `subserviceid`, `statusid`, `datereceived`, `creatorid`, `updaterid`, `status`) VALUES

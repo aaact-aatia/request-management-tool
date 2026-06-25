@@ -34,7 +34,7 @@ if ($teamId <= 0) {
     exit();
 }
 
-$teamSql = "SELECT id, nameen, namefr, email, contactname, contactemail, escalationcontactname, escalationcontactemail, team_lead_user_id FROM tblteams WHERE id='{$teamId}' LIMIT 1";
+$teamSql = "SELECT id, nameen, namefr, email, team_lead_user_id FROM tblteams WHERE id='{$teamId}' LIMIT 1";
 $teamResult = mysqli_query($link, $teamSql);
 $team = $teamResult ? mysqli_fetch_assoc($teamResult) : null;
 
@@ -70,33 +70,22 @@ include 'includes/template/head.php';
         $leadId = (int)($team['team_lead_user_id'] ?? 0);
         $managerName = $langFile['teams_details_no_manager'];
 
+        // Fetch team lead name
         if ($leadId > 0) {
-            $leadSql = "SELECT id, firstname, lastname, manager_id FROM tblusers WHERE id='{$leadId}' AND status='1' LIMIT 1";
+            $leadSql = "SELECT firstname, lastname FROM tblusers WHERE id='{$leadId}' AND status='1' LIMIT 1";
             $leadResult = mysqli_query($link, $leadSql);
             $leadRow = $leadResult ? mysqli_fetch_assoc($leadResult) : null;
-
             if (!empty($leadRow)) {
                 $leadName = trim(($leadRow['firstname'] ?? '') . ' ' . ($leadRow['lastname'] ?? ''));
-                $managerId = (int)($leadRow['manager_id'] ?? 0);
-
-                if ($managerId > 0) {
-                    $managerSql = "SELECT firstname, lastname FROM tblusers WHERE id='{$managerId}' AND status='1' LIMIT 1";
-                    $managerResult = mysqli_query($link, $managerSql);
-                    $managerRow = $managerResult ? mysqli_fetch_assoc($managerResult) : null;
-                    if (!empty($managerRow)) {
-                        $managerName = trim(($managerRow['firstname'] ?? '') . ' ' . ($managerRow['lastname'] ?? ''));
-                    }
-                }
             }
         }
 
-        if ($managerName === $langFile['teams_details_no_manager']) {
-            $fallbackManagerSql = "SELECT firstname, lastname FROM tblusers WHERE atype='3' AND status='1' AND FIND_IN_SET('{$teamId}', team) > 0 ORDER BY firstname ASC, lastname ASC LIMIT 1";
-            $fallbackManagerResult = mysqli_query($link, $fallbackManagerSql);
-            $fallbackManager = $fallbackManagerResult ? mysqli_fetch_assoc($fallbackManagerResult) : null;
-            if (!empty($fallbackManager)) {
-                $managerName = trim(($fallbackManager['firstname'] ?? '') . ' ' . ($fallbackManager['lastname'] ?? ''));
-            }
+        // Fetch manager name - look for managers (atype=3) assigned to this team
+        $managerSql = "SELECT firstname, lastname FROM tblusers WHERE atype='3' AND status='1' AND FIND_IN_SET('{$teamId}', team) > 0 ORDER BY firstname ASC, lastname ASC LIMIT 1";
+        $managerResult = mysqli_query($link, $managerSql);
+        $managerRow = $managerResult ? mysqli_fetch_assoc($managerResult) : null;
+        if (!empty($managerRow)) {
+            $managerName = trim(($managerRow['firstname'] ?? '') . ' ' . ($managerRow['lastname'] ?? ''));
         }
 
         $members = [];
@@ -126,22 +115,6 @@ include 'includes/template/head.php';
             <div style="break-inside: avoid;">
                 <dt><?= htmlspecialchars($langFile['teams_details_email']) ?></dt>
                 <dd><?= htmlspecialchars($team['email']) ?></dd>
-            </div>
-            <div style="break-inside: avoid;">
-                <dt><?= htmlspecialchars($langFile['teams_details_contact_name']) ?></dt>
-                <dd><?= htmlspecialchars($team['contactname'] ?? '—') ?></dd>
-            </div>
-            <div style="break-inside: avoid;">
-                <dt><?= htmlspecialchars($langFile['teams_details_contact_email']) ?></dt>
-                <dd><?= htmlspecialchars($team['contactemail'] ?? '—') ?></dd>
-            </div>
-            <div style="break-inside: avoid;">
-                <dt><?= htmlspecialchars($langFile['teams_details_escalation_contact_name']) ?></dt>
-                <dd><?= htmlspecialchars($team['escalationcontactname'] ?? '—') ?></dd>
-            </div>
-            <div style="break-inside: avoid;">
-                <dt><?= htmlspecialchars($langFile['teams_details_escalation_contact_email']) ?></dt>
-                <dd><?= htmlspecialchars($team['escalationcontactemail'] ?? '—') ?></dd>
             </div>
             <div style="break-inside: avoid;">
                 <dt><?= htmlspecialchars($langFile['teams_details_lead']) ?></dt>

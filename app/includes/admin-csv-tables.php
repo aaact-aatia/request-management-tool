@@ -8,7 +8,7 @@ if (!function_exists('rmt_get_admin_csv_tables')) {
 		return [
 			'tblteams' => [
 				'label_key' => 'admin_csv_table_teams',
-				'columns' => ['id', 'nameen', 'namefr', 'email', 'contactname', 'contactemail', 'escalationcontactname', 'escalationcontactemail', 'team_lead_user_id', 'status'],
+				'columns' => ['id', 'nameen', 'namefr', 'email', 'team_lead_user_id', 'status'],
 				'order_by' => 'id ASC',
 			],
 			'tblcatalogue' => [

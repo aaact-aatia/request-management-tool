@@ -63,9 +63,13 @@ $tableColumns = isset($csvTables[$tableName]) ? $csvTables[$tableName]['columns'
 	</form>
 
 	<?php if (!empty($tableColumns)): ?>
-		<div class="mrgn-tp-lg alert alert-warning">
-			<p><strong><?= htmlspecialchars($langFile['admin_csv_columns_warning'] ?? 'Do not modify the column headings in the exported file. The import will fail if the headings are changed or reordered.') ?></strong></p>
-			<p><?= htmlspecialchars($langFile['admin_csv_expected_columns_intro'] ?? 'The file header must exactly match this column order:') ?> <code><?= htmlspecialchars(implode(', ', $tableColumns)) ?></code></p>
+		<div class="mrgn-tp-lg alert alert-info">
+			<p><strong><?= htmlspecialchars($langFile['admin_csv_import_info'] ?? 'Import Tips:') ?></strong></p>
+			<ul style="margin-bottom: 0;">
+				<li><?= htmlspecialchars($langFile['admin_csv_import_tip_columns'] ?? 'All required columns must be present in the file') ?></li>
+				<li><?= htmlspecialchars($langFile['admin_csv_import_tip_order'] ?? 'Column order and extra columns do not matter') ?></li>
+				<li><?= htmlspecialchars($langFile['admin_csv_import_tip_comments'] ?? 'Comment rows (lines starting with #) are automatically skipped') ?></li>
+			</ul>
 		</div>
 	<?php endif; ?>
 </div>

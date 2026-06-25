@@ -211,9 +211,9 @@ INSERT INTO `tblstatus` (`id`, `nameen`, `namefr`, `is_resolved`, `status`) VALU
 (6, 'Cancelled', 'Annulé', 0, 1);
 
 -- Teams
-INSERT INTO `tblteams` (`nameen`, `namefr`, `email`, `contactname`, `contactemail`, `escalationcontactname`, `escalationcontactemail`, `status`) VALUES
-('IT Accessibility Office', 'Bureau de l''accessibilité des TI', 'accessibility@example.com', 'John Doe', 'john.doe@example.com', 'Jane Manager', 'jane.manager@example.com', 1),
-('Development Team', 'Équipe de développement', 'dev.team@example.com', 'Alice Developer', 'alice.dev@example.com', 'Bob Tech Lead', 'bob.techlead@example.com', 1);
+INSERT INTO `tblteams` (`nameen`, `namefr`, `email`, `team_lead_user_id`, `status`) VALUES
+('IT Accessibility Office', 'Bureau de l''accessibilité des TI', 'accessibility@example.com', NULL, 1),
+('Development Team', 'Équipe de développement', 'dev.team@example.com', NULL, 1);
 
 -- Canadian Federal Holidays (2019-2030)
 INSERT INTO `tblholidays` (`holiday_date`, `name_en`, `name_fr`, `recurring`, `status`) VALUES
