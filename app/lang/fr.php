@@ -420,6 +420,7 @@ return [
     'admin_csv_table_sources' => 'Sources',
     'admin_csv_table_status' => 'Valeurs de statut',
     'admin_csv_table_holidays' => 'Jours fériés',
+    'admin_csv_table_users' => 'Utilisateurs',
 
     // Teams management page (teams.php)
     'teams_page_title' => 'Gestion des équipes - Outil de gestion des demandes - Bureau de l\'accessibilité de la TI',

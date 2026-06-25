@@ -422,6 +422,7 @@ return [
     'admin_csv_table_sources' => 'Sources',
     'admin_csv_table_status' => 'Status values',
     'admin_csv_table_holidays' => 'Holidays',
+    'admin_csv_table_users' => 'Users',
 
     // Teams management page (teams.php)
     'teams_page_title' => 'Teams management - Request Management Tool - IT Accessibility Office',
