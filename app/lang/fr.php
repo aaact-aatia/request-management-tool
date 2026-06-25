@@ -375,14 +375,9 @@ return [
     // Settings page (settings.php)
     'settings_page_title' => 'Paramètres du compte - Outil de gestion des demandes - Bureau de l\'accessibilité de la TI',
     'settings_heading' => 'Paramètres du compte',
-    'settings_success_message' => 'Vous avez mis à jour l\'environnement avec succès, merci!',
     'settings_add_request_heading' => 'Ajouter manuellement une nouvelle demande',
     'settings_add_request_link' => 'Ajouter une demande (admin. uniquement)',
-    'settings_environment_heading' => 'Changer d\'environnement',
-    'settings_environment_label' => 'Sélectionnez l\'environnement',
-    'settings_environment_production' => 'Production',
-    'settings_environment_development' => 'Développement',
-    'settings_environment_button' => 'Changer d\'environnement',
+
     'settings_password_heading' => 'Réinitialisation du mot de passe',
     
     // Users management page (users.php)

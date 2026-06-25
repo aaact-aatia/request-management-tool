@@ -377,14 +377,8 @@ return [
     // Settings page (settings.php)
     'settings_page_title' => 'Account settings - Request Management Tool - IT Accessibility Office',
     'settings_heading' => 'Account settings',
-    'settings_success_message' => 'You have successfully updated the environment, thank you!',
     'settings_add_request_heading' => 'Manually add a new request',
     'settings_add_request_link' => 'Add request (admin only)',
-    'settings_environment_heading' => 'Switch environments',
-    'settings_environment_label' => 'Select environment',
-    'settings_environment_production' => 'Production',
-    'settings_environment_development' => 'Development',
-    'settings_environment_button' => 'Switch environments',
     'settings_password_heading' => 'Reset password for Request Management Tool',
     
     // Users management page (users.php)

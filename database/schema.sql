@@ -29,7 +29,6 @@ CREATE TABLE IF NOT EXISTS `tblusers` (
   `manager_id` int(11) DEFAULT NULL,
   `team` varchar(100) DEFAULT NULL,
   `status` tinyint(1) DEFAULT 1,
-  `environment` tinyint(1) DEFAULT 0 COMMENT '0=prod, 1=dev',
   PRIMARY KEY (`id`),
   KEY `atype` (`atype`),
   KEY `manager_id` (`manager_id`)

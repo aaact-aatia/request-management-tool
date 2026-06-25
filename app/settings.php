@@ -26,28 +26,6 @@ if ($_SESSION['lang'] === 'fr') {
     require('includes/loggedincheck.php');
 }
 
-// Check which environment is being used
-// Grab logged in user
-$currentuser = $_SESSION['pid'];
-
-// Check if current password is correct
-$result = mysqli_query($link, "SELECT environment FROM tblusers WHERE id = '$currentuser'");
-$row = mysqli_fetch_array($result);
-$cenvironment = $row['environment'];
-
-// Process the sign in form
-if ($_SERVER['REQUEST_METHOD']=='POST') {
-	// First update the environment
-	$nenvironment = mysqli_real_escape_string($link,$_POST['environment']);
-	$sql = "UPDATE `tblusers` SET `environment` = '$nenvironment' WHERE id='$currentuser'";
-	//echo $sql;
-	mysqli_query($link,$sql);
-	
-	// Redirect to login page
-	header("location:settings.php?lang={$_SESSION['lang']}&status=success"); 
-	exit();
-}
-
 // Check if there is a status
 if (!empty($_GET['status'])){
 	$status = $_GET['status'];
@@ -85,16 +63,6 @@ include 'includes/template/head.php';
 			<h1 property="name" id="wb-cont"><?= htmlspecialchars($langFile['settings_heading']) ?></h1>
 			
 			<?php 
-			if ($status == 'success') {
-			?>
-			<section class="alert alert-success">
-				<h2><?= htmlspecialchars($langFile['success_heading']) ?></h2>
-				<ul>
-					<li><?= htmlspecialchars($langFile['settings_success_message']) ?></li>
-				</ul>
-			</section>
-			<?php
-			}
 			// Check if the account is Super admin / admin to show this option
 			if ($_SESSION['atype']=='1' OR $_SESSION['atype']=='2') {
 			?>
@@ -127,63 +95,37 @@ include 'includes/template/head.php';
 				<p><?= $_SESSION['lang'] == 'fr' ? 'Ceci vous permet de tester les fonctionnalités et permissions de différents types de comptes sans vous déconnecter.' : 'This allows you to test features and permissions of different account types without logging out.' ?></p>
 			</div>
 			
-			<div class="col-xs-12">
-				<form method="post" action="includes/switch-account-type.php">
-					<div class="form-group">
-						<label for="test_atype"><span class="field-name"><?= $_SESSION['lang'] == 'fr' ? 'Type de compte de test' : 'Test Account Type' ?> <strong>(<?= htmlspecialchars($langFile['required']) ?>)</strong></span></label>
-						<select class="form-control" id="test_atype" name="test_atype" required>
-							<?php foreach ($accountTypes as $type): ?>
-								<option value="<?php echo $type['id']; ?>" <?php echo ($currentAtype == $type['id']) ? 'selected' : ''; ?>>
-									<?php echo htmlspecialchars($type[$nameField]); ?>
-								</option>
-							<?php endforeach; ?>
-						</select>
-						<p class="help-block"><?= $_SESSION['lang'] == 'fr' ? 'Actuellement vous testez en tant que: <strong>' : 'Currently testing as: <strong>' ?><?php 
-							foreach ($accountTypes as $type) {
-								if ($type['id'] == $currentAtype) {
-									echo htmlspecialchars($type[$nameField]);
-									break;
-								}
+			<form method="post" action="includes/switch-account-type.php">
+				<div class="form-group">
+					<label for="test_atype"><span class="field-name"><?= $_SESSION['lang'] == 'fr' ? 'Type de compte de test' : 'Test Account Type' ?> <strong>(<?= htmlspecialchars($langFile['required']) ?>)</strong></span></label>
+					<select class="form-control" id="test_atype" name="test_atype" required>
+						<?php foreach ($accountTypes as $type): ?>
+							<option value="<?php echo $type['id']; ?>" <?php echo ($currentAtype == $type['id']) ? 'selected' : ''; ?>>
+								<?php echo htmlspecialchars($type[$nameField]); ?>
+							</option>
+						<?php endforeach; ?>
+					</select>
+					<p class="help-block"><?= $_SESSION['lang'] == 'fr' ? 'Actuellement vous testez en tant que: <strong>' : 'Currently testing as: <strong>' ?><?php 
+						foreach ($accountTypes as $type) {
+							if ($type['id'] == $currentAtype) {
+								echo htmlspecialchars($type[$nameField]);
+								break;
 							}
-						?></strong></p>
-					</div>
-					<div class="form-group form-buttons">
-						<button type="submit" class="btn btn-primary"><?= $_SESSION['lang'] == 'fr' ? 'Changer le type de compte' : 'Switch Account Type' ?></button>
-						<?php if ($currentAtype != $_SESSION['real_atype']): ?>
-							<button type="submit" name="reset_atype" value="1" class="btn btn-warning"><?= $_SESSION['lang'] == 'fr' ? 'Réinitialiser au super admin' : 'Reset to Super Admin' ?></button>
-						<?php endif; ?>
-					</div>
-				</form>
-			</div>
+						}
+					?></strong></p>
+				</div>
+				<div class="form-group form-buttons">
+					<button type="submit" class="btn btn-primary"><?= $_SESSION['lang'] == 'fr' ? 'Changer le type de compte' : 'Switch Account Type' ?></button>
+					<?php if ($currentAtype != $_SESSION['real_atype']): ?>
+						<button type="submit" name="reset_atype" value="1" class="btn btn-warning"><?= $_SESSION['lang'] == 'fr' ? 'Réinitialiser au super admin' : 'Reset to Super Admin' ?></button>
+					<?php endif; ?>
+				</div>
+			</form>
 			<?php
 			}
 			?>
 			
-			<h2><?= htmlspecialchars($langFile['settings_environment_heading']) ?></h2>
-			
-			<div class="col-xs-12">
-				<form id="login" method="post" action="settings.php?lang=<?= $_SESSION['lang'] ?>">
-				<div class="form-group">
-					<label for="environment"><span class="field-name"><?= htmlspecialchars($langFile['settings_environment_label']) ?> <strong class="required">(<?= htmlspecialchars($langFile['required']) ?>)</strong></span></label>	
-					<select class="form-control" id="environment" name="environment" required>
-						<option value="0"<?php if ($cenvironment==0) { ?> selected<?php } ?>><?= htmlspecialchars($langFile['settings_environment_production']) ?></option>
-						<option value="1"<?php if ($cenvironment==1) { ?> selected<?php } ?>><?= htmlspecialchars($langFile['settings_environment_development']) ?></option>
-					</select>
-				</div>
-				<div class="form-group form-buttons">
-					<button type="submit" class="btn btn-primary"><?= htmlspecialchars($langFile['settings_environment_button']) ?></button>
-				</div>
-				</form>
-			</div>
-			
-			<h2><?= htmlspecialchars($langFile['settings_password_heading']) ?></h2>
-				
-			<div class="col-xs-12">
-				<form id="login" method="post" action="passwordreset.php?lang=<?= $_SESSION['lang'] ?>">
-				<div class="form-group">
-					<label for="token1"><span class="field-name"><?= htmlspecialchars($langFile['passwordreset_current']) ?> <strong>(<?= htmlspecialchars($langFile['required']) ?>)</strong></span></label>
-					<input type="password" class="form-control" id="token1" name="token1" placeholder="<?= htmlspecialchars($langFile['passwordreset_current_placeholder']) ?>">
-				</div>
+
 				<div class="form-group">
 					<label for="token2"><span class="field-name"><?= htmlspecialchars($langFile['passwordreset_new']) ?> <strong>(<?= htmlspecialchars($langFile['required']) ?>)</strong></span></label>
 					<input type="password" class="form-control" id="token2" name="token2" placeholder="<?= htmlspecialchars($langFile['passwordreset_new_placeholder']) ?>">
