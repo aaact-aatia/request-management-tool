@@ -1,8 +1,5 @@
 <?php
-if (session_status() != PHP_SESSION_ACTIVE)
-{
-	session_start();
-}
+require_once __DIR__ . '/includes/session_start.php';
 
 // Language detection
 $lang = isset($_GET['lang']) && $_GET['lang'] === 'fr' ? 'fr' : 'en';

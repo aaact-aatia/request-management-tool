@@ -1,4 +1,9 @@
 <?php
+if (isset($_SERVER['SCRIPT_FILENAME']) && realpath(__FILE__) === realpath((string) $_SERVER['SCRIPT_FILENAME'])) {
+    http_response_code(404);
+    exit();
+}
+
 /**
  * Edit Request - AAACT Admin Section
  * Team member assignment, SLA timer, and admin controls

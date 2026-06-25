@@ -7,9 +7,7 @@
  */
 
 // Start session
-if (session_status() != PHP_SESSION_ACTIVE) {
-	session_start();
-}
+require_once dirname(__DIR__) . '/session_start.php';
 
 // Grab HTTPS check
 require('includes/httpscheck.php');
