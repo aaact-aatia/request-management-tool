@@ -87,7 +87,7 @@ $t = $menu_text[$lang_code];
 				<?php 
 				}
 				// Only Super admins can access admin options
-				if (isset($_SESSION['atype']) && ($_SESSION['atype']==1 OR $_SESSION['atype']==2)) {
+				if (isset($_SESSION['atype']) && $_SESSION['atype']==1) {
 				?>
 				<li><a href="#s2" class="item"><?= htmlspecialchars($t['admin']) ?></a>
 					<ul class="sm list-unstyled" id="s2" role="menu">
