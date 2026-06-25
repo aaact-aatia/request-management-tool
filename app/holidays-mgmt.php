@@ -100,6 +100,15 @@ if (isset($_GET['status'])) {
         $statusMessage = '<div class="alert alert-success" role="alert">' . $t['success_updated'] . '</div>';
     } elseif ($_GET['status'] == 'deleted') {
         $statusMessage = '<div class="alert alert-success" role="alert">' . $t['success_deleted'] . '</div>';
+    } elseif ($_GET['status'] == 'import_success') {
+        $count = isset($_GET['count']) ? (int)$_GET['count'] : 0;
+        $statusMessage = '<div class="alert alert-success" role="alert">' . sprintf('Imported %d record(s)', $count) . '</div>';
+    } elseif ($_GET['status'] == 'import_partial') {
+        $ok = isset($_GET['ok']) ? (int)$_GET['ok'] : 0;
+        $fail = isset($_GET['fail']) ? (int)$_GET['fail'] : 0;
+        $statusMessage = '<div class="alert alert-warning" role="alert">' . sprintf('Imported %d record(s) with %d error(s)', $ok, $fail) . '</div>';
+    } elseif ($_GET['status'] == 'import_failed' || $_GET['status'] == 'header_mismatch' || $_GET['status'] == 'no_file' || $_GET['status'] == 'invalid_table') {
+        $statusMessage = '<div class="alert alert-danger" role="alert">Import failed. Please check the CSV file format.</div>';
     }
 }
 
@@ -198,6 +207,7 @@ include 'includes/template/head.php';
                     <?php endwhile; ?>
                 </tbody>
             </table>
+            <?php $tableName = 'tblholidays'; include('includes/admin-csv-buttons.php'); ?>
         <?php else: ?>
             <p><?= $t['no_holidays'] ?></p>
         <?php endif; ?>

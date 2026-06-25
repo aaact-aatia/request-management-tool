@@ -3,8 +3,6 @@
 
 require_once __DIR__ . '/env.php';
 
-require('cors.php');
-
 $displayErrors = app_is_production() ? '0' : '1';
 ini_set('display_errors', $displayErrors);
 ini_set('display_startup_errors', $displayErrors);
@@ -14,10 +12,19 @@ if (file_exists('/proc/self/fd/2')) {
 }
 date_default_timezone_set(app_env('TZ', 'America/New_York'));
 
+// Establish database connection BEFORE session setup
+// so we can configure MySQL-backed session handler
+require_once 'db.php';
+
+// Configure MySQL-backed sessions (must be done BEFORE any headers sent)
+// Must be before cors.php since cors.php sends headers
+require_once 'includes/session.php';
+
+// Now we can send CORS headers after session configuration
+require('cors.php');
+
 // Configure and start session only when a session is not already active.
 if (session_status() !== PHP_SESSION_ACTIVE) {
-	ini_set('session.gc_maxlifetime', '86400');
-	session_set_cookie_params(86400);
 	session_start();
 }
 
@@ -39,8 +46,6 @@ if (!isset($_SESSION["pid"]))
 	$_SESSION["firstname"] = null;
 	$_SESSION["team"] = null;
 }
-
-require_once 'db.php';
 
 /** @var mysqli $link */
 

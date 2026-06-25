@@ -1,4 +1,9 @@
 <?php
+if (isset($_SERVER['SCRIPT_FILENAME']) && realpath(__FILE__) === realpath((string) $_SERVER['SCRIPT_FILENAME'])) {
+    http_response_code(404);
+    exit();
+}
+
 // Start session and get database connection
 require_once(__DIR__ . '/../sql.php');
 

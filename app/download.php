@@ -4,9 +4,7 @@ require_once('BlobStorage.php');
 
 /** @var mysqli $link */
 
-if (session_status() != PHP_SESSION_ACTIVE) {
-    session_start();
-}
+require_once __DIR__ . '/includes/session_start.php';
 
 // Ensure the 'code' parameter is provided
 if (isset($_GET['code'])) {
