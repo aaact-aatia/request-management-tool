@@ -87,8 +87,6 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 			$team = $row['team'];
 			$_SESSION['team'] = explode(',', $team);
 			
-			// Store real account type for dev mode testing (if superadmin)
-			if ($isSuperuser) {
 			// Dev account switcher is now based on is_superuser flag, not real_atype
 			// Check if user has any assigned requests
 			$userId = $_SESSION['pid'];

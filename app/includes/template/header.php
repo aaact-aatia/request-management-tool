@@ -165,7 +165,10 @@ $headerTranslations = [
 
 		</div>
 
-		<?php require(__DIR__ . '/menu.php'); ?>
+		<?php 
+		require_once(__DIR__ . '/../helpers.php');
+		require(__DIR__ . '/menu.php'); 
+		?>
 
 		<nav id="wb-bc" property="breadcrumb" aria-labelledby="breadcrumbPosition">
 			<h2 id="breadcrumbPosition"><?= $headerLangStrings['breadcrumbs_heading'] ?></h2>
