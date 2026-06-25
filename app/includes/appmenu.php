@@ -81,27 +81,27 @@ $t = $menu_text[$lang_code];
 				<li><a href="/reports.php?lang=<?= $lang_code ?>" class="item"><?= htmlspecialchars($t['reports']) ?></a></li>
 				<?php
 				// Only Super admins can access this option
-				if(isset($_SESSION['atype']) && $_SESSION['atype']==1) {
+				if(isset($_SESSION['is_superuser']) && $_SESSION['is_superuser']==1) {
 				?>
 				<!-- <li><a href="/batch-ace-info.php?lang=<?= $lang_code ?>">Update (batch) AAACT tickets</a></li> -->
 				<?php 
 				}
-				// Only Super admins can access admin options
-				if (isset($_SESSION['atype']) && $_SESSION['atype']==1) {
+				// Only Super admins/admins can access admin options
+				if (isset($_SESSION['is_superuser']) && $_SESSION['is_superuser']==1) {
 				?>
 				<li><a href="#s2" class="item"><?= htmlspecialchars($t['admin']) ?></a>
 					<ul class="sm list-unstyled" id="s2" role="menu">
 						<li><a href="/teams.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($t['contacts']) ?></a></li>
 						<?php
 						// Only Super admins can access this option
-					if (isset($_SESSION['atype']) && $_SESSION['atype']==1) {
+					if (isset($_SESSION['is_superuser']) && $_SESSION['is_superuser']==1) {
 						?>
 						<li><a href="/catalogue.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($t['catalogue']) ?></a></li>					<li><a href="/holidays-mgmt.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($t['holidays']) ?></a></li>						<?php } ?>
 					<li><a href="/sources.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($t['sources']) ?></a></li>
 					<li><a href="/status.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($t['status']) ?></a></li>
 						<?php
 						// Only Super admins can access this option
-						if (isset($_SESSION['atype']) && $_SESSION['atype']==1) {
+								if (isset($_SESSION['is_superuser']) && $_SESSION['is_superuser']==1) {
 						?>
 						<!-- <li><a href="/batch-ace-info.php?lang=<?= $lang_code ?>">Update (batch) AAACT tickets</a></li> -->
 						<li><a href="/users.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($t['users']) ?></a></li>

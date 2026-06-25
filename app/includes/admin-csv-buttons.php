@@ -18,13 +18,8 @@ if (!isset($tableName)) {
 	return;
 }
 
-$effectiveAtype = isset($_SESSION['atype']) ? (int)$_SESSION['atype'] : 0;
-if (isset($_SESSION['real_atype']) && (int)$_SESSION['real_atype'] === 1) {
-	$effectiveAtype = 1;
-}
-
 // Only show CSV buttons to super admin
-if ($effectiveAtype !== 1) {
+if (!($_SESSION['is_superuser'] OR $_SESSION['is_admin'])) {
 	return;
 }
 

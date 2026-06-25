@@ -212,7 +212,7 @@ if (!empty($_SESSION['pid'])):
 		<strong><?= $langCode === 'en' ? 'You are logged in as:' : 'Vous êtes connecté en tant que :' ?></strong>
         <?= htmlspecialchars($_SESSION['firstname'] . ' (' . $_SESSION['email'] . ')') ?>
         <?php 
-        if (isset($_SESSION['real_atype']) && $_SESSION['real_atype'] == 1 && $_SESSION['atype'] != $_SESSION['real_atype']) {
+        if ($_SESSION['is_superuser'] == 1 && $_SESSION['atype'] != ($_SESSION['primary_atype'] ?? $_SESSION['atype'])) {
             // Get the current testing account type name
             $testAtype = $_SESSION['atype'];
 			$nameField = ($langCode === 'fr') ? 'namefr' : 'nameen';

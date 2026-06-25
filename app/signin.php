@@ -71,8 +71,8 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 		} else {
 			// Password correct
 			$primaryAtype = (int)$row['atype'];
-			$isSuperuser = $hasSuperRoleColumn ? ((int)($row['is_superuser'] ?? 0) === 1) : ($primaryAtype === 1);
-			$isAdmin = $hasAdminRoleColumn ? ((int)($row['is_admin'] ?? 0) === 1) : in_array($primaryAtype, [1, 2], true);
+			$isSuperuser = ((int)($row['is_superuser'] ?? 0) === 1);
+			$isAdmin = ((int)($row['is_admin'] ?? 0) === 1);
 			if ($isSuperuser) {
 				$isAdmin = true;
 			}
@@ -81,13 +81,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 			$_SESSION['primary_atype'] = $primaryAtype;
 			$_SESSION['is_superuser'] = $isSuperuser ? 1 : 0;
 			$_SESSION['is_admin'] = $isAdmin ? 1 : 0;
-			if ($isSuperuser) {
-				$_SESSION['atype'] = 1;
-			} elseif ($isAdmin) {
-				$_SESSION['atype'] = 2;
-			} else {
-				$_SESSION['atype'] = $primaryAtype;
-			}
+			$_SESSION['atype'] = $primaryAtype;
 			$_SESSION['firstname']=$row['firstname'];
 			$_SESSION['email']=$row['email'];
 			$team = $row['team'];
@@ -95,11 +89,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 			
 			// Store real account type for dev mode testing (if superadmin)
 			if ($isSuperuser) {
-				$_SESSION['real_atype'] = 1;
-			} else {
-				unset($_SESSION['real_atype']);
-			}
-			
+			// Dev account switcher is now based on is_superuser flag, not real_atype
 			// Check if user has any assigned requests
 			$userId = $_SESSION['pid'];
 		

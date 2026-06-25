@@ -9,7 +9,7 @@ $lang_code = $_SESSION['lang'] ?? 'en';
 $lang = require("../lang/{$lang_code}.php");
 
 // Check if the user has the right priv's
-if ($_SESSION['atype'] != 1) {
+if (!($_SESSION['is_superuser'] OR $_SESSION['is_admin'])) {
 	header("location:/openrequest.php?lang={$lang_code}&status=accessdenied"); 
 	exit();
 }

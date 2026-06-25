@@ -613,9 +613,9 @@ include 'includes/template/head.php';
 						<div class="col-xs-6">
 							<?php
 								// Check if the account is admin level to show this option 
-								if ($_SESSION['atype']==1 OR $_SESSION['atype']==2 OR $_SESSION['atype']==3 OR $_SESSION['atype']==4) {
-									// Now that we know the user is logged in we need to check if this ticket is assigned to them except for atype 1 and 2
-									if ($_SESSION['atype']==1 OR $_SESSION['atype']==2) {	
+							if ($_SESSION['is_superuser'] OR $_SESSION['is_admin'] OR $_SESSION['atype']==3 OR $_SESSION['atype']==4) {
+								// Now that we know the user is logged in we need to check if this ticket is assigned to them except for superadmin/admin
+								if ($_SESSION['is_superuser'] OR $_SESSION['is_admin']) {	
 							?>
 									<a class="btn btn-sm btn-default btn-block" href="editrequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?php echo base64_encode($row['id']);?>&reqid=<?php echo urlencode('a11y-' . $row['requestid']); ?>"><?= htmlspecialchars($langFile['asearch_edit']) ?></a>
 							<?php
@@ -641,7 +641,7 @@ include 'includes/template/head.php';
 							?>
 						</div>
 						<div class="col-xs-6">
-							<?php if ($_SESSION['atype']=='1') { ?>
+						<?php if ($_SESSION['is_superuser'] OR $_SESSION['is_admin']) { ?>
 							<a class="wb-lbx btn btn-sm btn-danger btn-block" href="includes/delete-request.php?id=<?php echo $row['id'];?>"><?= htmlspecialchars($langFile['asearch_delete']) ?></a>
 							<?php } elseif(in_array('1', $_SESSION['team'])){?>
 							<a class="btn btn-sm btn-default btn-block" href="clonerequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?php echo base64_encode($row['id']);?>&toClose=2"><?= htmlspecialchars($langFile['asearch_clone']) ?></a>

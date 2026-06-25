@@ -37,7 +37,7 @@ $langFile = require("lang/{$_SESSION['lang']}.php");
 require('includes/loggedincheck.php');
 
 // Check if the user has the right priv's
-if ($_SESSION['atype'] == 1 OR $_SESSION['atype'] == 2 OR $_SESSION['atype'] == 3 OR $_SESSION['atype'] == 4 OR $_SESSION['atype'] == 6) 
+if ($_SESSION['is_superuser'] OR $_SESSION['is_admin'] OR $_SESSION['atype'] == 3 OR $_SESSION['atype'] == 4 OR $_SESSION['atype'] == 6) 
 {
 	
 }

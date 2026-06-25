@@ -17,7 +17,7 @@ if (isset($_SERVER['SCRIPT_FILENAME']) && realpath(__FILE__) === realpath((strin
  */
 
 // Only show if user is logged in and is superadmin
-if (isset($_SESSION['pid']) && isset($_SESSION['real_atype']) && $_SESSION['real_atype'] == 1) {
+if (isset($_SESSION['pid']) && ($_SESSION['is_superuser'] == 1)) {
     // Get account types from database
     $accountTypes = [];
     $result = mysqli_query($link, "SELECT id, nameen, namefr FROM tblaccounttype WHERE status = 1 ORDER BY id ASC");
@@ -50,7 +50,7 @@ if (isset($_SESSION['pid']) && isset($_SESSION['real_atype']) && $_SESSION['real
                             </option>
                         <?php endforeach; ?>
                     </select>
-                    <?php if ($currentAtype != $_SESSION['real_atype']): ?>
+                    <?php if ($currentAtype != $_SESSION['primary_atype']): ?>
                         <button type="submit" name="reset_atype" value="1" class="btn btn-sm btn-warning">
                             <?php echo $lang_code == 'fr' ? 'Réinitialiser au super admin' : 'Reset to Super Admin'; ?>
                         </button>

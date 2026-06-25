@@ -9,7 +9,7 @@ $lang = isset($_GET['lang']) ? $_GET['lang'] : (isset($_SESSION['lang']) ? $_SES
 $is_french = ($lang === 'fr');
 
 // Check if the user has the right priv's
-if ($_SESSION['atype'] != 1) {
+if (!($_SESSION['is_superuser'] OR $_SESSION['is_admin'])) {
 	header("location:/openrequest-" . $lang . ".php?status=accessdenied"); 
 	exit();
 }

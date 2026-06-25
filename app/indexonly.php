@@ -306,7 +306,7 @@ include 'includes/template/head.php';
 					ob_start();
 					?>
 					<a class="btn btn-primary btn-block" href="editrequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?= base64_encode($row['id']) ?>&reqid=<?= urlencode('a11y-' . ($row['requestid'] ?? '')) ?>"><?= htmlspecialchars($langFile['indexonly_edit']) ?> <span class="wb-inv">a11y-<?= htmlspecialchars($row['requestid']) ?> <?= htmlspecialchars($langFile['indexonly_request']) ?></span></a>
-					<?php if ($_SESSION['atype']==1) { ?>
+						<?php if ($_SESSION['is_superuser'] OR $_SESSION['is_admin']) { ?>
 						<a class="wb-lbx btn btn-primary btn-block" href="includes/delete-request.php?id=<?= $row['id'] ?>"><?= htmlspecialchars($langFile['indexonly_delete']) ?> <span class="wb-inv">a11y-<?= htmlspecialchars($row['requestid']) ?> <?= htmlspecialchars($langFile['indexonly_request']) ?></span></a>
 					<?php } ?>
 					<?php if(in_array('1', $_SESSION['team'])){?>

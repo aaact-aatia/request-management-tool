@@ -8,7 +8,7 @@ require_once __DIR__ . '/session_start.php';
 $lang = $_GET['lang'] ?? 'en';
 
 // Check if the user has the right priv's
-if ($_SESSION['atype'] != 1) {
+if (!($_SESSION['is_superuser'] OR $_SESSION['is_admin'])) {
 	$redirect = ($lang == 'en') ? "/index-en.php?status=accessdenied" : "/openrequest-$lang.php?status=accessdenied";
 	header("location:$redirect"); 
 	exit();

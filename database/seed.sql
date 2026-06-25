@@ -240,18 +240,16 @@ CREATE TABLE IF NOT EXISTS `tblholidays` (
 
 -- Account types
 INSERT INTO `tblaccounttype` (`id`, `nameen`, `namefr`, `status`) VALUES
-(1, 'Super Admin', 'Super administrateur', 1),
-(2, 'Admin', 'Administrateur', 1),
 (3, 'Manager', 'Gestionnaire', 1),
 (4, 'Team Lead', 'Chef d''équipe', 1),
 (5, 'Employee', 'Employé', 1),
-(6, 'External', 'Externe', 1);
+(6, 'Director', 'Directeur', 1);
 
 -- Users (password is 'password' hashed with bcrypt)
 -- team field stores comma-separated tblcontacts IDs: 1=IT Accessibility Office, 2=Development Team
 INSERT INTO `tblusers` (`id`, `firstname`, `lastname`, `email`, `password`, `atype`, `is_superuser`, `is_admin`, `manager_id`, `team`, `status`) VALUES
-(1, 'Super', 'Admin', 'superadmin@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 3, 1, 1, NULL, '', 1),
-(2, 'Admin', 'User', 'admin@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 3, 0, 1, NULL, '', 1),
+(1, 'Super', 'Admin', 'superadmin@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 4, 1, 0, NULL, '1', 1),
+(2, 'Admin', 'User', 'admin@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 4, 0, 1, NULL, '1', 1),
 (3, 'Manager', 'User', 'manager@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 3, 0, 0, NULL, '1', 1),
 (4, 'Team', 'Lead', 'tl@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 4, 0, 0, 3, '1', 1),
 (5, 'Employee', 'User', 'employee@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 5, 0, 0, 3, '2', 1),

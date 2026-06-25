@@ -512,16 +512,16 @@ include 'includes/template/head.php';
 					$cardBodyHtml = ob_get_clean();
 
 					$cardFooterHtml = '';
-					if ($_SESSION['atype'] == '1' || $_SESSION['atype'] == '2' || $_SESSION['atype'] == '3' || $_SESSION['atype'] == '4' || $_SESSION['atype'] == '6') {
+					if ($_SESSION['is_superuser'] || $_SESSION['is_admin'] || $_SESSION['atype'] == '3' || $_SESSION['atype'] == '4' || $_SESSION['atype'] == '6') {
 						ob_start();
 						?>
 						<div class="row">
-							<?php if ($_SESSION['atype'] == '1' || $_SESSION['atype'] == '3' || $_SESSION['atype'] == '4'): ?>
+							<?php if ($_SESSION['is_superuser'] || $_SESSION['is_admin'] || $_SESSION['atype'] == '3' || $_SESSION['atype'] == '4'): ?>
 								<div class="col-xs-6">
 									<a href="<?= $t['edit_request'] ?>?lang=<?= $lang ?>&erid=<?= base64_encode($row['id']) ?>&reqid=<?= urlencode('a11y-' . ($row['requestid'] ?? '')) ?>" class="btn btn-default btn-block"><span class="glyphicon glyphicon-pencil" aria-hidden="true"></span><span class="mrgn-lft-sm"><?= $t['edit'] ?></span></a>
 								</div>
 							<?php endif; ?>
-							<?php if ($_SESSION['atype'] == '1'): ?>
+							<?php if ($_SESSION['is_superuser'] || $_SESSION['is_admin']): ?>
 								<div class="col-xs-6">
 									<a href="includes/delete-request.php?id=<?= $row['id'] ?>" class="wb-lbx btn btn-default btn-block" title="<?= $t['delete_request_title'] ?>"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span><span class="mrgn-lft-sm"><?= $t['delete_label'] ?></span></a>
 								</div>

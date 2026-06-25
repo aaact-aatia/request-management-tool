@@ -11,7 +11,6 @@ unset($_SESSION["atype"]);
 unset($_SESSION["primary_atype"]);
 unset($_SESSION["is_superuser"]);
 unset($_SESSION["is_admin"]);
-unset($_SESSION["real_atype"]); // Clear dev mode tracking
 
 header("location:signin.php?lang=$lang&loggedout=true"); 
 exit();

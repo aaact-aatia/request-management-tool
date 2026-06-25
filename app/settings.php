@@ -64,7 +64,7 @@ include 'includes/template/head.php';
 			
 			<?php 
 			// Check if the account is Super admin / admin to show this option
-			if ($_SESSION['atype']=='1' OR $_SESSION['atype']=='2') {
+			if ($_SESSION['is_superuser'] OR $_SESSION['is_admin']) {
 			?>
 			<h2><?= htmlspecialchars($langFile['settings_add_request_heading']) ?></h2>
 			
@@ -77,7 +77,7 @@ include 'includes/template/head.php';
 			
 			<?php
 			// Show account type switcher only for superadmin
-			if (isset($_SESSION['real_atype']) && $_SESSION['real_atype'] == 1) {
+			if (isset($_SESSION['is_superuser']) && $_SESSION['is_superuser'] == 1) {
 				// Get account types from database
 				$accountTypes = [];
 				$result = mysqli_query($link, "SELECT id, nameen, namefr FROM tblaccounttype WHERE status = 1 ORDER BY id ASC");
@@ -116,7 +116,7 @@ include 'includes/template/head.php';
 				</div>
 				<div class="form-group form-buttons">
 					<button type="submit" class="btn btn-primary"><?= $_SESSION['lang'] == 'fr' ? 'Changer le type de compte' : 'Switch Account Type' ?></button>
-					<?php if ($currentAtype != $_SESSION['real_atype']): ?>
+					<?php if ($currentAtype != $_SESSION['primary_atype']): ?>
 						<button type="submit" name="reset_atype" value="1" class="btn btn-warning"><?= $_SESSION['lang'] == 'fr' ? 'Réinitialiser au super admin' : 'Reset to Super Admin' ?></button>
 					<?php endif; ?>
 				</div>

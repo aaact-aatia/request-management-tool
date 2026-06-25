@@ -6,12 +6,10 @@ SET CHARACTER SET utf8mb4;
 
 -- Account types
 INSERT INTO `tblaccounttype` (`id`, `nameen`, `namefr`, `status`) VALUES
-(1, 'Super Admin', 'Super administrateur', 1),
-(2, 'Admin', 'Administrateur', 1),
 (3, 'Manager', 'Gestionnaire', 1),
 (4, 'Team Lead', 'Chef d''équipe', 1),
 (5, 'Employee', 'Employé', 1),
-(6, 'External', 'Externe', 1);
+(6, 'Director', 'Directeur', 1);
 
 -- Catalogue (matching openrequest.php options)
 INSERT INTO `tblcatalogue` (`id`, `nameen`, `namefr`, `status`) VALUES

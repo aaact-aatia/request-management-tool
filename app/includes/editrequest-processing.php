@@ -360,7 +360,7 @@ $sql .= " WHERE id='$requestuid'";
 mysqli_query($link, $sql);
 
 // Update communication logs (admin only)
-if (isAdmin() || $_SESSION['atype'] == 2) {
+if (($_SESSION['is_superuser'] || $_SESSION['is_admin'])) {
     if (!empty($commlogid1)) {
         $sql = "UPDATE `tblcommlog` SET `notes` = '$commlog1' WHERE id='$commlogid1'";
         mysqli_query($link, $sql);

@@ -14,15 +14,19 @@ if (isset($_SERVER['SCRIPT_FILENAME']) && realpath(__FILE__) === realpath((strin
 // ============================================================================
 
 function isAdmin() {
-    return isset($_SESSION['atype']) && $_SESSION['atype'] == 1;
+    return isset($_SESSION['is_superuser']) && $_SESSION['is_superuser'] == 1;
 }
 
 function canEditRequests() {
-    return isset($_SESSION['atype']) && in_array($_SESSION['atype'], [1, 2, 3, 4, 5]);
+    $isAdminOrSuperuser = (isset($_SESSION['is_superuser']) && $_SESSION['is_superuser']) || 
+                         (isset($_SESSION['is_admin']) && $_SESSION['is_admin']);
+    return $isAdminOrSuperuser || (isset($_SESSION['atype']) && in_array($_SESSION['atype'], [3, 4, 5]));
 }
 
 function canManageSLA() {
-    return isset($_SESSION['atype']) && in_array($_SESSION['atype'], [1, 2, 3, 4]);
+    $isAdminOrSuperuser = (isset($_SESSION['is_superuser']) && $_SESSION['is_superuser']) || 
+                         (isset($_SESSION['is_admin']) && $_SESSION['is_admin']);
+    return $isAdminOrSuperuser || (isset($_SESSION['atype']) && in_array($_SESSION['atype'], [3, 4]));
 }
 
 function isReadOnly() {
@@ -30,11 +34,13 @@ function isReadOnly() {
 }
 
 function canViewAllRequests() {
-    return isset($_SESSION['atype']) && in_array($_SESSION['atype'], [1, 6]);
+    $isAdminOrSuperuser = (isset($_SESSION['is_superuser']) && $_SESSION['is_superuser']) || 
+                         (isset($_SESSION['is_admin']) && $_SESSION['is_admin']);
+    return $isAdminOrSuperuser || (isset($_SESSION['atype']) && $_SESSION['atype'] == 6);
 }
 
 function canViewReports() {
-    return isset($_SESSION['atype']) && in_array($_SESSION['atype'], [1, 2, 3, 4, 5, 6]);
+    return isset($_SESSION['pid']); // Everyone can view reports
 }
 
 // ============================================================================

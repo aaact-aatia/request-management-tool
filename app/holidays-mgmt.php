@@ -20,7 +20,7 @@ require('includes/httpscheck.php');
 require('includes/loggedincheck.php');
 
 // Check if Super Admin
-if ($_SESSION['atype'] != 1) {
+if (!($_SESSION['is_superuser'] OR $_SESSION['is_admin'])) {
     header("Location: index.php");
     exit();
 }

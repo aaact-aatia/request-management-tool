@@ -145,7 +145,7 @@ The `-v` flag removes the `dbdata` volume.
 | manager@example.com | Manager (3) | Can edit team requests |
 | tl@example.com | Team Lead (4) | Can edit team requests |
 | employee@example.com | Employee (5) | Regular employee access |
-| external@example.com | External (6) | External user access |
+| external@example.com | Director (6) | Read-only reporting access |
 
 ### Docker Services
 

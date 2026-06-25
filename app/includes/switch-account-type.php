@@ -12,8 +12,8 @@
 // Grab MySQL connection
 require('../sql.php');
 
-// Verify user is logged in and is actual superadmin
-if (!isset($_SESSION['pid']) || !isset($_SESSION['real_atype']) || $_SESSION['real_atype'] != 1) {
+// Verify user is logged in and has superuser permissions
+if (!isset($_SESSION['pid']) || !isset($_SESSION['is_superuser']) || $_SESSION['is_superuser'] != 1) {
     // Not authorized - redirect
     header("Location: /openrequest.php?lang=" . ($_SESSION['lang'] ?? 'en'));
     exit();
@@ -22,9 +22,9 @@ if (!isset($_SESSION['pid']) || !isset($_SESSION['real_atype']) || $_SESSION['re
 // Get language
 $lang_code = $_SESSION['lang'] ?? 'en';
 
-// Handle reset to superadmin
+// Handle reset to superadmin's actual role
 if (isset($_POST['reset_atype'])) {
-    $_SESSION['atype'] = $_SESSION['real_atype'];
+    $_SESSION['atype'] = $_SESSION['primary_atype'];
     
     // Redirect back to settings page
     header("Location: /settings.php?lang={$lang_code}&status=success");
