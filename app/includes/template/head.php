@@ -49,6 +49,17 @@ $fullPageTitle = $pageTitle . ' - ' . $appName . ' - ' . $orgName;
 		<link rel="stylesheet" href="https://www.canada.ca/etc/designs/canada/wet-boew/css/theme.min.css"/>
 		<link rel="stylesheet" href="includes/template/app.css">
 
+		<style>
+			.wb-eqht-grd .panel.hght-inhrt {
+				display: flex;
+				flex-direction: column;
+			}
+
+			.wb-eqht-grd .panel.hght-inhrt .panel-body {
+				flex: 1 1 auto;
+			}
+		</style>
+
 		<?php if (!empty($extraStyles)): ?>
 		<style>
 		<?= $extraStyles ?>

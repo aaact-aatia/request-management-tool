@@ -150,6 +150,7 @@ return [
     'asearch_button' => 'Search',
     'asearch_results_heading' => 'Advanced search results',
     'asearch_last_1000' => 'Last 1000 entries',
+    'asearch_entries' => 'entries',
     'asearch_table_request' => 'Request #',
     'asearch_table_title' => 'Title',
     'asearch_table_client' => 'Client',

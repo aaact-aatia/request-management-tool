@@ -451,221 +451,202 @@ include 'includes/template/head.php';
 			$result = mysqli_query($link,$sql);
 			//List it
 			if(mysqli_num_rows($result)>0){
+			$numEntries = mysqli_num_rows($result);
 			?>
-			<h1 property="name" id="wb-cont"><?= htmlspecialchars($langFile['asearch_results_heading']) ?><?php if ($nosearch) { ?> - <?= htmlspecialchars($langFile['asearch_last_1000']) ?><?php } ?></h1>
+			<h1 property="name" id="wb-cont"><?= htmlspecialchars($langFile['asearch_results_heading']) ?> - <?= $numEntries ?> <?= htmlspecialchars($langFile['asearch_entries']) ?></h1>
 			
-			<table class="wb-tables table table-striped table-hover" data-wb-tables='{"columnDefs": [{ "type": "html-num", "targets": 0 }]}'>
-				<thead>
-				<tr>
-					<th><?= htmlspecialchars($langFile['asearch_table_request']) ?></th>
-					<th><?= htmlspecialchars($langFile['asearch_table_title']) ?></th>
-					<?php if($_SESSION['pid']!=""){ ?><th><?= htmlspecialchars($langFile['asearch_table_client']) ?></th><?php } ?>
-					<th><?= htmlspecialchars($langFile['asearch_table_service']) ?></th>
-					<th><?= htmlspecialchars($langFile['asearch_table_status']) ?></th>
-					<?php
-					// Check if the account is admin level to show this option 
-					if ($_SESSION['atype']=='1' OR $_SESSION['atype']=='2' OR $_SESSION['atype']=='3' OR $_SESSION['atype']=='4') {
-					?>
-					<th><?= htmlspecialchars($langFile['asearch_table_actions']) ?></th>
-					<?php } ?>
-				</tr>
-				</thead>
-				<tbody>
-			<?php
-				// Determine database column for name fields based on language
-				$nameField = ($_SESSION['lang'] === 'fr') ? 'namefr' : 'nameen';
+			<div class="row wb-eqht-grd">
+		<?php
+			// Determine database column for name fields based on language
+			$nameField = ($_SESSION['lang'] === 'fr') ? 'namefr' : 'nameen';
+			
+			while($row = mysqli_fetch_array($result)){
+				// Check if clientlname or clientfname is not empty
+				$clientfname = htmlspecialchars ($row['clientfname'] ?? '');
+				$clientlname = htmlspecialchars ($row['clientlname'] ?? '');
+				$clientname = "";
+				if ($clientfname!="" AND $clientlname!="") {
+					$clientname = $clientlname . ", " . $clientfname;
+				}
 				
-				while($row = mysqli_fetch_array($result)){
-					// Check if clientlname or clientfname is not empty
-					$clientfname = htmlspecialchars ($row['clientfname'] ?? '');
-					$clientlname = htmlspecialchars ($row['clientlname'] ?? '');
-					$clientname = "";
-					if ($clientfname!="" AND $clientlname!="") {
-						$clientname = $clientlname . ", " . $clientfname;
-					}
-					
-					// Grab the services related to this catalogue item
-					$subserviceid = $row['subserviceid'];
-					$serviceid = $row['serviceid'];
-					$catalogueid = $row['catalogueid'];
-					$tarraycontactid = "";
-					
-					$sla = 0;
-					$dsla = 0;
-					$overdue = false;
-					$doverdue = false;
-					$closedue = false;
-					$servicename = '';
-					$cataloguename = '';
-					$subservicename = '';
-					
-					if ($subserviceid!="" && $subserviceid != null) {
-						// Sub-service is not empty so grab the name
-						$result2 = mysqli_query($link, "SELECT $nameField,sds,contactid FROM tblsubservices WHERE id = '$subserviceid'");
-						$row2 = mysqli_fetch_array($result2);
-						if (!empty($row2)){
-							$subservicename = $row2[0];
-							$sla = $row2[1];
-							$dsla = $sla * 2;
-							$tarraycontactid = $row2[2];
-						}
-					}
-
-					
-
-					if ($serviceid!="" && $serviceid != null) {
-						// Sub-service is not empty so grab the name
-						$result2 = mysqli_query($link, "SELECT $nameField,sds,contactid FROM tblservices WHERE id = '$serviceid'");
-						$row2 = mysqli_fetch_array($result2);
-						
-						if($row2 != null && is_array($row2)){
-							$servicename = $row2[0];
-						if (empty($sla) and !empty($row2)) {
-							if ($serviceid==21 || $serviceid==22 || $serviceid==23 || $serviceid==24) {
-								$sla = 15;
-								$dsla = $sla * 2;
-							} else {
-								$sla = $row2[1];
-								$dsla = $sla * 2;
-							}
-						}
-						if (empty($tarraycontactid)) {
-							$tarraycontactid = $row2[2];
-						}
-						}
-					}
-					
-					if ($catalogueid!="" && !empty($catalogueid)) {
-						// Sub-service is not empty so grab the name
-						$result2 = mysqli_query($link, "SELECT $nameField FROM tblcatalogue WHERE id = '$catalogueid'");
-						$row2 = mysqli_fetch_array($result2);
-						$cataloguename = $row2[0];
-					}
-					
-					// Grab the date it was received
-					$slatimer = $row['slatimer'];
-					if ($slatimer=="" OR is_null($slatimer)) {
-						$datereceived = $row['datereceived'];
-					} else {
-						$datereceived = $slatimer;
-					}
-					if (!empty($datereceived) && strtotime($datereceived) !== false) {
-						$ndatereceived = date('Y-m-d H:i:s', strtotime($datereceived . ' +1 day'));
-					} else {
-						$ndatereceived = date('Y-m-d H:i:s');
-					}
-					
-					// Check if request is resolved and calculate from that day
-					// Grab the status id
-					$statusid = $row['statusid'];
-					$isResolvedStatus = rmt_is_resolved_status_id($link, $statusid);
-					$suppressSlaWarning = $isResolvedStatus || in_array((int)$statusid, [5, 6], true);
-					if ($isResolvedStatus) {
-						// Get the date resolved
-						$dateresolved = $row['dateresolved'];
-						if (!empty($dateresolved) && strtotime($dateresolved) !== false) {
-							$ndateresolved = date('Y-m-d H:i:s', strtotime($dateresolved));
-							// Calculate the business days (request completed)
-							//$cBdays = getWorkingDays($ndatereceived,$ndateresolved,$holidays);
-							$cBdays = calculateSLA($link, $row['requestid'], $ndatereceived,$ndateresolved);
-						} else {
-							// Missing resolve date: fall back to open-request SLA calculation.
-							$cBdays = calculateSLA($link, $row['requestid'], $ndatereceived);
-						}
-
-					} else {
-						// Calculate the business days (request still open)
-						//$cBdays = getWorkingDays($ndatereceived,date('Y-m-d'),$holidays);
-						$cBdays = calculateSLA($link, $row['requestid'], $ndatereceived);
-
-					}
-						
-					$sla2 = $sla - 1;
-					// Now check if the SLA is close
-					if ($cBdays > $dsla) {
-						$doverdue = true;
-					}
-					if ($cBdays > $sla) {
-						$overdue = true;
-					}
-					if ($cBdays == $sla) {
-						$closedue = true;
-					}
-					if ($cBdays >= $sla2) {
-						$closedue = true;
-					}
-			?>
-					<?php if ($suppressSlaWarning) { ?>
-					<tr>
-					<?php } else { ?>
-				<tr <?php if ($doverdue) { ?> style="background-color: #e87d88;"<?php } elseif($overdue) { ?> style="background-color: #f5c6cb;"<?php } elseif ($closedue) { ?> style="background-color: #ffeeba;"<?php } ?>>
-				<?php } ?>
-				<td>
-						<a href="viewrequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?php echo base64_encode($row['id']);?>&reqid=<?php echo urlencode('a11y-' . $row['requestid']);?>">a11y-<?php echo $row['requestid'];?> <span class="glyphicon glyphicon-eye-open"></span><span class="wb-inv"><?= htmlspecialchars($langFile['asearch_details']) ?></span></a>
-					</td>					
-					<td><?php echo htmlspecialchars ($row['title'] ?? '');?></td>
-					<?php if(!empty($_SESSION['pid'])){ ?><td><?php echo $clientname;?></td><?php } ?>
-					<td>
-						<?php echo $cataloguename; ?><?php echo "<br />" . $servicename; ?><?php if (!empty($subservicename)) { echo "<br />" . $subservicename; } ?>
-					</td>					
-					<td>
-					<?php 
-					
-					$result2 = mysqli_query($link, "SELECT $nameField FROM tblstatus WHERE id = '$statusid'");
+				// Grab the services related to this catalogue item
+				$subserviceid = $row['subserviceid'];
+				$serviceid = $row['serviceid'];
+				$catalogueid = $row['catalogueid'];
+				$statusid = $row['statusid'];
+				$tarraycontactid = "";
+				
+				$sla = 0;
+				$dsla = 0;
+				$overdue = false;
+				$doverdue = false;
+				$closedue = false;
+				$servicename = '';
+				$cataloguename = '';
+				$subservicename = '';
+				
+				if ($subserviceid!="" && $subserviceid != null) {
+					// Sub-service is not empty so grab the name
+					$result2 = mysqli_query($link, "SELECT $nameField,sds,contactid FROM tblsubservices WHERE id = '$subserviceid'");
 					$row2 = mysqli_fetch_array($result2);
-					$statusname = $row2[0];
-					?>
-						<?php echo $statusname; ?>
-						
-						<?php if ($suppressSlaWarning) { ?>
-						<?php } else { ?>
-						<?php if ($doverdue) { ?><br /><span class="glyphicon glyphicon-warning-sign"></span> <?= htmlspecialchars($langFile['asearch_escalation_required']) ?><?php } elseif ($overdue) { ?><br /><span class="glyphicon glyphicon-warning-sign"></span> <?= htmlspecialchars($langFile['asearch_request_past_sla']) ?><?php } elseif ($closedue) { ?><br /><span class="glyphicon glyphicon-warning-sign"></span> <?= htmlspecialchars($langFile['asearch_request_close_sla']) ?><?php } ?>
-						<?php } ?>
-					</td>
-					<?php
-					// Check if the account is admin level to show this option 
-					if ($_SESSION['atype']==1 OR $_SESSION['atype']==2 OR $_SESSION['atype']==3 OR $_SESSION['atype']==4) {
-					?>
-					<td>
-					<?php
-						// Now that we know the user is logged in we need to check if this ticket is assigned to them except for atype 1 and 2
-						if ($_SESSION['atype']==1 OR $_SESSION['atype']==2) {	
-					?>
-					
-						<a class="btn btn-primary btn-block" href="editrequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?php echo base64_encode($row['id']);?>&reqid=<?php echo urlencode('a11y-' . $row['requestid']); ?>"><?= htmlspecialchars($langFile['asearch_edit']) ?> &nbsp;<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> <?= htmlspecialchars($langFile['asearch_request']) ?></span></a><?php if ($_SESSION['atype']=='1') { ?> <a class="wb-lbx btn btn-primary btn-block" href="includes/delete-request.php?id=<?php echo $row['id'];?>"><?= htmlspecialchars($langFile['asearch_delete']) ?> &nbsp;<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> <?= htmlspecialchars($langFile['asearch_request']) ?></span></a><?php } ?>
-						<?php if(in_array('1', $_SESSION['team'])){?><a class="btn btn-primary btn-block" href="clonerequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?php echo base64_encode($row['id']);?>&toClose=2"><?= htmlspecialchars($langFile['asearch_clone']) ?> &nbsp;<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> <?= htmlspecialchars($langFile['asearch_request']) ?></span></a>
-						<?php if(!$isResolvedStatus){?><a class="btn btn-primary btn-block" href="clonerequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?php echo base64_encode($row['id']);?>&toClose=1"><?= htmlspecialchars($langFile['asearch_clone_close']) ?> &nbsp;<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> <?= htmlspecialchars($langFile['asearch_request']) ?></span></a><?php }}?>
-					</td>
-					<?php
-						} else  {
-						// User is 3 (Manager) or 4 (Team Leader) so check if they have permission to edit this request
-						// First grab any existing teams
-						$userid = $_SESSION['pid'];
-						$result2 = mysqli_query($link, "SELECT team FROM tblusers WHERE id = '$userid'");
-						$row2 = mysqli_fetch_array($result2);
-						$teams = $row2[0];
-						$tarray = explode(",",$teams);
-							if(in_array($tarraycontactid, $tarray)) {
-					?>
-						<a class="btn btn-primary btn-block" href="editrequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?php echo base64_encode($row['id']);?>&reqid=<?php echo urlencode('a11y-' . $row['requestid']); ?>"><?= htmlspecialchars($langFile['asearch_edit']) ?> &nbsp;<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> <?= htmlspecialchars($langFile['asearch_request']) ?></span></a><?php if ($_SESSION['atype']=='1') { ?> <a class="wb-lbx btn btn-primary btn-block" href="includes/delete-request.php?id=<?php echo $row['id'];?>"><?= htmlspecialchars($langFile['asearch_delete']) ?> &nbsp;<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> <?= htmlspecialchars($langFile['asearch_request']) ?></span></a><?php } ?>
-						<?php if(in_array('1', $_SESSION['team'])){?><a class="btn btn-primary btn-block" href="clonerequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?php echo base64_encode($row['id']);?>&toClose=2"><?= htmlspecialchars($langFile['asearch_clone']) ?> &nbsp;<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> <?= htmlspecialchars($langFile['asearch_request']) ?></span></a>
-						<?php if(!$isResolvedStatus){?><a class="btn btn-primary btn-block" href="clonerequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?php echo base64_encode($row['id']);?>&toClose=1"><?= htmlspecialchars($langFile['asearch_clone_close']) ?> &nbsp;<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> <?= htmlspecialchars($langFile['asearch_request']) ?></span></a><?php }}?>
-					<?php 
-							} else {
-					?>
-						<?= htmlspecialchars($langFile['asearch_na']) ?>
-					<?php
-							}
+					if (!empty($row2)){
+						$subservicename = $row2[0];
+						$sla = $row2[1];
+						$dsla = $sla * 2;
+						$tarraycontactid = $row2[2];
+					}
+				}
+				
+				if (!empty($serviceid)) {
+					// Sub-service is not empty so grab the name
+					$result2 = mysqli_query($link, "SELECT $nameField,sds,contactid FROM tblservices WHERE id = '$serviceid'");
+					$row2 = mysqli_fetch_array($result2);
+					$servicename = $row2 ? $row2[0] : '';
+					if ($sla == 0) {
+						if ($serviceid == 21 || $serviceid == 22 || $serviceid == 23 || $serviceid == 24) {
+							$sla = 15;
+							$dsla = $sla * 2;
+						} else {
+							$sla = $row2 ? $row2[1] : 0;
+							$dsla = $sla * 2;
 						}
-					?>
-					</td>
-					<?php 
-					} 
-					?>
-				</tr>
-			<?php } ?>
-				</tbody>
-			</table>
+					}
+					if (empty($tarraycontactid)) {
+						$tarraycontactid = $row2 ? $row2[2] : 0;
+					}
+				}
+				
+				// Sub-service is not empty so grab the name
+				$result2 = mysqli_query($link, "SELECT $nameField FROM tblcatalogue WHERE id = '$catalogueid'");
+				$row2 = mysqli_fetch_array($result2);
+				$cataloguename = $row2 ? $row2[0] : '';
+
+				// Grab the date it was received
+				$slatimer = $row['slatimer'];
+				if ($slatimer == "" or is_null($slatimer)) {
+					$datereceived = $row['datereceived'];
+				} else {
+					$datereceived = $slatimer;
+				}
+				$ndatereceived = date('Y-m-d H:i:s', strtotime($datereceived . ' +1 day'));
+				
+				// Calculate the business days
+				$cBdays = calculateSLA($link, $row['requestid'], $ndatereceived);
+				
+				// Check if ticket is close to SLA or past SLA
+				$suppressSlaWarning = in_array((int)$statusid, array(4, 5, 6));
+				if ($cBdays > $dsla) {
+					$doverdue = true;
+				}
+				if ($cBdays > $sla) {
+					$overdue = true;
+				}
+				if ($cBdays == $sla) {
+					$closedue = true;
+				}
+				
+				// Determine panel color based on SLA status
+				$panelClass = 'panel-default';
+				if (!$suppressSlaWarning) {
+					if ($doverdue) {
+						$panelClass = 'panel-danger';
+					} elseif ($overdue || $closedue) {
+						$panelClass = 'panel-warning';
+					}
+				}
+
+				// Get status name
+				$result2 = mysqli_query($link, "SELECT $nameField FROM tblstatus WHERE id = '$statusid'");
+				$row2 = mysqli_fetch_array($result2);
+				$statusname = $row2 ? $row2[0] : '';
+		?>
+		<div class="col-sm-6 col-md-4 mrgn-bttm-md">
+			<div class="panel <?= $panelClass ?> hght-inhrt">
+				<div class="panel-heading">
+					<h3 class="h5 mrgn-tp-sm mrgn-bttm-sm">
+						<a href="viewrequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?php echo base64_encode($row['id']);?>&reqid=<?php echo urlencode('a11y-' . $row['requestid']);?>">a11y-<?php echo htmlspecialchars($row['requestid']);?></a>
+					</h3>
+					<p class="mrgn-bttm-0"><?php echo htmlspecialchars($row['title'] ?? '');?></p>
+				</div>
+				<div class="panel-body">
+					<?php if (!$suppressSlaWarning) { ?>
+						<?php if ($doverdue) { ?>
+						<div class="alert alert-danger mrgn-bttm-md" role="alert">
+							<span class="glyphicon glyphicon-warning-sign"></span> <?= htmlspecialchars($langFile['asearch_escalation_required']) ?>
+						</div>
+						<?php } elseif ($overdue) { ?>
+						<div class="alert alert-warning mrgn-bttm-md" role="alert">
+							<span class="glyphicon glyphicon-warning-sign"></span> <?= htmlspecialchars($langFile['asearch_request_past_sla']) ?>
+						</div>
+						<?php } elseif ($closedue) { ?>
+						<div class="alert alert-warning mrgn-bttm-md" role="alert">
+							<span class="glyphicon glyphicon-warning-sign"></span> <?= htmlspecialchars($langFile['asearch_request_close_sla']) ?>
+						</div>
+						<?php } ?>
+					<?php } ?>
+					<?php if (!empty($_SESSION['pid'])) { ?>
+					<dl>
+						<dt><?= htmlspecialchars($langFile['asearch_table_client']) ?></dt>
+						<dd><?php echo htmlspecialchars($clientname);?></dd>
+					<?php } ?>
+						<dt><?= htmlspecialchars($langFile['asearch_table_service']) ?></dt>
+						<dd>
+							<?php echo htmlspecialchars($cataloguename); ?><br />
+							<?php echo htmlspecialchars($servicename); ?>
+							<?php if (!empty($subservicename)) { echo "<br />" . htmlspecialchars($subservicename); } ?>
+						</dd>
+						<dt><?= htmlspecialchars($langFile['asearch_table_status']) ?></dt>
+						<dd><?php echo htmlspecialchars($statusname); ?></dd>
+					<?php if (!empty($_SESSION['pid'])) { ?>
+					</dl>
+					<?php } ?>
+				</div>
+				<div class="panel-footer">
+					<div class="row">
+						<div class="col-xs-6">
+							<?php
+								// Check if the account is admin level to show this option 
+								if ($_SESSION['atype']==1 OR $_SESSION['atype']==2 OR $_SESSION['atype']==3 OR $_SESSION['atype']==4) {
+									// Now that we know the user is logged in we need to check if this ticket is assigned to them except for atype 1 and 2
+									if ($_SESSION['atype']==1 OR $_SESSION['atype']==2) {	
+							?>
+									<a class="btn btn-sm btn-default btn-block" href="editrequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?php echo base64_encode($row['id']);?>&reqid=<?php echo urlencode('a11y-' . $row['requestid']); ?>"><?= htmlspecialchars($langFile['asearch_edit']) ?></a>
+							<?php
+									} else  {
+										// User is 3 (Manager) or 4 (Team Leader) so check if they have permission to edit this request
+										// First grab any existing teams
+										$userid = $_SESSION['pid'];
+										$result2 = mysqli_query($link, "SELECT team FROM tblusers WHERE id = '$userid'");
+										$row2 = mysqli_fetch_array($result2);
+										$teams = $row2[0];
+										$tarray = explode(",",$teams);
+											if(in_array($tarraycontactid, $tarray)) {
+									?>
+									<a class="btn btn-sm btn-default btn-block" href="editrequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?php echo base64_encode($row['id']);?>&reqid=<?php echo urlencode('a11y-' . $row['requestid']); ?>"><?= htmlspecialchars($langFile['asearch_edit']) ?></a>
+									<?php 
+											} else {
+									?>
+									<span class="text-muted"><?= htmlspecialchars($langFile['asearch_na']) ?></span>
+									<?php
+											}
+										}
+									}
+							?>
+						</div>
+						<div class="col-xs-6">
+							<?php if ($_SESSION['atype']=='1') { ?>
+							<a class="wb-lbx btn btn-sm btn-danger btn-block" href="includes/delete-request.php?id=<?php echo $row['id'];?>"><?= htmlspecialchars($langFile['asearch_delete']) ?></a>
+							<?php } elseif(in_array('1', $_SESSION['team'])){?>
+							<a class="btn btn-sm btn-default btn-block" href="clonerequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?php echo base64_encode($row['id']);?>&toClose=2"><?= htmlspecialchars($langFile['asearch_clone']) ?></a>
+							<?php if(!$isResolvedStatus){?><a class="btn btn-sm btn-default btn-block" href="clonerequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?php echo base64_encode($row['id']);?>&toClose=1"><?= htmlspecialchars($langFile['asearch_clone_close']) ?></a><?php }?>
+							<?php }?>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<?php } ?>
+		</div>
 			<?php
 			} else {
 			?>
