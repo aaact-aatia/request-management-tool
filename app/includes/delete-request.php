@@ -2,6 +2,7 @@
 /**
  * Delete Request - Bilingual
  * Modal dialog to confirm request deletion
+ * This is a lightbox endpoint accessed directly via GET/POST requests
  */
 
 // Database connection

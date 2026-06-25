@@ -2,10 +2,7 @@
 // This is called through ajax on the product management page
 
 // Start session
-if (session_status() != PHP_SESSION_ACTIVE)
-{
-	session_start();
-}
+require_once __DIR__ . '/session_start.php';
 
 // Detect language
 $lang = isset($_GET['lang']) ? $_GET['lang'] : (isset($_SESSION['lang']) ? $_SESSION['lang'] : 'en');

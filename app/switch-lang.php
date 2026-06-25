@@ -14,9 +14,7 @@
  */
 
 // Start session
-if (session_status() != PHP_SESSION_ACTIVE) {
-	session_start();
-}
+require_once __DIR__ . '/includes/session_start.php';
 
 // Get the language parameter
 $targetLang = isset($_GET['lang']) ? $_GET['lang'] : 'en';

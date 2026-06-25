@@ -2,9 +2,7 @@
 ob_start();
 
 // Start session
-if (session_status() != PHP_SESSION_ACTIVE) {
-    session_start();
-}
+require_once __DIR__ . '/includes/session_start.php';
 
 // Grab HTTPS check
 require('includes/httpscheck.php');
