@@ -235,7 +235,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $servicename = $row[$nameField];
     }
     
-    $domain = "https://gcdc-ssc-ictaccess-linux-aaact-rmt-dev-asv.azurewebsites.net/";
+    $domain = app_base_url();
     
     // Email personalization data
     $personalisation = [
@@ -251,7 +251,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         "client_communications" => $clientnotes,
         "catalogue_name" => $cataloguename,
         "service_name" => $servicename,
-        "url" => $domain . "/viewrequest.php?lang=" . $lang . "&erid=" . $nrequestemailid . "&reqid=" . urlencode("a11y-" . $nrequestid)
+        "url" => app_url("viewrequest.php?lang=" . $lang . "&erid=" . $nrequestemailid . "&reqid=" . urlencode("a11y-" . $nrequestid))
     ];
     
     $encoded_personalisation = json_encode($personalisation);
@@ -259,10 +259,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Send email notifications based on settings
     if ($notification == "Y") {
         // Request with notification enabled
-        $template_id = $isFrench ? "86fb7784-b1cc-40b5-88e5-f7ea43ee75c0" : "d9c219be-799f-4713-950f-21884d5d3c3c";
+        $template_id = app_notify_template_id($isFrench ? 'request_team_fr' : 'request_team_en');
         
         if ($afterfact == "Y") {
-            $template_id = $isFrench ? "c5ea62d8-9e11-482a-acfc-ae8a450de06c" : "949c6248-ef73-4cf2-b1ea-5136c8c856c2";
+            $template_id = app_notify_template_id($isFrench ? 'request_afterfact_team_fr' : 'request_afterfact_team_en');
         }
         
         if (empty($contactemail)) {
@@ -273,7 +273,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // Send to team
         if (!empty($teamemail)) {
             if ($teamemail == "daiu-anci@ssc-spc.gc.ca") {
-                sendEmail($teamemail, "35388592-27f3-47f5-ae09-ac3f9ddf7904", $encoded_personalisation, ['recipientType' => 'internal']);
+                sendEmail($teamemail, app_notify_template_id('request_aaact'), $encoded_personalisation, ['recipientType' => 'internal']);
             } else {
                 sendEmail($teamemail, $template_id, $encoded_personalisation, ['recipientType' => 'internal']);
             }
@@ -281,7 +281,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         
         // Send to client (not for AAACT)
         if ($teamemail != "daiu-anci@ssc-spc.gc.ca") {
-            $clientTemplate = $isFrench ? "d4fb66f3-e9f3-442f-9b7b-8b8e24f8799d" : "9e4e2ca4-ad1a-4204-ba1e-4be61a12f51c";
+            $clientTemplate = app_notify_template_id($isFrench ? 'request_client_fr' : 'request_client_en');
             sendEmail($clientemail, $clientTemplate, $encoded_personalisation, ['recipientType' => 'client']);
         }
         
@@ -289,10 +289,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // Default notification behavior (not for AAACT)
         if ($teamemail != "daiu-anci@ssc-spc.gc.ca") {
             // Team notification
-            $template_id = $isFrench ? "c72c5e69-8a8c-42a2-9bb9-dfcf2c5f7d84" : "265e8009-741e-4a79-8e89-bfedaf071494";
+            $template_id = app_notify_template_id($isFrench ? 'request_default_team_fr' : 'request_default_team_en');
             
             if ($catalogueid == 9 || $catalogueid == 8) {
-                $template_id = "35388592-27f3-47f5-ae09-ac3f9ddf7904";
+                $template_id = app_notify_template_id('request_aaact');
             }
             
             if (!empty($teamemail)) {
@@ -300,7 +300,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             }
             
             // Client notification
-            $clientTemplate = $isFrench ? "36125c35-b1af-4989-9a94-f65b8e5cf49f" : "dcc97e6e-1fdf-4309-9351-a957ff5f6dcb";
+            $clientTemplate = app_notify_template_id($isFrench ? 'request_default_client_fr' : 'request_default_client_en');
             sendEmail($clientemail, $clientTemplate, $encoded_personalisation, ['recipientType' => 'client']);
         }
     }

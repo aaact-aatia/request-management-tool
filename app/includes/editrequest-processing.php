@@ -65,6 +65,7 @@ $commlogid2 = getPostValue('commlogid2');
 $adminnotes = getPostValue('adminnotes');
 $updaterid = $_SESSION['pid'];
 $todaydate = getTodayDate();
+$lang = $_SESSION['lang'] ?? 'en';
 
 function upsertDepartmentAgencyInNotes($notes, $departmentValue, $lang) {
     $cleanedNotes = preg_replace('/^\s*(Department\/agency|Ministère\/organisme):\s*.*(?:\R|$)/miu', '', (string)$notes);
@@ -204,7 +205,7 @@ $row = mysqli_fetch_assoc($result);
 $statusEn = $row ? $row['nameen'] : "";
 $statusFr = $row ? $row['namefr'] : "";
 
-$domain = "https://gcdc-ssc-ictaccess-linux-aaact-rmt-dev-asv.azurewebsites.net/";
+$domain = app_base_url();
 $nrequestemailid = base64_encode($requestuid);
 
 $personalisation = [
@@ -222,7 +223,7 @@ $personalisation = [
     "service_name" => $servicename,
     "status_en" => $statusEn,
     "status_fr" => $statusFr,
-    "url" => $domain . "/viewrequest.php?lang=en&erid=" . $nrequestemailid . "&reqid=" . urlencode("a11y-" . $requestid)
+    "url" => app_url("viewrequest.php?lang=" . $lang . "&erid=" . $nrequestemailid . "&reqid=" . urlencode("a11y-" . $requestid))
 ];
 
 // Send emails based on status changes
@@ -231,14 +232,17 @@ if (!$isCurrentResolved && $isTargetResolved) {
     mysqli_query($link, "UPDATE tbltriage SET cssurvey = 0 WHERE id = '$requestuid' AND (cssurvey IS NULL)");
 
     // Request resolved
-    sendEmail($teamemail, "5dc8291c-a0b4-4fa0-8733-40c28d3ddf6d", json_encode($personalisation), ['recipientType' => 'internal']);
+    $resolvedTeamTemplate = app_notify_template_id($lang === 'fr' ? 'resolved_team_fr' : 'resolved_team_en');
+    sendEmail($teamemail, $resolvedTeamTemplate, json_encode($personalisation), ['recipientType' => 'internal']);
     if ($teamemail != "daiu-anci@ssc-spc.gc.ca") {
-        sendEmail($clientemail, "49ffefeb-21d0-4508-ac5f-46b41c0f3348", json_encode($personalisation), ['recipientType' => 'client']);
+        $resolvedClientTemplate = app_notify_template_id($lang === 'fr' ? 'resolved_client_fr' : 'resolved_client_en');
+        sendEmail($clientemail, $resolvedClientTemplate, json_encode($personalisation), ['recipientType' => 'client']);
     }
 } elseif ($cstatusid != $statusid) {
     // Status changed (not to resolved)
     if ($teamemail != "daiu-anci@ssc-spc.gc.ca") {
-        sendEmail($clientemail, "393948e5-39fe-418e-b16f-73a1f084a0f2", json_encode($personalisation), ['recipientType' => 'client']);
+        $statusChangedClientTemplate = app_notify_template_id($lang === 'fr' ? 'status_changed_client_fr' : 'status_changed_client_en');
+        sendEmail($clientemail, $statusChangedClientTemplate, json_encode($personalisation), ['recipientType' => 'client']);
     }
 }
 
@@ -264,9 +268,11 @@ if ($csubserviceid != $subserviceid && hasValue($subserviceid)) {
         $personalisation['teamname'] = $row['nameen'];
         $newTeamEmail = $row['email'];
         
-        sendEmail($newTeamEmail, "8270de12-b994-4d29-aa22-428434fd9896", json_encode($personalisation), ['recipientType' => 'internal']);
+        $reassignedTeamTemplate = app_notify_template_id($lang === 'fr' ? 'reassigned_team_fr' : 'reassigned_team_en');
+        sendEmail($newTeamEmail, $reassignedTeamTemplate, json_encode($personalisation), ['recipientType' => 'internal']);
         if ($newTeamEmail != "daiu-anci@ssc-spc.gc.ca") {
-            sendEmail($clientemail, "8bb9cc70-dd1a-46d6-9843-c73cbe4e70f0", json_encode($personalisation), ['recipientType' => 'client']);
+            $reassignedClientTemplate = app_notify_template_id($lang === 'fr' ? 'reassigned_client_fr' : 'reassigned_client_en');
+            sendEmail($clientemail, $reassignedClientTemplate, json_encode($personalisation), ['recipientType' => 'client']);
         }
     }
 } elseif ($cserviceid != $serviceid) {
@@ -285,9 +291,11 @@ if ($csubserviceid != $subserviceid && hasValue($subserviceid)) {
         $personalisation['teamname'] = $row['nameen'];
         $newTeamEmail = $row['email'];
         
-        sendEmail($newTeamEmail, "8270de12-b994-4d29-aa22-428434fd9896", json_encode($personalisation), ['recipientType' => 'internal']);
+        $reassignedTeamTemplate = app_notify_template_id($lang === 'fr' ? 'reassigned_team_fr' : 'reassigned_team_en');
+        sendEmail($newTeamEmail, $reassignedTeamTemplate, json_encode($personalisation), ['recipientType' => 'internal']);
         if ($newTeamEmail != "daiu-anci@ssc-spc.gc.ca") {
-            sendEmail($clientemail, "8bb9cc70-dd1a-46d6-9843-c73cbe4e70f0", json_encode($personalisation), ['recipientType' => 'client']);
+            $reassignedClientTemplate = app_notify_template_id($lang === 'fr' ? 'reassigned_client_fr' : 'reassigned_client_en');
+            sendEmail($clientemail, $reassignedClientTemplate, json_encode($personalisation), ['recipientType' => 'client']);
         }
     }
 }

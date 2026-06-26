@@ -20,7 +20,7 @@ The following files contain the GC Notify integration, using `.env` variables fo
 | `app/sendmailtest1.sh` | Shell script for testing from the command line |
 | `app/env.php` | Runtime environment helpers including `app_notify_mode()` |
 
-All credentials are loaded from `.env` — no hardcoded values remain in the active implementation.
+All credentials are loaded from `.env` and runtime environment variables. Notification workflows now resolve template IDs through named template keys, and request email links use `APP_BASE_URL` (or runtime host detection fallback) instead of a hardcoded domain in the request flows.
 
 ## Required `.env` Variables
 
@@ -28,7 +28,9 @@ All credentials are loaded from `.env` — no hardcoded values remain in the act
 GCNOTIFY_API_KEY=your_gc_notify_api_key
 GCNOTIFY_TEMPLATE_ID=your_notification_template_id
 GCNOTIFY_TEST_EMAIL=your_test_email@example.com
+APP_BASE_URL=https://your-dev-or-prod-base-url
 NOTIFY_MODE=redirect
+NOTIFY_REDIRECT_FORCE_OVERRIDE=false
 NOTIFY_OVERRIDE_EMAIL=
 NOTIFY_OVERRIDE_CLIENT_EMAIL=
 NOTIFY_OVERRIDE_INTERNAL_EMAIL=
@@ -39,6 +41,32 @@ NOTIFY_OVERRIDE_INTERNAL_EMAIL=
 - `live` — send to the intended client/team recipients
 - `redirect` — in non-production, send to the logged-in user's email when available; otherwise fall back to the configured override addresses
 - `disabled` — do not send notifications; log the skip instead
+
+### Safelist key behavior (Team and safelist)
+
+If your GC Notify API key type is `Team and safelist`, recipients outside your team/safelist will be rejected by the API until your service is approved for live sending.
+
+Recommended dev settings:
+
+- `NOTIFY_MODE=redirect`
+- `NOTIFY_REDIRECT_FORCE_OVERRIDE=true`
+- `NOTIFY_OVERRIDE_EMAIL=<a safelisted mailbox>`
+
+With these settings, all app-triggered notifications are redirected to a known safelisted inbox for predictable testing.
+
+### Template override variables
+
+The app now supports per-event/per-language template overrides so UUID changes can be handled via environment settings instead of code edits.
+
+Examples:
+
+- `GCNOTIFY_TEMPLATE_REQUEST_TEAM_EN`
+- `GCNOTIFY_TEMPLATE_REQUEST_CLIENT_FR`
+- `GCNOTIFY_TEMPLATE_RESOLVED_CLIENT_EN`
+- `GCNOTIFY_TEMPLATE_STATUS_CHANGED_CLIENT_FR`
+- `GCNOTIFY_TEMPLATE_REASSIGNED_TEAM_EN`
+
+See `.env.example` for the full list.
 
 Recommended default:
 
@@ -65,7 +93,7 @@ Recommended default:
 
 ### 3. Generate an API Key
 - In GC Notify, go to API keys → Create key
-- Use "Team and whitelist" type for testing, "Live" type for production
+- Use `Team and safelist` type for testing, `Live` type for production
 - Copy the key — this goes in `GCNOTIFY_API_KEY`
 - **Important**: Store the key only in `.env` — never commit it to git
 
@@ -79,14 +107,12 @@ Recommended default:
 - Alternatively, run `app/sendmailtest1.sh` from the repo root
 
 ### 5. Remaining Implementation Work
-- Move hardcoded template UUIDs out of request lifecycle pages and into named environment/config settings
-- Replace hardcoded application URLs in email payloads with an environment-backed base URL
 - Expand documentation for the full event/template matrix by language
 - Add deeper operational logging if a durable audit trail is required
 
 ## Notes
 
 - GC Notify supports both English and French — consider creating separate templates per language or using bilingual templates
-- The request lifecycle currently still contains hardcoded template UUIDs; centralizing them is the next implementation step
+- The request lifecycle resolves templates via named keys in `app_notify_template_id(...)` and supports environment-level UUID overrides
 - Rate limits and quotas apply — check the GC Notify dashboard for current limits
 - Test keys and live keys are separate in GC Notify; use the correct one per environment

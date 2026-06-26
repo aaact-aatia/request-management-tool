@@ -19,6 +19,12 @@ function rmt_notify_redirect_recipient(string $recipientType = 'general'): ?stri
 		return $_SESSION['email'];
 	}
 
+	return rmt_notify_override_recipient($recipientType);
+}
+
+function rmt_notify_override_recipient(string $recipientType = 'general'): ?string
+{
+
 	$candidates = [];
 	if ($recipientType === 'client') {
 		$candidates[] = 'NOTIFY_OVERRIDE_CLIENT_EMAIL';
@@ -40,6 +46,13 @@ function rmt_notify_redirect_recipient(string $recipientType = 'general'): ?stri
 	return null;
 }
 
+function rmt_notify_force_override_recipient(): bool
+{
+	$rawValue = strtolower(trim((string) app_env('NOTIFY_REDIRECT_FORCE_OVERRIDE', 'false')));
+
+	return in_array($rawValue, ['1', 'true', 'yes', 'on'], true);
+}
+
 function sendEmail($emailAddress, $templateId, $personalisation, array $options = [])
 {
 	$recipientType = $options['recipientType'] ?? 'general';
@@ -57,14 +70,23 @@ function sendEmail($emailAddress, $templateId, $personalisation, array $options 
 	}
 
 	$finalRecipient = $originalRecipient;
+	$fallbackRedirectRecipient = null;
 	if ($mode === 'redirect') {
-		$redirectRecipient = rmt_notify_redirect_recipient($recipientType);
+		$overrideRecipient = rmt_notify_override_recipient($recipientType);
+		$redirectRecipient = rmt_notify_force_override_recipient()
+			? ($overrideRecipient ?? rmt_notify_redirect_recipient($recipientType))
+			: rmt_notify_redirect_recipient($recipientType);
+
 		if ($redirectRecipient === null) {
 			error_log(sprintf('GC Notify redirect skipped: no safe redirect recipient configured for %s notification to %s.', $recipientType, $originalRecipient));
 			return false;
 		}
 
 		$finalRecipient = $redirectRecipient;
+
+		if ($overrideRecipient !== null && strcasecmp($overrideRecipient, $finalRecipient) !== 0) {
+			$fallbackRedirectRecipient = $overrideRecipient;
+		}
 	}
 
 	$personalisationPayload = is_array($personalisation)
@@ -81,33 +103,60 @@ function sendEmail($emailAddress, $templateId, $personalisation, array $options 
 		return false;
 	}
 
-	$payload = [
-		'email_address' => $finalRecipient,
-		'template_id' => $templateId,
-		'personalisation' => $personalisationPayload,
-	];
+	$send = static function (string $recipient) use ($templateId, $personalisationPayload, $apiKey): array {
+		$payload = [
+			'email_address' => $recipient,
+			'template_id' => $templateId,
+			'personalisation' => $personalisationPayload,
+		];
 
-	$curl = curl_init();
-	curl_setopt_array($curl, [
-		CURLOPT_URL => 'https://api.notification.canada.ca/v2/notifications/email',
-		CURLOPT_RETURNTRANSFER => true,
-		CURLOPT_ENCODING => '',
-		CURLOPT_MAXREDIRS => 10,
-		CURLOPT_TIMEOUT => 0,
-		CURLOPT_FOLLOWLOCATION => true,
-		CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-		CURLOPT_CUSTOMREQUEST => 'POST',
-		CURLOPT_POSTFIELDS => json_encode($payload),
-		CURLOPT_HTTPHEADER => [
-			'Content-Type: application/json',
-			'Authorization: ApiKey-v1 ' . $apiKey,
-		],
-	]);
+		$curl = curl_init();
+		curl_setopt_array($curl, [
+			CURLOPT_URL => 'https://api.notification.canada.ca/v2/notifications/email',
+			CURLOPT_RETURNTRANSFER => true,
+			CURLOPT_ENCODING => '',
+			CURLOPT_MAXREDIRS => 10,
+			CURLOPT_TIMEOUT => 0,
+			CURLOPT_FOLLOWLOCATION => true,
+			CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+			CURLOPT_CUSTOMREQUEST => 'POST',
+			CURLOPT_POSTFIELDS => json_encode($payload),
+			CURLOPT_HTTPHEADER => [
+				'Content-Type: application/json',
+				'Authorization: ApiKey-v1 ' . $apiKey,
+			],
+		]);
 
-	$response = curl_exec($curl);
-	$error = curl_error($curl);
-	$httpCode = (int) curl_getinfo($curl, CURLINFO_HTTP_CODE);
-	curl_close($curl);
+		$response = curl_exec($curl);
+		$error = curl_error($curl);
+		$httpCode = (int) curl_getinfo($curl, CURLINFO_HTTP_CODE);
+		curl_close($curl);
+
+		return [
+			'error' => $error,
+			'httpCode' => $httpCode,
+			'response' => (string) $response,
+		];
+	};
+
+	$attempt = $send($finalRecipient);
+	$error = (string) $attempt['error'];
+	$httpCode = (int) $attempt['httpCode'];
+	$response = (string) $attempt['response'];
+
+	if (
+		$mode === 'redirect'
+		&& $fallbackRedirectRecipient !== null
+		&& $error === ''
+		&& in_array($httpCode, [400, 401, 403], true)
+	) {
+		error_log(sprintf('GC Notify redirect retry: primary redirect recipient %s rejected (HTTP %d), retrying with override recipient %s.', $finalRecipient, $httpCode, $fallbackRedirectRecipient));
+		$finalRecipient = $fallbackRedirectRecipient;
+		$attempt = $send($finalRecipient);
+		$error = (string) $attempt['error'];
+		$httpCode = (int) $attempt['httpCode'];
+		$response = (string) $attempt['response'];
+	}
 
 	if ($error !== '') {
 		error_log(sprintf('GC Notify request failed for %s recipient %s (original %s): %s', $recipientType, $finalRecipient, $originalRecipient, $error));
