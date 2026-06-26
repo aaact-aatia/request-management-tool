@@ -343,12 +343,19 @@ Configure the following under **Settings → Environment variables** in the Azur
 | `TZ` | `America/Toronto` | Timezone for SLA calculations |
 | `WEBSITES_PORT` | `80` | Required for Azure App Service custom container port mapping |
 | `CORS_ALLOWED_ORIGINS` | `https://your-app.azurewebsites.net` | Comma-separated allowed origins |
+| `GCNOTIFY_API_KEY` | *(secret)* | GC Notify API key for the current environment |
+| `NOTIFY_MODE` | `live` | `live`, `redirect`, or `disabled`; production should use `live` |
+| `NOTIFY_OVERRIDE_EMAIL` | *(optional email)* | Fallback redirect recipient used in non-production when no logged-in user email is available |
+| `NOTIFY_OVERRIDE_CLIENT_EMAIL` | *(optional email)* | Client-specific redirect target for non-production testing |
+| `NOTIFY_OVERRIDE_INTERNAL_EMAIL` | *(optional email)* | Internal/team redirect target for non-production testing |
 
 Also configure the container registry under **Deployment Center** → **Registry settings**:
 - Registry: `ghcr.io`
 - Image: `aaact-aatia/request-management-tool`
 - Tag: `prod` (or `dev` for staging)
 - Authentication: use a GitHub Personal Access Token (PAT) with `read:packages` scope as the registry password.
+
+For development environments, prefer `NOTIFY_MODE=redirect` so request notifications go to a safe test inbox instead of real client or team addresses. The redirect target defaults to the logged-in user's email when available and otherwise falls back to the configured override addresses.
 
 #### Known limitations
 

@@ -1,25 +1,26 @@
 # Future Plan 006: GC Notify Email Integration
 
-**Status**: Planned — Not Yet Enabled  
+**Status**: In Progress  
 **Date Planned**: 2026-05-01  
 **Reference**: [GC Notify Documentation](https://notification.canada.ca/en)
 
 ## Overview
 
-Enable email notifications via the GC Notify API (Government of Canada's notification service). The integration code exists in the codebase but is currently disabled. This document covers what needs to be done to activate it.
+Enable email notifications via the GC Notify API (Government of Canada's notification service). The integration code exists in the codebase and the shared notification boundary now supports environment-driven delivery controls for safe non-production testing. This document captures the current setup direction and the remaining work.
 
 ## Current State
 
-The following files contain the GC Notify integration, using `.env` variables for credentials:
+The following files contain the GC Notify integration, using `.env` variables for credentials and delivery controls:
 
 | File | Purpose |
 |------|---------|
-| `app/emailController.php` | Core `sendEmail()` function used by the app |
+| `app/emailController.php` | Core `sendEmail()` function used by the app and the notify-mode redirect/disabled logic |
 | `app/send-me-mail.php` | Standalone test page to verify the integration works |
 | `app/check_curl2.php` | cURL connectivity test against the GC Notify API |
 | `app/sendmailtest1.sh` | Shell script for testing from the command line |
+| `app/env.php` | Runtime environment helpers including `app_notify_mode()` |
 
-All credentials are loaded from `.env` — no hardcoded values remain.
+All credentials are loaded from `.env` — no hardcoded values remain in the active implementation.
 
 ## Required `.env` Variables
 
@@ -27,7 +28,22 @@ All credentials are loaded from `.env` — no hardcoded values remain.
 GCNOTIFY_API_KEY=your_gc_notify_api_key
 GCNOTIFY_TEMPLATE_ID=your_notification_template_id
 GCNOTIFY_TEST_EMAIL=your_test_email@example.com
+NOTIFY_MODE=redirect
+NOTIFY_OVERRIDE_EMAIL=
+NOTIFY_OVERRIDE_CLIENT_EMAIL=
+NOTIFY_OVERRIDE_INTERNAL_EMAIL=
 ```
+
+### Notification delivery modes
+
+- `live` — send to the intended client/team recipients
+- `redirect` — in non-production, send to the logged-in user's email when available; otherwise fall back to the configured override addresses
+- `disabled` — do not send notifications; log the skip instead
+
+Recommended default:
+
+- Development: `NOTIFY_MODE=redirect`
+- Production: `NOTIFY_MODE=live`
 
 ## Setup Steps
 
@@ -54,20 +70,23 @@ GCNOTIFY_TEST_EMAIL=your_test_email@example.com
 - **Important**: Store the key only in `.env` — never commit it to git
 
 ### 4. Test the Integration
-- Set all three `.env` variables
-- Set `GCNOTIFY_TEST_EMAIL` to your own email address
+- Set the required `.env` variables
+- In development, set `NOTIFY_MODE=redirect`
+- Ensure the logged-in tester account has a valid email address, or set `NOTIFY_OVERRIDE_EMAIL` / the more specific override addresses
+- Set `GCNOTIFY_TEST_EMAIL` to your own email address for the standalone connectivity pages
 - Visit `check_curl2.php` in a browser to test the API connection
 - Verify you receive the test email
 - Alternatively, run `app/sendmailtest1.sh` from the repo root
 
-### 5. Wire `emailController.php` into the App
-- `sendEmail($emailAddress, $templateId, $personalisation)` in `emailController.php` is the function to call
-- Find the appropriate trigger points in the request lifecycle (e.g., when a request is assigned, resolved, or updated)
-- Include `emailController.php` in those pages and call `sendEmail()`
+### 5. Remaining Implementation Work
+- Move hardcoded template UUIDs out of request lifecycle pages and into named environment/config settings
+- Replace hardcoded application URLs in email payloads with an environment-backed base URL
+- Expand documentation for the full event/template matrix by language
+- Add deeper operational logging if a durable audit trail is required
 
 ## Notes
 
 - GC Notify supports both English and French — consider creating separate templates per language or using bilingual templates
-- The `emailReader.php` file may contain additional integration logic — review it when activating
+- The request lifecycle currently still contains hardcoded template UUIDs; centralizing them is the next implementation step
 - Rate limits and quotas apply — check the GC Notify dashboard for current limits
 - Test keys and live keys are separate in GC Notify; use the correct one per environment

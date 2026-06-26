@@ -273,16 +273,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // Send to team
         if (!empty($teamemail)) {
             if ($teamemail == "daiu-anci@ssc-spc.gc.ca") {
-                sendEmail($teamemail, "35388592-27f3-47f5-ae09-ac3f9ddf7904", $encoded_personalisation);
+                sendEmail($teamemail, "35388592-27f3-47f5-ae09-ac3f9ddf7904", $encoded_personalisation, ['recipientType' => 'internal']);
             } else {
-                sendEmail($teamemail, $template_id, $encoded_personalisation);
+                sendEmail($teamemail, $template_id, $encoded_personalisation, ['recipientType' => 'internal']);
             }
         }
         
         // Send to client (not for AAACT)
         if ($teamemail != "daiu-anci@ssc-spc.gc.ca") {
             $clientTemplate = $isFrench ? "d4fb66f3-e9f3-442f-9b7b-8b8e24f8799d" : "9e4e2ca4-ad1a-4204-ba1e-4be61a12f51c";
-            sendEmail($clientemail, $clientTemplate, $encoded_personalisation);
+            sendEmail($clientemail, $clientTemplate, $encoded_personalisation, ['recipientType' => 'client']);
         }
         
     } elseif ($notification != "N" || $notification == 1) {
@@ -296,12 +296,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             }
             
             if (!empty($teamemail)) {
-                sendEmail($teamemail, $template_id, $encoded_personalisation);
+                sendEmail($teamemail, $template_id, $encoded_personalisation, ['recipientType' => 'internal']);
             }
             
             // Client notification
             $clientTemplate = $isFrench ? "36125c35-b1af-4989-9a94-f65b8e5cf49f" : "dcc97e6e-1fdf-4309-9351-a957ff5f6dcb";
-            sendEmail($clientemail, $clientTemplate, $encoded_personalisation);
+            sendEmail($clientemail, $clientTemplate, $encoded_personalisation, ['recipientType' => 'client']);
         }
     }
     

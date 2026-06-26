@@ -25,6 +25,45 @@ function app_is_production(): bool
     return !in_array($environment, ['dev', 'development', 'local', 'test', 'testing'], true);
 }
 
+function app_notify_mode(): string
+{
+    $defaultMode = app_is_production() ? 'live' : 'redirect';
+    $mode = strtolower((string) app_env('NOTIFY_MODE', $defaultMode));
+
+    if (!in_array($mode, ['live', 'redirect', 'disabled'], true)) {
+        return $defaultMode;
+    }
+
+    return $mode;
+}
+
+function app_notify_redirect_recipient(string $recipientType = 'general'): ?string
+{
+    if (!empty($_SESSION['email']) && filter_var($_SESSION['email'], FILTER_VALIDATE_EMAIL)) {
+        return $_SESSION['email'];
+    }
+
+    $candidates = [];
+    if ($recipientType === 'client') {
+        $candidates[] = 'NOTIFY_OVERRIDE_CLIENT_EMAIL';
+    }
+
+    if ($recipientType === 'internal') {
+        $candidates[] = 'NOTIFY_OVERRIDE_INTERNAL_EMAIL';
+    }
+
+    $candidates[] = 'NOTIFY_OVERRIDE_EMAIL';
+
+    foreach ($candidates as $key) {
+        $value = app_env($key);
+        if ($value !== null && $value !== '' && filter_var($value, FILTER_VALIDATE_EMAIL)) {
+            return $value;
+        }
+    }
+
+    return null;
+}
+
 function app_env_required(string $key): string
 {
     $value = app_env($key);

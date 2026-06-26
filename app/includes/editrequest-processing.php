@@ -231,14 +231,14 @@ if (!$isCurrentResolved && $isTargetResolved) {
     mysqli_query($link, "UPDATE tbltriage SET cssurvey = 0 WHERE id = '$requestuid' AND (cssurvey IS NULL)");
 
     // Request resolved
-    sendEmail($teamemail, "5dc8291c-a0b4-4fa0-8733-40c28d3ddf6d", json_encode($personalisation));
+    sendEmail($teamemail, "5dc8291c-a0b4-4fa0-8733-40c28d3ddf6d", json_encode($personalisation), ['recipientType' => 'internal']);
     if ($teamemail != "daiu-anci@ssc-spc.gc.ca") {
-        sendEmail($clientemail, "49ffefeb-21d0-4508-ac5f-46b41c0f3348", json_encode($personalisation));
+        sendEmail($clientemail, "49ffefeb-21d0-4508-ac5f-46b41c0f3348", json_encode($personalisation), ['recipientType' => 'client']);
     }
 } elseif ($cstatusid != $statusid) {
     // Status changed (not to resolved)
     if ($teamemail != "daiu-anci@ssc-spc.gc.ca") {
-        sendEmail($clientemail, "393948e5-39fe-418e-b16f-73a1f084a0f2", json_encode($personalisation));
+        sendEmail($clientemail, "393948e5-39fe-418e-b16f-73a1f084a0f2", json_encode($personalisation), ['recipientType' => 'client']);
     }
 }
 
@@ -264,9 +264,9 @@ if ($csubserviceid != $subserviceid && hasValue($subserviceid)) {
         $personalisation['teamname'] = $row['nameen'];
         $newTeamEmail = $row['email'];
         
-        sendEmail($newTeamEmail, "8270de12-b994-4d29-aa22-428434fd9896", json_encode($personalisation));
+        sendEmail($newTeamEmail, "8270de12-b994-4d29-aa22-428434fd9896", json_encode($personalisation), ['recipientType' => 'internal']);
         if ($newTeamEmail != "daiu-anci@ssc-spc.gc.ca") {
-            sendEmail($clientemail, "8bb9cc70-dd1a-46d6-9843-c73cbe4e70f0", json_encode($personalisation));
+            sendEmail($clientemail, "8bb9cc70-dd1a-46d6-9843-c73cbe4e70f0", json_encode($personalisation), ['recipientType' => 'client']);
         }
     }
 } elseif ($cserviceid != $serviceid) {
@@ -285,9 +285,9 @@ if ($csubserviceid != $subserviceid && hasValue($subserviceid)) {
         $personalisation['teamname'] = $row['nameen'];
         $newTeamEmail = $row['email'];
         
-        sendEmail($newTeamEmail, "8270de12-b994-4d29-aa22-428434fd9896", json_encode($personalisation));
+        sendEmail($newTeamEmail, "8270de12-b994-4d29-aa22-428434fd9896", json_encode($personalisation), ['recipientType' => 'internal']);
         if ($newTeamEmail != "daiu-anci@ssc-spc.gc.ca") {
-            sendEmail($clientemail, "8bb9cc70-dd1a-46d6-9843-c73cbe4e70f0", json_encode($personalisation));
+            sendEmail($clientemail, "8bb9cc70-dd1a-46d6-9843-c73cbe4e70f0", json_encode($personalisation), ['recipientType' => 'client']);
         }
     }
 }

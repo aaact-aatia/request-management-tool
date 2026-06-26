@@ -21,6 +21,9 @@ $isAuthenticated = !empty($_SESSION['pid']);
 $appName = $config['app']['name'][$langCode];
 $orgName = $config['app']['organization'][$langCode];
 $orgUrl = $config['app']['organization_url'][$langCode];
+$notifyMode = function_exists('app_notify_mode') ? app_notify_mode() : 'live';
+$showEnvironmentBanner = function_exists('app_is_production') ? !app_is_production() : false;
+$notifyRedirectEmail = function_exists('app_notify_redirect_recipient') ? app_notify_redirect_recipient() : null;
 
 // Header-specific language strings
 $headerTranslations = [
@@ -41,6 +44,12 @@ $headerTranslations = [
 		'close_overlay' => 'Close overlay',
 		'close_esc' => 'Close: Menu (escape key)',
 		'breadcrumbs_heading' => 'You are here:',
+		'dev_notice_label' => 'Development environment notice',
+		'dev_notice_prefix' => 'Development environment.',
+		'dev_notice_redirect' => 'Email notifications are redirected to a safe test recipient.',
+		'dev_notice_redirect_email' => 'Email notifications are redirected to:',
+		'dev_notice_disabled' => 'Email notifications are disabled.',
+		'dev_notice_live' => 'Email notifications are being sent to their intended recipients.',
 	],
 	'fr' => [
 		'skip_heading' => 'Ignorer les liens',
@@ -59,10 +68,25 @@ $headerTranslations = [
 		'close_overlay' => 'Fermer la fenêtre superposée',
 		'close_esc' => 'Fermer : Menu (touche d\'échappement)',
 		'breadcrumbs_heading' => 'Vous êtes ici :',
+		'dev_notice_label' => 'Avis sur l\'environnement de développement',
+		'dev_notice_prefix' => 'Environnement de développement.',
+		'dev_notice_redirect' => 'Les notifications par courriel sont redirigées vers un destinataire d\'essai sécuritaire.',
+		'dev_notice_redirect_email' => 'Les notifications par courriel sont redirigées vers :',
+		'dev_notice_disabled' => 'Les notifications par courriel sont désactivées.',
+		'dev_notice_live' => 'Les notifications par courriel sont envoyées à leurs destinataires prévus.',
 	]
 ];
 
 	$headerLangStrings = $headerTranslations[$langCode];
+	$notifyModeMessage = $headerLangStrings['dev_notice_live'];
+	if ($notifyMode === 'redirect') {
+		$notifyModeMessage = $headerLangStrings['dev_notice_redirect'];
+		if (!empty($notifyRedirectEmail)) {
+			$notifyModeMessage = $headerLangStrings['dev_notice_redirect_email'] . ' ' . $notifyRedirectEmail;
+		}
+	} elseif ($notifyMode === 'disabled') {
+		$notifyModeMessage = $headerLangStrings['dev_notice_disabled'];
+	}
 ?>
 <body vocab="https://schema.org/" typeof="WebPage">
 	<nav aria-label="<?= $headerLangStrings['skip_heading'] ?>">
@@ -187,28 +211,21 @@ $headerTranslations = [
 		</nav>
 	</header>
 
-<?php
-// Show development environment banner if applicable
-if (isset($cenvironment) && $cenvironment == 1):
-?>
-<div style="padding:15px;position:fixed;bottom:0;right:0;width:35%;z-index:9999999;background-color:#FFF;border-style:solid;">
-    <div style="padding:5px;">
-        <div class="alert alert-danger" style="margin:0 auto;">
-			<h3><?= $langCode === 'en' ? 'Development environment' : 'Environnement de développement' ?></h3>
-            <p>
-				<?= $langCode === 'en' 
-                    ? 'You are currently viewing the development environment, no changes will be made in production. Use account settings to switch back to production.'
-                    : 'Vous consultez actuellement l\'environnement de développement, aucune modification ne sera apportée en production. Utilisez les paramètres du compte pour revenir à la production.'
-                ?>
-            </p>
-        </div>
-    </div>
+<?php if ($showEnvironmentBanner): ?>
+<div class="container mrgn-tp-md">
+	<section class="alert alert-warning" aria-label="<?= htmlspecialchars($headerLangStrings['dev_notice_label']) ?>">
+		<p class="mrgn-bttm-0">
+			<strong><?= htmlspecialchars($headerLangStrings['dev_notice_prefix']) ?></strong>
+			<?= htmlspecialchars($notifyModeMessage) ?>
+		</p>
+	</section>
 </div>
 <?php endif; ?>
 
 <?php
 // Show logged-in user info and account type testing notice
 if (!empty($_SESSION['pid'])):
+	/** @var mysqli $link */
 ?>
 <div class="container">
     <p>
