@@ -104,8 +104,8 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	$hasSuperRoleColumn = rmt_db_column_exists($link, 'tblusers', 'is_superuser');
 	$hasAdminRoleColumn = rmt_db_column_exists($link, 'tblusers', 'is_admin');
 
-	$insertColumns = "`firstname`, `lastname`, `email`, `password`, `atype`, `manager_id`, `team`, `status`, `environment`";
-	$insertValues = "'$firstname', '$lastname', '$email', '$npassword', '$accounttype', NULL, '$teamstring', '$status', 1";
+	$insertColumns = "`firstname`, `lastname`, `email`, `password`, `atype`, `manager_id`, `team`, `status`";
+	$insertValues = "'$firstname', '$lastname', '$email', '$npassword', '$accounttype', NULL, '$teamstring', '$status'";
 	if ($hasSuperRoleColumn) {
 		$insertColumns .= ", `is_superuser`";
 		$insertValues .= ", '$isSuperuserRole'";
