@@ -13,28 +13,75 @@ if (isset($_SERVER['SCRIPT_FILENAME']) && realpath(__FILE__) === realpath((strin
 // PERMISSION HELPERS
 // ============================================================================
 
+function isSuperAdmin() {
+    // Returns true if user is a superuser (unless in test mode)
+    $inTestMode = isset($_SESSION['atype']) && isset($_SESSION['primary_atype']) && 
+                  $_SESSION['atype'] != $_SESSION['primary_atype'];
+    return !$inTestMode && isset($_SESSION['is_superuser']) && $_SESSION['is_superuser'] == 1;
+}
+
+// Alias for backward compatibility - DO NOT USE, prefer isSuperAdmin()
 function isAdmin() {
-    return isset($_SESSION['atype']) && $_SESSION['atype'] == 1;
+    return isSuperAdmin();
 }
 
 function canEditRequests() {
-    return isset($_SESSION['atype']) && in_array($_SESSION['atype'], [1, 2, 3, 4, 5]);
+    $isAdminOrSuperuser = (isset($_SESSION['is_superuser']) && $_SESSION['is_superuser']) || 
+                         (isset($_SESSION['is_admin']) && $_SESSION['is_admin']);
+    // If in test mode, only use tested atype permissions, not superuser flags
+    $inTestMode = isset($_SESSION['atype']) && isset($_SESSION['primary_atype']) && 
+                  $_SESSION['atype'] != $_SESSION['primary_atype'];
+
+    if ($inTestMode) {
+        return isset($_SESSION['atype']) && in_array($_SESSION['atype'], [3, 4, 5]);
+    }
+
+    return $isAdminOrSuperuser || (isset($_SESSION['atype']) && in_array($_SESSION['atype'], [3, 4, 5]));
 }
 
 function canManageSLA() {
-    return isset($_SESSION['atype']) && in_array($_SESSION['atype'], [1, 2, 3, 4]);
+    // If in test mode, only use tested atype permissions, not superuser flags
+    $inTestMode = isset($_SESSION['atype']) && isset($_SESSION['primary_atype']) && 
+                  $_SESSION['atype'] != $_SESSION['primary_atype'];
+
+    if ($inTestMode) {
+        return isset($_SESSION['atype']) && in_array($_SESSION['atype'], [3, 4]);
+    }
+
+    $isAdminOrSuperuser = (isset($_SESSION['is_superuser']) && $_SESSION['is_superuser']) || 
+                         (isset($_SESSION['is_admin']) && $_SESSION['is_admin']);
+    return $isAdminOrSuperuser || (isset($_SESSION['atype']) && in_array($_SESSION['atype'], [3, 4]));
 }
 
 function isReadOnly() {
+    // If superuser is in test mode (atype != primary_atype), apply readonly based on test atype
+    // Otherwise, superusers are never read-only
+    $inTestMode = isset($_SESSION['atype']) && isset($_SESSION['primary_atype']) && 
+                  $_SESSION['atype'] != $_SESSION['primary_atype'];
+    
+    if (!$inTestMode && isset($_SESSION['is_superuser']) && $_SESSION['is_superuser'] == 1) {
+        return false; // Superusers are never read-only (unless testing)
+    }
+    
     return isset($_SESSION['atype']) && $_SESSION['atype'] == 6;
 }
 
 function canViewAllRequests() {
-    return isset($_SESSION['atype']) && in_array($_SESSION['atype'], [1, 6]);
+    $isAdminOrSuperuser = (isset($_SESSION['is_superuser']) && $_SESSION['is_superuser']) || 
+                         (isset($_SESSION['is_admin']) && $_SESSION['is_admin']);
+    // If in test mode, use tested atype permissions only
+    $inTestMode = isset($_SESSION['atype']) && isset($_SESSION['primary_atype']) && 
+                  $_SESSION['atype'] != $_SESSION['primary_atype'];
+
+    if ($inTestMode) {
+        return isset($_SESSION['atype']) && $_SESSION['atype'] == 6;
+    }
+
+    return $isAdminOrSuperuser || (isset($_SESSION['atype']) && $_SESSION['atype'] == 6);
 }
 
 function canViewReports() {
-    return isset($_SESSION['atype']) && in_array($_SESSION['atype'], [1, 2, 3, 4, 5, 6]);
+    return isset($_SESSION['pid']); // Everyone can view reports
 }
 
 // ============================================================================

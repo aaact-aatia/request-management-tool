@@ -8,8 +8,8 @@ require_once __DIR__ . '/session_start.php';
 $lang = $_GET['lang'] ?? 'en';
 
 // Check if the user has the right priv's
-if ($_SESSION['atype'] != 1) {
-	header("location:/openrequest-$lang.php?status=accessdenied"); 
+if (!($_SESSION['is_superuser'] OR $_SESSION['is_admin'])) {
+	header("location:/openrequest.php?lang=$lang&status=accessdenied"); 
 	exit();
 }
 
@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	rmt_admin_query($link,$sql);
 	
 	// Now redirect
-	header("location:/viewrequest-$lang.php?rid=$triageid"); 
+	header("location:/viewrequest.php?lang=$lang&rid=$triageid"); 
 	exit();
 }
 

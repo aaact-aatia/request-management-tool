@@ -9,7 +9,7 @@ $lang_code = $_SESSION['lang'] ?? 'en';
 require("../lang/{$lang_code}.php");
 
 // Check if the user has the right priv's
-$canEditTeams = in_array((int)($_SESSION['atype'] ?? 0), [1, 2, 3, 4], true);
+$canEditTeams = ($_SESSION['is_superuser'] || $_SESSION['is_admin']) || in_array((int)($_SESSION['atype'] ?? 0), [3, 4], true);
 if (!$canEditTeams) {
 	header("location:/openrequest.php?lang={$lang_code}&status=accessdenied"); 
 	exit();
@@ -22,27 +22,24 @@ require('../sql.php');
 // Now first get the ID
 $contactid = $_GET['id'];
 
-// Process the edit product form
+// Process the edit team form
 if ($_SERVER['REQUEST_METHOD']=='POST'){
 	
 	// Grab form elements
 	$teamnameen = mysqli_real_escape_string($link,$_POST['nameen']);
 	$teamnamefr = mysqli_real_escape_string($link,$_POST['namefr']);
 	$teamemail = mysqli_real_escape_string($link,$_POST['email']);
-	$contactname = mysqli_real_escape_string($link,$_POST['contactname']);
-	$contactemail = mysqli_real_escape_string($link,$_POST['contactemail']);
-	$escalationcontactname = mysqli_real_escape_string($link,$_POST['escalationcontactname']);
-	$escalationcontactemail = mysqli_real_escape_string($link,$_POST['escalationcontactemail']);
 	$teamLeadUserId = !empty($_POST['team_lead_user_id']) ? (int)$_POST['team_lead_user_id'] : 0;
 	$date_now = date("Y-m-d H:i:s");
 	$updatedby = $_SESSION['pid'];
 	$noerror = false;
 	
-	// Custom form validation
-	if ($teamnameen=="" OR $teamnamefr=="" OR $teamemail=="" OR $contactname=="" OR $contactemail=="" OR $escalationcontactname=="" OR $escalationcontactemail=="") {
+	// Custom form validation - require team name and email
+	if (empty($teamnameen) || empty($teamnamefr) || empty($teamemail)) {
 		$noerror = true;
 	}
 
+	// Validate team lead if provided
 	if (!$noerror && $teamLeadUserId > 0) {
 		$leadCheckSql = "SELECT id FROM tblusers WHERE id='" . $teamLeadUserId . "' AND atype='4' AND status='1' LIMIT 1";
 		$leadCheckResult = rmt_admin_query($link, $leadCheckSql);
@@ -59,8 +56,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	
 	// Create SQL statement
 	$teamLeadSqlValue = ($teamLeadUserId > 0) ? (string)$teamLeadUserId : "NULL";
-	$sql = "UPDATE `tblteams` SET `nameen` = '$teamnameen', `namefr` = '$teamnamefr', `email` = '$teamemail', `contactname` = '$contactname', `contactemail` = '$contactemail', `escalationcontactname` = '$escalationcontactname', `escalationcontactemail` = '$escalationcontactemail', `team_lead_user_id` = $teamLeadSqlValue, `dateupdated` = '$date_now', `updatedby` = '$updatedby' WHERE id='$contactid'";
-	//echo $sql;
+	$sql = "UPDATE `tblteams` SET `nameen` = '$teamnameen', `namefr` = '$teamnamefr', `email` = '$teamemail', `team_lead_user_id` = $teamLeadSqlValue, `dateupdated` = '$date_now', `updatedby` = '$updatedby' WHERE id='$contactid'";
 	rmt_admin_query($link,$sql);
 	
 	// Now redirect
@@ -96,25 +92,9 @@ if(rmt_result_num_rows($result2)>0){
 				<input type="email" class="form-control" id="email" name="email" value="<?php echo htmlspecialchars($row2['email']); ?>" required>
 		</div>
 		<div class="form-group">
-			<label for="contactname"><span class="field-name"><?php echo $lang_code === 'en' ? 'Contact name' : 'Nom du contact'; ?>: <strong>(<?php echo $lang_code === 'en' ? 'required' : 'requis'; ?>)</strong></span></label>
-			<input type="text" class="form-control" id="contactname" name="contactname" value="<?php echo htmlspecialchars($row2['contactname']); ?>" required>
-		</div>
-		<div class="form-group">
-			<label for="contactemail"><span class="field-name"><?php echo $lang_code === 'en' ? 'Contact email' : 'Courriel du contact'; ?>: <strong>(<?php echo $lang_code === 'en' ? 'required' : 'requis'; ?>)</strong></span></label>
-			<input type="email" class="form-control" id="contactemail" name="contactemail" value="<?php echo htmlspecialchars($row2['contactemail']); ?>" required>
-		</div>
-		<div class="form-group">
-			<label for="escalationcontactname"><span class="field-name"><?php echo $lang_code === 'en' ? 'Escalation contact name' : 'Nom du contact d\'escalade'; ?>: <strong>(<?php echo $lang_code === 'en' ? 'required' : 'requis'; ?>)</strong></span></label>
-			<input type="text" class="form-control" id="escalationcontactname" name="escalationcontactname" value="<?php echo htmlspecialchars($row2['escalationcontactname']); ?>" required>
-		</div>
-		<div class="form-group">
-			<label for="escalationcontactemail"><span class="field-name"><?php echo $lang_code === 'en' ? 'Escalation contact email' : 'Courriel du contact d\'escalade'; ?>: <strong>(<?php echo $lang_code === 'en' ? 'required' : 'requis'; ?>)</strong></span></label>
-			<input type="email" class="form-control" id="escalationcontactemail" name="escalationcontactemail" value="<?php echo htmlspecialchars($row2['escalationcontactemail']); ?>" required>
-		</div>
-		<div class="form-group">
-			<label for="team_lead_user_id"><span class="field-name"><?php echo $lang_code === 'en' ? 'Team lead' : 'Chef d\'équipe'; ?>:</span></label>
+			<label for="team_lead_user_id"><span class="field-name"><?php echo $lang_code === 'en' ? 'Team Lead' : 'Chef d\'équipe'; ?>:</span></label>
 			<select class="form-control" id="team_lead_user_id" name="team_lead_user_id">
-				<option value=""><?php echo $lang_code === 'en' ? 'No team lead assigned' : 'Aucun chef d\'équipe assigné'; ?></option>
+				<option value=""><?php echo $lang_code === 'en' ? 'None assigned' : 'Aucun assigné'; ?></option>
 				<?php
 				$leadSql = "SELECT id, firstname, lastname FROM tblusers WHERE atype='4' AND status='1' ORDER BY firstname ASC, lastname ASC";
 				$leadResult = rmt_admin_query($link, $leadSql);
@@ -127,6 +107,7 @@ if(rmt_result_num_rows($result2)>0){
 				}
 				?>
 			</select>
+			<p class="small"><?php echo $lang_code === 'en' ? 'The person responsible for day-to-day team operations.' : 'La personne responsable des opérations quotidiennes de l\'équipe.'; ?></p>
 		</div>
 		<div class="form-group form-buttons">
 			<button type="submit" class="btn btn-default"><?php echo $lang_code === 'en' ? 'Save' : 'Sauvegarder'; ?></button>

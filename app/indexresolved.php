@@ -303,7 +303,7 @@ include 'includes/template/head.php';
 					$tarray = explode(",",$teams);
 					
 					// Admins see everything, other users only see requests for their teams
-					$showRequest = ($_SESSION['atype'] == '1' || $_SESSION['atype'] == '6') || in_array($tarraycontactid, $tarray);
+					$showRequest = ($_SESSION['is_superuser'] || $_SESSION['is_admin'] || $_SESSION['atype'] == '6') || in_array($tarraycontactid, $tarray);
 					
 					if($showRequest) {
 						$hasVisibleRows = true;
@@ -400,7 +400,7 @@ include 'includes/template/head.php';
 						ob_start();
 						?>
 						<a class="btn btn-primary btn-block" href="editrequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?= base64_encode($row['id']) ?>&reqid=<?= urlencode('a11y-' . ($row['requestid'] ?? '')) ?>"><?= htmlspecialchars($langFile['indexresolved_edit']) ?> <span class="wb-inv">a11y-<?= htmlspecialchars($row['requestid']) ?> <?= htmlspecialchars($langFile['indexresolved_request']) ?></span></a>
-						<?php if ($_SESSION['atype']==1) { ?>
+						<?php if ($_SESSION['is_superuser'] || $_SESSION['is_admin']) { ?>
 							<a class="wb-lbx btn btn-primary btn-block" href="includes/delete-request.php?id=<?= $row['id'] ?>"><?= htmlspecialchars($langFile['indexresolved_delete']) ?><span class="wb-inv"> a11y-<?= htmlspecialchars($row['requestid']) ?> <?= htmlspecialchars($langFile['indexresolved_request']) ?></span></a>
 						<?php } ?>
 						<?php if(in_array('1', $_SESSION['team'])){?>

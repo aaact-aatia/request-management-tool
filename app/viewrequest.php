@@ -394,10 +394,10 @@ if(mysqli_num_rows($result)>0){
 			<?php
 				$canShowEditControls = !empty($_SESSION['pid']) && canEditRequests();
 				// Only authenticated users with edit permissions can see request controls.
-				if ($canShowEditControls && ($_SESSION['atype']=='1' OR $_SESSION['atype']=='2')) {	
+			if ($canShowEditControls && ($_SESSION['is_superuser'] OR $_SESSION['is_admin'])) {	
 			?>
 			<div class="pull-right">
-				<p><a class="btn btn-primary" href="editrequest.php?lang=<?php echo $lang; ?>&erid=<?php echo base64_encode($row['id']);?>&reqid=<?php echo urlencode('a11y-' . $row['requestid']); ?>">Edit <span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span></a><?php if ($_SESSION['atype']=='1') { ?> <a class="wb-lbx btn btn-primary" href="includes/delete-request.php?id=<?php echo $row['id'];?>">Delete<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span> </a><?php } ?></p>
+            <p><a class="btn btn-primary" href="editrequest.php?lang=<?php echo $lang; ?>&erid=<?php echo base64_encode($row['id']);?>&reqid=<?php echo urlencode('a11y-' . $row['requestid']); ?>">Edit <span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span></a><?php if ($_SESSION['is_superuser'] OR $_SESSION['is_admin']) { ?> <a class="wb-lbx btn btn-primary" href="includes/delete-request.php?id=<?php echo $row['id'];?>">Delete<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span> </a><?php } ?></p>
 			</div>
 			<div class="clearfix"></div>
 			<?php
@@ -416,7 +416,7 @@ if(mysqli_num_rows($result)>0){
 					if(in_array($tarraycontactid, $tarray)) {
 			?>
 			<div class="pull-right">
-				<p><a class="btn btn-primary" href="editrequest.php?lang=<?php echo $lang; ?>&erid=<?php echo base64_encode($row['id']);?>&reqid=<?php echo urlencode('a11y-' . $row['requestid']); ?>">Edit <span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span></a><?php if ($_SESSION['atype']=='1') { ?> <a class="wb-lbx btn btn-primary" href="includes/delete-request.php?id=<?php echo $row['id'];?>">Delete<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span> </a><?php } ?></p>
+				<p><a class="btn btn-primary" href="editrequest.php?lang=<?php echo $lang; ?>&erid=<?php echo base64_encode($row['id']);?>&reqid=<?php echo urlencode('a11y-' . $row['requestid']); ?>">Edit <span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span></a><?php if ($_SESSION['is_superuser'] OR $_SESSION['is_admin']) { ?> <a class="wb-lbx btn btn-primary" href="includes/delete-request.php?id=<?php echo $row['id'];?>">Delete<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span> </a><?php } ?></p>
 			</div>
 			<div class="clearfix"></div>
 			<?php 
@@ -528,7 +528,7 @@ if(mysqli_num_rows($result)>0){
 				<?php } ?>
 				<?php
 				// Check if the account is admin level to show the assigned member.
-				if ($_SESSION['atype'] == '1' OR $_SESSION['atype'] == '2' OR $_SESSION['atype'] == '3' OR $_SESSION['atype'] == '4' OR $_SESSION['atype'] == '5') {
+			if ($_SESSION['is_superuser'] || $_SESSION['is_admin'] || $_SESSION['atype'] == '3' || $_SESSION['atype'] == '4' || $_SESSION['atype'] == '5') {
 					$workerid = $row['workerid'];
 					if ($workerid != 0 AND $workerid != "") {
 						$result2 = mysqli_query($link, "SELECT firstname, lastname FROM tblusers WHERE id = '$workerid'");
@@ -631,7 +631,7 @@ if(mysqli_num_rows($result)>0){
 			</dl>
 
 			<?php
-			if ($_SESSION['atype'] == 1 OR $_SESSION['atype'] == 2 OR $_SESSION['atype'] == 5 OR $_SESSION['atype'] == 3 OR $_SESSION['atype'] == 4 OR $_SESSION['atype'] == 6)
+        if ($_SESSION['is_superuser'] || $_SESSION['is_admin'] || $_SESSION['atype'] == 5 || $_SESSION['atype'] == 3 || $_SESSION['atype'] == 4 || $_SESSION['atype'] == 6)
 			{
 			?>
 			
@@ -874,7 +874,7 @@ $blobStorage = new AzureBlobStorageManager();
 					$nnotes = nl2br(htmlspecialchars($notes));
 				?>
 				
-				<dt><?php echo $dateadded ?><?php if ($_SESSION['atype']=='1') {?> <a class="wb-lbx" href="includes/delete-comms.php?t=c&id=<?php echo $row2['id'];?>&rid=<?php echo $triageid ?>"><span class="glyphicon glyphicon-trash"></span><span class="wb-inv"> <?= htmlspecialchars($t['delete_comment']) ?></span></a><?php } ?></dt>
+            <dt><?php echo $dateadded ?><?php if ($_SESSION['is_superuser'] OR $_SESSION['is_admin']) {?> <a class="wb-lbx" href="includes/delete-comms.php?t=c&id=<?php echo $row2['id'];?>&rid=<?php echo $triageid ?>"><span class="glyphicon glyphicon-trash"></span><span class="wb-inv"> <?= htmlspecialchars($t['delete_comment']) ?></span></a><?php } ?></dt>
 				<dd><?php echo $nnotes ?></dd>
 				<?php } ?>
 			</dl>
@@ -887,7 +887,7 @@ $blobStorage = new AzureBlobStorageManager();
 			
 			<?php
 			// Check if the account is admin level to show this option 
-			if ($_SESSION['atype']=='1' OR $_SESSION['atype']=='2' OR $_SESSION['atype']=='3' OR $_SESSION['atype']=='4' OR $_SESSION['atype'] == '6') {
+		if ($_SESSION['is_superuser'] OR $_SESSION['is_admin'] OR $_SESSION['atype']=='3' OR $_SESSION['atype']=='4' OR $_SESSION['atype'] == '6') {
 			?>			
 			<h2><?= htmlspecialchars($t['staff_comms']) ?></h2>
 			
@@ -914,7 +914,7 @@ $blobStorage = new AzureBlobStorageManager();
 					$cfname = $row3['firstname'];
 					$clname = $row3['lastname'];
 				?>
-				<dt><?php echo $dateadded ?><?php if($creatorid!=0) {?> - <?php echo $cfname ?> <?php echo $clname ?><?php } ?><?php if ($_SESSION['atype']=='1') {?> <a class="wb-lbx" href="includes/delete-comms.php?t=a&id=<?php echo $row2['id'];?>&rid=<?php echo $triageid ?>"><span class="glyphicon glyphicon-trash"></span><span class="wb-inv"> <?= htmlspecialchars($t['delete_comment']) ?></span></a><?php } ?></dt>
+				<dt><?php echo $dateadded ?><?php if($creatorid!=0) {?> - <?php echo $cfname ?> <?php echo $clname ?><?php } ?><?php if ($_SESSION['is_superuser'] OR $_SESSION['is_admin']) {?> <a class="wb-lbx" href="includes/delete-comms.php?t=a&id=<?php echo $row2['id'];?>&rid=<?php echo $triageid ?>"><span class="glyphicon glyphicon-trash"></span><span class="wb-inv"> <?= htmlspecialchars($t['delete_comment']) ?></span></a><?php } ?></dt>
 				<dd><?php echo $annotes ?></dd>
 				<?php } ?>
 			</dl>

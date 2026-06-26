@@ -9,7 +9,7 @@ $lang = isset($_GET['lang']) ? $_GET['lang'] : (isset($_SESSION['lang']) ? $_SES
 $is_french = ($lang === 'fr');
 
 // Check if the user has the right priv's
-if ($_SESSION['atype'] != 1) {
+if (!($_SESSION['is_superuser'] OR $_SESSION['is_admin'])) {
 	header("location:/openrequest-" . $lang . ".php?status=accessdenied"); 
 	exit();
 }
@@ -170,10 +170,8 @@ if(rmt_result_num_rows($result2)>0){
 		$team_name = $is_french ? 'namefr' : 'nameen';
 		$hint_none = $is_french ? 'Aucune équipe n\'est assignée aux comptes Administrateur, Super administrateur et Externe.' : 'No team is assigned for Admin, Super Admin, and External accounts.';
 		$hint_single = $is_french ? 'Un Employé peut avoir zero ou une équipe. Un Chef d\'équipe et un Gestionnaire peuvent avoir plusieurs équipes.' : 'Employee can have zero or one team. Team Lead and Manager can have multiple teams.';
-		$hasSuperRoleColumn = rmt_db_column_exists($link, 'tblusers', 'is_superuser');
-		$hasAdminRoleColumn = rmt_db_column_exists($link, 'tblusers', 'is_admin');
-		$currentIsSuperRole = $hasSuperRoleColumn ? ((int)($row2['is_superuser'] ?? 0) === 1) : ((int)$row2['atype'] === 1);
-		$currentIsAdminRole = $hasAdminRoleColumn ? ((int)($row2['is_admin'] ?? 0) === 1) : in_array((int)$row2['atype'], [1, 2], true);
+	$currentIsSuperRole = ((int)($row2['is_superuser'] ?? 0) === 1);
+	$currentIsAdminRole = ((int)($row2['is_admin'] ?? 0) === 1);
 ?>
 <section id="filter-id" class="modal-dialog modal-content overlay-def">
 	<header class="modal-header">

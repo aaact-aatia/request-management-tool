@@ -12,7 +12,7 @@ require_once '../sql.php';
 $lang = $_SESSION['lang'] ?? 'en';
 
 // Check if the user has the right privileges
-if (!isset($_SESSION['atype']) || $_SESSION['atype'] != 1) {
+if (!isset($_SESSION['is_superuser']) || (!$_SESSION['is_superuser'] && !$_SESSION['is_admin'])) {
 	header("location:/openrequest.php?lang=$lang&status=accessdenied"); 
 	exit();
 }

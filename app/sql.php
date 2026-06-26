@@ -155,28 +155,5 @@ if (!function_exists('rmt_result_fetch_array')) {
 	}
 }
 
-// Check which environment is being used
-// Grab logged in user
-$cenvironment = 0; // Default to production
-if (isset($_SESSION['pid'])){
-	$currentuser = $_SESSION['pid'];
-	$result = mysqli_query($link, "SELECT environment FROM tblusers WHERE id = '$currentuser'");
-	$row = mysqli_fetch_array(result: $result);
-	$cenvironment = $row['environment'] ?? 0;
 
-	// If it's prod keep going otherwise close connection and open DEV
-	// if ($cenvironment==1) {
-	// 	//We need to use DEV
-	// 	// Close connection
-	// 	mysqli_close($link);
-	
-	// 	//connection to the database
-	// 	$link = mysqli_connect("localhost", "upek4k7dkhz94", "uz3s6hae96jp", "dblee9r8rvaboq");
- 
-	// 	// Check connection
-	// 	if($link == false){
-	// 		die("ERROR: Could not connect. " . mysqli_connect_error());
-	// 	}
-	// }
-}
 ?>

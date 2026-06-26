@@ -26,7 +26,7 @@ require('includes/httpscheck.php');
 require('includes/loggedincheck.php');
 
 // Check if the user has the right priv's
-if ($_SESSION['atype'] != 1) {
+if (!($_SESSION['is_superuser'] OR $_SESSION['is_admin'])) {
 	$redirectPage = ($_SESSION['lang'] === 'fr') ? 'openrequest-fr.php' : 'openrequest-en.php';
 	header("location:/{$redirectPage}?status=accessdenied"); 
 	exit();

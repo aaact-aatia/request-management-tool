@@ -165,7 +165,10 @@ $headerTranslations = [
 
 		</div>
 
-		<?php require(__DIR__ . '/menu.php'); ?>
+		<?php 
+		require_once(__DIR__ . '/../helpers.php');
+		require(__DIR__ . '/menu.php'); 
+		?>
 
 		<nav id="wb-bc" property="breadcrumb" aria-labelledby="breadcrumbPosition">
 			<h2 id="breadcrumbPosition"><?= $headerLangStrings['breadcrumbs_heading'] ?></h2>
@@ -212,7 +215,8 @@ if (!empty($_SESSION['pid'])):
 		<strong><?= $langCode === 'en' ? 'You are logged in as:' : 'Vous êtes connecté en tant que :' ?></strong>
         <?= htmlspecialchars($_SESSION['firstname'] . ' (' . $_SESSION['email'] . ')') ?>
         <?php 
-        if (isset($_SESSION['real_atype']) && $_SESSION['real_atype'] == 1 && $_SESSION['atype'] != $_SESSION['real_atype']) {
+        // Show testing notice if superuser and atype != 1 (meaning they're testing)
+        if ($_SESSION['is_superuser'] == 1 && $_SESSION['atype'] != 1) {
             // Get the current testing account type name
             $testAtype = $_SESSION['atype'];
 			$nameField = ($langCode === 'fr') ? 'namefr' : 'nameen';

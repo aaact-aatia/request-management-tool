@@ -18,9 +18,10 @@ if (isset($_SERVER['SCRIPT_FILENAME']) && realpath(__FILE__) === realpath((strin
 // Set language from session (already initialized in header.php)
 $lang_code = $_SESSION['lang'] ?? 'en';
 
-// Resolve effective account type for menu permissions.
-// Use the current switched role (atype) to test menu visibility for different roles.
-$effective_atype = isset($_SESSION['atype']) ? (int) $_SESSION['atype'] : null;
+// Resolve effective permissions for menu visibility
+// Use permission flags for admin access instead of account type
+$isTestingDifferentType = isset($_SESSION['is_superuser']) && $_SESSION['is_superuser'] == 1 && isset($_SESSION['atype']) && (int)$_SESSION['atype'] !== 1;
+$isSuperAdmin = !$isTestingDifferentType && isset($_SESSION['is_superuser']) && $_SESSION['is_superuser'] == 1;
 
 // Menu text translations
 $menu_text = [
@@ -74,7 +75,7 @@ $menuLangStrings = $menu_text[$lang_code];
 		<div class="row">
 			<ul class="list-inline menu" role="menubar">
 				<?php
-				if (!empty($_SESSION['pid']) && $effective_atype !== 6) {
+				if (!empty($_SESSION['pid']) && !isReadOnly()) {
 				?>
 					<li><a href="#" class="item"><?= htmlspecialchars($menuLangStrings['overview']) ?></a>
 						<ul class="sm list-unstyled" id="s2" role="menu">
@@ -85,25 +86,25 @@ $menuLangStrings = $menu_text[$lang_code];
 					</li>
 				<?php } ?>
 				<li><a href="/openrequest.php?lang=<?= $lang_code ?>" class="item"><?= htmlspecialchars($menuLangStrings['new_request']) ?></a></li>
-				<?php if (!empty($_SESSION['pid']) && $effective_atype !== 6) { ?>
+				<?php if (!empty($_SESSION['pid']) && !isReadOnly()) { ?>
 					<li><a href="/asearch.php?lang=<?= $lang_code ?>" class="item"><?= htmlspecialchars($menuLangStrings['search']) ?></a></li>
 					<li><a href="/reports.php?lang=<?= $lang_code ?>" class="item"><?= htmlspecialchars($menuLangStrings['reports']) ?></a></li>
 				<?php
 				// Only Super admins can access this option
-				if ($effective_atype === 1) {
+				if ($isSuperAdmin) {
 				?>
 					<!-- <li><a href="/batch-ace-info.php?lang=<?= $lang_code ?>">Update (batch) AAACT tickets</a></li> -->
 				<?php
 				}
 				// Only Super admins can access admin options
-				if ($effective_atype === 1) {
+				if ($isSuperAdmin) {
 				?>
 					<li><a href="#s2" class="item"><?= htmlspecialchars($menuLangStrings['admin']) ?></a>
 						<ul class="sm list-unstyled" id="s2" role="menu">
 							<li><a href="/teams.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['contacts']) ?></a></li>
 							<?php
 							// Only Super admins can access this option
-							if ($effective_atype === 1) {
+						if ($isSuperAdmin) {
 							?>
 							<li><a href="/catalogue.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['catalogue']) ?></a></li>
 							<li><a href="/holidays-mgmt.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['holidays']) ?></a></li>
@@ -112,7 +113,7 @@ $menuLangStrings = $menu_text[$lang_code];
 							<li><a href="/status.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['status']) ?></a></li>
 							<?php
 							// Only Super admins can access this option
-							if ($effective_atype === 1) {
+						if ($isSuperAdmin) {
 							?>
 								<!-- <li><a href="/batch-ace-info.php?lang=<?= $lang_code ?>">Update (batch) AAACT tickets</a></li> -->
 								<li><a href="/users.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['users']) ?></a></li>

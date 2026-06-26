@@ -29,7 +29,6 @@ CREATE TABLE IF NOT EXISTS `tblusers` (
   `manager_id` int(11) DEFAULT NULL,
   `team` varchar(100) DEFAULT NULL,
   `status` tinyint(1) DEFAULT 1,
-  `environment` tinyint(1) DEFAULT 0 COMMENT '0=prod, 1=dev',
   PRIMARY KEY (`id`),
   KEY `atype` (`atype`),
   KEY `manager_id` (`manager_id`)
@@ -186,10 +185,6 @@ CREATE TABLE IF NOT EXISTS `tblteams` (
   `nameen` varchar(100) NOT NULL,
   `namefr` varchar(100) NOT NULL,
   `email` varchar(255) NOT NULL,
-  `contactname` varchar(200) NOT NULL,
-  `contactemail` varchar(255) NOT NULL,
-  `escalationcontactname` varchar(200) DEFAULT NULL,
-  `escalationcontactemail` varchar(255) DEFAULT NULL,
   `team_lead_user_id` int(11) DEFAULT NULL,
   `dateadded` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `dateupdated` timestamp NULL DEFAULT NULL,
