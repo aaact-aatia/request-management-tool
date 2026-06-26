@@ -116,7 +116,7 @@ include 'includes/template/head.php';
 				</div>
 				<div class="form-group form-buttons">
 					<button type="submit" class="btn btn-primary"><?= $_SESSION['lang'] == 'fr' ? 'Changer le type de compte' : 'Switch Account Type' ?></button>
-					<?php if ($currentAtype != $_SESSION['primary_atype']): ?>
+					<?php if ((int)$currentAtype !== 1): ?>
 						<button type="submit" name="reset_atype" value="1" class="btn btn-warning"><?= $_SESSION['lang'] == 'fr' ? 'Réinitialiser au super admin' : 'Reset to Super Admin' ?></button>
 					<?php endif; ?>
 				</div>

@@ -66,7 +66,15 @@ $t = $menu_text[$lang_code];
 		<h2 class="wb-inv"><?= htmlspecialchars($t['nav_heading']) ?></h2>
 		<div class="row">
 			<ul class="list-inline menu" role="menubar">
-			<?php if(!empty($_SESSION['pid']) && $_SESSION['atype'] != 6){ ?>
+			<?php 
+				// Show menu if logged in and either:
+				// 1. atype is not 6 (External/Director), OR
+				// 2. is_superuser=1 and NOT in test mode
+				$inTestMode = isset($_SESSION['is_superuser']) && (int)$_SESSION['is_superuser'] === 1 &&
+				              isset($_SESSION['atype']) && (int)$_SESSION['atype'] !== 1;
+				$showMenu = (!empty($_SESSION['pid']) && $_SESSION['atype'] != 6) || 
+				            (isset($_SESSION['is_superuser']) && $_SESSION['is_superuser'] == 1 && !$inTestMode);
+				if ($showMenu) { ?>
 				<li><a href="#" class="item"><?= htmlspecialchars($t['overview']) ?></a>
 					<ul class="sm list-unstyled" id="s2" role="menu">
 						<li><a href="/index.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($t['view_all']) ?></a></li>

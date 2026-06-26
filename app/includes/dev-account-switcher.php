@@ -50,7 +50,7 @@ if (isset($_SESSION['pid']) && ($_SESSION['is_superuser'] == 1)) {
                             </option>
                         <?php endforeach; ?>
                     </select>
-                    <?php if ($currentAtype != $_SESSION['primary_atype']): ?>
+                    <?php if ((int)$currentAtype !== 1): ?>
                         <button type="submit" name="reset_atype" value="1" class="btn btn-sm btn-warning">
                             <?php echo $lang_code == 'fr' ? 'Réinitialiser au super admin' : 'Reset to Super Admin'; ?>
                         </button>

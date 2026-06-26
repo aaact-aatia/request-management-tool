@@ -20,7 +20,8 @@ $lang_code = $_SESSION['lang'] ?? 'en';
 
 // Resolve effective permissions for menu visibility
 // Use permission flags for admin access instead of account type
-$isSuperAdmin = isset($_SESSION['is_superuser']) && $_SESSION['is_superuser'] == 1;
+$isTestingDifferentType = isset($_SESSION['is_superuser']) && $_SESSION['is_superuser'] == 1 && isset($_SESSION['atype']) && (int)$_SESSION['atype'] !== 1;
+$isSuperAdmin = !$isTestingDifferentType && isset($_SESSION['is_superuser']) && $_SESSION['is_superuser'] == 1;
 
 // Menu text translations
 $menu_text = [

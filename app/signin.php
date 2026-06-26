@@ -81,7 +81,9 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 			$_SESSION['primary_atype'] = $primaryAtype;
 			$_SESSION['is_superuser'] = $isSuperuser ? 1 : 0;
 			$_SESSION['is_admin'] = $isAdmin ? 1 : 0;
-			$_SESSION['atype'] = $primaryAtype;
+			// On normal login (not in test mode), superusers get atype=1 for full permissions
+			// Non-superusers get their database atype. Testing mode overrides this in settings.
+			$_SESSION['atype'] = $isSuperuser ? 1 : $primaryAtype;
 			$_SESSION['firstname']=$row['firstname'];
 			$_SESSION['email']=$row['email'];
 			$team = $row['team'];

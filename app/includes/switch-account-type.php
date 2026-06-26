@@ -24,7 +24,8 @@ $lang_code = $_SESSION['lang'] ?? 'en';
 
 // Handle reset to superadmin's actual role
 if (isset($_POST['reset_atype'])) {
-    $_SESSION['atype'] = $_SESSION['primary_atype'];
+    // Set atype to 1 (full superadmin permissions), not to their database atype
+    $_SESSION['atype'] = 1;
     
     // Redirect back to settings page
     header("Location: /settings.php?lang={$lang_code}&status=success");

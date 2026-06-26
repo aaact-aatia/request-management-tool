@@ -150,7 +150,7 @@ include 'includes/template/head.php';
 			<?php
 			// Determine which field to use for team name based on language
 			$teamNameField = ($_SESSION['lang'] === 'fr') ? 'namefr' : 'nameen';
-			$canEditTeams = in_array((int)($_SESSION['atype'] ?? 0), [1, 2, 3, 4], true);
+			$canEditTeams = ($_SESSION['is_superuser'] || $_SESSION['is_admin']) || in_array((int)($_SESSION['atype'] ?? 0), [3, 4], true);
 			
 			// Construct SQL statement
 			$sql = "SELECT * FROM tblteams ORDER BY $teamNameField ASC";

@@ -22,7 +22,7 @@ $lang = $_SESSION['lang'];
 $langFile = require("lang/{$lang}.php");
 require('includes/loggedincheck.php');
 
-$canEditTeams = in_array((int)($_SESSION['atype'] ?? 0), [1, 2, 3, 4], true);
+$canEditTeams = ($_SESSION['is_superuser'] || $_SESSION['is_admin']) || in_array((int)($_SESSION['atype'] ?? 0), [3, 4], true);
 if (!$canEditTeams) {
     header("location:/openrequest.php?lang={$lang}&status=accessdenied");
     exit();
