@@ -70,6 +70,9 @@ include 'includes/template/head.php';
 			
 			<ul>
 				<li><a href="/addrequest.php?lang=<?= $_SESSION['lang'] ?>" class="item"><?= htmlspecialchars($langFile['settings_add_request_link']) ?></a></li>
+				<?php if (!app_is_production()): ?>
+				<li><a href="/dev-create-test-request.php?lang=<?= $_SESSION['lang'] ?>" class="item"><?= htmlspecialchars($langFile['settings_quick_test_request_link']) ?></a></li>
+				<?php endif; ?>
 			</ul>
 			<?php
 			}

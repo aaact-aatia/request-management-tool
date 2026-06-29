@@ -377,6 +377,7 @@ return [
     'settings_heading' => 'Paramètres du compte',
     'settings_add_request_heading' => 'Ajouter manuellement une nouvelle demande',
     'settings_add_request_link' => 'Ajouter une demande (admin. uniquement)',
+    'settings_quick_test_request_link' => 'Créer une demande de test rapide (dev seulement)',
     'settings_gcnotify_link' => 'Parametres GC Notify (admin. uniquement)',
 
     'settings_password_heading' => 'Réinitialisation du mot de passe',

@@ -379,6 +379,7 @@ return [
     'settings_heading' => 'Account settings',
     'settings_add_request_heading' => 'Manually add a new request',
     'settings_add_request_link' => 'Add request (admin only)',
+    'settings_quick_test_request_link' => 'Create quick test request (dev only)',
     'settings_gcnotify_link' => 'GC Notify settings (admin only)',
     'settings_password_heading' => 'Reset password for Request Management Tool',
 
