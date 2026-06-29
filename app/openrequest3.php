@@ -39,6 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $clientemail = getPostValue('clientemail');
     $departmentagency = getPostValue('departmentagency');
     $clientphone = getPostValue('clientphone');
+    $requestlang = app_normalize_language($lang);
     $bdm = getPostValue('bdm', 0);
     $attach1 = getPostValue('attach1');
     $attach2 = getPostValue('attach2');
@@ -123,8 +124,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     
     // Insert the full triage record in one shot
     $daterequiredSql = $daterequiredu ? 'NULL' : "'$daterequired'";
-    $columns = "requestid, creatorid, catalogueid, serviceid, subserviceid, statusid, datereceived, slatimer, isreaudit, title, clientlname, clientfname, clientemail, clientphone, daterequired, bdm, attach1, attach2, attach3, status";
-    $values  = "'$nrequestid', $userid, $catalogueid, $serviceid, $subserviceid, $statusid, '$dateopened', '$slatimer', $reauditFlag, '$requesttitle', '$clientlname', '$clientfname', '$clientemail', '$clientphone', $daterequiredSql, '$bdm', '$attach1', '$attach2', '$attach3', '$status'";
+    $columns = "requestid, creatorid, catalogueid, serviceid, subserviceid, statusid, datereceived, slatimer, isreaudit, title, clientlname, clientfname, clientemail, clientphone, requestlang, daterequired, bdm, attach1, attach2, attach3, status";
+    $values  = "'$nrequestid', $userid, $catalogueid, $serviceid, $subserviceid, $statusid, '$dateopened', '$slatimer', $reauditFlag, '$requesttitle', '$clientlname', '$clientfname', '$clientemail', '$clientphone', '$requestlang', $daterequiredSql, '$bdm', '$attach1', '$attach2', '$attach3', '$status'";
     
     if ($firstsprintenddate) {
         $columns .= ", firstsprintenddate";
@@ -259,10 +260,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Send email notifications based on settings
     if ($notification == "Y") {
         // Request with notification enabled
-        $template_id = app_notify_template_id($isFrench ? 'request_team_fr' : 'request_team_en');
+        $template_id = app_notify_template_id('request_team_en');
         
         if ($afterfact == "Y") {
-            $template_id = app_notify_template_id($isFrench ? 'request_afterfact_team_fr' : 'request_afterfact_team_en');
+            $template_id = app_notify_template_id('request_afterfact_team_en');
         }
         
         if (empty($contactemail)) {
@@ -281,7 +282,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         
         // Send to client (not for AAACT)
         if ($teamemail != "daiu-anci@ssc-spc.gc.ca") {
-            $clientTemplate = app_notify_template_id($isFrench ? 'request_client_fr' : 'request_client_en');
+            $clientTemplate = app_notify_template_id(app_notify_template_key_for_language('request_client', $requestlang));
             sendEmail($clientemail, $clientTemplate, $encoded_personalisation, ['recipientType' => 'client']);
         }
         
@@ -289,7 +290,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // Default notification behavior (not for AAACT)
         if ($teamemail != "daiu-anci@ssc-spc.gc.ca") {
             // Team notification
-            $template_id = app_notify_template_id($isFrench ? 'request_default_team_fr' : 'request_default_team_en');
+            $template_id = app_notify_template_id('request_default_team_en');
             
             if ($catalogueid == 9 || $catalogueid == 8) {
                 $template_id = app_notify_template_id('request_aaact');
@@ -300,7 +301,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             }
             
             // Client notification
-            $clientTemplate = app_notify_template_id($isFrench ? 'request_default_client_fr' : 'request_default_client_en');
+            $clientTemplate = app_notify_template_id(app_notify_template_key_for_language('request_default_client', $requestlang));
             sendEmail($clientemail, $clientTemplate, $encoded_personalisation, ['recipientType' => 'client']);
         }
     }

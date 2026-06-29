@@ -100,6 +100,7 @@ CREATE TABLE IF NOT EXISTS `tbltriage` (
   `clientfname` varchar(100) DEFAULT NULL,
   `clientemail` varchar(255) DEFAULT NULL,
   `clientphone` varchar(50) DEFAULT NULL,
+  `requestlang` varchar(2) NOT NULL DEFAULT 'en',
   `sourceid` int(11) DEFAULT NULL,
   `datereceived` date DEFAULT NULL,
   `dateupdated` date DEFAULT NULL,

@@ -246,6 +246,22 @@ function app_url(string $path = ''): string
     return $baseUrl . '/' . ltrim($path, '/');
 }
 
+function app_normalize_language(?string $language, string $default = 'en'): string
+{
+    $normalized = strtolower(trim((string) $language));
+
+    if (in_array($normalized, ['en', 'fr'], true)) {
+        return $normalized;
+    }
+
+    return $default;
+}
+
+function app_notify_template_key_for_language(string $baseKey, ?string $language, string $default = 'en'): string
+{
+    return $baseKey . '_' . app_normalize_language($language, $default);
+}
+
 function app_notify_template_id(string $templateKey): string
 {
     $templates = [
