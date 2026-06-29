@@ -110,8 +110,7 @@ function sendEmail($emailAddress, $templateId, $personalisation, array $options 
 			'personalisation' => $personalisationPayload,
 		];
 
-		$curl = curl_init();
-		curl_setopt_array($curl, [
+		$curlOptions = [
 			CURLOPT_URL => 'https://api.notification.canada.ca/v2/notifications/email',
 			CURLOPT_RETURNTRANSFER => true,
 			CURLOPT_ENCODING => '',
@@ -125,7 +124,12 @@ function sendEmail($emailAddress, $templateId, $personalisation, array $options 
 				'Content-Type: application/json',
 				'Authorization: ApiKey-v1 ' . $apiKey,
 			],
-		]);
+		];
+
+		$curlOptions = array_replace($curlOptions, app_gcnotify_curl_tls_options());
+
+		$curl = curl_init();
+		curl_setopt_array($curl, $curlOptions);
 
 		$response = curl_exec($curl);
 		$error = curl_error($curl);

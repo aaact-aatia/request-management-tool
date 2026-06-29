@@ -143,4 +143,40 @@ function app_env_required(string $key): string
 
     return $value;
 }
+
+function app_env_bool(string $key, bool $default = false): bool
+{
+    $rawValue = app_env($key);
+    if ($rawValue === null || $rawValue === '') {
+        return $default;
+    }
+
+    $normalized = strtolower(trim((string) $rawValue));
+
+    if (in_array($normalized, ['1', 'true', 'yes', 'on'], true)) {
+        return true;
+    }
+
+    if (in_array($normalized, ['0', 'false', 'no', 'off'], true)) {
+        return false;
+    }
+
+    return $default;
+}
+
+function app_gcnotify_curl_tls_options(): array
+{
+    $options = [];
+    $caBundlePath = trim((string) app_env('GCNOTIFY_CURL_CA_BUNDLE', ''));
+    if ($caBundlePath !== '') {
+        $options[CURLOPT_CAINFO] = $caBundlePath;
+    }
+
+    if (app_env_bool('GCNOTIFY_CURL_INSECURE', false)) {
+        $options[CURLOPT_SSL_VERIFYPEER] = false;
+        $options[CURLOPT_SSL_VERIFYHOST] = 0;
+    }
+
+    return $options;
+}
 ?>

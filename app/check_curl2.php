@@ -12,7 +12,7 @@ require('sql.php');
 
 $curl = curl_init();
 
-curl_setopt_array($curl, array(
+$curlOptions = array(
     CURLOPT_URL => 'https://api.notification.canada.ca/v2/notifications/email',
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_ENCODING => '',
@@ -37,7 +37,10 @@ curl_setopt_array($curl, array(
         'Content-Type: application/json',
         'Authorization: ApiKey-v1 ' . app_env('GCNOTIFY_API_KEY', ''),
     ),
-));
+);
+
+$curlOptions = array_replace($curlOptions, app_gcnotify_curl_tls_options());
+curl_setopt_array($curl, $curlOptions);
 
 $response = curl_exec($curl);
 $error    = curl_error($curl);

@@ -28,6 +28,8 @@ All credentials are loaded from `.env` and runtime environment variables. Notifi
 GCNOTIFY_API_KEY=your_gc_notify_api_key
 GCNOTIFY_TEMPLATE_ID=your_notification_template_id
 GCNOTIFY_TEST_EMAIL=your_test_email@example.com
+GCNOTIFY_CURL_CA_BUNDLE=
+GCNOTIFY_CURL_INSECURE=false
 APP_BASE_URL=https://your-dev-or-prod-base-url
 NOTIFY_MODE=redirect
 NOTIFY_REDIRECT_FORCE_OVERRIDE=false
@@ -67,6 +69,19 @@ Examples:
 - `GCNOTIFY_TEMPLATE_REASSIGNED_TEAM_EN`
 
 See `.env.example` for the full list.
+
+### TLS troubleshooting (self-signed certificate chain)
+
+If you see this error from `check_curl2.php`:
+
+- `SSL certificate problem: self-signed certificate in certificate chain`
+
+use one of these options:
+
+1. Preferred: set `GCNOTIFY_CURL_CA_BUNDLE` to a CA bundle path that trusts your intercepting/proxy certificate.
+2. Temporary dev diagnostic only: set `GCNOTIFY_CURL_INSECURE=true`, test, then revert to `false`.
+
+Do not use `GCNOTIFY_CURL_INSECURE=true` in production.
 
 Recommended default:
 
