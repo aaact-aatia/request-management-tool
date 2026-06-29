@@ -32,6 +32,8 @@ $menu_text = [
 		'view_my' => 'View my requests only',
 		'view_resolved' => 'View closed requests',
 		'new_request' => 'New request',
+		'new_request_standard' => 'Standard request',
+		'new_request_quick_test' => 'Quick test request (dev only)',
 		'search' => 'Search requests',
 		'reports' => 'Reports',
 		'admin' => 'Administration',
@@ -53,6 +55,8 @@ $menu_text = [
 		'view_my' => 'Afficher mes demandes uniquement',
 		'view_resolved' => 'Afficher les demandes fermées',
 		'new_request' => 'Nouvelle demande',
+		'new_request_standard' => 'Demande standard',
+		'new_request_quick_test' => 'Demande de test rapide (dev seulement)',
 		'search' => 'Recherche d\'une demande',
 		'reports' => 'Rapports',
 		'admin' => 'Administration',
@@ -87,7 +91,16 @@ $menuLangStrings = $menu_text[$lang_code];
 						</ul>
 					</li>
 				<?php } ?>
-				<li><a href="/openrequest.php?lang=<?= $lang_code ?>" class="item"><?= htmlspecialchars($menuLangStrings['new_request']) ?></a></li>
+				<?php if ($isSuperAdmin && !app_is_production()) { ?>
+					<li><a href="#s-new-request" class="item"><?= htmlspecialchars($menuLangStrings['new_request']) ?></a>
+						<ul class="sm list-unstyled" id="s-new-request" role="menu">
+							<li><a href="/openrequest.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['new_request_standard']) ?></a></li>
+							<li><a href="/dev-create-test-request.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['new_request_quick_test']) ?></a></li>
+						</ul>
+					</li>
+				<?php } else { ?>
+					<li><a href="/openrequest.php?lang=<?= $lang_code ?>" class="item"><?= htmlspecialchars($menuLangStrings['new_request']) ?></a></li>
+				<?php } ?>
 				<?php if (!empty($_SESSION['pid']) && !isReadOnly()) { ?>
 					<li><a href="/asearch.php?lang=<?= $lang_code ?>" class="item"><?= htmlspecialchars($menuLangStrings['search']) ?></a></li>
 					<li><a href="/reports.php?lang=<?= $lang_code ?>" class="item"><?= htmlspecialchars($menuLangStrings['reports']) ?></a></li>
