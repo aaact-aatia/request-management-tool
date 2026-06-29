@@ -18,6 +18,161 @@ function app_env(string $key, ?string $default = null): ?string
     return $default;
 }
 
+function app_configurable_nonsecret_keys(): array
+{
+    return [
+        'APP_BASE_URL',
+        'NOTIFY_MODE',
+        'NOTIFY_REDIRECT_FORCE_OVERRIDE',
+        'NOTIFY_OVERRIDE_EMAIL',
+        'NOTIFY_OVERRIDE_CLIENT_EMAIL',
+        'NOTIFY_OVERRIDE_INTERNAL_EMAIL',
+        'GCNOTIFY_TEST_EMAIL',
+        'GCNOTIFY_CURL_CA_BUNDLE',
+        'GCNOTIFY_CURL_INSECURE',
+        'GCNOTIFY_TEMPLATE_REQUEST_TEAM_EN',
+        'GCNOTIFY_TEMPLATE_REQUEST_TEAM_FR',
+        'GCNOTIFY_TEMPLATE_REQUEST_AFTERFACT_TEAM_EN',
+        'GCNOTIFY_TEMPLATE_REQUEST_AFTERFACT_TEAM_FR',
+        'GCNOTIFY_TEMPLATE_REQUEST_AAACT',
+        'GCNOTIFY_TEMPLATE_REQUEST_CLIENT_EN',
+        'GCNOTIFY_TEMPLATE_REQUEST_CLIENT_FR',
+        'GCNOTIFY_TEMPLATE_REQUEST_DEFAULT_TEAM_EN',
+        'GCNOTIFY_TEMPLATE_REQUEST_DEFAULT_TEAM_FR',
+        'GCNOTIFY_TEMPLATE_REQUEST_DEFAULT_CLIENT_EN',
+        'GCNOTIFY_TEMPLATE_REQUEST_DEFAULT_CLIENT_FR',
+        'GCNOTIFY_TEMPLATE_RESOLVED_TEAM_EN',
+        'GCNOTIFY_TEMPLATE_RESOLVED_TEAM_FR',
+        'GCNOTIFY_TEMPLATE_RESOLVED_CLIENT_EN',
+        'GCNOTIFY_TEMPLATE_RESOLVED_CLIENT_FR',
+        'GCNOTIFY_TEMPLATE_STATUS_CHANGED_CLIENT_EN',
+        'GCNOTIFY_TEMPLATE_STATUS_CHANGED_CLIENT_FR',
+        'GCNOTIFY_TEMPLATE_REASSIGNED_TEAM_EN',
+        'GCNOTIFY_TEMPLATE_REASSIGNED_TEAM_FR',
+        'GCNOTIFY_TEMPLATE_REASSIGNED_CLIENT_EN',
+        'GCNOTIFY_TEMPLATE_REASSIGNED_CLIENT_FR',
+    ];
+}
+
+function app_settings_table_ensure($dbLink): bool
+{
+    if (!($dbLink instanceof mysqli)) {
+        return false;
+    }
+
+    $sql = "CREATE TABLE IF NOT EXISTS tblappconfig (
+        id INT NOT NULL AUTO_INCREMENT,
+        config_key VARCHAR(128) NOT NULL,
+        config_value TEXT NULL,
+        updated_by INT NULL,
+        updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        status TINYINT(1) NOT NULL DEFAULT 1,
+        PRIMARY KEY (id),
+        UNIQUE KEY uniq_tblappconfig_key (config_key)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+
+    return mysqli_query($dbLink, $sql) !== false;
+}
+
+function app_settings_table_exists($dbLink): bool
+{
+    static $checked = false;
+    static $exists = false;
+
+    if ($checked) {
+        return $exists;
+    }
+
+    $checked = true;
+
+    if (!($dbLink instanceof mysqli)) {
+        return false;
+    }
+
+    $sql = "SELECT 1 FROM INFORMATION_SCHEMA.TABLES
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME = 'tblappconfig'
+            LIMIT 1";
+    $result = mysqli_query($dbLink, $sql);
+    $exists = ($result instanceof mysqli_result) && mysqli_num_rows($result) > 0;
+
+    return $exists;
+}
+
+function app_db_settings_all(): array
+{
+    static $cache = null;
+
+    if (is_array($cache)) {
+        return $cache;
+    }
+
+    $cache = [];
+    global $link;
+    if (!($link instanceof mysqli)) {
+        return $cache;
+    }
+
+    if (!app_settings_table_exists($link)) {
+        return $cache;
+    }
+
+    $allowed = app_configurable_nonsecret_keys();
+    if (empty($allowed)) {
+        return $cache;
+    }
+
+    $escapedKeys = [];
+    foreach ($allowed as $key) {
+        $escapedKeys[] = "'" . mysqli_real_escape_string($link, $key) . "'";
+    }
+
+    $sql = "SELECT config_key, config_value
+            FROM tblappconfig
+            WHERE status = 1
+              AND config_key IN (" . implode(',', $escapedKeys) . ")";
+    $result = mysqli_query($link, $sql);
+    if ($result instanceof mysqli_result) {
+        while ($row = mysqli_fetch_assoc($result)) {
+            $cache[$row['config_key']] = (string) ($row['config_value'] ?? '');
+        }
+    }
+
+    return $cache;
+}
+
+function app_setting(string $key, ?string $default = null): ?string
+{
+    if (in_array($key, app_configurable_nonsecret_keys(), true)) {
+        $settings = app_db_settings_all();
+        if (array_key_exists($key, $settings) && $settings[$key] !== '') {
+            return $settings[$key];
+        }
+    }
+
+    return app_env($key, $default);
+}
+
+function app_setting_bool(string $key, bool $default = false): bool
+{
+    $rawValue = app_setting($key);
+    if ($rawValue === null || $rawValue === '') {
+        return $default;
+    }
+
+    $normalized = strtolower(trim((string) $rawValue));
+
+    if (in_array($normalized, ['1', 'true', 'yes', 'on'], true)) {
+        return true;
+    }
+
+    if (in_array($normalized, ['0', 'false', 'no', 'off'], true)) {
+        return false;
+    }
+
+    return $default;
+}
+
 function app_is_production(): bool
 {
     $environment = strtolower((string) app_env('APP_ENV', 'production'));
@@ -28,7 +183,7 @@ function app_is_production(): bool
 function app_notify_mode(): string
 {
     $defaultMode = app_is_production() ? 'live' : 'redirect';
-    $mode = strtolower((string) app_env('NOTIFY_MODE', $defaultMode));
+    $mode = strtolower((string) app_setting('NOTIFY_MODE', $defaultMode));
 
     if (!in_array($mode, ['live', 'redirect', 'disabled'], true)) {
         return $defaultMode;
@@ -55,7 +210,7 @@ function app_notify_redirect_recipient(string $recipientType = 'general'): ?stri
     $candidates[] = 'NOTIFY_OVERRIDE_EMAIL';
 
     foreach ($candidates as $key) {
-        $value = app_env($key);
+        $value = app_setting($key);
         if ($value !== null && $value !== '' && filter_var($value, FILTER_VALIDATE_EMAIL)) {
             return $value;
         }
@@ -66,7 +221,7 @@ function app_notify_redirect_recipient(string $recipientType = 'general'): ?stri
 
 function app_base_url(): string
 {
-    $configuredBaseUrl = trim((string) app_env('APP_BASE_URL', ''));
+    $configuredBaseUrl = trim((string) app_setting('APP_BASE_URL', ''));
     if ($configuredBaseUrl !== '') {
         return rtrim($configuredBaseUrl, '/');
     }
@@ -123,7 +278,7 @@ function app_notify_template_id(string $templateKey): string
     }
 
     $template = $templates[$templateKey];
-    return (string) app_env($template['env'], $template['default']);
+    return (string) app_setting($template['env'], $template['default']);
 }
 
 function app_env_required(string $key): string
@@ -167,12 +322,12 @@ function app_env_bool(string $key, bool $default = false): bool
 function app_gcnotify_curl_tls_options(): array
 {
     $options = [];
-    $caBundlePath = trim((string) app_env('GCNOTIFY_CURL_CA_BUNDLE', ''));
+    $caBundlePath = trim((string) app_setting('GCNOTIFY_CURL_CA_BUNDLE', ''));
     if ($caBundlePath !== '') {
         $options[CURLOPT_CAINFO] = $caBundlePath;
     }
 
-    if (app_env_bool('GCNOTIFY_CURL_INSECURE', false)) {
+    if (app_setting_bool('GCNOTIFY_CURL_INSECURE', false)) {
         $options[CURLOPT_SSL_VERIFYPEER] = false;
         $options[CURLOPT_SSL_VERIFYHOST] = 0;
     }

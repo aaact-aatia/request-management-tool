@@ -70,6 +70,98 @@ Examples:
 
 See `.env.example` for the full list.
 
+### Template model and ID mapping
+
+The application selects templates by logical key, then resolves each key to an environment variable (or a default UUID).
+
+This allows you to keep code stable and update template IDs by configuration only.
+
+### Communication language policy
+
+The application should record the language of the site the request came from when the request is created. Recommended field name: `requestlang` in `tbltriage`.
+
+- Set it from the current site/session language at submission time.
+- Use it to decide the language order for client-facing notifications.
+- Do not infer it later from the request text or the current user session.
+
+Policy:
+
+- Client-facing emails follow the request language first.
+- Internal/team/generic inbox emails are English-first.
+- If a message has both client and internal audiences, treat them as separate sends when possible.
+
+#### Communication matrix
+
+| Audience | Stored request language | Language order | Template family |
+|----------|-------------------------|----------------|-----------------|
+| Client | `en` | English first, then French | `*_CLIENT_EN` |
+| Client | `fr` | French first, then English | `*_CLIENT_FR` |
+| Team / internal inbox | `en` or `fr` | English first, then French if bilingual text is required | `*_TEAM_EN` |
+| Generic inbox | `en` or `fr` | English first, then French if bilingual text is required | `*_TEAM_EN` or a generic internal template |
+
+Recommended implementation rule:
+
+1. Use `requestlang` to pick the client-facing template order.
+2. Use English-first templates for internal and generic mailbox notifications.
+3. Keep template text grouped by audience, not by the sender's current UI state.
+
+#### Key to environment variable map
+
+| Flow | Key | App setting |
+|------|-----|-------------|
+| New request (team, EN) | `request_team_en` | `GCNOTIFY_TEMPLATE_REQUEST_TEAM_EN` |
+| New request (team, FR) | `request_team_fr` | `GCNOTIFY_TEMPLATE_REQUEST_TEAM_FR` |
+| New request after-fact (team, EN) | `request_afterfact_team_en` | `GCNOTIFY_TEMPLATE_REQUEST_AFTERFACT_TEAM_EN` |
+| New request after-fact (team, FR) | `request_afterfact_team_fr` | `GCNOTIFY_TEMPLATE_REQUEST_AFTERFACT_TEAM_FR` |
+| New request AAACT path | `request_aaact` | `GCNOTIFY_TEMPLATE_REQUEST_AAACT` |
+| New request (client, EN) | `request_client_en` | `GCNOTIFY_TEMPLATE_REQUEST_CLIENT_EN` |
+| New request (client, FR) | `request_client_fr` | `GCNOTIFY_TEMPLATE_REQUEST_CLIENT_FR` |
+| New request default (team, EN) | `request_default_team_en` | `GCNOTIFY_TEMPLATE_REQUEST_DEFAULT_TEAM_EN` |
+| New request default (team, FR) | `request_default_team_fr` | `GCNOTIFY_TEMPLATE_REQUEST_DEFAULT_TEAM_FR` |
+| New request default (client, EN) | `request_default_client_en` | `GCNOTIFY_TEMPLATE_REQUEST_DEFAULT_CLIENT_EN` |
+| New request default (client, FR) | `request_default_client_fr` | `GCNOTIFY_TEMPLATE_REQUEST_DEFAULT_CLIENT_FR` |
+| Resolved (team, EN) | `resolved_team_en` | `GCNOTIFY_TEMPLATE_RESOLVED_TEAM_EN` |
+| Resolved (team, FR) | `resolved_team_fr` | `GCNOTIFY_TEMPLATE_RESOLVED_TEAM_FR` |
+| Resolved (client, EN) | `resolved_client_en` | `GCNOTIFY_TEMPLATE_RESOLVED_CLIENT_EN` |
+| Resolved (client, FR) | `resolved_client_fr` | `GCNOTIFY_TEMPLATE_RESOLVED_CLIENT_FR` |
+| Status changed (client, EN) | `status_changed_client_en` | `GCNOTIFY_TEMPLATE_STATUS_CHANGED_CLIENT_EN` |
+| Status changed (client, FR) | `status_changed_client_fr` | `GCNOTIFY_TEMPLATE_STATUS_CHANGED_CLIENT_FR` |
+| Reassigned (team, EN) | `reassigned_team_en` | `GCNOTIFY_TEMPLATE_REASSIGNED_TEAM_EN` |
+| Reassigned (team, FR) | `reassigned_team_fr` | `GCNOTIFY_TEMPLATE_REASSIGNED_TEAM_FR` |
+| Reassigned (client, EN) | `reassigned_client_en` | `GCNOTIFY_TEMPLATE_REASSIGNED_CLIENT_EN` |
+| Reassigned (client, FR) | `reassigned_client_fr` | `GCNOTIFY_TEMPLATE_REASSIGNED_CLIENT_FR` |
+
+#### Recommended way to build templates
+
+Start small and expand:
+
+1. Create one connectivity template for `check_curl2.php` and set `GCNOTIFY_TEMPLATE_ID`.
+2. Create one generic workflow template for EN and one for FR.
+3. Point all EN override settings to the EN workflow template ID.
+4. Point all FR override settings to the FR workflow template ID.
+5. Run the full checklist and capture gaps in wording/fields.
+6. Split into specialized templates (new, reassigned, resolved, status changed) only when content needs diverge.
+
+#### Placeholder guidance
+
+Use placeholders that already exist in personalization payloads, such as:
+
+- `requestid`
+- `nrequestid`
+- `teamname`
+- `requesttitle`
+- `nrequestemail`
+- `url`
+
+When adding a placeholder to a template, verify that the relevant flow always supplies it.
+
+#### App Service setup checklist for template IDs
+
+1. Set `GCNOTIFY_TEMPLATE_ID` for direct connectivity test pages.
+2. Set all `GCNOTIFY_TEMPLATE_*` values used by the flows you are testing.
+3. Save settings and restart app service.
+4. Run `check_curl2.php` first, then run the workflow checklist.
+
 ### TLS troubleshooting (self-signed certificate chain)
 
 If you see this error from `check_curl2.php`:

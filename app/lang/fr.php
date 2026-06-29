@@ -377,8 +377,21 @@ return [
     'settings_heading' => 'Paramètres du compte',
     'settings_add_request_heading' => 'Ajouter manuellement une nouvelle demande',
     'settings_add_request_link' => 'Ajouter une demande (admin. uniquement)',
+    'settings_gcnotify_link' => 'Parametres GC Notify (admin. uniquement)',
 
     'settings_password_heading' => 'Réinitialisation du mot de passe',
+
+    // Page des parametres GC Notify (gcnotify-settings.php)
+    'gcnotify_settings_heading' => 'Parametres GC Notify',
+    'gcnotify_settings_intro' => 'Gerez les parametres GC Notify non sensibles depuis l\'application. Les valeurs enregistrees ici remplacent les valeurs d\'environnement pour la meme cle.',
+    'gcnotify_settings_saved' => 'Les parametres GC Notify ont ete enregistres avec succes.',
+    'gcnotify_settings_secret_note_title' => 'Gestion des secrets',
+    'gcnotify_settings_secret_note_body' => 'GCNOTIFY_API_KEY demeure uniquement dans l\'environnement et n\'est pas modifiable ici.',
+    'gcnotify_settings_delivery_heading' => 'Parametres de distribution et de routage',
+    'gcnotify_settings_templates_heading' => 'Remplacements des ID de gabarits',
+    'gcnotify_settings_templates_intro' => 'Les gabarits GC Notify doivent d abord etre crees et geres dans GC Notify. Entrez ici les UUID de gabarit pour que cette application puisse les referencer et les utiliser.',
+    'gcnotify_settings_save' => 'Enregistrer les parametres GC Notify',
+    'gcnotify_settings_back' => 'Retour aux parametres du compte',
     
     // Users management page (users.php)
     'users_page_title' => 'Gestion des utilisateurs - Outil de gestion des demandes - Bureau de l\'accessibilité de la TI',

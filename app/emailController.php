@@ -48,7 +48,7 @@ function rmt_notify_override_recipient(string $recipientType = 'general'): ?stri
 
 function rmt_notify_force_override_recipient(): bool
 {
-	$rawValue = strtolower(trim((string) app_env('NOTIFY_REDIRECT_FORCE_OVERRIDE', 'false')));
+	$rawValue = strtolower(trim((string) app_setting('NOTIFY_REDIRECT_FORCE_OVERRIDE', 'false')));
 
 	return in_array($rawValue, ['1', 'true', 'yes', 'on'], true);
 }

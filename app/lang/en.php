@@ -379,7 +379,20 @@ return [
     'settings_heading' => 'Account settings',
     'settings_add_request_heading' => 'Manually add a new request',
     'settings_add_request_link' => 'Add request (admin only)',
+    'settings_gcnotify_link' => 'GC Notify settings (admin only)',
     'settings_password_heading' => 'Reset password for Request Management Tool',
+
+    // GC Notify settings page (gcnotify-settings.php)
+    'gcnotify_settings_heading' => 'GC Notify settings',
+    'gcnotify_settings_intro' => 'Manage non-secret GC Notify settings from the application. Values saved here override environment values for the same key.',
+    'gcnotify_settings_saved' => 'GC Notify settings were saved successfully.',
+    'gcnotify_settings_secret_note_title' => 'Secret handling',
+    'gcnotify_settings_secret_note_body' => 'GCNOTIFY_API_KEY remains environment-only and is not editable here.',
+    'gcnotify_settings_delivery_heading' => 'Delivery and routing settings',
+    'gcnotify_settings_templates_heading' => 'Template ID overrides',
+    'gcnotify_settings_templates_intro' => 'GC Notify templates must be created and managed in GC Notify first. Enter the template UUIDs here so this application can reference and use them.',
+    'gcnotify_settings_save' => 'Save GC Notify settings',
+    'gcnotify_settings_back' => 'Back to account settings',
     
     // Users management page (users.php)
     'users_page_title' => 'User management - Request Management Tool - IT Accessibility Office',

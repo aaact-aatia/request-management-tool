@@ -38,6 +38,7 @@ $menu_text = [
 		'contacts' => 'Teams',
 		'catalogue' => 'Service catalogue',
 		'holidays' => 'Holidays',
+		'gcnotify_settings' => 'GC Notify settings',
 		'sources' => 'Sources',
 		'status' => 'Status',
 		'users' => 'Users',
@@ -58,6 +59,7 @@ $menu_text = [
 		'contacts' => 'Équipes',
 		'catalogue' => 'Catalogue de services',
 		'holidays' => 'Jours fériés',
+		'gcnotify_settings' => 'Parametres GC Notify',
 		'sources' => 'Sources',
 		'status' => 'Statuts',
 		'users' => 'Utilisateurs',
@@ -108,6 +110,7 @@ $menuLangStrings = $menu_text[$lang_code];
 							?>
 							<li><a href="/catalogue.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['catalogue']) ?></a></li>
 							<li><a href="/holidays-mgmt.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['holidays']) ?></a></li>
+							<li><a href="/gcnotify-settings.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['gcnotify_settings']) ?></a></li>
 							<?php } ?>
 							<li><a href="/sources.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['sources']) ?></a></li>
 							<li><a href="/status.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['status']) ?></a></li>
