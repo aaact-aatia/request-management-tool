@@ -13,9 +13,9 @@ require('sql.php');
 if (!isset($link) || !($link instanceof mysqli)) {
     throw new RuntimeException('Database connection was not initialized in sql.php');
 }
-require('includes/helpers.php');
-require('BlobStorage.php');
-require('emailController.php');
+require_once('includes/helpers.php');
+require_once('BlobStorage.php');
+require_once('emailController.php');
 
 // Detect language
 $lang = detectLanguage();
@@ -124,8 +124,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     
     // Insert the full triage record in one shot
     $daterequiredSql = $daterequiredu ? 'NULL' : "'$daterequired'";
-    $columns = "requestid, creatorid, catalogueid, serviceid, subserviceid, statusid, datereceived, slatimer, isreaudit, title, clientlname, clientfname, clientemail, clientphone, requestlang, daterequired, bdm, attach1, attach2, attach3, status";
-    $values  = "'$nrequestid', $userid, $catalogueid, $serviceid, $subserviceid, $statusid, '$dateopened', '$slatimer', $reauditFlag, '$requesttitle', '$clientlname', '$clientfname', '$clientemail', '$clientphone', '$requestlang', $daterequiredSql, '$bdm', '$attach1', '$attach2', '$attach3', '$status'";
+    $columns = "requestid, creatorid, catalogueid, serviceid, subserviceid, statusid, datereceived, slatimer, isreaudit, title, clientlname, clientfname, clientemail, clientphone, daterequired, bdm, attach1, attach2, attach3, status";
+    $values  = "'$nrequestid', $userid, $catalogueid, $serviceid, $subserviceid, $statusid, '$dateopened', '$slatimer', $reauditFlag, '$requesttitle', '$clientlname', '$clientfname', '$clientemail', '$clientphone', $daterequiredSql, '$bdm', '$attach1', '$attach2', '$attach3', '$status'";
+
+    $hasRequestLangColumn = function_exists('rmt_db_column_exists')
+        && rmt_db_column_exists($link, 'tbltriage', 'requestlang');
+    if ($hasRequestLangColumn) {
+        $columns .= ", requestlang";
+        $values  .= ", '$requestlang'";
+    }
     
     if ($firstsprintenddate) {
         $columns .= ", firstsprintenddate";
@@ -245,6 +252,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         "teamname" => $teamname,
         "requesttitle" => $requesttitle,
         "nrequestemailid" => $nrequestemailid,
+        "nrequestemail" => $clientemail,
         "client_fname" => $clientfname,
         "client_lname" => $clientlname,
         "client_email" => $clientemail,

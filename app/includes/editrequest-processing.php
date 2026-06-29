@@ -215,6 +215,7 @@ $personalisation = [
     "teamname" => $teamname,
     "requesttitle" => $requesttitle,
     "nrequestemailid" => $nrequestemailid,
+    "nrequestemail" => $clientemail,
     "client_fname" => $clientfname,
     "client_lname" => $clientlname,
     "client_email" => $clientemail,
