@@ -88,29 +88,11 @@ include 'includes/template/header.php';
 					$survey = $row2['survey'];
 					// If survey is 1 then send it
 					if ($survey==1) {
-						// Prepare email
-						$erequestnum = $row['requestid'];
-						$eclientemail = $row['clientemail'];
-						$esubject = "Sondage sur la satisfaction de la clientèle pour / Client satisfaction survey for a11y-".$erequestnum;
-						$erequestPublicId = urlencode('a11y-' . $erequestnum);
-						
-						// Build dynamic base URL using current server
-						$emailScheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-						$emailHost = isset($_SERVER['HTTP_HOST']) ? trim((string)$_SERVER['HTTP_HOST']) : '';
-						$emailBaseUrl = $emailHost !== '' ? ($emailScheme . '://' . $emailHost) : 'https://gcdc-ssc-ictaccess-linux-aaact-rmt-dev-asv.azurewebsites.net';
-						
-						$ebodyText = "Bonjour,\r\n\r\nVotre demande d'accessibilité a été complété par un membre de notre équipe, serait-il possible pour vous de compléter sondage sur la satisfaction de la clientèle? Ce sondage nous aidera à mieux servir nos clients et ne prendra que 30 secondes à remplir.\r\n\r\n"
-							. $emailBaseUrl . "/client-survey.php?lang=fr&erid=".$nrequestid."&reqid=".$erequestPublicId
-							. "\r\n\r\n**********************************************************\r\n\r\nHello,\r\n\r\nYour accessibility request has now been completed by one of our team members, could you please fill out the following client satisfaction survey? This survey will help us serve our clients better and will only take 30 seconds to complete.\r\n\r\n"
-							. $emailBaseUrl . "/client-survey.php?lang=en&erid=".$nrequestid."&reqid=".$erequestPublicId
-							. "\r\n\r\nMerci / Thank you";
-						$encodedSubject = rawurlencode($esubject);
-						$encodedBody = rawurlencode($ebodyText);
 				?>
 				<tr>
 					<td><a href="viewrequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?php echo base64_encode($requestid);?>&reqid=<?php echo urlencode('a11y-' . $requesttid);?>">a11y-<?php echo $requesttid ?> <span class="glyphicon glyphicon-eye-open"></span><span class="wb-inv"><?= htmlspecialchars($langFile['client_survey_pending_details']) ?></span></a></td>
 					<td><?php echo $title ?></td>
-					<td><a class="btn btn-primary mrgn-bttm-sm" href="/client-survey-link.php?lang=<?= htmlspecialchars($_SESSION['lang']) ?>&erid=<?php echo $nrequestid; ?>"><?= htmlspecialchars($langFile['client_survey_pending_view_links']) ?></a><br /><a class="btn btn-default mrgn-bttm-sm" href="mailto:<?php echo htmlspecialchars($eclientemail) ?>?subject=<?php echo $encodedSubject ?>&body=<?php echo $encodedBody ?>"><?= htmlspecialchars($langFile['client_survey_pending_generate_email']) ?></a><br /><a class="wb-lbx btn btn-primary" href="includes/client-survey-sent.php?id=<?php echo $row['id'];?>"><?= htmlspecialchars($langFile['client_survey_pending_mark_sent']) ?></a></td>
+					<td><a class="btn btn-primary mrgn-bttm-sm" href="/client-survey-link.php?lang=<?= htmlspecialchars($_SESSION['lang']) ?>&erid=<?php echo $nrequestid; ?>"><?= htmlspecialchars($langFile['client_survey_pending_view_links']) ?></a></td>
 				</tr>
 			<?php 
 					}

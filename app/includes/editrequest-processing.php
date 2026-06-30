@@ -66,6 +66,9 @@ $adminnotes = getPostValue('adminnotes');
 $updaterid = $_SESSION['pid'];
 $todaydate = getTodayDate();
 $lang = $_SESSION['lang'] ?? 'en';
+$requestlang = app_normalize_language($lang);
+$requestuidInt = (int) $requestuid;
+$postedRequestLang = app_normalize_language(getPostValue('requestlang', ''), '');
 
 function upsertDepartmentAgencyInNotes($notes, $departmentValue, $lang) {
     $cleanedNotes = preg_replace('/^\s*(Department\/agency|Ministère\/organisme):\s*.*(?:\R|$)/miu', '', (string)$notes);
@@ -144,15 +147,18 @@ if (isset($_FILES['fileToUpload']) && !empty($_FILES['fileToUpload']['tmp_name']
 // TEAM ASSIGNMENT & EMAIL NOTIFICATIONS
 // ============================================================================
 
-// Get previous values
-$result2 = mysqli_query($link, "SELECT catalogueid, serviceid, subserviceid, workerid, requestlang
-                                FROM tbltriage WHERE id = '$requestuid'");
+// Get previous values for reassignment checks.
+$result2 = mysqli_query($link, "SELECT catalogueid, serviceid, subserviceid, workerid FROM tbltriage WHERE id = '$requestuid'");
 $row2 = mysqli_fetch_assoc($result2);
 $ccatalogueid = $row2['catalogueid'];
 $cserviceid = $row2['serviceid'];
 $csubserviceid = $row2['subserviceid'];
 $prevWorkerid = $row2['workerid'];
-$requestlang = app_normalize_language($row2['requestlang'] ?? $requestlang);
+
+// Always honor the request's original language preference for outbound client notifications.
+$requestlang = in_array($postedRequestLang, ['en', 'fr'], true)
+    ? $postedRequestLang
+    : rmt_get_request_language($link, $requestuidInt, $requestlang);
 
 // Determine team contact
 $contactid = -1;
@@ -232,48 +238,8 @@ $personalisation = [
 if (!$isCurrentResolved && $isTargetResolved) {
     // Queue one survey send for newly resolved requests only.
     mysqli_query($link, "UPDATE tbltriage SET cssurvey = 0 WHERE id = '$requestuid' AND (cssurvey IS NULL)");
-
-    // Request resolved
-    $resolvedTemplate = app_notify_template_id('notification_generic');
-    $resolvedCategory = rmt_notification_template_category('resolved');
-    $resolvedTeamPersonalisation = $personalisation + [
-        'notification_event' => 'resolved',
-        'template_category_id' => $resolvedCategory['id'],
-        'template_category_name_en' => $resolvedCategory['name_en'],
-        'template_category_name_fr' => $resolvedCategory['name_fr'],
-        'subject' => rmt_notification_subject('resolved', 'internal', 'en', $personalisation),
-        'message' => rmt_notification_message('resolved', 'internal', 'en', $personalisation),
-    ];
-    sendEmail($teamemail, $resolvedTemplate, json_encode($resolvedTeamPersonalisation), ['recipientType' => 'internal']);
-    if ($teamemail != "daiu-anci@ssc-spc.gc.ca") {
-        $resolvedClientPersonalisation = $personalisation + [
-            'notification_event' => 'resolved',
-            'template_category_id' => $resolvedCategory['id'],
-            'template_category_name_en' => $resolvedCategory['name_en'],
-            'template_category_name_fr' => $resolvedCategory['name_fr'],
-            'subject' => rmt_notification_subject('resolved', 'client', $requestlang, $personalisation),
-            'message' => rmt_notification_message('resolved', 'client', $requestlang, $personalisation),
-        ];
-        sendEmail($clientemail, $resolvedTemplate, json_encode($resolvedClientPersonalisation), ['recipientType' => 'client']);
-    }
 } elseif ($cstatusid != $statusid) {
-    // Status changed (not to resolved)
-    if ($teamemail != "daiu-anci@ssc-spc.gc.ca") {
-        $statusChangedTemplate = app_notify_template_id('notification_generic');
-        $statusLabel = ($requestlang === 'fr') ? $statusFr : $statusEn;
-        $statusChangedPayload = $personalisation + ['status_label' => $statusLabel];
-        $statusChangedCategory = rmt_notification_template_category('status_changed');
-        $statusChangedPersonalisation = $personalisation + [
-            'notification_event' => 'status_changed',
-            'template_category_id' => $statusChangedCategory['id'],
-            'template_category_name_en' => $statusChangedCategory['name_en'],
-            'template_category_name_fr' => $statusChangedCategory['name_fr'],
-            'status_label' => $statusLabel,
-            'subject' => rmt_notification_subject('status_changed', 'client', $requestlang, $statusChangedPayload),
-            'message' => rmt_notification_message('status_changed', 'client', $requestlang, $statusChangedPayload),
-        ];
-        sendEmail($clientemail, $statusChangedTemplate, json_encode($statusChangedPersonalisation), ['recipientType' => 'client']);
-    }
+    // Status changed (not to resolved) - client notifications are manual only.
 }
 
 // Send emails for service/subservice changes
@@ -309,17 +275,6 @@ if ($csubserviceid != $subserviceid && hasValue($subserviceid)) {
             'message' => rmt_notification_message('reassigned', 'internal', 'en', $personalisation),
         ];
         sendEmail($newTeamEmail, $reassignedTemplate, json_encode($reassignedTeamPersonalisation), ['recipientType' => 'internal']);
-        if ($newTeamEmail != "daiu-anci@ssc-spc.gc.ca") {
-            $reassignedClientPersonalisation = $personalisation + [
-                'notification_event' => 'reassigned',
-                'template_category_id' => $reassignedCategory['id'],
-                'template_category_name_en' => $reassignedCategory['name_en'],
-                'template_category_name_fr' => $reassignedCategory['name_fr'],
-                'subject' => rmt_notification_subject('reassigned', 'client', $requestlang, $personalisation),
-                'message' => rmt_notification_message('reassigned', 'client', $requestlang, $personalisation),
-            ];
-            sendEmail($clientemail, $reassignedTemplate, json_encode($reassignedClientPersonalisation), ['recipientType' => 'client']);
-        }
     }
 } elseif ($cserviceid != $serviceid) {
     // Service changed
@@ -348,17 +303,6 @@ if ($csubserviceid != $subserviceid && hasValue($subserviceid)) {
             'message' => rmt_notification_message('reassigned', 'internal', 'en', $personalisation),
         ];
         sendEmail($newTeamEmail, $reassignedTemplate, json_encode($reassignedTeamPersonalisation), ['recipientType' => 'internal']);
-        if ($newTeamEmail != "daiu-anci@ssc-spc.gc.ca") {
-            $reassignedClientPersonalisation = $personalisation + [
-                'notification_event' => 'reassigned',
-                'template_category_id' => $reassignedCategory['id'],
-                'template_category_name_en' => $reassignedCategory['name_en'],
-                'template_category_name_fr' => $reassignedCategory['name_fr'],
-                'subject' => rmt_notification_subject('reassigned', 'client', $requestlang, $personalisation),
-                'message' => rmt_notification_message('reassigned', 'client', $requestlang, $personalisation),
-            ];
-            sendEmail($clientemail, $reassignedTemplate, json_encode($reassignedClientPersonalisation), ['recipientType' => 'client']);
-        }
     }
 }
 

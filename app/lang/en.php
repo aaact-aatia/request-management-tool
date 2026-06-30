@@ -245,7 +245,6 @@ return [
     'client_survey_pending_col_title' => 'Title',
     'client_survey_pending_col_actions' => 'Actions',
     'client_survey_pending_details' => 'details',
-    'client_survey_pending_generate_email' => 'Generate survey email',
     'client_survey_pending_view_links' => 'View survey links',
     'client_survey_pending_mark_sent' => 'Mark as sent',
     'client_survey_pending_no_surveys' => 'No surveys available!',
@@ -259,8 +258,15 @@ return [
     'client_survey_link_french' => 'French survey link',
     'client_survey_link_english' => 'English survey link',
     'client_survey_link_email_client' => 'Open a draft email to the client',
+    'client_survey_link_send_resolved' => 'Send resolved + survey email to client',
+    'client_survey_link_resolved_sent' => 'Resolved email sent to the client (with survey links when enabled).',
+    'client_survey_link_missing_email' => 'Client email is missing for this request.',
+    'client_survey_link_send_failed' => 'Email could not be sent. Please verify GC Notify settings and try again.',
     'client_survey_link_back_request' => 'Back to request',
     'client_survey_link_survey_disabled' => 'This catalogue is currently marked as not requiring surveys.',
+    'client_survey_link_survey_status_label' => 'Survey enabled',
+    'client_survey_link_survey_status_enabled' => 'Yes',
+    'client_survey_link_survey_status_disabled' => 'No',
     
     // Batch AAACT Info page (batch-ace-info.php)
     'batch_ace_no_details' => 'No details available',

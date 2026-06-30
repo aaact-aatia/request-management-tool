@@ -57,6 +57,9 @@ $translations = [
         'client_lastname' => 'Client last name',
         'client_firstname' => 'Client first name',
         'client_email' => 'Client email',
+        'request_language' => 'Preferred language',
+        'language_english' => 'English',
+        'language_french' => 'French',
         'department_agency' => 'Department/agency',
         'client_phone' => 'Client phone #',
         'request_source' => 'Request source',
@@ -126,6 +129,9 @@ $translations = [
         'client_lastname' => 'Nom du client',
         'client_firstname' => 'Prénom du client',
         'client_email' => 'Courriel du client',
+        'request_language' => 'Langue preferee',
+        'language_english' => 'Anglais',
+        'language_french' => 'Francais',
         'department_agency' => 'Ministère/organisme',
         'client_phone' => 'Numéro de téléphone client',
         'request_source' => 'Source de la demande',
@@ -233,6 +239,8 @@ include 'includes/template/head.php';
 
             $departmentAgency = '';
             $departmentAgencyCommlogId = 0;
+            $originalRequestLang = rmt_get_request_language($link, (int) $requestuid, $_SESSION['lang'] ?? 'en');
+            $originalRequestLangLabel = ($originalRequestLang === 'fr') ? $t['language_french'] : $t['language_english'];
             $deptPrefixRegex = '/^(Department\/agency|Ministère\/organisme):\s*(.+)$/miu';
 
             $deptResult = mysqli_query($link, "SELECT id, notes FROM tblcommlog WHERE triageid = '$requestuid' AND status = '1' ORDER BY id ASC");
@@ -246,6 +254,8 @@ include 'includes/template/head.php';
         ?>
         
         <form method="POST" enctype="multipart/form-data" action="editrequest.php?lang=<?php echo $lang; ?>&id=<?php echo $row['id']; ?>">
+
+            <input type="hidden" name="requestlang" value="<?php echo htmlspecialchars($originalRequestLang, ENT_QUOTES, 'UTF-8'); ?>">
 
             <?php
             $readonly = !canEditRequests();
@@ -403,10 +413,17 @@ include 'includes/template/head.php';
                 <!-- Row: Client Phone | Request Source (catalogue 4) | Audience (catalogues 8/9) -->
                 <div class="row">
                     <div class="col-md-6">
+                        <?php echo renderTextInput('requestlang_display', $t['request_language'], $originalRequestLangLabel . ' (' . $originalRequestLang . ')', false, true); ?>
+                    </div>
+                    <div class="col-md-6">
                         <?php echo renderTextInput('clientphone', $t['client_phone'], $row['clientphone'], false, false, 'tel', 'data-rule-phoneUS="true"'); ?>
                     </div>
-                    <?php if ($catalogueid == 4): ?>
+                </div>
+
+                <?php if ($catalogueid == 4 || (in_array($catalogueid, [8, 9]) && hasValue($row['audienceid'] ?? null))): ?>
+                <div class="row">
                     <div class="col-md-6">
+                        <?php if ($catalogueid == 4): ?>
                         <?php
                         $sources = getDropdownOptions($link, 'tblsources', $lang);
                         $sourceOptions = [];
@@ -415,9 +432,7 @@ include 'includes/template/head.php';
                         }
                         echo renderSelect('sourceid', $t['request_source'], $sourceOptions, $row['sourceid'], true, $t['select_source']);
                         ?>
-                    </div>
-                    <?php elseif (in_array($catalogueid, [8, 9]) && hasValue($row['audienceid'] ?? null)): ?>
-                    <div class="col-md-6">
+                        <?php elseif (in_array($catalogueid, [8, 9]) && hasValue($row['audienceid'] ?? null)): ?>
                         <?php
                         $audiences = getDropdownOptions($link, 'tblaudience', $lang);
                         $audienceOptions = [];
@@ -426,9 +441,10 @@ include 'includes/template/head.php';
                         }
                         echo renderSelect('audience', $t['intended_audience'], $audienceOptions, $row['audienceid'], true, $t['select_audience']);
                         ?>
+                        <?php endif; ?>
                     </div>
-                    <?php endif; ?>
                 </div>
+                <?php endif; ?>
 
             </fieldset>
 

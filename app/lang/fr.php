@@ -243,7 +243,6 @@ return [
     'client_survey_pending_col_title' => 'Titre',
     'client_survey_pending_col_actions' => 'Actions',
     'client_survey_pending_details' => 'détails',
-    'client_survey_pending_generate_email' => 'Générer le courriel du sondage',
     'client_survey_pending_view_links' => 'Voir les liens du sondage',
     'client_survey_pending_mark_sent' => 'Marquer comme envoyé',
     'client_survey_pending_no_surveys' => 'Aucun sondage disponible!',
@@ -257,8 +256,15 @@ return [
     'client_survey_link_french' => 'Lien du sondage en français',
     'client_survey_link_english' => 'Lien du sondage en anglais',
     'client_survey_link_email_client' => 'Ouvrir un courriel prérempli au client',
+    'client_survey_link_send_resolved' => 'Envoyer le courriel de resolution + sondage au client',
+    'client_survey_link_resolved_sent' => 'Le courriel de resolution a ete envoye au client (avec liens de sondage si actives).',
+    'client_survey_link_missing_email' => 'Le courriel du client est manquant pour cette demande.',
+    'client_survey_link_send_failed' => 'Le courriel n\'a pas pu etre envoye. Verifiez la configuration de GC Notify et reessayez.',
     'client_survey_link_back_request' => 'Retour à la demande',
     'client_survey_link_survey_disabled' => 'Ce catalogue est actuellement marqué comme ne nécessitant pas de sondage.',
+    'client_survey_link_survey_status_label' => 'Sondage active',
+    'client_survey_link_survey_status_enabled' => 'Oui',
+    'client_survey_link_survey_status_disabled' => 'Non',
     
     // Batch AAACT Info page (batch-ace-info.php)
     'batch_ace_no_details' => 'Aucun détail disponible',

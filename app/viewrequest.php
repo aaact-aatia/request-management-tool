@@ -29,6 +29,9 @@ $translations = [
 		'last_name' => 'Last name',
 		'first_name' => 'First name',
 		'client_email' => 'Client email',
+		'request_language' => 'Preferred language',
+		'language_english' => 'English',
+		'language_french' => 'French',
 		'send_email' => 'Send email',
 		'department_agency' => 'Department/agency',
 		'client_phone' => 'Client phone number',
@@ -68,15 +71,20 @@ $translations = [
 		'download_all' => 'Download All',
 		'download' => 'Download',
 		'css_completed' => 'Client satisfaction survey',
+		'resolved_email_status' => 'Resolved email to client',
+		'resolved_email_sent' => 'Sent',
+		'resolved_email_not_sent' => 'Not sent',
+		'resolved_email_sent_on' => 'Sent on',
+		'resolved_email_send_button' => 'Send resolved + survey email now',
+		'resolved_email_missing_client' => 'Client email is missing for this request.',
 		'completed' => 'completed',
 		'not_completed' => 'not completed',
 		'overall_satisfaction' => 'Over-all satisfaction',
 		'response_time' => 'Response time',
 		'comments' => 'Comments',
 		'na' => 'N/A',
-		'css_send' => 'Please send the client satisfaction survey link to the client using the copy function below.',
-		'view_links' => 'View survey links',
-		'generate_email' => 'Generate email with survey link',
+		'css_send' => 'Use the client notification page to send the resolved email (with survey links when enabled).',
+		'view_links' => 'Open client notification page',
 		'survey_sent' => 'Survey was sent',
 		'resend' => 'resend?',
 		'mark_sent' => 'Mark survey as sent',
@@ -115,6 +123,9 @@ $translations = [
 		'last_name' => 'Nom',
 		'first_name' => 'Prénom',
 		'client_email' => 'Courriel du client',
+		'request_language' => 'Langue preferee',
+		'language_english' => 'Anglais',
+		'language_french' => 'Francais',
 		'send_email' => 'Envoyer un courriel',
 		'department_agency' => 'Ministère/organisme',
 		'client_phone' => 'Numéro de téléphone client',
@@ -154,15 +165,20 @@ $translations = [
 		'download_all' => 'Tout télécharger',
 		'download' => 'Télécharger',
 		'css_completed' => 'Sondage de satisfaction de la clientèle',
+		'resolved_email_status' => 'Courriel de resolution au client',
+		'resolved_email_sent' => 'Envoye',
+		'resolved_email_not_sent' => 'Non envoye',
+		'resolved_email_sent_on' => 'Envoye le',
+		'resolved_email_send_button' => 'Envoyer le courriel de resolution + sondage',
+		'resolved_email_missing_client' => 'Le courriel du client est manquant pour cette demande.',
 		'completed' => 'complété',
 		'not_completed' => 'non complété',
 		'overall_satisfaction' => 'Satisfaction globale',
 		'response_time' => 'Temps de réponse',
 		'comments' => 'Commentaires',
 		'na' => 'S.O.',
-		'css_send' => 'Veuillez envoyer le lien du sondage de satisfaction de la clientèle au client en utilisant la fonction de copie ci-dessous.',
-		'view_links' => 'Voir les liens du sondage',
-		'generate_email' => 'Générer un courriel avec le lien du sondage',
+		'css_send' => 'Utilisez la page de notification client pour envoyer le courriel de resolution (avec liens de sondage lorsqu\'ils sont actives).',
+		'view_links' => 'Ouvrir la page de notification client',
 		'survey_sent' => 'Le sondage a été envoyé',
 		'resend' => 'renvoyer?',
 		'mark_sent' => 'Marquer le sondage comme envoyé',
@@ -252,6 +268,8 @@ if(mysqli_num_rows($result)>0){
 		$servicename = '';
 		$cataloguename = '';
 		$departmentAgency = '';
+		$requestLanguageCode = rmt_get_request_language($link, (int) $triageid, $lang);
+		$requestLanguageLabel = ($requestLanguageCode === 'fr') ? $t['language_french'] : $t['language_english'];
 		
 		if ($subserviceid!=0) {
 			// Sub-service is not empty so grab the name
@@ -567,6 +585,10 @@ if(mysqli_num_rows($result)>0){
 					<dd><a href="mailto:<?php echo htmlspecialchars($row['clientemail']) ?>?Subject=a11y-<?php echo $row['requestid'] ?> - <?php echo htmlspecialchars($row['title']) ?>"><?php echo htmlspecialchars($row['clientemail']) ?> <span class="glyphicon glyphicon-envelope"></span><span class="wb-inv">- <?= $t['send_email'] ?></span></a></dd>
 				</div>
 				<?php } ?>
+				<div style="break-inside: avoid;">
+					<dt><?= $t['request_language'] ?></dt>
+					<dd><?php echo htmlspecialchars($requestLanguageLabel, ENT_QUOTES, 'UTF-8'); ?> (<?php echo htmlspecialchars($requestLanguageCode, ENT_QUOTES, 'UTF-8'); ?>)</dd>
+				</div>
 				<?php if ($row['clientphone'] != "") { ?>
 				<div style="break-inside: avoid;">
 					<dt><?= $t['client_phone'] ?></dt>
@@ -763,8 +785,30 @@ $blobStorage = new AzureBlobStorageManager();
 
 			<?php if($_SESSION['pid']!=""){ ?>
 			<?php
-			// Check if status is resolved, if it is then display the client satisfaction survey link and results if available
+			// Check if status is resolved, if it is then display the client satisfaction survey status
 			if (rmt_is_resolved_status_id($link, $statusid)){
+			$resolvedEmailSentDate = rmt_get_resolved_email_sent_date($link, (int) $triageid);
+			$resolvedEmailSent = ($resolvedEmailSentDate !== null && $resolvedEmailSentDate !== '');
+			$resolvedClientEmail = trim((string) ($row['clientemail'] ?? ''));
+			?>
+			<h2><?= htmlspecialchars($t['resolved_email_status']) ?></h2>
+			<p>
+				<strong><?= htmlspecialchars($resolvedEmailSent ? $t['resolved_email_sent'] : $t['resolved_email_not_sent']) ?></strong>
+				<?php if ($resolvedEmailSent): ?>
+				- <?= htmlspecialchars($t['resolved_email_sent_on']) ?> <?= htmlspecialchars($resolvedEmailSentDate) ?>
+				<?php endif; ?>
+			</p>
+			<?php if (!$resolvedEmailSent): ?>
+				<?php if ($resolvedClientEmail !== ''): ?>
+				<form method="post" action="/client-survey-link.php?lang=<?= htmlspecialchars($_SESSION['lang']) ?>&erid=<?php echo $nrequestid; ?>" class="form-inline mrgn-bttm-md">
+					<input type="hidden" name="email_action" value="send_resolved_email">
+					<button type="submit" class="btn btn-primary"><?= htmlspecialchars($t['resolved_email_send_button']) ?></button>
+				</form>
+				<?php else: ?>
+				<p><?= htmlspecialchars($t['resolved_email_missing_client']) ?></p>
+				<?php endif; ?>
+			<?php endif; ?>
+			<?php
 			// First check if surveys are enabled for this catalogue
 			$catalogueSurveySql = "SELECT survey FROM tblcatalogue WHERE id = '$catalogueid'";
 			$catalogueSurveyResult = mysqli_query($link, $catalogueSurveySql);
@@ -794,35 +838,12 @@ $blobStorage = new AzureBlobStorageManager();
 			</dl>
 			<?php
 				} else {
-					// No results so display copy form link for triage agent
-				    $surveySentCount = $row['cssurvey'];
+					$surveySentCount = (int) ($row['cssurvey'] ?? 0);
 			?>
 			<h2><?= htmlspecialchars($t['css_completed']) ?> <span class="glyphicon glyphicon-remove"></span><span class="wb-inv"><?= htmlspecialchars($t['not_completed']) ?></span></h2>
 			
 			<p><?= htmlspecialchars($t['css_send']) ?></p>
-			
-			<?php
-			// Prepare email
-			$erequestnum = $row['requestid'];
-			$eclientemail = $row['clientemail'];
-			$esubject = "Sondage sur la satisfaction de la clientèle pour / Client satisfaction survey for a11y-".$erequestnum;
-			$erequestPublicId = urlencode('a11y-' . $erequestnum);
-			
-			// Build dynamic base URL using current server
-			$emailScheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-			$emailHost = isset($_SERVER['HTTP_HOST']) ? trim((string)$_SERVER['HTTP_HOST']) : '';
-			$emailBaseUrl = $emailHost !== '' ? ($emailScheme . '://' . $emailHost) : 'https://gcdc-ssc-ictaccess-linux-aaact-rmt-dev-asv.azurewebsites.net';
-			
-			$ebodyText = "Bonjour,\r\n\r\nVotre demande d’accessibilité a été complété par un membre de notre équipe, serait-il possible pour vous de compléter sondage sur la satisfaction de la clientèle? Ce sondage nous aidera à mieux servir nos clients et ne prendra que 30 secondes à remplir.\r\n\r\n"
-				. $emailBaseUrl . "/client-survey.php?lang=fr&erid=".$nrequestid."&reqid=".$erequestPublicId
-				. "\r\n\r\n**********************************************************\r\n\r\nHello,\r\n\r\nYour accessibility request has now been completed by one of our team members, could you please fill out the following client satisfaction survey? This survey will help us serve our clients better and will only take 30 seconds to complete.\r\n\r\n"
-				. $emailBaseUrl . "/client-survey.php?lang=en&erid=".$nrequestid."&reqid=".$erequestPublicId
-				. "\r\n\r\nMerci / Thank you";
-			$encodedSubject = rawurlencode($esubject);
-			$encodedBody = rawurlencode($ebodyText);
-			?>
-			
-			<p><a class="btn btn-primary" href="/client-survey-link.php?lang=<?= htmlspecialchars($_SESSION['lang']) ?>&erid=<?php echo $nrequestid; ?>"><?= htmlspecialchars($t['view_links']) ?></a> <a class="btn btn-default" href="mailto:<?php echo htmlspecialchars($eclientemail) ?>?subject=<?php echo $encodedSubject ?>&body=<?php echo $encodedBody ?>"><?= htmlspecialchars($t['generate_email']) ?></a> <?php if ($surveySentCount>=1) { ?><a class="wb-lbx btn btn-primary" href="includes/client-survey-sent.php?id=<?php echo $row['id'];?>"><?= htmlspecialchars($t['survey_sent']) ?> (<?php echo $surveySentCount ?>), <?= htmlspecialchars($t['resend']) ?> <span class="glyphicon glyphicon-ok"></span></a><?php } else {?><a class="wb-lbx btn btn-primary" href="includes/client-survey-sent.php?id=<?php echo $row['id'];?>"><?= htmlspecialchars($t['mark_sent']) ?></a><?php } ?></p>
+			<p><a class="btn btn-primary" href="/client-survey-link.php?lang=<?= htmlspecialchars($_SESSION['lang']) ?>&erid=<?php echo $nrequestid; ?>"><?= htmlspecialchars($t['view_links']) ?></a> <?php if ($surveySentCount>=1) { ?><span class="label label-success"><?= htmlspecialchars($t['survey_sent']) ?> (<?php echo $surveySentCount ?>)</span><?php } ?></p>
 			
 			<?php
 				}

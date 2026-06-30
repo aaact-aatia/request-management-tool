@@ -147,6 +147,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     mysqli_query($link, $sql);
     $latestid = mysqli_insert_id($link);
     $nrequestemailid = base64_encode($latestid);
+
+    // Preserve original request language even on older schemas that may not include tbltriage.requestlang.
+    rmt_save_request_language_metadata($link, (int) $latestid, $requestlang, (int) $creatorid);
     
     // Add client notes to communication log if provided
     $datereceived = date("Y-m-d");
