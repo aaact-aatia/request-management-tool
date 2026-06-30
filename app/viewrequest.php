@@ -352,6 +352,7 @@ if(mysqli_num_rows($result)>0){
 		$cBdays = calculateSLA($link, $row['requestid'], $ndatereceived);
 
 		$sla2 = $sla - 1;
+		$suppressSlaWarning = rmt_is_resolved_status_id($link, $row['statusid']) || in_array((int)$row['statusid'], [5, 6], true);
 		// Now check if the SLA is close
 		if ($uReview==false) {
 			if ($cBdays > $dsla) {
@@ -367,7 +368,6 @@ if(mysqli_num_rows($result)>0){
 			if ($cBdays >= $sla2) {
 				$closedue = true;
 			}
-			$suppressSlaWarning = rmt_is_resolved_status_id($link, $row['statusid']) || in_array((int)$row['statusid'], [5, 6], true);
 		}
 ?>
 	<?php

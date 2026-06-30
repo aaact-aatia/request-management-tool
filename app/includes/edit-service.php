@@ -78,6 +78,7 @@ if(rmt_result_num_rows($result2)>0){
 		<div class="form-group">
 			<label for="contactid"><span class="field-name"><?php echo $lang_code === 'en' ? 'Contact group' : 'Groupe de contact'; ?>: <strong>(<?php echo $lang_code === 'en' ? 'required' : 'requis'; ?>)</strong></span></label>
 			<select class="form-control" id="contactid" name="contactid" required>
+				<option value=""<?php if (empty($row2['contactid'])) echo " selected"; ?> disabled><?php echo $lang_code === 'en' ? 'Select contact group' : 'Selectionnez un groupe de contact'; ?></option>
 				<?php 
 				$sort_field = $lang_code === 'fr' ? 'namefr' : 'nameen';
 				$sql3 = "SELECT * FROM tblteams WHERE status='1' ORDER BY {$sort_field} ASC";

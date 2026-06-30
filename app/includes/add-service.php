@@ -107,6 +107,7 @@ $t = $translations[$lang_code];
 		<div class="form-group">
 			<label for="contactid"><span class="field-name"><?= htmlspecialchars($t['contact_group']) ?> <strong><?= htmlspecialchars($t['required']) ?></strong></span></label>
 			<select class="form-control" id="contactid" name="contactid" required>
+				<option value="" selected disabled><?= $lang_code === 'fr' ? 'Selectionnez un groupe de contact' : 'Select contact group' ?></option>
 				<?php 
 				$sql2 = "SELECT * FROM tblteams WHERE status='1' ORDER BY {$t['team_sort_field']} ASC";
 				$result2 = rmt_admin_query($link,$sql2);	

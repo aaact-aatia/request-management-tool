@@ -308,56 +308,52 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             }
         }
         
-        // Send to client (not for AAACT)
-        if ($teamemail != "daiu-anci@ssc-spc.gc.ca") {
-            $clientCategory = rmt_notification_template_category('request_created');
-            $clientPersonalisation = $personalisation + [
-                'notification_event' => 'request_created',
-                'template_category_id' => $clientCategory['id'],
-                'template_category_name_en' => $clientCategory['name_en'],
-                'template_category_name_fr' => $clientCategory['name_fr'],
-                'subject' => rmt_notification_subject('request_created', 'client', $requestlang, $personalisation),
-                'message' => rmt_notification_message('request_created', 'client', $requestlang, $personalisation),
-            ];
-            sendEmail($clientemail, $template_id, json_encode($clientPersonalisation), ['recipientType' => 'client']);
-        }
+        // Always send to client for new submissions.
+        $clientCategory = rmt_notification_template_category('request_created');
+        $clientPersonalisation = $personalisation + [
+            'notification_event' => 'request_created',
+            'template_category_id' => $clientCategory['id'],
+            'template_category_name_en' => $clientCategory['name_en'],
+            'template_category_name_fr' => $clientCategory['name_fr'],
+            'subject' => rmt_notification_subject('request_created', 'client', $requestlang, $personalisation),
+            'message' => rmt_notification_message('request_created', 'client', $requestlang, $personalisation),
+        ];
+        sendEmail($clientemail, $template_id, json_encode($clientPersonalisation), ['recipientType' => 'client']);
         
     } elseif ($notification != "N" || $notification == 1) {
-        // Default notification behavior (not for AAACT)
-        if ($teamemail != "daiu-anci@ssc-spc.gc.ca") {
-            // Team notification
+        // Default notification behavior.
+        $template_id = app_notify_template_id('notification_generic');
+		
+        if ($catalogueid == 9 || $catalogueid == 8) {
             $template_id = app_notify_template_id('notification_generic');
-            
-            if ($catalogueid == 9 || $catalogueid == 8) {
-                $template_id = app_notify_template_id('notification_generic');
-            }
-            
-            if (!empty($teamemail)) {
-                $teamMessageEvent = ($catalogueid == 9 || $catalogueid == 8) ? 'request_aaact' : 'request_created';
-                $teamCategory = rmt_notification_template_category($teamMessageEvent);
-                $teamPersonalisation = $personalisation + [
-                    'notification_event' => $teamMessageEvent,
-                    'template_category_id' => $teamCategory['id'],
-                    'template_category_name_en' => $teamCategory['name_en'],
-                    'template_category_name_fr' => $teamCategory['name_fr'],
-                    'subject' => rmt_notification_subject($teamMessageEvent, 'internal', 'en', $personalisation),
-                    'message' => rmt_notification_message($teamMessageEvent, 'internal', 'en', $personalisation),
-                ];
-                sendEmail($teamemail, $template_id, json_encode($teamPersonalisation), ['recipientType' => 'internal']);
-            }
-            
-            // Client notification
-            $clientCategory = rmt_notification_template_category('request_created');
-            $clientPersonalisation = $personalisation + [
-                'notification_event' => 'request_created',
-                'template_category_id' => $clientCategory['id'],
-                'template_category_name_en' => $clientCategory['name_en'],
-                'template_category_name_fr' => $clientCategory['name_fr'],
-                'subject' => rmt_notification_subject('request_created', 'client', $requestlang, $personalisation),
-                'message' => rmt_notification_message('request_created', 'client', $requestlang, $personalisation),
-            ];
-            sendEmail($clientemail, $template_id, json_encode($clientPersonalisation), ['recipientType' => 'client']);
         }
+		
+        // Team notification
+        if (!empty($teamemail)) {
+            $teamMessageEvent = ($catalogueid == 9 || $catalogueid == 8) ? 'request_aaact' : 'request_created';
+            $teamCategory = rmt_notification_template_category($teamMessageEvent);
+            $teamPersonalisation = $personalisation + [
+                'notification_event' => $teamMessageEvent,
+                'template_category_id' => $teamCategory['id'],
+                'template_category_name_en' => $teamCategory['name_en'],
+                'template_category_name_fr' => $teamCategory['name_fr'],
+                'subject' => rmt_notification_subject($teamMessageEvent, 'internal', 'en', $personalisation),
+                'message' => rmt_notification_message($teamMessageEvent, 'internal', 'en', $personalisation),
+            ];
+            sendEmail($teamemail, $template_id, json_encode($teamPersonalisation), ['recipientType' => 'internal']);
+        }
+		
+        // Always send to client for new submissions.
+        $clientCategory = rmt_notification_template_category('request_created');
+        $clientPersonalisation = $personalisation + [
+            'notification_event' => 'request_created',
+            'template_category_id' => $clientCategory['id'],
+            'template_category_name_en' => $clientCategory['name_en'],
+            'template_category_name_fr' => $clientCategory['name_fr'],
+            'subject' => rmt_notification_subject('request_created', 'client', $requestlang, $personalisation),
+            'message' => rmt_notification_message('request_created', 'client', $requestlang, $personalisation),
+        ];
+        sendEmail($clientemail, $template_id, json_encode($clientPersonalisation), ['recipientType' => 'client']);
     }
     
     // Redirect to view request page
