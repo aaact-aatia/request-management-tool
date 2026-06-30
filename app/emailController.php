@@ -35,6 +35,7 @@ function rmt_notify_override_recipient(string $recipientType = 'general'): ?stri
 	}
 
 	$candidates[] = 'NOTIFY_OVERRIDE_EMAIL';
+	$candidates[] = 'GCNOTIFY_TEST_EMAIL';
 
 	foreach ($candidates as $key) {
 		$value = app_env($key);
