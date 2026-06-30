@@ -34,8 +34,7 @@ $pageTitle = $page['title'][$lang];
 $pageDescription = $page['description'][$lang];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $requestLanguage = app_normalize_language($_POST['requestlang'] ?? $lang, $lang);
-    $_SESSION['lang'] = $requestLanguage;
+    $requestLanguage = app_normalize_language($lang, $lang);
 
     $clientEmail = trim((string) ($_SESSION['email'] ?? ''));
     if ($clientEmail === '' || !filter_var($clientEmail, FILTER_VALIDATE_EMAIL)) {
@@ -88,25 +87,13 @@ include 'includes/template/head.php';
 
     <div class="alert alert-info">
         <p><?php echo $lang === 'fr'
-            ? 'Cet outil cree une demande de test pre-remplie dans la langue choisie et l ouvre ensuite pour validation.'
-            : 'This tool creates a prefilled test request in the selected language and then opens it for validation.'; ?></p>
+            ? 'Cette demande de test sera creee et enregistree en francais. Pour tester une demande en anglais, changez la langue de l application vers anglais avant de la creer.'
+            : 'This test request will be created and stored as English. To test a French request, switch the app language to French before creating it.'; ?></p>
     </div>
 
     <form method="post" action="/dev-create-test-request.php?lang=<?php echo urlencode($lang); ?>">
-        <div class="form-group">
-            <label for="requestlang"><span class="field-name"><?php echo $lang === 'fr' ? 'Langue de la demande' : 'Request language'; ?></span></label>
-            <select class="form-control" id="requestlang" name="requestlang">
-                <option value="en" <?php echo $lang === 'en' ? 'selected' : ''; ?>>English</option>
-                <option value="fr" <?php echo $lang === 'fr' ? 'selected' : ''; ?>>Français</option>
-            </select>
-            <p class="help-block"><?php echo $lang === 'fr'
-                ? 'La langue choisie devient la langue enregistrée pour la demande et guide les courriels client.'
-                : 'The selected language is stored on the request and controls client-facing notifications.'; ?></p>
-        </div>
-
         <div class="form-group form-buttons">
             <button type="submit" class="btn btn-primary"><?php echo $lang === 'fr' ? 'Créer la demande de test' : 'Create test request'; ?></button>
-            <a class="btn btn-default" href="/settings.php?lang=<?php echo urlencode($lang); ?>"><?php echo $lang === 'fr' ? 'Retour aux paramètres' : 'Back to settings'; ?></a>
         </div>
     </form>
 </main>

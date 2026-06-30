@@ -29,7 +29,7 @@ $translations = [
 		'last_name' => 'Last name',
 		'first_name' => 'First name',
 		'client_email' => 'Client email',
-		'request_language' => 'Preferred language',
+		'request_language' => 'Original requested language',
 		'language_english' => 'English',
 		'language_french' => 'French',
 		'send_email' => 'Send email',
@@ -77,13 +77,15 @@ $translations = [
 		'resolved_email_sent_on' => 'Sent on',
 		'resolved_email_send_button' => 'Send resolved + survey email now',
 		'resolved_email_missing_client' => 'Client email is missing for this request.',
+		'resolved_email_send_success' => 'Resolved email sent to the client.',
+		'resolved_email_send_failed' => 'Email could not be sent. Please verify GC Notify settings and try again.',
 		'completed' => 'completed',
 		'not_completed' => 'not completed',
 		'overall_satisfaction' => 'Over-all satisfaction',
 		'response_time' => 'Response time',
 		'comments' => 'Comments',
 		'na' => 'N/A',
-		'css_send' => 'Use the client notification page to send the resolved email (with survey links when enabled).',
+		'css_send' => 'Use the resolved email action above to send the survey links.',
 		'view_links' => 'Open client notification page',
 		'survey_sent' => 'Survey was sent',
 		'resend' => 'resend?',
@@ -123,7 +125,7 @@ $translations = [
 		'last_name' => 'Nom',
 		'first_name' => 'Prénom',
 		'client_email' => 'Courriel du client',
-		'request_language' => 'Langue preferee',
+		'request_language' => 'Langue demandee initiale',
 		'language_english' => 'Anglais',
 		'language_french' => 'Francais',
 		'send_email' => 'Envoyer un courriel',
@@ -171,13 +173,15 @@ $translations = [
 		'resolved_email_sent_on' => 'Envoye le',
 		'resolved_email_send_button' => 'Envoyer le courriel de resolution + sondage',
 		'resolved_email_missing_client' => 'Le courriel du client est manquant pour cette demande.',
+		'resolved_email_send_success' => 'Le courriel de resolution a ete envoye au client.',
+		'resolved_email_send_failed' => 'Le courriel n\'a pas pu etre envoye. Verifiez la configuration de GC Notify et reessayez.',
 		'completed' => 'complété',
 		'not_completed' => 'non complété',
 		'overall_satisfaction' => 'Satisfaction globale',
 		'response_time' => 'Temps de réponse',
 		'comments' => 'Commentaires',
 		'na' => 'S.O.',
-		'css_send' => 'Utilisez la page de notification client pour envoyer le courriel de resolution (avec liens de sondage lorsqu\'ils sont actives).',
+		'css_send' => 'Utilisez l\'action de courriel de resolution ci-dessus pour envoyer les liens du sondage.',
 		'view_links' => 'Ouvrir la page de notification client',
 		'survey_sent' => 'Le sondage a été envoyé',
 		'resend' => 'renvoyer?',
@@ -206,6 +210,7 @@ require('BlobStorage.php');
 require('includes/httpscheck.php');
 require('includes/sla-calculator.php');
 require('includes/helpers.php');
+require('emailController.php');
 // Include file for calculating business days
 require('includes/calculate-bdays.php');
 /** @var array $holidays */
@@ -587,7 +592,7 @@ if(mysqli_num_rows($result)>0){
 				<?php } ?>
 				<div style="break-inside: avoid;">
 					<dt><?= $t['request_language'] ?></dt>
-					<dd><?php echo htmlspecialchars($requestLanguageLabel, ENT_QUOTES, 'UTF-8'); ?> (<?php echo htmlspecialchars($requestLanguageCode, ENT_QUOTES, 'UTF-8'); ?>)</dd>
+					<dd><?php echo htmlspecialchars($requestLanguageLabel, ENT_QUOTES, 'UTF-8'); ?></dd>
 				</div>
 				<?php if ($row['clientphone'] != "") { ?>
 				<div style="break-inside: avoid;">
@@ -787,11 +792,82 @@ $blobStorage = new AzureBlobStorageManager();
 			<?php
 			// Check if status is resolved, if it is then display the client satisfaction survey status
 			if (rmt_is_resolved_status_id($link, $statusid)){
+			$resolvedClientEmail = trim((string) ($row['clientemail'] ?? ''));
+			$resolvedActionStatus = '';
+
+			// Check if surveys are enabled for this catalogue
+			$catalogueSurveySql = "SELECT survey FROM tblcatalogue WHERE id = '$catalogueid'";
+			$catalogueSurveyResult = mysqli_query($link, $catalogueSurveySql);
+			$catalogueSurveyRow = mysqli_fetch_array($catalogueSurveyResult);
+			$surveyEnabled = ((int) ($catalogueSurveyRow['survey'] ?? 0) === 1);
+
+			if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['email_action'] ?? '') === 'send_resolved_email')) {
+				if ($resolvedClientEmail === '') {
+					$resolvedActionStatus = 'missing_email';
+				} else {
+					$requestLanguage = rmt_get_request_language($link, (int) $triageid, $lang);
+					$encodedTriageId = base64_encode((string) $triageid);
+					$encodedRequestPublicId = urlencode('a11y-' . (string) $row['requestid']);
+					$requestViewUrl = app_url('viewrequest.php?lang=' . $requestLanguage . '&erid=' . $encodedTriageId . '&reqid=' . $encodedRequestPublicId);
+					$frSurveyLink = app_url('client-survey.php?lang=fr&erid=' . $encodedTriageId . '&reqid=' . $encodedRequestPublicId);
+					$enSurveyLink = app_url('client-survey.php?lang=en&erid=' . $encodedTriageId . '&reqid=' . $encodedRequestPublicId);
+
+					$resolvedContext = [
+						'requestid' => (string) $row['requestid'],
+						'client_fname' => (string) ($row['clientfname'] ?? ''),
+						'client_lname' => (string) ($row['clientlname'] ?? ''),
+						'url' => $requestViewUrl,
+					];
+					if ($surveyEnabled) {
+						$resolvedContext['survey_link_en'] = $enSurveyLink;
+						$resolvedContext['survey_link_fr'] = $frSurveyLink;
+					}
+
+					$category = rmt_notification_template_category('resolved');
+					$personalisation = [
+						'requestid' => (string) $row['requestid'],
+						'requesttitle' => (string) ($row['title'] ?? ''),
+						'client_fname' => (string) ($row['clientfname'] ?? ''),
+						'client_lname' => (string) ($row['clientlname'] ?? ''),
+						'url' => $requestViewUrl,
+						'notification_event' => 'resolved',
+						'template_category_id' => $category['id'],
+						'template_category_name_en' => $category['name_en'],
+						'template_category_name_fr' => $category['name_fr'],
+						'subject' => rmt_notification_subject('resolved', 'client', $requestLanguage, ['requestid' => (string) $row['requestid']]),
+						'message' => rmt_notification_message('resolved', 'client', $requestLanguage, $resolvedContext),
+					];
+
+					$templateId = app_notify_template_id('notification_generic');
+					$sent = sendEmail($resolvedClientEmail, $templateId, json_encode($personalisation), ['recipientType' => 'client']);
+					if ($sent) {
+						if ($surveyEnabled) {
+							$currentSurveySentCount = (int) ($row['cssurvey'] ?? 0);
+							$updatedSurveySentCount = ($currentSurveySentCount <= 0) ? 1 : ($currentSurveySentCount + 1);
+							mysqli_query($link, "UPDATE tbltriage SET cssurvey = '$updatedSurveySentCount' WHERE id = '$triageid'");
+							$row['cssurvey'] = $updatedSurveySentCount;
+						}
+
+						$senderId = isset($_SESSION['pid']) ? (int) $_SESSION['pid'] : 0;
+						rmt_mark_resolved_email_sent($link, (int) $triageid, $senderId);
+						$resolvedActionStatus = 'success';
+					} else {
+						$resolvedActionStatus = 'failed';
+					}
+				}
+			}
+
 			$resolvedEmailSentDate = rmt_get_resolved_email_sent_date($link, (int) $triageid);
 			$resolvedEmailSent = ($resolvedEmailSentDate !== null && $resolvedEmailSentDate !== '');
-			$resolvedClientEmail = trim((string) ($row['clientemail'] ?? ''));
 			?>
 			<h2><?= htmlspecialchars($t['resolved_email_status']) ?></h2>
+			<?php if ($resolvedActionStatus === 'success'): ?>
+			<p class="text-success"><strong><?= htmlspecialchars($t['resolved_email_send_success']) ?></strong></p>
+			<?php elseif ($resolvedActionStatus === 'failed'): ?>
+			<p class="text-danger"><strong><?= htmlspecialchars($t['resolved_email_send_failed']) ?></strong></p>
+			<?php elseif ($resolvedActionStatus === 'missing_email'): ?>
+			<p class="text-danger"><strong><?= htmlspecialchars($t['resolved_email_missing_client']) ?></strong></p>
+			<?php endif; ?>
 			<p>
 				<strong><?= htmlspecialchars($resolvedEmailSent ? $t['resolved_email_sent'] : $t['resolved_email_not_sent']) ?></strong>
 				<?php if ($resolvedEmailSent): ?>
@@ -800,7 +876,7 @@ $blobStorage = new AzureBlobStorageManager();
 			</p>
 			<?php if (!$resolvedEmailSent): ?>
 				<?php if ($resolvedClientEmail !== ''): ?>
-				<form method="post" action="/client-survey-link.php?lang=<?= htmlspecialchars($_SESSION['lang']) ?>&erid=<?php echo $nrequestid; ?>" class="form-inline mrgn-bttm-md">
+				<form method="post" action="" class="form-inline mrgn-bttm-md">
 					<input type="hidden" name="email_action" value="send_resolved_email">
 					<button type="submit" class="btn btn-primary"><?= htmlspecialchars($t['resolved_email_send_button']) ?></button>
 				</form>
@@ -808,14 +884,7 @@ $blobStorage = new AzureBlobStorageManager();
 				<p><?= htmlspecialchars($t['resolved_email_missing_client']) ?></p>
 				<?php endif; ?>
 			<?php endif; ?>
-			<?php
-			// First check if surveys are enabled for this catalogue
-			$catalogueSurveySql = "SELECT survey FROM tblcatalogue WHERE id = '$catalogueid'";
-			$catalogueSurveyResult = mysqli_query($link, $catalogueSurveySql);
-			$catalogueSurveyRow = mysqli_fetch_array($catalogueSurveyResult);
-			$surveyEnabled = $catalogueSurveyRow['survey'];
-			
-			if ($surveyEnabled == 1) {
+			<?php if ($surveyEnabled) {
 				// Status is resolved and surveys are enabled, so first check if a client survey has been completed.
 				$surveySql = "SELECT * FROM tblcss WHERE requestid='$triageid' AND status=1";
 				$surveyResult = mysqli_query($link,$surveySql);
@@ -843,7 +912,7 @@ $blobStorage = new AzureBlobStorageManager();
 			<h2><?= htmlspecialchars($t['css_completed']) ?> <span class="glyphicon glyphicon-remove"></span><span class="wb-inv"><?= htmlspecialchars($t['not_completed']) ?></span></h2>
 			
 			<p><?= htmlspecialchars($t['css_send']) ?></p>
-			<p><a class="btn btn-primary" href="/client-survey-link.php?lang=<?= htmlspecialchars($_SESSION['lang']) ?>&erid=<?php echo $nrequestid; ?>"><?= htmlspecialchars($t['view_links']) ?></a> <?php if ($surveySentCount>=1) { ?><span class="label label-success"><?= htmlspecialchars($t['survey_sent']) ?> (<?php echo $surveySentCount ?>)</span><?php } ?></p>
+			<?php if ($surveySentCount>=1) { ?><p><span class="label label-success"><?= htmlspecialchars($t['survey_sent']) ?> (<?php echo $surveySentCount ?>)</span></p><?php } ?>
 			
 			<?php
 				}
