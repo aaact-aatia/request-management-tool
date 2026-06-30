@@ -59,14 +59,25 @@ function sendEmail($emailAddress, $templateId, $personalisation, array $options 
 	$recipientType = $options['recipientType'] ?? 'general';
 	$originalRecipient = trim((string) $emailAddress);
 	$mode = rmt_notify_mode();
+	$recordPreview = static function (string $result, string $finalRecipient = '') use ($recipientType, $originalRecipient, $mode): void {
+		app_dev_notification_preview_add([
+			'recipientType' => $recipientType,
+			'intendedRecipient' => $originalRecipient,
+			'finalRecipient' => $finalRecipient,
+			'mode' => $mode,
+			'result' => $result,
+		]);
+	};
 
 	if ($originalRecipient === '' || $templateId === '') {
 		error_log('GC Notify skipped: missing recipient or template ID.');
+		$recordPreview('skipped');
 		return false;
 	}
 
 	if ($mode === 'disabled') {
 		error_log(sprintf('GC Notify disabled: skipped %s notification to %s.', $recipientType, $originalRecipient));
+		$recordPreview('disabled');
 		return false;
 	}
 
@@ -80,6 +91,7 @@ function sendEmail($emailAddress, $templateId, $personalisation, array $options 
 
 		if ($redirectRecipient === null) {
 			error_log(sprintf('GC Notify redirect skipped: no safe redirect recipient configured for %s notification to %s.', $recipientType, $originalRecipient));
+			$recordPreview('redirect_skipped');
 			return false;
 		}
 
@@ -101,6 +113,7 @@ function sendEmail($emailAddress, $templateId, $personalisation, array $options 
 	$apiKey = app_env('GCNOTIFY_API_KEY', '');
 	if ($apiKey === '') {
 		error_log('GC Notify skipped: GCNOTIFY_API_KEY is missing.');
+		$recordPreview('missing_api_key', $finalRecipient);
 		return false;
 	}
 
@@ -165,13 +178,17 @@ function sendEmail($emailAddress, $templateId, $personalisation, array $options 
 
 	if ($error !== '') {
 		error_log(sprintf('GC Notify request failed for %s recipient %s (original %s): %s', $recipientType, $finalRecipient, $originalRecipient, $error));
+		$recordPreview('failed', $finalRecipient);
 		return false;
 	}
 
 	if ($httpCode < 200 || $httpCode >= 300) {
 		error_log(sprintf('GC Notify returned HTTP %d for %s recipient %s (original %s). Response: %s', $httpCode, $recipientType, $finalRecipient, $originalRecipient, (string) $response));
+		$recordPreview('failed', $finalRecipient);
 		return false;
 	}
+
+	$recordPreview('sent', $finalRecipient);
 
 	return true;
 }

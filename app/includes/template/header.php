@@ -50,6 +50,13 @@ $headerTranslations = [
 		'dev_notice_redirect_email' => 'Email notifications are redirected to:',
 		'dev_notice_disabled' => 'Email notifications are disabled.',
 		'dev_notice_live' => 'Email notifications are being sent to their intended recipients.',
+		'dev_preview_title' => 'Notification preview (development)',
+		'dev_preview_client' => 'Client',
+		'dev_preview_internal' => 'Team',
+		'dev_preview_general' => 'Recipient',
+		'dev_preview_disabled' => 'Disabled mode: would send to',
+		'dev_preview_sent' => 'Sent to',
+		'dev_preview_intended' => 'intended',
 	],
 	'fr' => [
 		'skip_heading' => 'Ignorer les liens',
@@ -74,10 +81,20 @@ $headerTranslations = [
 		'dev_notice_redirect_email' => 'Les notifications par courriel sont redirigées vers :',
 		'dev_notice_disabled' => 'Les notifications par courriel sont désactivées.',
 		'dev_notice_live' => 'Les notifications par courriel sont envoyées à leurs destinataires prévus.',
+		'dev_preview_title' => 'Apercu des notifications (developpement)',
+		'dev_preview_client' => 'Client',
+		'dev_preview_internal' => 'Equipe',
+		'dev_preview_general' => 'Destinataire',
+		'dev_preview_disabled' => 'Mode desactive : envoi prevu a',
+		'dev_preview_sent' => 'Envoye a',
+		'dev_preview_intended' => 'prevu',
 	]
 ];
 
 	$headerLangStrings = $headerTranslations[$langCode];
+	$devNotificationPreviewEntries = function_exists('app_dev_notification_preview_consume')
+		? app_dev_notification_preview_consume()
+		: [];
 	$notifyModeMessage = $headerLangStrings['dev_notice_live'];
 	if ($notifyMode === 'redirect') {
 		$notifyModeMessage = $headerLangStrings['dev_notice_redirect'];
@@ -218,6 +235,40 @@ $headerTranslations = [
 			<strong><?= htmlspecialchars($headerLangStrings['dev_notice_prefix']) ?></strong>
 			<?= htmlspecialchars($notifyModeMessage) ?>
 		</p>
+	</section>
+</div>
+<?php endif; ?>
+
+<?php if ($showEnvironmentBanner && !empty($devNotificationPreviewEntries)): ?>
+<div class="container mrgn-tp-md">
+	<section class="alert alert-info" aria-label="<?= htmlspecialchars($headerLangStrings['dev_preview_title']) ?>">
+		<p><strong><?= htmlspecialchars($headerLangStrings['dev_preview_title']) ?></strong></p>
+		<ul class="mrgn-bttm-0">
+			<?php foreach ($devNotificationPreviewEntries as $previewEntry): ?>
+				<?php
+				$recipientType = (string) ($previewEntry['recipientType'] ?? 'general');
+				$intendedRecipient = (string) ($previewEntry['intendedRecipient'] ?? '');
+				$finalRecipient = (string) ($previewEntry['finalRecipient'] ?? '');
+				$result = (string) ($previewEntry['result'] ?? 'attempted');
+
+				$recipientLabel = $headerLangStrings['dev_preview_general'];
+				if ($recipientType === 'client') {
+					$recipientLabel = $headerLangStrings['dev_preview_client'];
+				} elseif ($recipientType === 'internal') {
+					$recipientLabel = $headerLangStrings['dev_preview_internal'];
+				}
+
+				if ($result === 'disabled') {
+					$detail = $headerLangStrings['dev_preview_disabled'] . ' ' . $intendedRecipient;
+				} elseif ($finalRecipient !== '' && strcasecmp($finalRecipient, $intendedRecipient) !== 0) {
+					$detail = $headerLangStrings['dev_preview_sent'] . ' ' . $finalRecipient . ' (' . $headerLangStrings['dev_preview_intended'] . ': ' . $intendedRecipient . ')';
+				} else {
+					$detail = $headerLangStrings['dev_preview_sent'] . ' ' . ($finalRecipient !== '' ? $finalRecipient : $intendedRecipient);
+				}
+				?>
+				<li><strong><?= htmlspecialchars($recipientLabel) ?>:</strong> <?= htmlspecialchars($detail) ?></li>
+			<?php endforeach; ?>
+		</ul>
 	</section>
 </div>
 <?php endif; ?>

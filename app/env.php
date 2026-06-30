@@ -305,4 +305,47 @@ function app_gcnotify_curl_tls_options(): array
 
     return $options;
 }
+
+function app_dev_notification_preview_enabled(): bool
+{
+    if (app_is_production()) {
+        return false;
+    }
+
+    return session_status() === PHP_SESSION_ACTIVE;
+}
+
+function app_dev_notification_preview_add(array $entry): void
+{
+    if (!app_dev_notification_preview_enabled()) {
+        return;
+    }
+
+    if (!isset($_SESSION['dev_notification_preview']) || !is_array($_SESSION['dev_notification_preview'])) {
+        $_SESSION['dev_notification_preview'] = [];
+    }
+
+    $_SESSION['dev_notification_preview'][] = [
+        'recipientType' => (string) ($entry['recipientType'] ?? 'general'),
+        'intendedRecipient' => (string) ($entry['intendedRecipient'] ?? ''),
+        'finalRecipient' => (string) ($entry['finalRecipient'] ?? ''),
+        'mode' => (string) ($entry['mode'] ?? app_notify_mode()),
+        'result' => (string) ($entry['result'] ?? 'attempted'),
+    ];
+}
+
+function app_dev_notification_preview_consume(): array
+{
+    if (!app_dev_notification_preview_enabled()) {
+        return [];
+    }
+
+    $entries = $_SESSION['dev_notification_preview'] ?? [];
+    if (!is_array($entries)) {
+        $entries = [];
+    }
+
+    unset($_SESSION['dev_notification_preview']);
+    return $entries;
+}
 ?>
