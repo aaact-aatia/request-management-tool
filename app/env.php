@@ -30,27 +30,7 @@ function app_configurable_nonsecret_keys(): array
         'GCNOTIFY_TEST_EMAIL',
         'GCNOTIFY_CURL_CA_BUNDLE',
         'GCNOTIFY_CURL_INSECURE',
-        'GCNOTIFY_TEMPLATE_REQUEST_TEAM_EN',
-        'GCNOTIFY_TEMPLATE_REQUEST_TEAM_FR',
-        'GCNOTIFY_TEMPLATE_REQUEST_AFTERFACT_TEAM_EN',
-        'GCNOTIFY_TEMPLATE_REQUEST_AFTERFACT_TEAM_FR',
-        'GCNOTIFY_TEMPLATE_REQUEST_AAACT',
-        'GCNOTIFY_TEMPLATE_REQUEST_CLIENT_EN',
-        'GCNOTIFY_TEMPLATE_REQUEST_CLIENT_FR',
-        'GCNOTIFY_TEMPLATE_REQUEST_DEFAULT_TEAM_EN',
-        'GCNOTIFY_TEMPLATE_REQUEST_DEFAULT_TEAM_FR',
-        'GCNOTIFY_TEMPLATE_REQUEST_DEFAULT_CLIENT_EN',
-        'GCNOTIFY_TEMPLATE_REQUEST_DEFAULT_CLIENT_FR',
-        'GCNOTIFY_TEMPLATE_RESOLVED_TEAM_EN',
-        'GCNOTIFY_TEMPLATE_RESOLVED_TEAM_FR',
-        'GCNOTIFY_TEMPLATE_RESOLVED_CLIENT_EN',
-        'GCNOTIFY_TEMPLATE_RESOLVED_CLIENT_FR',
-        'GCNOTIFY_TEMPLATE_STATUS_CHANGED_CLIENT_EN',
-        'GCNOTIFY_TEMPLATE_STATUS_CHANGED_CLIENT_FR',
-        'GCNOTIFY_TEMPLATE_REASSIGNED_TEAM_EN',
-        'GCNOTIFY_TEMPLATE_REASSIGNED_TEAM_FR',
-        'GCNOTIFY_TEMPLATE_REASSIGNED_CLIENT_EN',
-        'GCNOTIFY_TEMPLATE_REASSIGNED_CLIENT_FR',
+        'GCNOTIFY_TEMPLATE_ID',
     ];
 }
 
@@ -257,35 +237,10 @@ function app_normalize_language(?string $language, string $default = 'en'): stri
     return $default;
 }
 
-function app_notify_template_key_for_language(string $baseKey, ?string $language, string $default = 'en'): string
-{
-    return $baseKey . '_' . app_normalize_language($language, $default);
-}
-
 function app_notify_template_id(string $templateKey): string
 {
     $templates = [
-        'request_team_en' => ['env' => 'GCNOTIFY_TEMPLATE_REQUEST_TEAM_EN', 'default' => 'd9c219be-799f-4713-950f-21884d5d3c3c'],
-        'request_team_fr' => ['env' => 'GCNOTIFY_TEMPLATE_REQUEST_TEAM_FR', 'default' => '86fb7784-b1cc-40b5-88e5-f7ea43ee75c0'],
-        'request_afterfact_team_en' => ['env' => 'GCNOTIFY_TEMPLATE_REQUEST_AFTERFACT_TEAM_EN', 'default' => '949c6248-ef73-4cf2-b1ea-5136c8c856c2'],
-        'request_afterfact_team_fr' => ['env' => 'GCNOTIFY_TEMPLATE_REQUEST_AFTERFACT_TEAM_FR', 'default' => 'c5ea62d8-9e11-482a-acfc-ae8a450de06c'],
-        'request_aaact' => ['env' => 'GCNOTIFY_TEMPLATE_REQUEST_AAACT', 'default' => '35388592-27f3-47f5-ae09-ac3f9ddf7904'],
-        'request_client_en' => ['env' => 'GCNOTIFY_TEMPLATE_REQUEST_CLIENT_EN', 'default' => '9e4e2ca4-ad1a-4204-ba1e-4be61a12f51c'],
-        'request_client_fr' => ['env' => 'GCNOTIFY_TEMPLATE_REQUEST_CLIENT_FR', 'default' => 'd4fb66f3-e9f3-442f-9b7b-8b8e24f8799d'],
-        'request_default_team_en' => ['env' => 'GCNOTIFY_TEMPLATE_REQUEST_DEFAULT_TEAM_EN', 'default' => '265e8009-741e-4a79-8e89-bfedaf071494'],
-        'request_default_team_fr' => ['env' => 'GCNOTIFY_TEMPLATE_REQUEST_DEFAULT_TEAM_FR', 'default' => 'c72c5e69-8a8c-42a2-9bb9-dfcf2c5f7d84'],
-        'request_default_client_en' => ['env' => 'GCNOTIFY_TEMPLATE_REQUEST_DEFAULT_CLIENT_EN', 'default' => 'dcc97e6e-1fdf-4309-9351-a957ff5f6dcb'],
-        'request_default_client_fr' => ['env' => 'GCNOTIFY_TEMPLATE_REQUEST_DEFAULT_CLIENT_FR', 'default' => '36125c35-b1af-4989-9a94-f65b8e5cf49f'],
-        'resolved_team_en' => ['env' => 'GCNOTIFY_TEMPLATE_RESOLVED_TEAM_EN', 'default' => '5dc8291c-a0b4-4fa0-8733-40c28d3ddf6d'],
-        'resolved_team_fr' => ['env' => 'GCNOTIFY_TEMPLATE_RESOLVED_TEAM_FR', 'default' => '5dc8291c-a0b4-4fa0-8733-40c28d3ddf6d'],
-        'resolved_client_en' => ['env' => 'GCNOTIFY_TEMPLATE_RESOLVED_CLIENT_EN', 'default' => '49ffefeb-21d0-4508-ac5f-46b41c0f3348'],
-        'resolved_client_fr' => ['env' => 'GCNOTIFY_TEMPLATE_RESOLVED_CLIENT_FR', 'default' => '49ffefeb-21d0-4508-ac5f-46b41c0f3348'],
-        'status_changed_client_en' => ['env' => 'GCNOTIFY_TEMPLATE_STATUS_CHANGED_CLIENT_EN', 'default' => '393948e5-39fe-418e-b16f-73a1f084a0f2'],
-        'status_changed_client_fr' => ['env' => 'GCNOTIFY_TEMPLATE_STATUS_CHANGED_CLIENT_FR', 'default' => '393948e5-39fe-418e-b16f-73a1f084a0f2'],
-        'reassigned_team_en' => ['env' => 'GCNOTIFY_TEMPLATE_REASSIGNED_TEAM_EN', 'default' => '8270de12-b994-4d29-aa22-428434fd9896'],
-        'reassigned_team_fr' => ['env' => 'GCNOTIFY_TEMPLATE_REASSIGNED_TEAM_FR', 'default' => '8270de12-b994-4d29-aa22-428434fd9896'],
-        'reassigned_client_en' => ['env' => 'GCNOTIFY_TEMPLATE_REASSIGNED_CLIENT_EN', 'default' => '8bb9cc70-dd1a-46d6-9843-c73cbe4e70f0'],
-        'reassigned_client_fr' => ['env' => 'GCNOTIFY_TEMPLATE_REASSIGNED_CLIENT_FR', 'default' => '8bb9cc70-dd1a-46d6-9843-c73cbe4e70f0'],
+        'notification_generic' => ['env' => 'GCNOTIFY_TEMPLATE_ID', 'default' => ''],
     ];
 
     if (!isset($templates[$templateKey])) {

@@ -248,7 +248,7 @@ include 'includes/template/head.php';
         <form method="POST" enctype="multipart/form-data" action="editrequest.php?lang=<?php echo $lang; ?>&id=<?php echo $row['id']; ?>">
 
             <?php
-            $readonly = !isAdmin();
+            $readonly = !canEditRequests();
             $serviceid = $row['serviceid'];
             $catalogueid = $row['catalogueid'];
             $dateRange = getDateRange(1);

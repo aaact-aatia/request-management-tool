@@ -27,27 +27,7 @@ $configKeys = [
     'GCNOTIFY_TEST_EMAIL',
     'GCNOTIFY_CURL_CA_BUNDLE',
     'GCNOTIFY_CURL_INSECURE',
-    'GCNOTIFY_TEMPLATE_REQUEST_TEAM_EN',
-    'GCNOTIFY_TEMPLATE_REQUEST_TEAM_FR',
-    'GCNOTIFY_TEMPLATE_REQUEST_AFTERFACT_TEAM_EN',
-    'GCNOTIFY_TEMPLATE_REQUEST_AFTERFACT_TEAM_FR',
-    'GCNOTIFY_TEMPLATE_REQUEST_AAACT',
-    'GCNOTIFY_TEMPLATE_REQUEST_CLIENT_EN',
-    'GCNOTIFY_TEMPLATE_REQUEST_CLIENT_FR',
-    'GCNOTIFY_TEMPLATE_REQUEST_DEFAULT_TEAM_EN',
-    'GCNOTIFY_TEMPLATE_REQUEST_DEFAULT_TEAM_FR',
-    'GCNOTIFY_TEMPLATE_REQUEST_DEFAULT_CLIENT_EN',
-    'GCNOTIFY_TEMPLATE_REQUEST_DEFAULT_CLIENT_FR',
-    'GCNOTIFY_TEMPLATE_RESOLVED_TEAM_EN',
-    'GCNOTIFY_TEMPLATE_RESOLVED_TEAM_FR',
-    'GCNOTIFY_TEMPLATE_RESOLVED_CLIENT_EN',
-    'GCNOTIFY_TEMPLATE_RESOLVED_CLIENT_FR',
-    'GCNOTIFY_TEMPLATE_STATUS_CHANGED_CLIENT_EN',
-    'GCNOTIFY_TEMPLATE_STATUS_CHANGED_CLIENT_FR',
-    'GCNOTIFY_TEMPLATE_REASSIGNED_TEAM_EN',
-    'GCNOTIFY_TEMPLATE_REASSIGNED_TEAM_FR',
-    'GCNOTIFY_TEMPLATE_REASSIGNED_CLIENT_EN',
-    'GCNOTIFY_TEMPLATE_REASSIGNED_CLIENT_FR',
+    'GCNOTIFY_TEMPLATE_ID',
 ];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -63,12 +43,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $escapedKey = mysqli_real_escape_string($link, $key);
         $escapedValue = mysqli_real_escape_string($link, $value);
 
+        $statusValue = ($value === '') ? 0 : 1;
         $sql = "INSERT INTO tblappconfig (config_key, config_value, updated_by, status)
-                VALUES ('{$escapedKey}', '{$escapedValue}', {$updatedBy}, 1)
+                VALUES ('{$escapedKey}', '{$escapedValue}', {$updatedBy}, {$statusValue})
                 ON DUPLICATE KEY UPDATE
                     config_value = VALUES(config_value),
                     updated_by = VALUES(updated_by),
-                    status = 1";
+                    status = VALUES(status)";
         mysqli_query($link, $sql);
     }
 
@@ -76,9 +57,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit();
 }
 
+$storedValues = app_db_settings_all();
 $values = [];
 foreach ($configKeys as $key) {
-    $values[$key] = (string) app_setting($key, '');
+    $values[$key] = (string) ($storedValues[$key] ?? '');
 }
 
 $status = $_GET['status'] ?? '';
@@ -269,267 +251,36 @@ include 'includes/template/head.php';
         <fieldset class="mrgn-bttm-lg" aria-describedby="gcnotify-templates-help">
             <legend class="h2"><?php echo htmlspecialchars($t['gcnotify_settings_templates_heading']); ?></legend>
             <p id="gcnotify-templates-help" class="help-block"><?php echo htmlspecialchars($t['gcnotify_settings_templates_intro']); ?></p>
+            <p class="help-block">
+                <?php echo $isFrench
+                    ? 'Créez un seul modèle GC Notify avec ((subject)) pour le sujet et ((message)) pour le corps principal du courriel.'
+                    : 'Create one GC Notify template with ((subject)) for the subject and ((message)) for the main email body.'; ?>
+            </p>
+            <p class="help-block">
+                <a href="/templates/notification-generic.php?lang=<?php echo urlencode($lang); ?>">
+                    <?php echo $isFrench ? 'Voir l apercu du modele generique' : 'View generic template preview'; ?>
+                </a>
+            </p>
 
-        <?php
-        $templateKeys = [
-            'GCNOTIFY_TEMPLATE_REQUEST_TEAM_EN',
-            'GCNOTIFY_TEMPLATE_REQUEST_TEAM_FR',
-            'GCNOTIFY_TEMPLATE_REQUEST_AFTERFACT_TEAM_EN',
-            'GCNOTIFY_TEMPLATE_REQUEST_AFTERFACT_TEAM_FR',
-            'GCNOTIFY_TEMPLATE_REQUEST_AAACT',
-            'GCNOTIFY_TEMPLATE_REQUEST_CLIENT_EN',
-            'GCNOTIFY_TEMPLATE_REQUEST_CLIENT_FR',
-            'GCNOTIFY_TEMPLATE_REQUEST_DEFAULT_TEAM_EN',
-            'GCNOTIFY_TEMPLATE_REQUEST_DEFAULT_TEAM_FR',
-            'GCNOTIFY_TEMPLATE_REQUEST_DEFAULT_CLIENT_EN',
-            'GCNOTIFY_TEMPLATE_REQUEST_DEFAULT_CLIENT_FR',
-            'GCNOTIFY_TEMPLATE_RESOLVED_TEAM_EN',
-            'GCNOTIFY_TEMPLATE_RESOLVED_TEAM_FR',
-            'GCNOTIFY_TEMPLATE_RESOLVED_CLIENT_EN',
-            'GCNOTIFY_TEMPLATE_RESOLVED_CLIENT_FR',
-            'GCNOTIFY_TEMPLATE_STATUS_CHANGED_CLIENT_EN',
-            'GCNOTIFY_TEMPLATE_STATUS_CHANGED_CLIENT_FR',
-            'GCNOTIFY_TEMPLATE_REASSIGNED_TEAM_EN',
-            'GCNOTIFY_TEMPLATE_REASSIGNED_TEAM_FR',
-            'GCNOTIFY_TEMPLATE_REASSIGNED_CLIENT_EN',
-            'GCNOTIFY_TEMPLATE_REASSIGNED_CLIENT_FR',
-        ];
-
-        $templateMeta = [
-            'GCNOTIFY_TEMPLATE_REQUEST_TEAM_EN' => [
-                'label' => [
-                    'en' => 'New request to assigned team (English)',
-                    'fr' => 'Nouvelle demande a l equipe assignee (anglais)',
-                ],
-                'description' => [
-                    'en' => 'Template used for a new request email sent to the assigned team in English.',
-                    'fr' => 'Gabarit utilise pour un courriel de nouvelle demande envoye a l equipe assignee en anglais.',
-                ],
-            ],
-            'GCNOTIFY_TEMPLATE_REQUEST_TEAM_FR' => [
-                'label' => [
-                    'en' => 'New request to assigned team (French)',
-                    'fr' => 'Nouvelle demande a l equipe assignee (francais)',
-                ],
-                'description' => [
-                    'en' => 'Template used for a new request email sent to the assigned team in French.',
-                    'fr' => 'Gabarit utilise pour un courriel de nouvelle demande envoye a l equipe assignee en francais.',
-                ],
-            ],
-            'GCNOTIFY_TEMPLATE_REQUEST_AFTERFACT_TEAM_EN' => [
-                'label' => [
-                    'en' => 'After-fact request to assigned team (English)',
-                    'fr' => 'Demande apres coup a l equipe assignee (anglais)',
-                ],
-                'description' => [
-                    'en' => 'Template used for after-fact request notifications to the assigned team in English.',
-                    'fr' => 'Gabarit utilise pour les notifications de demande apres coup a l equipe assignee en anglais.',
-                ],
-            ],
-            'GCNOTIFY_TEMPLATE_REQUEST_AFTERFACT_TEAM_FR' => [
-                'label' => [
-                    'en' => 'After-fact request to assigned team (French)',
-                    'fr' => 'Demande apres coup a l equipe assignee (francais)',
-                ],
-                'description' => [
-                    'en' => 'Template used for after-fact request notifications to the assigned team in French.',
-                    'fr' => 'Gabarit utilise pour les notifications de demande apres coup a l equipe assignee en francais.',
-                ],
-            ],
-            'GCNOTIFY_TEMPLATE_REQUEST_AAACT' => [
-                'label' => [
-                    'en' => 'New request to AAACT internal mailbox',
-                    'fr' => 'Nouvelle demande a la boite interne AATIA',
-                ],
-                'description' => [
-                    'en' => 'Template used for internal AAACT notifications when a new request is created.',
-                    'fr' => 'Gabarit utilise pour les notifications internes AATIA lorsqu une nouvelle demande est creee.',
-                ],
-            ],
-            'GCNOTIFY_TEMPLATE_REQUEST_CLIENT_EN' => [
-                'label' => [
-                    'en' => 'New request to client (English)',
-                    'fr' => 'Nouvelle demande au client (anglais)',
-                ],
-                'description' => [
-                    'en' => 'Template used for client confirmation when a new request is submitted in English.',
-                    'fr' => 'Gabarit utilise pour la confirmation au client lorsqu une nouvelle demande est soumise en anglais.',
-                ],
-            ],
-            'GCNOTIFY_TEMPLATE_REQUEST_CLIENT_FR' => [
-                'label' => [
-                    'en' => 'New request to client (French)',
-                    'fr' => 'Nouvelle demande au client (francais)',
-                ],
-                'description' => [
-                    'en' => 'Template used for client confirmation when a new request is submitted in French.',
-                    'fr' => 'Gabarit utilise pour la confirmation au client lorsqu une nouvelle demande est soumise en francais.',
-                ],
-            ],
-            'GCNOTIFY_TEMPLATE_REQUEST_DEFAULT_TEAM_EN' => [
-                'label' => [
-                    'en' => 'Default service request to team (English)',
-                    'fr' => 'Demande service par defaut a l equipe (anglais)',
-                ],
-                'description' => [
-                    'en' => 'Template used for team notifications when the request follows the default service flow in English.',
-                    'fr' => 'Gabarit utilise pour les notifications a l equipe lorsque la demande suit le flux de service par defaut en anglais.',
-                ],
-            ],
-            'GCNOTIFY_TEMPLATE_REQUEST_DEFAULT_TEAM_FR' => [
-                'label' => [
-                    'en' => 'Default service request to team (French)',
-                    'fr' => 'Demande service par defaut a l equipe (francais)',
-                ],
-                'description' => [
-                    'en' => 'Template used for team notifications when the request follows the default service flow in French.',
-                    'fr' => 'Gabarit utilise pour les notifications a l equipe lorsque la demande suit le flux de service par defaut en francais.',
-                ],
-            ],
-            'GCNOTIFY_TEMPLATE_REQUEST_DEFAULT_CLIENT_EN' => [
-                'label' => [
-                    'en' => 'Default service request to client (English)',
-                    'fr' => 'Demande service par defaut au client (anglais)',
-                ],
-                'description' => [
-                    'en' => 'Template used for client emails in the default service flow in English.',
-                    'fr' => 'Gabarit utilise pour les courriels au client dans le flux de service par defaut en anglais.',
-                ],
-            ],
-            'GCNOTIFY_TEMPLATE_REQUEST_DEFAULT_CLIENT_FR' => [
-                'label' => [
-                    'en' => 'Default service request to client (French)',
-                    'fr' => 'Demande service par defaut au client (francais)',
-                ],
-                'description' => [
-                    'en' => 'Template used for client emails in the default service flow in French.',
-                    'fr' => 'Gabarit utilise pour les courriels au client dans le flux de service par defaut en francais.',
-                ],
-            ],
-            'GCNOTIFY_TEMPLATE_RESOLVED_TEAM_EN' => [
-                'label' => [
-                    'en' => 'Resolved notification to team (English)',
-                    'fr' => 'Notification resolue a l equipe (anglais)',
-                ],
-                'description' => [
-                    'en' => 'Template used when a request is marked resolved and a team notification is sent in English.',
-                    'fr' => 'Gabarit utilise lorsqu une demande est marquee resolue et qu une notification d equipe est envoyee en anglais.',
-                ],
-            ],
-            'GCNOTIFY_TEMPLATE_RESOLVED_TEAM_FR' => [
-                'label' => [
-                    'en' => 'Resolved notification to team (French)',
-                    'fr' => 'Notification resolue a l equipe (francais)',
-                ],
-                'description' => [
-                    'en' => 'Template used when a request is marked resolved and a team notification is sent in French.',
-                    'fr' => 'Gabarit utilise lorsqu une demande est marquee resolue et qu une notification d equipe est envoyee en francais.',
-                ],
-            ],
-            'GCNOTIFY_TEMPLATE_RESOLVED_CLIENT_EN' => [
-                'label' => [
-                    'en' => 'Resolved notification to client (English)',
-                    'fr' => 'Notification resolue au client (anglais)',
-                ],
-                'description' => [
-                    'en' => 'Template used when a request is resolved and the client is notified in English.',
-                    'fr' => 'Gabarit utilise lorsqu une demande est resolue et que le client est avise en anglais.',
-                ],
-            ],
-            'GCNOTIFY_TEMPLATE_RESOLVED_CLIENT_FR' => [
-                'label' => [
-                    'en' => 'Resolved notification to client (French)',
-                    'fr' => 'Notification resolue au client (francais)',
-                ],
-                'description' => [
-                    'en' => 'Template used when a request is resolved and the client is notified in French.',
-                    'fr' => 'Gabarit utilise lorsqu une demande est resolue et que le client est avise en francais.',
-                ],
-            ],
-            'GCNOTIFY_TEMPLATE_STATUS_CHANGED_CLIENT_EN' => [
-                'label' => [
-                    'en' => 'Status changed notification to client (English)',
-                    'fr' => 'Notification de changement de statut au client (anglais)',
-                ],
-                'description' => [
-                    'en' => 'Template used when a request status changes and a client update is sent in English.',
-                    'fr' => 'Gabarit utilise lorsqu un statut de demande change et qu une mise a jour client est envoyee en anglais.',
-                ],
-            ],
-            'GCNOTIFY_TEMPLATE_STATUS_CHANGED_CLIENT_FR' => [
-                'label' => [
-                    'en' => 'Status changed notification to client (French)',
-                    'fr' => 'Notification de changement de statut au client (francais)',
-                ],
-                'description' => [
-                    'en' => 'Template used when a request status changes and a client update is sent in French.',
-                    'fr' => 'Gabarit utilise lorsqu un statut de demande change et qu une mise a jour client est envoyee en francais.',
-                ],
-            ],
-            'GCNOTIFY_TEMPLATE_REASSIGNED_TEAM_EN' => [
-                'label' => [
-                    'en' => 'Reassigned notification to team (English)',
-                    'fr' => 'Notification de reattribution a l equipe (anglais)',
-                ],
-                'description' => [
-                    'en' => 'Template used when a request is reassigned and the destination team is notified in English.',
-                    'fr' => 'Gabarit utilise lorsqu une demande est reattribuee et que l equipe destinataire est avisee en anglais.',
-                ],
-            ],
-            'GCNOTIFY_TEMPLATE_REASSIGNED_TEAM_FR' => [
-                'label' => [
-                    'en' => 'Reassigned notification to team (French)',
-                    'fr' => 'Notification de reattribution a l equipe (francais)',
-                ],
-                'description' => [
-                    'en' => 'Template used when a request is reassigned and the destination team is notified in French.',
-                    'fr' => 'Gabarit utilise lorsqu une demande est reattribuee et que l equipe destinataire est avisee en francais.',
-                ],
-            ],
-            'GCNOTIFY_TEMPLATE_REASSIGNED_CLIENT_EN' => [
-                'label' => [
-                    'en' => 'Reassigned notification to client (English)',
-                    'fr' => 'Notification de reattribution au client (anglais)',
-                ],
-                'description' => [
-                    'en' => 'Template used when a request is reassigned and the client update is sent in English.',
-                    'fr' => 'Gabarit utilise lorsqu une demande est reattribuee et qu une mise a jour client est envoyee en anglais.',
-                ],
-            ],
-            'GCNOTIFY_TEMPLATE_REASSIGNED_CLIENT_FR' => [
-                'label' => [
-                    'en' => 'Reassigned notification to client (French)',
-                    'fr' => 'Notification de reattribution au client (francais)',
-                ],
-                'description' => [
-                    'en' => 'Template used when a request is reassigned and the client update is sent in French.',
-                    'fr' => 'Gabarit utilise lorsqu une demande est reattribuee et qu une mise a jour client est envoyee en francais.',
-                ],
-            ],
-        ];
-
-        foreach ($templateKeys as $key):
-            $label = $templateMeta[$key]['label'][$lang] ?? $key;
-            $description = $templateMeta[$key]['description'][$lang] ?? '';
-            $labelId = $key . '-label';
-            $descId = $key . '-desc';
-        ?>
             <div class="form-group">
-                <label id="<?php echo htmlspecialchars($labelId); ?>" for="<?php echo htmlspecialchars($key); ?>">
-                    <span class="field-name"><?php echo htmlspecialchars($label); ?></span>
+                <label id="GCNOTIFY_TEMPLATE_ID-label" for="GCNOTIFY_TEMPLATE_ID">
+                    <span class="field-name"><?php echo $isFrench ? 'Modele GC Notify generique' : 'Generic GC Notify template'; ?></span>
                 </label>
-                <p id="<?php echo htmlspecialchars($descId); ?>" class="help-block"><?php echo htmlspecialchars($description); ?></p>
+                <p id="GCNOTIFY_TEMPLATE_ID-desc" class="help-block">
+                    <?php echo $isFrench
+                        ? 'Utilise pour toutes les notifications. Le modele doit contenir ((subject)) et ((message)) et peut inclure ((requestid)) et ((url)) dans le pied de page.'
+                        : 'Used for all notifications. The template should contain ((subject)) and ((message)) and can include ((requestid)) and ((url)) in the footer.'; ?>
+                </p>
                 <input
                     type="text"
                     class="form-control"
-                    id="<?php echo htmlspecialchars($key); ?>"
-                    name="<?php echo htmlspecialchars($key); ?>"
-                    value="<?php echo htmlspecialchars($values[$key]); ?>"
+                    id="GCNOTIFY_TEMPLATE_ID"
+                    name="GCNOTIFY_TEMPLATE_ID"
+                    value="<?php echo htmlspecialchars($values['GCNOTIFY_TEMPLATE_ID']); ?>"
                     placeholder="UUID"
-                    aria-describedby="<?php echo htmlspecialchars($descId); ?>"
+                    aria-describedby="GCNOTIFY_TEMPLATE_ID-desc"
                 >
             </div>
-        <?php endforeach; ?>
         </fieldset>
 
         <div class="form-group form-buttons">

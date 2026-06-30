@@ -268,10 +268,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Send email notifications based on settings
     if ($notification == "Y") {
         // Request with notification enabled
-        $template_id = app_notify_template_id('request_team_en');
+        $template_id = app_notify_template_id('notification_generic');
         
         if ($afterfact == "Y") {
-            $template_id = app_notify_template_id('request_afterfact_team_en');
+            $template_id = app_notify_template_id('notification_generic');
         }
         
         if (empty($contactemail)) {
@@ -281,36 +281,79 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         
         // Send to team
         if (!empty($teamemail)) {
+            $teamMessageEvent = ($afterfact == "Y") ? 'request_afterfact' : 'request_created';
+            $teamCategory = rmt_notification_template_category($teamMessageEvent);
+            $teamPersonalisation = $personalisation + [
+                'notification_event' => $teamMessageEvent,
+                'template_category_id' => $teamCategory['id'],
+                'template_category_name_en' => $teamCategory['name_en'],
+                'template_category_name_fr' => $teamCategory['name_fr'],
+                'subject' => rmt_notification_subject($teamMessageEvent, 'internal', 'en', $personalisation),
+                'message' => rmt_notification_message($teamMessageEvent, 'internal', 'en', $personalisation),
+            ];
             if ($teamemail == "daiu-anci@ssc-spc.gc.ca") {
-                sendEmail($teamemail, app_notify_template_id('request_aaact'), $encoded_personalisation, ['recipientType' => 'internal']);
+                $aaactCategory = rmt_notification_template_category('request_aaact');
+                $teamPersonalisation['message'] = rmt_notification_message('request_aaact', 'internal', 'en', $personalisation);
+                $teamPersonalisation['subject'] = rmt_notification_subject('request_aaact', 'internal', 'en', $personalisation);
+                $teamPersonalisation['notification_event'] = 'request_aaact';
+                $teamPersonalisation['template_category_id'] = $aaactCategory['id'];
+                $teamPersonalisation['template_category_name_en'] = $aaactCategory['name_en'];
+                $teamPersonalisation['template_category_name_fr'] = $aaactCategory['name_fr'];
+                sendEmail($teamemail, $template_id, json_encode($teamPersonalisation), ['recipientType' => 'internal']);
             } else {
-                sendEmail($teamemail, $template_id, $encoded_personalisation, ['recipientType' => 'internal']);
+                sendEmail($teamemail, $template_id, json_encode($teamPersonalisation), ['recipientType' => 'internal']);
             }
         }
         
         // Send to client (not for AAACT)
         if ($teamemail != "daiu-anci@ssc-spc.gc.ca") {
-            $clientTemplate = app_notify_template_id(app_notify_template_key_for_language('request_client', $requestlang));
-            sendEmail($clientemail, $clientTemplate, $encoded_personalisation, ['recipientType' => 'client']);
+            $clientCategory = rmt_notification_template_category('request_created');
+            $clientPersonalisation = $personalisation + [
+                'notification_event' => 'request_created',
+                'template_category_id' => $clientCategory['id'],
+                'template_category_name_en' => $clientCategory['name_en'],
+                'template_category_name_fr' => $clientCategory['name_fr'],
+                'subject' => rmt_notification_subject('request_created', 'client', $requestlang, $personalisation),
+                'message' => rmt_notification_message('request_created', 'client', $requestlang, $personalisation),
+            ];
+            sendEmail($clientemail, $template_id, json_encode($clientPersonalisation), ['recipientType' => 'client']);
         }
         
     } elseif ($notification != "N" || $notification == 1) {
         // Default notification behavior (not for AAACT)
         if ($teamemail != "daiu-anci@ssc-spc.gc.ca") {
             // Team notification
-            $template_id = app_notify_template_id('request_default_team_en');
+            $template_id = app_notify_template_id('notification_generic');
             
             if ($catalogueid == 9 || $catalogueid == 8) {
-                $template_id = app_notify_template_id('request_aaact');
+                $template_id = app_notify_template_id('notification_generic');
             }
             
             if (!empty($teamemail)) {
-                sendEmail($teamemail, $template_id, $encoded_personalisation, ['recipientType' => 'internal']);
+                $teamMessageEvent = ($catalogueid == 9 || $catalogueid == 8) ? 'request_aaact' : 'request_created';
+                $teamCategory = rmt_notification_template_category($teamMessageEvent);
+                $teamPersonalisation = $personalisation + [
+                    'notification_event' => $teamMessageEvent,
+                    'template_category_id' => $teamCategory['id'],
+                    'template_category_name_en' => $teamCategory['name_en'],
+                    'template_category_name_fr' => $teamCategory['name_fr'],
+                    'subject' => rmt_notification_subject($teamMessageEvent, 'internal', 'en', $personalisation),
+                    'message' => rmt_notification_message($teamMessageEvent, 'internal', 'en', $personalisation),
+                ];
+                sendEmail($teamemail, $template_id, json_encode($teamPersonalisation), ['recipientType' => 'internal']);
             }
             
             // Client notification
-            $clientTemplate = app_notify_template_id(app_notify_template_key_for_language('request_default_client', $requestlang));
-            sendEmail($clientemail, $clientTemplate, $encoded_personalisation, ['recipientType' => 'client']);
+            $clientCategory = rmt_notification_template_category('request_created');
+            $clientPersonalisation = $personalisation + [
+                'notification_event' => 'request_created',
+                'template_category_id' => $clientCategory['id'],
+                'template_category_name_en' => $clientCategory['name_en'],
+                'template_category_name_fr' => $clientCategory['name_fr'],
+                'subject' => rmt_notification_subject('request_created', 'client', $requestlang, $personalisation),
+                'message' => rmt_notification_message('request_created', 'client', $requestlang, $personalisation),
+            ];
+            sendEmail($clientemail, $template_id, json_encode($clientPersonalisation), ['recipientType' => 'client']);
         }
     }
     

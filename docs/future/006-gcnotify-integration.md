@@ -56,25 +56,15 @@ Recommended dev settings:
 
 With these settings, all app-triggered notifications are redirected to a known safelisted inbox for predictable testing.
 
-### Template override variables
+### Template override variable
 
-The app now supports per-event/per-language template overrides so UUID changes can be handled via environment settings instead of code edits.
+The app now uses one generic template override key. Update `GCNOTIFY_TEMPLATE_ID` to point at the GC Notify template that contains the `((message))` placeholder.
 
-Examples:
-
-- `GCNOTIFY_TEMPLATE_REQUEST_TEAM_EN`
-- `GCNOTIFY_TEMPLATE_REQUEST_CLIENT_FR`
-- `GCNOTIFY_TEMPLATE_RESOLVED_CLIENT_EN`
-- `GCNOTIFY_TEMPLATE_STATUS_CHANGED_CLIENT_FR`
-- `GCNOTIFY_TEMPLATE_REASSIGNED_TEAM_EN`
-
-See `.env.example` for the full list.
+See `.env.example` for the generic setting.
 
 ### Template model and ID mapping
 
-The application selects templates by logical key, then resolves each key to an environment variable (or a default UUID).
-
-This allows you to keep code stable and update template IDs by configuration only.
+The application now uses a single GC Notify template ID for all notification types. The app supplies the event-specific body text through `((message))`.
 
 ### Communication language policy
 
@@ -109,27 +99,7 @@ Recommended implementation rule:
 
 | Flow | Key | App setting |
 |------|-----|-------------|
-| New request (team, EN) | `request_team_en` | `GCNOTIFY_TEMPLATE_REQUEST_TEAM_EN` |
-| New request (team, FR) | `request_team_fr` | `GCNOTIFY_TEMPLATE_REQUEST_TEAM_FR` |
-| New request after-fact (team, EN) | `request_afterfact_team_en` | `GCNOTIFY_TEMPLATE_REQUEST_AFTERFACT_TEAM_EN` |
-| New request after-fact (team, FR) | `request_afterfact_team_fr` | `GCNOTIFY_TEMPLATE_REQUEST_AFTERFACT_TEAM_FR` |
-| New request AAACT path | `request_aaact` | `GCNOTIFY_TEMPLATE_REQUEST_AAACT` |
-| New request (client, EN) | `request_client_en` | `GCNOTIFY_TEMPLATE_REQUEST_CLIENT_EN` |
-| New request (client, FR) | `request_client_fr` | `GCNOTIFY_TEMPLATE_REQUEST_CLIENT_FR` |
-| New request default (team, EN) | `request_default_team_en` | `GCNOTIFY_TEMPLATE_REQUEST_DEFAULT_TEAM_EN` |
-| New request default (team, FR) | `request_default_team_fr` | `GCNOTIFY_TEMPLATE_REQUEST_DEFAULT_TEAM_FR` |
-| New request default (client, EN) | `request_default_client_en` | `GCNOTIFY_TEMPLATE_REQUEST_DEFAULT_CLIENT_EN` |
-| New request default (client, FR) | `request_default_client_fr` | `GCNOTIFY_TEMPLATE_REQUEST_DEFAULT_CLIENT_FR` |
-| Resolved (team, EN) | `resolved_team_en` | `GCNOTIFY_TEMPLATE_RESOLVED_TEAM_EN` |
-| Resolved (team, FR) | `resolved_team_fr` | `GCNOTIFY_TEMPLATE_RESOLVED_TEAM_FR` |
-| Resolved (client, EN) | `resolved_client_en` | `GCNOTIFY_TEMPLATE_RESOLVED_CLIENT_EN` |
-| Resolved (client, FR) | `resolved_client_fr` | `GCNOTIFY_TEMPLATE_RESOLVED_CLIENT_FR` |
-| Status changed (client, EN) | `status_changed_client_en` | `GCNOTIFY_TEMPLATE_STATUS_CHANGED_CLIENT_EN` |
-| Status changed (client, FR) | `status_changed_client_fr` | `GCNOTIFY_TEMPLATE_STATUS_CHANGED_CLIENT_FR` |
-| Reassigned (team, EN) | `reassigned_team_en` | `GCNOTIFY_TEMPLATE_REASSIGNED_TEAM_EN` |
-| Reassigned (team, FR) | `reassigned_team_fr` | `GCNOTIFY_TEMPLATE_REASSIGNED_TEAM_FR` |
-| Reassigned (client, EN) | `reassigned_client_en` | `GCNOTIFY_TEMPLATE_REASSIGNED_CLIENT_EN` |
-| Reassigned (client, FR) | `reassigned_client_fr` | `GCNOTIFY_TEMPLATE_REASSIGNED_CLIENT_FR` |
+| Generic notification shell | `notification_generic` | `GCNOTIFY_TEMPLATE_ID` |
 
 #### Recommended way to build templates
 
