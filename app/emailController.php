@@ -4,7 +4,7 @@ require_once __DIR__ . '/env.php';
 function rmt_notify_mode(): string
 {
 	$defaultMode = app_is_production() ? 'live' : 'redirect';
-	$mode = strtolower((string) app_env('NOTIFY_MODE', $defaultMode));
+	$mode = strtolower((string) app_setting('NOTIFY_MODE', $defaultMode));
 
 	if (!in_array($mode, ['live', 'redirect', 'disabled'], true)) {
 		return $defaultMode;
@@ -38,7 +38,7 @@ function rmt_notify_override_recipient(string $recipientType = 'general'): ?stri
 	$candidates[] = 'GCNOTIFY_TEST_EMAIL';
 
 	foreach ($candidates as $key) {
-		$value = app_env($key);
+		$value = app_setting($key);
 		if ($value !== null && $value !== '' && filter_var($value, FILTER_VALIDATE_EMAIL)) {
 			return $value;
 		}
