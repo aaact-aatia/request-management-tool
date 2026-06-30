@@ -154,7 +154,7 @@ if(rmt_result_num_rows($result2)>0){
 		$label_password = $is_french ? 'Mot de passe:' : 'Password:';
 		$label_password_note = $is_french ? 'remplissez uniquement pour changer le mot de passe' : 'only fill in to change the password';
 		$label_password2 = $is_french ? 'Confirmation du mot de passe:' : 'Confirm password:';
-		$label_accounttype = $is_french ? 'Type de compte:' : 'Account type:';
+		$label_accounttype = $is_french ? 'Role:' : 'Role:';
 		$label_teams = $is_french ? 'Équipe(s):' : 'Team(s):';
 		$label_extra_roles = $is_french ? 'Permissions supplémentaires:' : 'Extra permissions:';
 		$label_superuser = $is_french ? 'Privilèges de Super administrateur' : 'Super Admin privileges';

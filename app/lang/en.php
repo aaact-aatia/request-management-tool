@@ -407,7 +407,7 @@ return [
     'users_add_button' => 'Add new user',
     'users_col_name' => 'Full name',
     'users_col_email' => 'Email',
-    'users_col_account_type' => 'Account type',
+    'users_col_account_type' => 'Role',
     'users_col_team' => 'Team(s)',
     'users_edit_button' => 'Edit user',
     'users_delete_button' => 'Delete user',

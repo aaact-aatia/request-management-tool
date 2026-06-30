@@ -306,6 +306,44 @@ if ($csubserviceid != $subserviceid && hasValue($subserviceid)) {
     }
 }
 
+// Send notification when assigned worker changes.
+$prevWorkerIdInt = (int) ($prevWorkerid ?? 0);
+$workerIdInt = (int) ($workerid ?? 0);
+if ($workerIdInt > 0 && $workerIdInt !== $prevWorkerIdInt) {
+    $workerResult = mysqli_query($link, "SELECT firstname, lastname, email, atype FROM tblusers WHERE id = '$workerIdInt' AND status = '1' LIMIT 1");
+    $workerRow = $workerResult ? mysqli_fetch_assoc($workerResult) : null;
+    $workerEmail = trim((string) ($workerRow['email'] ?? ''));
+
+    if ($workerEmail !== '') {
+        $workerName = trim(((string) ($workerRow['firstname'] ?? '')) . ' ' . ((string) ($workerRow['lastname'] ?? '')));
+        if ($workerName !== '') {
+            $personalisation['teamname'] = $workerName;
+        }
+
+        $workerRoleKey = 'assignee';
+        $workerAtype = (int) ($workerRow['atype'] ?? 0);
+        if ($workerAtype === 3) {
+            $workerRoleKey = 'manager';
+        } elseif ($workerAtype === 4) {
+            $workerRoleKey = 'team_lead';
+        } elseif ($workerAtype === 1) {
+            $workerRoleKey = 'admin';
+        }
+
+        $reassignedTemplate = app_notify_template_id('notification_generic');
+        $reassignedCategory = rmt_notification_template_category('reassigned');
+        $reassignedWorkerPersonalisation = $personalisation + [
+            'notification_event' => 'reassigned',
+            'template_category_id' => $reassignedCategory['id'],
+            'template_category_name_en' => $reassignedCategory['name_en'],
+            'template_category_name_fr' => $reassignedCategory['name_fr'],
+            'subject' => rmt_notification_subject('reassigned', 'internal', 'en', $personalisation),
+            'message' => rmt_notification_message('reassigned', 'internal', 'en', $personalisation),
+        ];
+        sendEmail($workerEmail, $reassignedTemplate, json_encode($reassignedWorkerPersonalisation), ['recipientType' => 'internal', 'recipientRole' => $workerRoleKey]);
+    }
+}
+
 // ============================================================================
 // VALIDATION
 // ============================================================================

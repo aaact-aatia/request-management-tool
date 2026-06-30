@@ -54,6 +54,12 @@ $headerTranslations = [
 		'dev_preview_client' => 'Client',
 		'dev_preview_internal' => 'Team',
 		'dev_preview_general' => 'Recipient',
+		'dev_preview_role_team' => 'Team',
+		'dev_preview_role_manager' => 'Manager',
+		'dev_preview_role_team_lead' => 'Team lead',
+		'dev_preview_role_admin' => 'Admin',
+		'dev_preview_role_assignee' => 'Assignee',
+		'dev_preview_role_user' => 'Employee',
 		'dev_preview_disabled' => 'Disabled mode: would send to',
 		'dev_preview_sent' => 'Sent to',
 		'dev_preview_intended' => 'intended',
@@ -85,6 +91,12 @@ $headerTranslations = [
 		'dev_preview_client' => 'Client',
 		'dev_preview_internal' => 'Equipe',
 		'dev_preview_general' => 'Destinataire',
+		'dev_preview_role_team' => 'Equipe',
+		'dev_preview_role_manager' => 'Gestionnaire',
+		'dev_preview_role_team_lead' => 'Chef d equipe',
+		'dev_preview_role_admin' => 'Administrateur',
+		'dev_preview_role_assignee' => 'Personne assignee',
+		'dev_preview_role_user' => 'Employe',
 		'dev_preview_disabled' => 'Mode desactive : envoi prevu a',
 		'dev_preview_sent' => 'Envoye a',
 		'dev_preview_intended' => 'prevu',
@@ -247,14 +259,46 @@ $headerTranslations = [
 			<?php foreach ($devNotificationPreviewEntries as $previewEntry): ?>
 				<?php
 				$recipientType = (string) ($previewEntry['recipientType'] ?? 'general');
+				$recipientRole = trim((string) ($previewEntry['recipientRole'] ?? ''));
 				$intendedRecipient = (string) ($previewEntry['intendedRecipient'] ?? '');
 				$finalRecipient = (string) ($previewEntry['finalRecipient'] ?? '');
 				$result = (string) ($previewEntry['result'] ?? 'attempted');
+				$hasCustomRecipientLabel = false;
 
-				$recipientLabel = $headerLangStrings['dev_preview_general'];
-				if ($recipientType === 'client') {
+				if ($recipientType === 'internal' && $recipientRole === '' && isset($link) && ($link instanceof mysqli)) {
+					$emailToClassify = $finalRecipient !== '' ? $finalRecipient : $intendedRecipient;
+					if ($emailToClassify !== '') {
+						$escapedEmail = mysqli_real_escape_string($link, $emailToClassify);
+						$roleNameField = $langCode === 'fr' ? 'namefr' : 'nameen';
+						$roleResult = mysqli_query($link, "
+							SELECT u.atype, at.$roleNameField AS role_name
+							FROM tblusers u
+							LEFT JOIN tblaccounttype at ON at.id = u.atype
+							WHERE LOWER(u.email) = LOWER('$escapedEmail') AND u.status = '1'
+							ORDER BY u.id DESC
+							LIMIT 1
+						");
+						$roleRow = $roleResult ? mysqli_fetch_assoc($roleResult) : null;
+						if (!empty($roleRow)) {
+							$recipientRole = 'user';
+							$roleName = trim((string) ($roleRow['role_name'] ?? ''));
+							if ($roleName !== '') {
+								$recipientLabel = $roleName;
+								$hasCustomRecipientLabel = true;
+							}
+						}
+					}
+				}
+
+				if (!isset($recipientLabel)) {
+					$recipientLabel = $headerLangStrings['dev_preview_general'];
+				}
+				$roleLabelKey = 'dev_preview_role_' . $recipientRole;
+				if (!$hasCustomRecipientLabel && $recipientRole !== '' && isset($headerLangStrings[$roleLabelKey])) {
+					$recipientLabel = $headerLangStrings[$roleLabelKey];
+				} elseif (!$hasCustomRecipientLabel && $recipientType === 'client') {
 					$recipientLabel = $headerLangStrings['dev_preview_client'];
-				} elseif ($recipientType === 'internal') {
+				} elseif (!$hasCustomRecipientLabel && $recipientType === 'internal') {
 					$recipientLabel = $headerLangStrings['dev_preview_internal'];
 				}
 

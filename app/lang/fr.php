@@ -406,7 +406,7 @@ return [
     'users_add_button' => 'Ajouter un nouvel utilisateur',
     'users_col_name' => 'Nom complet',
     'users_col_email' => 'Courriel',
-    'users_col_account_type' => 'Type de compte',
+    'users_col_account_type' => 'Role',
     'users_col_team' => 'Équipe(s)',
     'users_edit_button' => 'Modifier l\'utilisateur',
     'users_delete_button' => 'Supprimer l\'utilisateur',
