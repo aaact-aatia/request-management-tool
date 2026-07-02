@@ -71,8 +71,9 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 		} else {
 			// Password correct
 			$primaryAtype = (int)$row['atype'];
-			$isSuperuser = ((int)($row['is_superuser'] ?? 0) === 1);
-			$isAdmin = ((int)($row['is_admin'] ?? 0) === 1);
+			// Preserve legacy account-type permissions when migrated rows have role flags unset.
+			$isSuperuser = ((int)($row['is_superuser'] ?? 0) === 1) || $primaryAtype === 1;
+			$isAdmin = ((int)($row['is_admin'] ?? 0) === 1) || in_array($primaryAtype, [1, 2], true);
 			if ($isSuperuser) {
 				$isAdmin = true;
 			}
