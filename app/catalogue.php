@@ -41,6 +41,10 @@ else{
 
 // Determine which name column to use
 $nameColumn = ($_SESSION['lang'] === 'fr') ? 'namefr' : 'nameen';
+$teamNameColumn = ($_SESSION['lang'] === 'fr') ? 'team_namefr' : 'team_nameen';
+
+$hasCatalogueContact = function_exists('rmt_db_column_exists')
+	&& rmt_db_column_exists($link, 'tblcatalogue', 'contactid');
 
 // =============================================================================
 // PAGE FRONTMATTER - Define page metadata
@@ -137,7 +141,15 @@ include 'includes/template/head.php';
 			
 			<?php
 			// Construct SQL statement
-			$sql = "SELECT * FROM tblcatalogue WHERE status = '1' ORDER BY {$nameColumn} ASC";
+			if ($hasCatalogueContact) {
+				$sql = "SELECT c.*, t.nameen AS team_nameen, t.namefr AS team_namefr
+						FROM tblcatalogue c
+						LEFT JOIN tblteams t ON t.id = c.contactid
+						WHERE c.status = '1'
+						ORDER BY c.{$nameColumn} ASC";
+			} else {
+				$sql = "SELECT * FROM tblcatalogue WHERE status = '1' ORDER BY {$nameColumn} ASC";
+			}
 			//echo $sql;
 			
 			$result = mysqli_query($link,$sql);
@@ -148,6 +160,7 @@ include 'includes/template/head.php';
 				<thead>
 					<tr>
 						<th><?= htmlspecialchars($langFile['catalogue_name_column']) ?></th>
+						<th><?= htmlspecialchars($langFile['catalogue_contact_group_column'] ?? (($_SESSION['lang'] === 'fr') ? 'Groupe de contact' : 'Contact group')) ?></th>
 						<th><?= htmlspecialchars($langFile['catalogue_services_column']) ?></th>
 						<th><?= htmlspecialchars($langFile['actions_column']) ?></th>
 					</tr>
@@ -161,6 +174,20 @@ include 'includes/template/head.php';
 					?>
 						<tr>
 							<td><?php echo htmlspecialchars($row[$nameColumn]);?><br /><?php if ($row['survey']==0) { echo '<span class="glyphicon glyphicon-warning-sign"></span> ' . htmlspecialchars($langFile['catalogue_surveys_not_sent']); } else { echo '<span class="glyphicon glyphicon-ok"></span> ' . htmlspecialchars($langFile['catalogue_surveys_sent']); }?></td>
+							<td>
+								<?php
+								$contactGroupName = '';
+								if ($hasCatalogueContact && !empty($row[$teamNameColumn])) {
+									$contactGroupName = $row[$teamNameColumn];
+								}
+
+								if ($contactGroupName === '') {
+									echo htmlspecialchars($langFile['catalogue_contact_group_unassigned'] ?? (($_SESSION['lang'] === 'fr') ? 'Non assigne' : 'Not assigned'));
+								} else {
+									echo htmlspecialchars($contactGroupName);
+								}
+								?>
+							</td>
 							<td>
 							<?php 
 							// Grab the services related to this catalogue item

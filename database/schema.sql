@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS `tblcatalogue` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `nameen` varchar(255) NOT NULL,
   `namefr` varchar(255) NOT NULL,
+  `contactid` int(11) DEFAULT 1,
   `survey` tinyint(1) DEFAULT 1,
   `status` tinyint(1) DEFAULT 1,
   PRIMARY KEY (`id`)

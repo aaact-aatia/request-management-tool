@@ -173,10 +173,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         mysqli_query($link, $sql);
     }
     
-    // Determine the team to notify based on service/subservice
+    // Determine the team to notify based on first-tier catalogue ownership.
+    // Fall back to legacy service/subservice contact ownership for older data.
     $contactid = -1;
+    $hasCatalogueContact = function_exists('rmt_db_column_exists')
+        && rmt_db_column_exists($link, 'tblcatalogue', 'contactid');
+
+    if ($hasCatalogueContact && $catalogueid && $catalogueid != 0) {
+        $result = mysqli_query($link, "SELECT contactid FROM tblcatalogue WHERE id = '$catalogueid'");
+        $row = mysqli_fetch_array($result);
+        if (!empty($row) && !empty($row[0])) {
+            $contactid = (int)$row[0];
+        }
+    }
     
-    if ($subserviceid && $subserviceid != 0) {
+    if (($contactid <= 0) && $subserviceid && $subserviceid != 0) {
         // Get serviceid from subservice
         $result = mysqli_query($link, "SELECT serviceid FROM tblsubservices WHERE id = '$subserviceid'");
         $row = mysqli_fetch_array($result);
@@ -190,24 +201,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if (!empty($row)) {
             $contactid = $row[0];
         }
-        
-        // Get team details
-        $result = mysqli_query($link, "SELECT * FROM tblteams WHERE id = '$contactid'");
-        $row = mysqli_fetch_array($result);
-        if (!empty($row)) {
-            $teamname = $isFrench ? $row['namefr'] : $row['nameen'];
-            $teamemail = $row['email'];
-            $contactname = $row['contactname'];
-            $contactemail = $row['contactemail'];
-        }
-    } elseif ($serviceid && $serviceid != 0) {
+    }
+
+    if (($contactid <= 0) && $serviceid && $serviceid != 0) {
         // Get contact from service directly
         $result = mysqli_query($link, "SELECT contactid FROM tblservices WHERE id = '$serviceid'");
         $row = mysqli_fetch_array($result);
         if (!empty($row)) {
             $contactid = $row[0];
         }
-        
+    }
+
+    if ($contactid > 0) {
         // Get team details
         $result = mysqli_query($link, "SELECT * FROM tblteams WHERE id = '$contactid'");
         $row = mysqli_fetch_array($result);
@@ -217,12 +222,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $contactname = $row['contactname'];
             $contactemail = $row['contactemail'];
         }
-    } else {
-        // Fallback to AAACT triage
+    }
+
+    if (empty($teamemail)) {
+        // Fallback to AAACT triage when team ownership is not configured.
         $teamname = "AAACT Triage";
         $teamemail = "daiu-anci@ssc-spc.gc.ca";
         $contactname = "Brad Souster";
         $contactemail = "Brad.Souster@ssc-spc.gc.ca";
+    } else {
+        $teamname = $teamname ?? "";
+        $teamemail = $teamemail ?? "";
+        $contactname = $contactname ?? "";
+        $contactemail = $contactemail ?? "";
     }
     
     // Prepare email data

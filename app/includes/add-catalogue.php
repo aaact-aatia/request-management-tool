@@ -23,11 +23,12 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	// Grab form elements
 	$nameen = mysqli_real_escape_string($link,$_POST['nameen']);
 	$namefr = mysqli_real_escape_string($link,$_POST['namefr']);
+	$contactid = mysqli_real_escape_string($link,$_POST['contactid']);
 	$status = 1;
 	$noerror = false;
 	
 	// Custom form validation
-	if ($nameen=="" OR $namefr=="") {
+	if ($nameen=="" OR $namefr=="" OR $contactid=="") {
 		$noerror = true;
 	}
 
@@ -38,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	}
 	
 	// Create SQL statement
-	$sql = "INSERT INTO tblcatalogue(`nameen`, `namefr`, `status`) VALUES ('$nameen', '$namefr', '$status')";
+	$sql = "INSERT INTO tblcatalogue(`nameen`, `namefr`, `contactid`, `status`) VALUES ('$nameen', '$namefr', '$contactid', '$status')";
 	//echo $sql;
 	//exit();
 	rmt_admin_query($link,$sql);
@@ -61,6 +62,21 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 		<div class="form-group">
 			<label for="namefr"><span class="field-name"><?= htmlspecialchars($lang['add_catalogue_name_fr'] ?? 'Name (french)') ?>: <strong>(<?= htmlspecialchars($lang['required'] ?? 'required') ?>)</strong></span></label>
 			<input type="text" class="form-control" id="namefr" name="namefr" value="" required>
+		</div>
+		<div class="form-group">
+			<label for="contactid"><span class="field-name"><?= htmlspecialchars($lang['catalogue_contact_group_field'] ?? (($lang_code === 'fr') ? 'Groupe de contact' : 'Contact group')) ?>: <strong>(<?= htmlspecialchars($lang['required'] ?? 'required') ?>)</strong></span></label>
+			<select class="form-control" id="contactid" name="contactid" required>
+				<option value="" selected disabled><?= $lang_code === 'fr' ? 'Selectionnez un groupe de contact' : 'Select contact group' ?></option>
+				<?php
+				$sortField = $lang_code === 'fr' ? 'namefr' : 'nameen';
+				$teamsSql = "SELECT * FROM tblteams WHERE status='1' ORDER BY {$sortField} ASC";
+				$teamsResult = rmt_admin_query($link, $teamsSql, $lang_code);
+				while ($teamRow = rmt_result_fetch_array($teamsResult)) {
+					$teamName = $lang_code === 'fr' ? $teamRow['namefr'] : $teamRow['nameen'];
+				?>
+					<option value="<?= htmlspecialchars($teamRow['id']) ?>"><?= htmlspecialchars($teamName) ?></option>
+				<?php } ?>
+			</select>
 		</div>
 		<div class="form-group form-buttons">
 			<button type="submit" class="btn btn-default"><?= htmlspecialchars($lang['add_button'] ?? 'Add') ?></button>

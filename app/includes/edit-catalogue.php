@@ -26,11 +26,12 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	// Grab form elements
 	$nameen = mysqli_real_escape_string($link,$_POST['nameen']);
 	$namefr = mysqli_real_escape_string($link,$_POST['namefr']);
+	$contactid = mysqli_real_escape_string($link,$_POST['contactid']);
 	$survey = mysqli_real_escape_string($link,$_POST['survey']);
 	$noerror = false;
 	
 	// Custom form validation
-	if ($nameen=="" OR $namefr=="") {
+	if ($nameen=="" OR $namefr=="" OR $contactid=="") {
 		$noerror = true;
 	}
 	
@@ -41,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	}
 	
 	// Create SQL statement
-	$sql = "UPDATE `tblcatalogue` SET `nameen` = '$nameen', `namefr` = '$namefr', `survey` = '$survey' WHERE id='$catalogueid'";
+	$sql = "UPDATE `tblcatalogue` SET `nameen` = '$nameen', `namefr` = '$namefr', `contactid` = '$contactid', `survey` = '$survey' WHERE id='$catalogueid'";
 	//echo $sql;
 	rmt_admin_query($link,$sql);
 	
@@ -72,6 +73,21 @@ if(rmt_result_num_rows($result2)>0){
 		<div class="form-group">
 			<label for="namefr"><span class="field-name"><?php echo $lang_code === 'en' ? 'Name (french)' : 'Nom (français)'; ?>: <strong>(<?php echo $lang_code === 'en' ? 'required' : 'requis'; ?>)</strong></span></label>
 			<input type="text" class="form-control" id="namefr" name="namefr" value="<?php echo htmlspecialchars($row2['namefr']); ?>" required>
+		</div>
+		<div class="form-group">
+			<label for="contactid"><span class="field-name"><?php echo $lang_code === 'en' ? 'Contact group' : 'Groupe de contact'; ?>: <strong>(<?php echo $lang_code === 'en' ? 'required' : 'requis'; ?>)</strong></span></label>
+			<select class="form-control" id="contactid" name="contactid" required>
+				<option value=""<?php if (empty($row2['contactid'])) echo " selected"; ?> disabled><?php echo $lang_code === 'en' ? 'Select contact group' : 'Selectionnez un groupe de contact'; ?></option>
+				<?php
+				$sortField = $lang_code === 'fr' ? 'namefr' : 'nameen';
+				$teamsSql = "SELECT * FROM tblteams WHERE status='1' ORDER BY {$sortField} ASC";
+				$teamsResult = rmt_admin_query($link, $teamsSql, $lang_code);
+				while ($teamRow = rmt_result_fetch_array($teamsResult)) {
+					$teamName = $lang_code === 'fr' ? $teamRow['namefr'] : $teamRow['nameen'];
+				?>
+					<option value="<?php echo $teamRow['id']; ?>"<?php if((int)$teamRow['id'] === (int)($row2['contactid'] ?? 0)) echo " selected"; ?>><?php echo htmlspecialchars($teamName); ?></option>
+				<?php } ?>
+			</select>
 		</div>
 		<div class="form-group">
 			<label for="survey"><span class="field-name"><?php echo $lang_code === 'en' ? 'Send survey' : 'Envoyer le sondage'; ?>: <strong>(<?php echo $lang_code === 'en' ? 'required' : 'requis'; ?>)</strong></span></label>

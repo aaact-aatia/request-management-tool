@@ -17,17 +17,27 @@ if (isset($_SERVER['SCRIPT_FILENAME']) && realpath(__FILE__) === realpath((strin
     <select class="form-control" id="workerid" name="workerid">
         <option value="0"><?php echo $t['select_team_member']; ?></option>
         <?php 
-        // Resolve the contact ID for this request from subservice or service
+        // Resolve the contact ID for this request from first-tier catalogue.
+        // Fall back to legacy service/subservice ownership for older records.
         $contactid = 0;
-        if (!empty($row['subserviceid'])) {
-            $r = mysqli_query($link, "SELECT contactid FROM tblsubservices WHERE id='" . (int)$row['subserviceid'] . "'");
+        $hasCatalogueContact = function_exists('rmt_db_column_exists')
+            && rmt_db_column_exists($link, 'tblcatalogue', 'contactid');
+        if ($hasCatalogueContact && !empty($row['catalogueid'])) {
+            $r = mysqli_query($link, "SELECT contactid FROM tblcatalogue WHERE id='" . (int)$row['catalogueid'] . "'");
             $cr = mysqli_fetch_assoc($r);
-            $contactid = $cr['contactid'] ?? 0;
+            $contactid = (int)($cr['contactid'] ?? 0);
+        }
+        if (!empty($row['subserviceid'])) {
+            if (!$contactid) {
+                $r = mysqli_query($link, "SELECT contactid FROM tblsubservices WHERE id='" . (int)$row['subserviceid'] . "'");
+                $cr = mysqli_fetch_assoc($r);
+                $contactid = (int)($cr['contactid'] ?? 0);
+            }
         }
         if (!$contactid && !empty($row['serviceid'])) {
             $r = mysqli_query($link, "SELECT contactid FROM tblservices WHERE id='" . (int)$row['serviceid'] . "'");
             $cr = mysqli_fetch_assoc($r);
-            $contactid = $cr['contactid'] ?? 0;
+            $contactid = (int)($cr['contactid'] ?? 0);
         }
 
         // Default to AAACT (contactid=1) when service has no team assignment

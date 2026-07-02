@@ -28,12 +28,11 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	// Grab form elements
 	$nameen = mysqli_real_escape_string($link,$_POST['nameen']);
 	$namefr = mysqli_real_escape_string($link,$_POST['namefr']);
-	$contactid = mysqli_real_escape_string($link,$_POST['contactid']);
 	$sds = mysqli_real_escape_string($link,$_POST['sds']);
 	$noerror = false;
 	
 	// Custom form validation
-	if ($nameen=="" OR $namefr=="" OR $contactid=="" OR $sds=="" OR $subserviceid=="") {
+	if ($nameen=="" OR $namefr=="" OR $sds=="" OR $subserviceid=="") {
 		$noerror = true;
 	}
 	
@@ -44,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	}
 	
 	// Create SQL statement
-	$sql = "UPDATE `tblsubservices` SET `nameen` = '$nameen', `namefr` = '$namefr', `contactid` = '$contactid', `sds` = '$sds' WHERE id='$subserviceid'";
+	$sql = "UPDATE `tblsubservices` SET `nameen` = '$nameen', `namefr` = '$namefr', `sds` = '$sds' WHERE id='$subserviceid'";
 	//echo $sql;
 	rmt_admin_query($link,$sql);
 	
@@ -63,13 +62,10 @@ if(rmt_result_num_rows($result2)>0){
 		$title = $is_french ? ('Modifier l\'élément de sous-service ' . $row2['namefr']) : ('Edit ' . $row2['nameen'] . ' sub-service item');
 		$label_en = $is_french ? 'Nom (anglais):' : 'Name (english):';
 		$label_fr = $is_french ? 'Nom (français):' : 'Name (french):';
-		$label_contact = $is_french ? 'Groupe de contact:' : 'Contact group:';
 		$label_sds = $is_french ? 'Norme de prestation de services:' : 'Service delivery standard:';
 		$required_label = $is_french ? 'requis' : 'required';
 		$save_btn = $is_french ? 'Sauvegarder' : 'Save';
 		$days_label = $is_french ? 'jours' : 'days';
-		$sort_field = $is_french ? 'namefr' : 'nameen';
-		$team_name = $is_french ? 'namefr' : 'nameen';
 ?>
 <section id="filter-id" class="modal-dialog modal-content overlay-def">
 	<header class="modal-header">
@@ -84,20 +80,6 @@ if(rmt_result_num_rows($result2)>0){
 		<div class="form-group">
 			<label for="namefr"><span class="field-name"><?php echo $label_fr ?> <strong>(<?php echo $required_label ?>)</strong></span></label>
 			<input type="text" class="form-control" id="namefr" name="namefr" value="<?php echo $row2['namefr'] ?>" required>
-		</div>
-		<div class="form-group">
-			<label for="contactid"><span class="field-name"><?php echo $label_contact ?> <strong>(<?php echo $required_label ?>)</strong></span></label>
-			<select class="form-control" id="contactid" name="contactid" required>
-				<?php 
-				$sql3 = "SELECT * FROM tblteams WHERE status='1' ORDER BY $sort_field ASC";
-				$result3 = rmt_admin_query($link,$sql3);	
-				while($row3 = rmt_result_fetch_array($result3)){
-				?>
-					<option value="<?php echo $row3['id']; ?>"<?php if($row3['id'] == $row2['contactid']) echo " selected"; ?>><?php echo $row3[$team_name]; ?></option>
-				<?php
-				}
-				?>
-			</select>
 		</div>
 		<div class="form-group">
 			<label for="sds"><span class="field-name"><?php echo $label_sds ?> <strong>(<?php echo $required_label ?>)</strong></span></label>

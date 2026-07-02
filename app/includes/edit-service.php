@@ -27,12 +27,11 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	// Grab form elements
 	$nameen = mysqli_real_escape_string($link,$_POST['nameen']);
 	$namefr = mysqli_real_escape_string($link,$_POST['namefr']);
-	$contactid = mysqli_real_escape_string($link,$_POST['contactid']);
 	$sds = mysqli_real_escape_string($link,$_POST['sds']);
 	$noerror = false;
 	
 	// Custom form validation
-	if ($nameen=="" OR $namefr=="" OR $contactid=="" OR $sds=="" OR $catalogueid=="") {
+	if ($nameen=="" OR $namefr=="" OR $sds=="" OR $catalogueid=="") {
 		$noerror = true;
 	}
 	
@@ -43,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	}
 	
 	// Create SQL statement
-	$sql = "UPDATE `tblservices` SET `nameen` = '$nameen', `namefr` = '$namefr', `contactid` = '$contactid', `sds` = '$sds' WHERE id='$serviceid'";
+	$sql = "UPDATE `tblservices` SET `nameen` = '$nameen', `namefr` = '$namefr', `sds` = '$sds' WHERE id='$serviceid'";
 	//echo $sql;
 	rmt_admin_query($link,$sql);
 	
@@ -74,23 +73,6 @@ if(rmt_result_num_rows($result2)>0){
 		<div class="form-group">
 			<label for="namefr"><span class="field-name"><?php echo $lang_code === 'en' ? 'Name (french)' : 'Nom (français)'; ?>: <strong>(<?php echo $lang_code === 'en' ? 'required' : 'requis'; ?>)</strong></span></label>
 			<input type="text" class="form-control" id="namefr" name="namefr" value="<?php echo htmlspecialchars($row2['namefr']); ?>" required>
-		</div>
-		<div class="form-group">
-			<label for="contactid"><span class="field-name"><?php echo $lang_code === 'en' ? 'Contact group' : 'Groupe de contact'; ?>: <strong>(<?php echo $lang_code === 'en' ? 'required' : 'requis'; ?>)</strong></span></label>
-			<select class="form-control" id="contactid" name="contactid" required>
-				<option value=""<?php if (empty($row2['contactid'])) echo " selected"; ?> disabled><?php echo $lang_code === 'en' ? 'Select contact group' : 'Selectionnez un groupe de contact'; ?></option>
-				<?php 
-				$sort_field = $lang_code === 'fr' ? 'namefr' : 'nameen';
-				$sql3 = "SELECT * FROM tblteams WHERE status='1' ORDER BY {$sort_field} ASC";
-				$result3 = rmt_admin_query($link,$sql3);	
-				while($row3 = rmt_result_fetch_array($result3)){
-					$team_name = $lang_code === 'fr' ? $row3['namefr'] : $row3['nameen'];
-				?>
-					<option value="<?php echo $row3['id']; ?>"<?php if($row3['id'] == $row2['contactid']) echo " selected"; ?>><?php echo htmlspecialchars($team_name); ?></option>
-				<?php
-				}
-				?>
-			</select>
 		</div>
 		<div class="form-group">
 			<label for="sds"><span class="field-name"><?php echo $lang_code === 'en' ? 'Service delivery standard' : 'Norme de prestation de services'; ?>: <strong>(<?php echo $lang_code === 'en' ? 'required' : 'requis'; ?>)</strong></span></label>

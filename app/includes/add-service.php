@@ -26,13 +26,12 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	// Grab form elements
 	$nameen = mysqli_real_escape_string($link,$_POST['nameen']);
 	$namefr = mysqli_real_escape_string($link,$_POST['namefr']);
-	$contactid = mysqli_real_escape_string($link,$_POST['contactid']);
 	$sds = mysqli_real_escape_string($link,$_POST['sds']);
 	$status = 1;
 	$noerror = false;
 	
 	// Custom form validation
-	if ($nameen=="" OR $namefr=="" OR $contactid=="" OR $sds=="" OR $catalogueid=="") {
+	if ($nameen=="" OR $namefr=="" OR $sds=="" OR $catalogueid=="") {
 		$noerror = true;
 	}
 
@@ -43,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	}
 	
 	// Create SQL statement
-	$sql = "INSERT INTO tblservices(`nameen`, `namefr`, `catalogueid`, `contactid`, `sds`, `status`) VALUES ('$nameen', '$namefr', '$catalogueid', '$contactid', '$sds', '$status')";
+	$sql = "INSERT INTO tblservices(`nameen`, `namefr`, `catalogueid`, `sds`, `status`) VALUES ('$nameen', '$namefr', '$catalogueid', '$sds', '$status')";
 	//echo $sql;
 	//exit();
 	rmt_admin_query($link,$sql);
@@ -68,23 +67,19 @@ $translations = [
 		'modal_title' => 'Add new service item for',
 		'name_en' => 'Name (english):',
 		'name_fr' => 'Name (french):',
-		'contact_group' => 'Contact group:',
 		'sds' => 'Service delivery standard:',
 		'days' => 'days',
 		'required' => '(required)',
-		'add_button' => 'Add',
-		'team_sort_field' => 'nameen'
+		'add_button' => 'Add'
 	],
 	'fr' => [
 		'modal_title' => 'Ajouter un nouvel élément de service pour',
 		'name_en' => 'Nom (anglais):',
 		'name_fr' => 'Nom (français):',
-		'contact_group' => 'Groupe de contact:',
 		'sds' => 'Norme de prestation de services:',
 		'days' => 'jours',
 		'required' => '(requis)',
-		'add_button' => 'Ajouter',
-		'team_sort_field' => 'namefr'
+		'add_button' => 'Ajouter'
 	]
 ];
 
@@ -103,22 +98,6 @@ $t = $translations[$lang_code];
 		<div class="form-group">
 			<label for="namefr"><span class="field-name"><?= htmlspecialchars($t['name_fr']) ?> <strong><?= htmlspecialchars($t['required']) ?></strong></span></label>
 			<input type="text" class="form-control" id="namefr" name="namefr" value="" required>
-		</div>
-		<div class="form-group">
-			<label for="contactid"><span class="field-name"><?= htmlspecialchars($t['contact_group']) ?> <strong><?= htmlspecialchars($t['required']) ?></strong></span></label>
-			<select class="form-control" id="contactid" name="contactid" required>
-				<option value="" selected disabled><?= $lang_code === 'fr' ? 'Selectionnez un groupe de contact' : 'Select contact group' ?></option>
-				<?php 
-				$sql2 = "SELECT * FROM tblteams WHERE status='1' ORDER BY {$t['team_sort_field']} ASC";
-				$result2 = rmt_admin_query($link,$sql2);	
-				while($row2 = rmt_result_fetch_array($result2)){
-					$teamname = ($lang_code === 'fr') ? $row2['namefr'] : $row2['nameen'];
-				?>
-					<option value="<?= htmlspecialchars($row2['id']) ?>"><?= htmlspecialchars($teamname) ?></option>
-				<?php
-				}
-				?>
-			</select>
 		</div>
 		<div class="form-group">
 			<label for="sds"><span class="field-name"><?= htmlspecialchars($t['sds']) ?> <strong><?= htmlspecialchars($t['required']) ?></strong></span></label>

@@ -13,7 +13,7 @@ if (!function_exists('rmt_get_admin_csv_tables')) {
 			],
 			'tblcatalogue' => [
 				'label_key' => 'admin_csv_table_catalogue',
-				'columns' => ['id', 'nameen', 'namefr', 'survey', 'status'],
+				'columns' => ['id', 'nameen', 'namefr', 'contactid', 'survey', 'status'],
 				'order_by' => 'id ASC',
 			],
 			'tblservices' => [
