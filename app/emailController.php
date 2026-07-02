@@ -56,6 +56,10 @@ function rmt_notify_force_override_recipient(): bool
 
 function sendEmail($emailAddress, $templateId, $personalisation, array $options = [])
 {
+	if (function_exists('app_dev_notification_preview_begin_batch')) {
+		app_dev_notification_preview_begin_batch();
+	}
+
 	$recipientType = $options['recipientType'] ?? 'general';
 	$recipientRole = trim((string) ($options['recipientRole'] ?? ''));
 	$originalRecipient = trim((string) $emailAddress);

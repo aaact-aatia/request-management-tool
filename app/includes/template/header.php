@@ -104,9 +104,17 @@ $headerTranslations = [
 ];
 
 	$headerLangStrings = $headerTranslations[$langCode];
-	$devNotificationPreviewEntries = function_exists('app_dev_notification_preview_consume')
-		? app_dev_notification_preview_consume()
-		: [];
+	$statusParam = strtolower(trim((string) ($_GET['status'] ?? '')));
+	$showDevNotificationPreview = in_array($statusParam, ['newrequestcomplete'], true);
+	$devNotificationPreviewEntries = [];
+	if (function_exists('app_dev_notification_preview_consume')) {
+		if ($showDevNotificationPreview) {
+			$devNotificationPreviewEntries = app_dev_notification_preview_consume();
+		} else {
+			// Prevent previews from leaking into unrelated pages.
+			app_dev_notification_preview_consume();
+		}
+	}
 	$notifyModeMessage = $headerLangStrings['dev_notice_live'];
 	if ($notifyMode === 'redirect') {
 		$notifyModeMessage = $headerLangStrings['dev_notice_redirect'];
@@ -251,7 +259,7 @@ $headerTranslations = [
 </div>
 <?php endif; ?>
 
-<?php if ($showEnvironmentBanner && !empty($devNotificationPreviewEntries)): ?>
+<?php if ($showEnvironmentBanner && $showDevNotificationPreview && !empty($devNotificationPreviewEntries)): ?>
 <div class="container mrgn-tp-md">
 	<section class="alert alert-info" aria-label="<?= htmlspecialchars($headerLangStrings['dev_preview_title']) ?>">
 		<p><strong><?= htmlspecialchars($headerLangStrings['dev_preview_title']) ?></strong></p>
