@@ -114,7 +114,6 @@ The repository contains database bootstrap files with distinct responsibilities:
 - `database/schema.sql`: database structure only (`CREATE TABLE`, indexes, and constraints)
 - `database/reference.sql`: production-safe lookup and configuration data required by the app
 - `database/sample-dev.sql`: local/development sample data only (non-production)
-- `database/seed.sql`: legacy combined seed retained for compatibility
 
 ### Local Initialization Behavior
 

@@ -118,7 +118,7 @@ docker compose up -d
 # Access: http://localhost:${PORT} (from .env)
 ```
 
-The database is seeded automatically on first start from [database/seed.sql](../database/seed.sql).
+The database is initialized automatically on first start using the split bootstrap files: [database/schema.sql](../database/schema.sql), [database/reference.sql](../database/reference.sql), and [database/sample-dev.sql](../database/sample-dev.sql).
 
 ### Docker-First PHP Validation (Required)
 Agents must use Docker for PHP validation and must not assume PHP is installed on the host machine.
