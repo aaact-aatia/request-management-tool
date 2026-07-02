@@ -235,6 +235,12 @@ return [
     'client_survey_response_time' => 'Temps de réponse',
     'client_survey_comments_label' => 'Avez-vous des suggestions pour améliorer notre service ou des commentaires supplémentaires ?',
     'client_survey_submit' => 'Soumettre',
+
+    // Client Survey Thank You page (client-survey-thank-you.php)
+    'client_survey_thank_you_page_title' => 'Merci - Outil de gestion des demandes - Bureau de l\'accessibilité de la TI',
+    'client_survey_thank_you_heading' => 'Merci',
+    'client_survey_thank_you_message' => 'Votre sondage a été soumis avec succès. Nous vous remercions de votre rétroaction.',
+    'client_survey_thank_you_new_request_link' => 'Soumettre une nouvelle demande',
     
     // Client Survey Pending page (client-survey-pending.php)
     'client_survey_pending_page_title' => 'Sondage sur la satisfaction de la clientèle - Request Management Tool - IT Accessibility Office',

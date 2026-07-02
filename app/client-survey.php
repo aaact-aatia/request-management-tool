@@ -57,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 	mysqli_query($link, $sql);
 
 	// Now redirect
-	header("location:/viewrequest.php?lang=" . $_SESSION['lang'] . "&erid=" . $nrequestid . "&reqid=" . urlencode("a11y-" . $requestid) . "&status=clientsurveycomplete");
+	header("location:/client-survey-thank-you.php?lang=" . $_SESSION['lang']);
 	exit();
 }
 

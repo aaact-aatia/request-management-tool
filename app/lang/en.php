@@ -237,6 +237,12 @@ return [
     'client_survey_response_time' => 'Response time',
     'client_survey_comments_label' => 'Do you have any suggestions to improve our service or any additional comments?',
     'client_survey_submit' => 'Submit',
+
+    // Client Survey Thank You page (client-survey-thank-you.php)
+    'client_survey_thank_you_page_title' => 'Thank you - Request Management Tool - IT Accessibility Office',
+    'client_survey_thank_you_heading' => 'Thank you',
+    'client_survey_thank_you_message' => 'Your survey has been submitted successfully. We appreciate your feedback.',
+    'client_survey_thank_you_new_request_link' => 'Submit a new request',
     
     // Client Survey Pending page (client-survey-pending.php)
     'client_survey_pending_page_title' => 'Client satisfaction surveys - Request Management Tool - IT Accessibility Office',
