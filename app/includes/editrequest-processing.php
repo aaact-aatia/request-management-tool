@@ -219,6 +219,7 @@ $personalisation = [
     "requestid" => $requestid,
     "nrequestid" => $requestid,
     "teamname" => $teamname,
+    "team_email" => $teamemail,
     "requesttitle" => $requesttitle,
     "nrequestemailid" => $nrequestemailid,
     "nrequestemail" => $clientemail,
@@ -262,6 +263,7 @@ if ($csubserviceid != $subserviceid && hasValue($subserviceid)) {
         $result = mysqli_query($link, "SELECT * FROM tblteams WHERE id = '$contactid'");
         $row = mysqli_fetch_assoc($result);
         $personalisation['teamname'] = $row['nameen'];
+        $personalisation['team_email'] = $row['email'];
         $newTeamEmail = $row['email'];
         
         $reassignedTemplate = app_notify_template_id('notification_generic');
@@ -290,6 +292,7 @@ if ($csubserviceid != $subserviceid && hasValue($subserviceid)) {
         $result = mysqli_query($link, "SELECT * FROM tblteams WHERE id = '$contactid'");
         $row = mysqli_fetch_assoc($result);
         $personalisation['teamname'] = $row['nameen'];
+        $personalisation['team_email'] = $row['email'];
         $newTeamEmail = $row['email'];
         
         $reassignedTemplate = app_notify_template_id('notification_generic');
@@ -319,6 +322,7 @@ if ($workerIdInt > 0 && $workerIdInt !== $prevWorkerIdInt) {
         if ($workerName !== '') {
             $personalisation['teamname'] = $workerName;
         }
+        $personalisation['team_email'] = $workerEmail;
 
         $workerRoleKey = 'assignee';
         $workerAtype = (int) ($workerRow['atype'] ?? 0);

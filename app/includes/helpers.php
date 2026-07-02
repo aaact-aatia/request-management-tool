@@ -335,6 +335,35 @@ function rmt_notification_salutation(string $language, array $context = [], stri
     return $isFrench ? 'Bonjour,' : 'Hello,';
 }
 
+function rmt_notification_signature_single_language(string $language, array $context = []): string {
+    $isFrench = (app_normalize_language($language) === 'fr');
+    $teamName = rmt_notification_escape((string) ($context['teamname'] ?? ''));
+    $teamEmail = rmt_notification_escape((string) ($context['team_email'] ?? 'aaact-aatia@ssc-spc.gc.ca'));
+    if ($teamEmail === '') {
+        $teamEmail = 'aaact-aatia@ssc-spc.gc.ca';
+    }
+
+    if ($isFrench) {
+        $lines = [];
+        if ($teamName !== '') {
+            $lines[] = $teamName;
+        }
+        $lines[] = 'Accessibilite, adaptation et technologie informatique adaptee (AATIA)';
+        $lines[] = $teamEmail;
+
+        return implode("\n", $lines);
+    }
+
+    $lines = [];
+    if ($teamName !== '') {
+        $lines[] = $teamName;
+    }
+    $lines[] = 'Accessibility, Accommodation and Adaptive Computer Technology (AAACT)';
+    $lines[] = $teamEmail;
+
+    return implode("\n", $lines);
+}
+
 function rmt_notification_language_order(string $recipientType, ?string $language): array {
     $lang = app_normalize_language($language);
 
@@ -493,9 +522,15 @@ function rmt_notification_message_single_language(string $event, string $recipie
             : 'View request: [' . $requestId . '](' . $requestUrl . ')';
     }
 
-    $withLink = static function (array $paragraphs) use ($format, $linkLine): string {
+    $signatureBlock = rmt_notification_signature_single_language($language, $context);
+
+    $withLink = static function (array $paragraphs) use ($format, $linkLine, $signatureBlock): string {
         if ($linkLine !== '') {
             $paragraphs[] = $linkLine;
+        }
+
+        if ($signatureBlock !== '') {
+            $paragraphs[] = $signatureBlock;
         }
 
         return $format($paragraphs);

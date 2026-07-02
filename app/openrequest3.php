@@ -253,6 +253,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         "requestid" => $nrequestid,
         "nrequestid" => $nrequestid,
         "teamname" => $teamname,
+        "team_email" => $teamemail,
         "requesttitle" => $requesttitle,
         "nrequestemailid" => $nrequestemailid,
         "nrequestemail" => $clientemail,
