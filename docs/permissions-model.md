@@ -110,6 +110,11 @@ Decisions confirmed for this workstream:
 4. Treat non-authenticated users as a distinct access class with explicit deny-by-default policy.
 5. Prioritize documentation first, then implementation hardening.
 
+Director UI policy clarifications (approved):
+- Directors must not see Edit or Delete request actions on overview/list/search cards.
+- Request-card footers should be hidden when no permitted actions remain.
+- Directors must not see request-detail actions that trigger outbound workflow (for example, send resolved/survey email actions).
+
 ## Known Enforcement Gaps (To Be Addressed)
 
 Current code discovery identified these high-priority inconsistencies:

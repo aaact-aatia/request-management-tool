@@ -17,7 +17,7 @@ Access classes:
 | `app/openrequest.php` | `PUBLIC_GUEST` | Public intake entry | Guest allowed to start request submission flow. |
 | `app/openrequest2.php` | `PUBLIC_GUEST` | Public intake step | Must remain intake-only (no internal controls). |
 | `app/openrequest3.php` | `PUBLIC_GUEST` | Public intake submit | Must only support create flow and safe redirects. |
-| `app/viewrequest.php` | `GUEST_LINK_LIMITED` and `AUTH_REQUIRED` (dual mode) | Guest link-limited view + richer internal view for authenticated roles | Requires explicit mode boundary and field-level restrictions. |
+| `app/viewrequest.php` | `GUEST_LINK_LIMITED` and `AUTH_REQUIRED` (dual mode) | Guest link-limited view + richer internal view for authenticated roles | Requires explicit mode boundary and field-level restrictions; Director remains read-only (no edit/delete/send-resolved-email actions). |
 | `app/editrequest.php` | `ROLE_RESTRICTED` | `request.edit.client_fields` / `request.edit.workflow_fields` / `request.edit.internal_fields` | No guest or director edit access. Edit fields must be role-tier gated. |
 | `app/clonerequest.php` | `ROLE_RESTRICTED` | Internal only | Scoped by role; no guest access. |
 
