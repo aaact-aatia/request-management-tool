@@ -13,10 +13,16 @@ if (isset($_SERVER['SCRIPT_FILENAME']) && realpath(__FILE__) === realpath((strin
 // PERMISSION HELPERS
 // ============================================================================
 
+function isRoleTestMode() {
+    // Superadmin test mode is active when they switch to any non-superadmin atype.
+    return (isset($_SESSION['is_superuser']) && (int)$_SESSION['is_superuser'] === 1)
+        && isset($_SESSION['atype'])
+        && (int)$_SESSION['atype'] !== 1;
+}
+
 function isSuperAdmin() {
     // Returns true if user is a superuser (unless in test mode)
-    $inTestMode = isset($_SESSION['atype']) && isset($_SESSION['primary_atype']) && 
-                  $_SESSION['atype'] != $_SESSION['primary_atype'];
+    $inTestMode = isRoleTestMode();
 
     if ($inTestMode) {
         return false;
@@ -34,8 +40,7 @@ function isAdmin() {
 
 function canEditRequests() {
     // If in test mode, only use tested atype permissions, not superuser flags
-    $inTestMode = isset($_SESSION['atype']) && isset($_SESSION['primary_atype']) && 
-                  $_SESSION['atype'] != $_SESSION['primary_atype'];
+    $inTestMode = isRoleTestMode();
 
     if ($inTestMode) {
         return isset($_SESSION['atype']) && in_array((int) $_SESSION['atype'], [1, 3, 4, 5], true);
@@ -50,8 +55,7 @@ function canEditRequests() {
 
 function canDeleteRequests() {
     // If in test mode, only use tested atype permissions, not superuser flags
-    $inTestMode = isset($_SESSION['atype']) && isset($_SESSION['primary_atype']) &&
-                  $_SESSION['atype'] != $_SESSION['primary_atype'];
+    $inTestMode = isRoleTestMode();
 
     if ($inTestMode) {
         return isset($_SESSION['atype']) && (int) $_SESSION['atype'] === 1;
@@ -64,8 +68,7 @@ function canDeleteRequests() {
 
 function canManageSLA() {
     // If in test mode, only use tested atype permissions, not superuser flags
-    $inTestMode = isset($_SESSION['atype']) && isset($_SESSION['primary_atype']) && 
-                  $_SESSION['atype'] != $_SESSION['primary_atype'];
+    $inTestMode = isRoleTestMode();
 
     if ($inTestMode) {
         return isset($_SESSION['atype']) && in_array($_SESSION['atype'], [3, 4]);
@@ -79,8 +82,7 @@ function canManageSLA() {
 function isReadOnly() {
     // If superuser is in test mode (atype != primary_atype), apply readonly based on test atype
     // Otherwise, superusers are never read-only
-    $inTestMode = isset($_SESSION['atype']) && isset($_SESSION['primary_atype']) && 
-                  $_SESSION['atype'] != $_SESSION['primary_atype'];
+    $inTestMode = isRoleTestMode();
     
     if (!$inTestMode && isset($_SESSION['is_superuser']) && $_SESSION['is_superuser'] == 1) {
         return false; // Superusers are never read-only (unless testing)
@@ -93,8 +95,7 @@ function canViewAllRequests() {
     $isAdminOrSuperuser = (isset($_SESSION['is_superuser']) && $_SESSION['is_superuser']) || 
                          (isset($_SESSION['is_admin']) && $_SESSION['is_admin']);
     // If in test mode, use tested atype permissions only
-    $inTestMode = isset($_SESSION['atype']) && isset($_SESSION['primary_atype']) && 
-                  $_SESSION['atype'] != $_SESSION['primary_atype'];
+    $inTestMode = isRoleTestMode();
 
     if ($inTestMode) {
         return isset($_SESSION['atype']) && $_SESSION['atype'] == 6;

@@ -27,15 +27,15 @@ Access classes:
 |---|---|---|---|
 | `app/index.php` | `AUTH_REQUIRED` | Internal landing/list view | Scope by role (all vs assigned/team). |
 | `app/indexonly.php` | `AUTH_REQUIRED` | Internal list view | Scope by role. |
-| `app/indexresolved.php` | `AUTH_REQUIRED` | Internal resolved list | Scope by role. |
-| `app/asearch.php` | `AUTH_REQUIRED` | Internal search | Scope by role and data visibility rules. |
+| `app/indexresolved.php` | `AUTH_REQUIRED` | Internal resolved list | Scope by role. Team Lead is restricted to team-related requests. |
+| `app/asearch.php` | `AUTH_REQUIRED` | Internal search | Scope by role and data visibility rules. Team Lead defaults to team-related scope and can explicitly choose all-requests search. |
 
 ## Reports and survey pages
 
 | Route | Access Class | Target Policy | Notes |
 |---|---|---|---|
 | `app/reports.php` | `AUTH_REQUIRED` | `report.view` | No guest access. |
-| `app/report-status.php` | `AUTH_REQUIRED` | `report.view` | Role scope applies. |
+| `app/report-status.php` | `AUTH_REQUIRED` | `report.view` | Role scope applies. Team Lead report data is restricted to team-related requests. |
 | `app/client-survey.php` | `PUBLIC_GUEST` (if confirmed) | Public client survey submission | Confirm business intent and keep write-only client fields. |
 | `app/client-survey-thank-you.php` | `PUBLIC_GUEST` | Survey completion page | Public confirmation route. |
 | `app/client-survey-link.php` | `ROLE_RESTRICTED` | `survey.manage_links` | Internal link management. |

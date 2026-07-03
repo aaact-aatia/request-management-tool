@@ -103,13 +103,23 @@ else{
 	$status = "";
 }
 
+$effectiveAtype = (int)($_SESSION['atype'] ?? 0);
+$isTeamLeadAccount = ($effectiveAtype === 4);
+$searchScope = $isTeamLeadAccount ? (($_GET['searchscope'] ?? 'team') === 'all' ? 'all' : 'team') : 'all';
+$userTeamIds = [];
+if ($isTeamLeadAccount) {
+	$teamResult = mysqli_query($link, "SELECT team FROM tblusers WHERE id = '" . (int)($_SESSION['pid'] ?? 0) . "' LIMIT 1");
+	$teamRow = $teamResult ? mysqli_fetch_assoc($teamResult) : null;
+	$userTeamIds = array_values(array_filter(array_map('trim', explode(',', (string)($teamRow['team'] ?? '')))));
+}
+
 // Process search if any parameters are submitted
 $hasSearchParams = !empty($_GET['requestid']) || !empty($_GET['requesttitle']) || !empty($clientlname) || !empty($clientfname) || 
                     !empty($clientemail) || !empty($clientphone) || !empty($_GET['sourceid']) || !empty($_GET['datereceived']) || 
                     !empty($_GET['datereceived2']) || !empty($_GET['dateupdated']) || !empty($_GET['dateupdated2']) || 
                     !empty($_GET['daterequired']) || !empty($_GET['daterequired2']) || !empty($_GET['dateresolved']) || 
                     !empty($_GET['dateresolved2']) || !empty($_GET['statusid']) || !empty($_GET['catalogueid']) || 
-                    !empty($serviceid) || !empty($subserviceid);
+					!empty($serviceid) || !empty($subserviceid) || ($isTeamLeadAccount && isset($_GET['searchscope']));
 
 if ($hasSearchParams){
 	// Set no search value
@@ -228,11 +238,21 @@ if ($hasSearchParams){
 	$last_space_position = strrpos($SQLSV, ' ');
 	$SQLSV = substr($SQLSV, 0, $last_space_position);
 
+	$teamScopeClause = "";
+	if ($isTeamLeadAccount && $searchScope !== 'all') {
+		if (empty($userTeamIds)) {
+			$teamScopeClause = " AND 1=0";
+		} else {
+			$teamIdCsv = implode(',', array_map('intval', $userTeamIds));
+			$teamScopeClause = " AND ((serviceid IN (SELECT id FROM tblservices WHERE contactid IN ($teamIdCsv))) OR (subserviceid IN (SELECT id FROM tblsubservices WHERE contactid IN ($teamIdCsv))))";
+		}
+	}
+
 	// Create SQL statement
 	if ($nosearch) {
-		$sql = "SELECT * FROM tbltriage WHERE status = '1' ORDER BY requestid DESC LIMIT 1000";
+		$sql = "SELECT * FROM tbltriage WHERE status = '1'" . $teamScopeClause . " ORDER BY requestid DESC LIMIT 1000";
 	} else {
-		$sql = "SELECT * FROM tbltriage WHERE$SQLSV AND status = '1' ORDER BY requestid DESC";
+		$sql = "SELECT * FROM tbltriage WHERE $SQLSV AND status = '1'" . $teamScopeClause . " ORDER BY requestid DESC";
 	}
 	
 	//echo $sql;
@@ -450,6 +470,15 @@ include 'includes/template/head.php';
 			</div>
 			
 			<div class="form-group form-buttons">
+				<?php if ($isTeamLeadAccount) { ?>
+				<div class="form-group">
+					<label for="searchscope"><span class="field-name"><?php echo ($_SESSION['lang'] === 'fr') ? 'Portée de la recherche' : 'Search scope'; ?></span></label>
+					<select class="form-control" id="searchscope" name="searchscope">
+						<option value="team" <?php echo $searchScope === 'team' ? 'selected' : ''; ?>><?php echo ($_SESSION['lang'] === 'fr') ? 'Demandes liées à mon équipe' : 'Requests related to my team'; ?></option>
+						<option value="all" <?php echo $searchScope === 'all' ? 'selected' : ''; ?>><?php echo ($_SESSION['lang'] === 'fr') ? 'Toutes les demandes' : 'All requests'; ?></option>
+					</select>
+				</div>
+				<?php } ?>
 				<button type="submit" class="btn btn-default"><?= htmlspecialchars($langFile['asearch_button']) ?></button>			<button type="reset" class="btn btn-default"><?= htmlspecialchars($langFile['asearch_clear']) ?></button>			</div>
 			</form>
 			<?php
@@ -570,7 +599,7 @@ include 'includes/template/head.php';
 				// Determine action availability for this request.
 				$canEditThisRequest = false;
 				if (canEditRequests()) {
-					if (isSuperAdmin() || (isset($_SESSION['is_admin']) && $_SESSION['is_admin'])) {
+					if (isSuperAdmin() || (isset($_SESSION['is_admin']) && $_SESSION['is_admin']) || (int)($_SESSION['atype'] ?? 0) === 3) {
 						$canEditThisRequest = true;
 					} else {
 						$userid = $_SESSION['pid'];

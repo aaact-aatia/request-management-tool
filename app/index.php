@@ -253,6 +253,15 @@ include 'includes/template/head.php';
 			}
 			$sortSql = $sortOptions[$sort];
 
+			$effectiveAtype = (int)($_SESSION['atype'] ?? 0);
+			$isTeamLeadAccount = ($effectiveAtype === 4);
+			$userTeamIds = [];
+			if ($isTeamLeadAccount) {
+				$teamResult = mysqli_query($link, "SELECT team FROM tblusers WHERE id = '" . (int)($_SESSION['pid'] ?? 0) . "' LIMIT 1");
+				$teamRow = $teamResult ? mysqli_fetch_assoc($teamResult) : null;
+				$userTeamIds = array_filter(array_map('trim', explode(',', (string)($teamRow['team'] ?? ''))));
+			}
+
 			// Construct SQL statement
 			$sql = "SELECT * FROM tbltriage WHERE status = 1 AND (statusid=1 OR statusid=2 OR statusid=3 OR statusid=7 OR statusid=10 OR statusid='11' OR statusid='12') ORDER BY $sortSql";
 			//echo $sql;
@@ -398,6 +407,14 @@ include 'includes/template/head.php';
 					$tarraycontactid = $row_lookup ? $row_lookup[2] : 0;
 			}
 		}
+
+					$canViewRow = true;
+					if ($isTeamLeadAccount) {
+						$canViewRow = !empty($tarraycontactid) && in_array((string)$tarraycontactid, $userTeamIds, true);
+					}
+					if (!$canViewRow) {
+						continue;
+					}
 		
 		// Sub-service is not empty so grab the name
 		$nameField = $lang == 'fr' ? 'namefr' : 'nameen';
@@ -512,17 +529,19 @@ include 'includes/template/head.php';
 					$cardBodyHtml = ob_get_clean();
 
 					$cardFooterHtml = '';
-					if (canEditRequests() || canDeleteRequests()) {
+					$canEditThisRequest = canEditRequests();
+					$canDeleteThisRequest = canDeleteRequests();
+					if ($canEditThisRequest || $canDeleteThisRequest) {
 						ob_start();
 						?>
 						<div class="row">
-							<?php if (canEditRequests()): ?>
-								<div class="col-xs-6">
+							<?php if ($canEditThisRequest): ?>
+								<div class="<?= $canDeleteThisRequest ? 'col-xs-6' : 'col-xs-12' ?>">
 									<a href="<?= $t['edit_request'] ?>?lang=<?= $lang ?>&erid=<?= base64_encode($row['id']) ?>&reqid=<?= urlencode('a11y-' . ($row['requestid'] ?? '')) ?>" class="btn btn-default btn-block"><span class="glyphicon glyphicon-pencil" aria-hidden="true"></span><span class="mrgn-lft-sm"><?= $t['edit'] ?></span></a>
 								</div>
 							<?php endif; ?>
-							<?php if (canDeleteRequests()): ?>
-								<div class="col-xs-6">
+							<?php if ($canDeleteThisRequest): ?>
+								<div class="<?= $canEditThisRequest ? 'col-xs-6' : 'col-xs-12' ?>">
 									<a href="includes/delete-request.php?id=<?= $row['id'] ?>" class="wb-lbx btn btn-danger btn-block"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span><span class="mrgn-lft-sm"><?= $t['delete_label'] ?></span></a>
 								</div>
 							<?php endif; ?>

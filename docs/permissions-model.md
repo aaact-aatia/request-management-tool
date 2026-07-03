@@ -62,7 +62,7 @@ The matrix below reflects currently intended behavior for this documentation eff
 | Superadmin (`is_superuser=1`) | Yes | Yes | Yes | No (except while testing another role) | Yes |
 | Admin (`is_admin=1`) | Yes | Yes | Yes | No | Yes |
 | Manager (`atype=3`) | Yes | Yes | No | No | No |
-| Team Lead (`atype=4`) | Yes | Yes | No | No | No |
+| Team Lead (`atype=4`) | Yes | No | No | No | No |
 | Employee (`atype=5`) | Yes | No | No | No | No |
 | Director (`atype=6`) | No | No | Yes | Yes | No |
 

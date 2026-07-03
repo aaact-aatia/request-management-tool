@@ -23,6 +23,11 @@ $lang_code = $_SESSION['lang'] ?? 'en';
 $isTestingDifferentType = isset($_SESSION['is_superuser']) && $_SESSION['is_superuser'] == 1 && isset($_SESSION['atype']) && (int)$_SESSION['atype'] !== 1;
 $isSuperAdmin = !$isTestingDifferentType && isset($_SESSION['is_superuser']) && $_SESSION['is_superuser'] == 1;
 $effectiveAtype = (int)($_SESSION['atype'] ?? 0);
+$isAdminAccount = !$isTestingDifferentType && (
+	(isset($_SESSION['is_admin']) && $_SESSION['is_admin'] == 1) ||
+	$effectiveAtype === 2 ||
+	$effectiveAtype === 1
+);
 $isDirector = !empty($_SESSION['pid']) && $effectiveAtype === 6;
 $canSeeCoreNav = !empty($_SESSION['pid']) && (!isReadOnly() || $isDirector);
 
@@ -116,8 +121,8 @@ $menuLangStrings = $menu_text[$lang_code];
 					<!-- <li><a href="/batch-ace-info.php?lang=<?= $lang_code ?>">Update (batch) AAACT tickets</a></li> -->
 				<?php
 				}
-				// Only Super admins can access admin options
-				if ($isSuperAdmin) {
+				// Administration menu is restricted to admin/superadmin.
+				if ($isAdminAccount || $isSuperAdmin) {
 				?>
 					<li><a href="#s2" class="item"><?= htmlspecialchars($menuLangStrings['admin']) ?></a>
 						<ul class="sm list-unstyled" id="s2" role="menu">

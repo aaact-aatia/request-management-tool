@@ -72,7 +72,7 @@ Use the following logical permissions as the policy vocabulary.
 | `request.edit.workflow_fields` | No | No | Yes | Yes | No | Yes | Yes |
 | `request.edit.internal_fields` | No | No | No | No | No | Yes | Yes |
 | `request.delete` | No | No | No | No | No | Yes | Yes |
-| `workflow.manage_sla` | No | No | Yes | Yes | No | Yes | Yes |
+| `workflow.manage_sla` | No | No | No | Yes | No | Yes | Yes |
 | `workflow.manage_assignments` | No | No | Yes | Yes | No | Yes | Yes |
 | `workflow.internal_comms_read` | No | Scoped | Scoped | Scoped | Scoped/read-only | Yes | Yes |
 | `workflow.internal_comms_write` | No | Scoped | Scoped | Scoped | No | Yes | Yes |
@@ -141,7 +141,7 @@ The following mapping is the proposed implementation contract for role-based fie
 
 | Form field / area | Proposed tier | Employee | Team Lead | Manager | Admin | Superadmin | Notes |
 |---|---|---|---|---|---|---|---|
-| `requesttitle` | Client | No | No | No | Edit | Edit | Request title is requester-facing content. |
+| `requesttitle` | Client | No | Edit | Edit | Edit | Edit | Request title is requester-facing content. |
 | `clientlname`, `clientfname` | Client | No | No | No | Edit | Edit | Client identity fields. |
 | `clientemail`, `clientphone` | Client | No | No | No | Edit | Edit | Client contact fields. |
 | `departmentagency` | Client | No | No | No | Edit | Edit | Stored in communications note prefix; keep client-tier. |
@@ -155,8 +155,8 @@ The following mapping is the proposed implementation contract for role-based fie
 | `audience` | Workflow | No | No | No | Edit | Edit | Operational classification field. |
 | Sprint fields (`firstsprintstartdate`, `firstsprintenddate`, `sprintschedule`, `sprintdefects`) | Workflow | No | No | No | Edit | Edit | Delivery planning fields. |
 | `workerid` (assignee) | Workflow | Edit | Edit | Edit | Edit | Edit | Assignment control. |
-| `slatimer` | Workflow | No | No | No | Edit | Edit | Currently tied to `canManageSLA()`. |
-| Communications log update (`commlog1`, `commlog2`) | Internal | No | No | No | Edit | Edit | Editing existing logs remains admin/superadmin only. |
+| `slatimer` | Workflow | No | No | Edit | Edit | Edit | Manager can update SLA timer; Team Lead cannot. |
+| Communications log update (`commlog1`, `commlog2`) | Internal | No | Edit | Edit | Edit | Edit | Team Lead and Manager can update existing communication logs. |
 | Communications log add (`adminnotes`) | Internal | Edit | Edit | Edit | Edit | Edit | Employee, Team Lead, and Manager can add logs. |
 | Communications log delete | Internal | Edit | Edit | Edit | Edit | Edit | Employee, Team Lead, and Manager can delete logs. |
 | `requestid` | Internal | No | No | No | Edit | Edit | Identifier mutation should be privileged only. |

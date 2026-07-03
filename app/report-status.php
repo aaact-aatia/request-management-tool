@@ -50,6 +50,24 @@ $edate = "";
 $cSearch = false;
 $strCat = "";
 
+$effectiveAtype = (int)($_SESSION['atype'] ?? 0);
+$isTeamLeadAccount = ($effectiveAtype === 4);
+$teamScopeClause = '';
+$teamScopeExpression = '';
+if ($isTeamLeadAccount) {
+	$teamResult = mysqli_query($link, "SELECT team FROM tblusers WHERE id = '" . (int)($_SESSION['pid'] ?? 0) . "' LIMIT 1");
+	$teamRow = $teamResult ? mysqli_fetch_assoc($teamResult) : null;
+	$teamIds = array_values(array_filter(array_map('trim', explode(',', (string)($teamRow['team'] ?? '')))));
+	if (empty($teamIds)) {
+		$teamScopeClause = " AND 1=0";
+		$teamScopeExpression = '1=0';
+	} else {
+		$teamIdCsv = implode(',', array_map('intval', $teamIds));
+		$teamScopeExpression = "((serviceid IN (SELECT id FROM tblservices WHERE contactid IN ($teamIdCsv))) OR (subserviceid IN (SELECT id FROM tblsubservices WHERE contactid IN ($teamIdCsv))))";
+		$teamScopeClause = " AND " . $teamScopeExpression;
+	}
+}
+
 // Process the add product form
 if ($_SERVER['REQUEST_METHOD']=='POST'){
 	// Set no search value
@@ -106,9 +124,9 @@ include 'includes/template/header.php';
 				<?php
 				// Get current number of open tickets
 				if ($cSearch) {
-					$sql = "SELECT * FROM tbltriage WHERE $strCat AND status = '1' AND (statusid='1' OR statusid='3' OR statusid='5' OR statusid='6' OR statusid='7' OR statusid='8' OR statusid='10' OR statusid='11' OR statusid='12')";
+					$sql = "SELECT * FROM tbltriage WHERE $strCat AND status = '1' AND (statusid='1' OR statusid='3' OR statusid='5' OR statusid='6' OR statusid='7' OR statusid='8' OR statusid='10' OR statusid='11' OR statusid='12')" . $teamScopeClause;
 				} else {
-					$sql = "SELECT * FROM tbltriage WHERE status = '1' AND (statusid='1' OR statusid='3' OR statusid='5' OR statusid='6' OR statusid='7' OR statusid='8' OR statusid='10' OR statusid='11' OR statusid='12')";
+					$sql = "SELECT * FROM tbltriage WHERE status = '1' AND (statusid='1' OR statusid='3' OR statusid='5' OR statusid='6' OR statusid='7' OR statusid='8' OR statusid='10' OR statusid='11' OR statusid='12')" . $teamScopeClause;
 				}
 				//echo $sql;
 				
@@ -120,9 +138,9 @@ include 'includes/template/header.php';
 				<?php
 				// Get current number tickets On hold
 				if ($cSearch) {
-					$sql = "SELECT * FROM tbltriage WHERE $strCat AND status = '1' AND (statusid='5')";
+					$sql = "SELECT * FROM tbltriage WHERE $strCat AND status = '1' AND (statusid='5')" . $teamScopeClause;
 				} else {
-					$sql = "SELECT * FROM tbltriage WHERE status = '1' AND (statusid='5')";
+					$sql = "SELECT * FROM tbltriage WHERE status = '1' AND (statusid='5')" . $teamScopeClause;
 				}
 				$result = mysqli_query($link,$sql);
 				$num_rows = mysqli_num_rows($result);
@@ -132,9 +150,9 @@ include 'includes/template/header.php';
 				<?php
 				// Get current number tickets closed total
 				if ($cSearch) {
-					$sql = "SELECT * FROM tbltriage WHERE $strCat AND status = '1' AND (dateresolved BETWEEN '$sdate' AND '$edate')";
+					$sql = "SELECT * FROM tbltriage WHERE $strCat AND status = '1' AND (dateresolved BETWEEN '$sdate' AND '$edate')" . $teamScopeClause;
 				} else {
-					$sql = "SELECT * FROM tbltriage WHERE status = '1' AND (dateresolved BETWEEN '$sdate' AND '$edate')";
+					$sql = "SELECT * FROM tbltriage WHERE status = '1' AND (dateresolved BETWEEN '$sdate' AND '$edate')" . $teamScopeClause;
 				}
 				$result = mysqli_query($link,$sql);
 				$num_rows = mysqli_num_rows($result);
@@ -144,9 +162,9 @@ include 'includes/template/header.php';
 				<?php
 				// Get current number
 				if ($cSearch) {
-					$sql = "SELECT * FROM tbltriage WHERE $strCat AND status = '1' AND (datereceived BETWEEN '$sdate' AND '$edate')";
+					$sql = "SELECT * FROM tbltriage WHERE $strCat AND status = '1' AND (datereceived BETWEEN '$sdate' AND '$edate')" . $teamScopeClause;
 				} else {
-					$sql = "SELECT * FROM tbltriage WHERE status = '1' AND (datereceived BETWEEN '$sdate' AND '$edate')";
+					$sql = "SELECT * FROM tbltriage WHERE status = '1' AND (datereceived BETWEEN '$sdate' AND '$edate')" . $teamScopeClause;
 				}
 				$result = mysqli_query($link,$sql);
 				$num_rows = mysqli_num_rows($result);
@@ -162,9 +180,9 @@ include 'includes/template/header.php';
 				
 				// Construct SQL
 				if ($cSearch) {
-					$sql = "SELECT * FROM tbltriage WHERE $strCat AND status = '1' AND (dateresolved BETWEEN '$sdate' AND '$edate')";
+					$sql = "SELECT * FROM tbltriage WHERE $strCat AND status = '1' AND (dateresolved BETWEEN '$sdate' AND '$edate')" . $teamScopeClause;
 				} else {
-					$sql = "SELECT * FROM tbltriage WHERE status = '1' AND (dateresolved BETWEEN '$sdate' AND '$edate')";
+					$sql = "SELECT * FROM tbltriage WHERE status = '1' AND (dateresolved BETWEEN '$sdate' AND '$edate')" . $teamScopeClause;
 				}
 				$result = mysqli_query($link,$sql);
 				if(mysqli_num_rows($result)>0){
@@ -202,7 +220,13 @@ include 'includes/template/header.php';
 			<?php
 			//percentageOfTotalDays, avgDaysPerOccurence,avgOccurence,avgDays
 
-			$result = calculateStatusAvg($link, $sdate, $edate, $strCat);
+			$statusAvgFilter = $strCat;
+			if ($isTeamLeadAccount) {
+				$statusAvgFilter = $statusAvgFilter !== ''
+					? $statusAvgFilter . ' AND ' . $teamScopeExpression
+					: $teamScopeExpression;
+			}
+			$result = calculateStatusAvg($link, $sdate, $edate, $statusAvgFilter);
 $statusAverages = $result["statusAverages"];
 $overallAverages = $result["overallAverages"];
 $requestDetailsJSON = $result["requestDetails"]; // This is in JSON format.
@@ -276,9 +300,9 @@ echo '</tbody></table>';
 					// Now we need to display the amount of requests per service catalogue item
 					// Construct SQL
 					if ($cSearch) {
-						$sql = "SELECT catalogueid, COUNT(*) FROM tbltriage WHERE $strCat AND status = '1' AND (datereceived BETWEEN '$sdate' AND '$edate')";
+						$sql = "SELECT catalogueid, COUNT(*) FROM tbltriage WHERE $strCat AND status = '1' AND (datereceived BETWEEN '$sdate' AND '$edate')" . $teamScopeClause;
 					} else {
-						$sql = "SELECT catalogueid, COUNT(*) FROM tbltriage WHERE status = '1' AND (datereceived BETWEEN '$sdate' AND '$edate') GROUP BY catalogueid";
+						$sql = "SELECT catalogueid, COUNT(*) FROM tbltriage WHERE status = '1' AND (datereceived BETWEEN '$sdate' AND '$edate')" . $teamScopeClause . " GROUP BY catalogueid";
 					}
 					$result = mysqli_query($link,$sql);
 					if(mysqli_num_rows($result)>0){
@@ -301,9 +325,9 @@ echo '</tbody></table>';
 					// Now we need to display the amount of requests per service catalogue item
 					// Construct SQL
 					if ($cSearch) {
-						$sql = "SELECT catalogueid, COUNT(*) FROM tbltriage WHERE $strCat AND status = '1' AND (datereceived BETWEEN '$sdate' AND '$edate')";
+						$sql = "SELECT catalogueid, COUNT(*) FROM tbltriage WHERE $strCat AND status = '1' AND (datereceived BETWEEN '$sdate' AND '$edate')" . $teamScopeClause;
 					} else {
-						$sql = "SELECT catalogueid, COUNT(*) FROM tbltriage WHERE status = '1' AND (datereceived BETWEEN '$sdate' AND '$edate') GROUP BY catalogueid";
+						$sql = "SELECT catalogueid, COUNT(*) FROM tbltriage WHERE status = '1' AND (datereceived BETWEEN '$sdate' AND '$edate')" . $teamScopeClause . " GROUP BY catalogueid";
 					}
 					$result = mysqli_query($link,$sql);
 					if(mysqli_num_rows($result)>0){

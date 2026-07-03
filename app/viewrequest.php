@@ -317,6 +317,17 @@ if(mysqli_num_rows($result)>0){
 		$cataloguename = $row2 ? $row2[0] : '';
 	}
 
+		$effectiveAtype = (int)($_SESSION['atype'] ?? 0);
+		if ($effectiveAtype === 4) {
+			$teamResult = mysqli_query($link, "SELECT team FROM tblusers WHERE id = '" . (int)($_SESSION['pid'] ?? 0) . "' LIMIT 1");
+			$teamRow = $teamResult ? mysqli_fetch_assoc($teamResult) : null;
+			$teamIds = array_filter(array_map('trim', explode(',', (string)($teamRow['team'] ?? ''))));
+			if (empty($tarraycontactid) || !in_array((string)$tarraycontactid, $teamIds, true)) {
+				header("location:/index.php?lang=$lang&status=accessdenied");
+				exit();
+			}
+		}
+
 		if ($audienceid!=0 && $audienceid != null) {
 			// Sub-service is not empty so grab the name
 			$result2 = mysqli_query($link, "SELECT $nameField FROM tblaudience WHERE id = '$audienceid'");
@@ -417,12 +428,14 @@ if(mysqli_num_rows($result)>0){
 			<?php
 				$canShowEditControls = !empty($_SESSION['pid']) && canEditRequests();
 				$canEditThisRequest = false;
+				$canDeleteThisRequest = canDeleteRequests();
+				$isManagerAccount = ((int)($_SESSION['atype'] ?? 0) === 3);
 				// Only authenticated users with edit permissions can see request controls.
-			if ($canShowEditControls && ($_SESSION['is_superuser'] OR $_SESSION['is_admin'])) {	
+			if ($canShowEditControls && (isSuperAdmin() || isAdmin() || $isManagerAccount)) {	
 				$canEditThisRequest = true;
 			?>
 			<div class="pull-right">
-            <p><a class="btn btn-primary" href="editrequest.php?lang=<?php echo $lang; ?>&erid=<?php echo base64_encode($row['id']);?>&reqid=<?php echo urlencode('a11y-' . $row['requestid']); ?>">Edit <span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span></a><?php if ($_SESSION['is_superuser'] OR $_SESSION['is_admin']) { ?> <a class="wb-lbx btn btn-primary" href="includes/delete-request.php?id=<?php echo $row['id'];?>">Delete<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span> </a><?php } ?></p>
+			<p><a class="btn btn-primary" href="editrequest.php?lang=<?php echo $lang; ?>&erid=<?php echo base64_encode($row['id']);?>&reqid=<?php echo urlencode('a11y-' . $row['requestid']); ?>">Edit <span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span></a><?php if ($canDeleteThisRequest) { ?> <a class="wb-lbx btn btn-primary" href="includes/delete-request.php?id=<?php echo $row['id'];?>">Delete<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span> </a><?php } ?></p>
 			</div>
 			<div class="clearfix"></div>
 			<?php
@@ -442,7 +455,7 @@ if(mysqli_num_rows($result)>0){
 						$canEditThisRequest = true;
 			?>
 			<div class="pull-right">
-				<p><a class="btn btn-primary" href="editrequest.php?lang=<?php echo $lang; ?>&erid=<?php echo base64_encode($row['id']);?>&reqid=<?php echo urlencode('a11y-' . $row['requestid']); ?>">Edit <span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span></a><?php if ($_SESSION['is_superuser'] OR $_SESSION['is_admin']) { ?> <a class="wb-lbx btn btn-primary" href="includes/delete-request.php?id=<?php echo $row['id'];?>">Delete<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span> </a><?php } ?></p>
+				<p><a class="btn btn-primary" href="editrequest.php?lang=<?php echo $lang; ?>&erid=<?php echo base64_encode($row['id']);?>&reqid=<?php echo urlencode('a11y-' . $row['requestid']); ?>">Edit <span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span></a><?php if ($canDeleteThisRequest) { ?> <a class="wb-lbx btn btn-primary" href="includes/delete-request.php?id=<?php echo $row['id'];?>">Delete<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span> </a><?php } ?></p>
 			</div>
 			<div class="clearfix"></div>
 			<?php 
@@ -807,8 +820,9 @@ $blobStorage = new AzureBlobStorageManager();
 			$catalogueSurveyResult = mysqli_query($link, $catalogueSurveySql);
 			$catalogueSurveyRow = mysqli_fetch_array($catalogueSurveyResult);
 			$surveyEnabled = ((int) ($catalogueSurveyRow['survey'] ?? 0) === 1);
+			$allowResolvedEmailSendInView = false;
 
-			if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['email_action'] ?? '') === 'send_resolved_email')) {
+			if ($allowResolvedEmailSendInView && $_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['email_action'] ?? '') === 'send_resolved_email')) {
 				if (!$canEditThisRequest) {
 					$resolvedActionStatus = 'failed';
 				} else {
@@ -885,7 +899,7 @@ $blobStorage = new AzureBlobStorageManager();
 				- <?= htmlspecialchars($t['resolved_email_sent_on']) ?> <?= htmlspecialchars($resolvedEmailSentDate) ?>
 				<?php endif; ?>
 			</p>
-			<?php if (!$resolvedEmailSent && $canEditThisRequest): ?>
+			<?php if ($allowResolvedEmailSendInView && !$resolvedEmailSent && $canEditThisRequest): ?>
 				<?php if ($resolvedClientEmail !== ''): ?>
 				<form method="post" action="" class="form-inline mrgn-bttm-md">
 					<input type="hidden" name="email_action" value="send_resolved_email">
@@ -975,7 +989,7 @@ $blobStorage = new AzureBlobStorageManager();
 					$nnotes = nl2br(htmlspecialchars($notes));
 				?>
 				
-            <dt><?php echo $dateadded ?><?php if ($_SESSION['is_superuser'] OR $_SESSION['is_admin']) {?> <a class="wb-lbx" href="includes/delete-comms.php?t=c&id=<?php echo $row2['id'];?>&rid=<?php echo $triageid ?>"><span class="glyphicon glyphicon-trash"></span><span class="wb-inv"> <?= htmlspecialchars($t['delete_comment']) ?></span></a><?php } ?></dt>
+			<dt><?php echo $dateadded ?><?php if ($canDeleteThisRequest) {?> <a class="wb-lbx" href="includes/delete-comms.php?t=c&id=<?php echo $row2['id'];?>&rid=<?php echo $triageid ?>"><span class="glyphicon glyphicon-trash"></span><span class="wb-inv"> <?= htmlspecialchars($t['delete_comment']) ?></span></a><?php } ?></dt>
 				<dd><?php echo $nnotes ?></dd>
 				<?php } ?>
 			</dl>
@@ -1015,7 +1029,7 @@ $blobStorage = new AzureBlobStorageManager();
 					$cfname = $row3['firstname'] ?? '';
 					$clname = $row3['lastname'] ?? '';
 				?>
-				<dt><?php echo $dateadded ?><?php if($creatorid!=0 && ($cfname !== '' || $clname !== '')) {?> - <?php echo htmlspecialchars(trim($cfname . ' ' . $clname), ENT_QUOTES, 'UTF-8') ?><?php } ?><?php if ($_SESSION['is_superuser'] OR $_SESSION['is_admin']) {?> <a class="wb-lbx" href="includes/delete-comms.php?t=a&id=<?php echo $row2['id'];?>&rid=<?php echo $triageid ?>"><span class="glyphicon glyphicon-trash"></span><span class="wb-inv"> <?= htmlspecialchars($t['delete_comment']) ?></span></a><?php } ?></dt>
+				<dt><?php echo $dateadded ?><?php if($creatorid!=0 && ($cfname !== '' || $clname !== '')) {?> - <?php echo htmlspecialchars(trim($cfname . ' ' . $clname), ENT_QUOTES, 'UTF-8') ?><?php } ?><?php if ($canDeleteThisRequest) {?> <a class="wb-lbx" href="includes/delete-comms.php?t=a&id=<?php echo $row2['id'];?>&rid=<?php echo $triageid ?>"><span class="glyphicon glyphicon-trash"></span><span class="wb-inv"> <?= htmlspecialchars($t['delete_comment']) ?></span></a><?php } ?></dt>
 				<dd><?php echo $annotes ?></dd>
 				<?php } ?>
 			</dl>

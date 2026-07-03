@@ -13,10 +13,11 @@ if (isset($_SERVER['SCRIPT_FILENAME']) && realpath(__FILE__) === realpath((strin
 <h2><?php echo $t['staff_use_only']; ?></h2>
 
 <?php
-$inTestMode = isset($_SESSION['atype']) && isset($_SESSION['primary_atype']) &&
-    (int)$_SESSION['atype'] !== (int)$_SESSION['primary_atype'];
+$inTestMode = isRoleTestMode();
 $canFullFieldEdit = !$inTestMode && (!empty($_SESSION['is_superuser']) || !empty($_SESSION['is_admin']));
+$isManagerAccount = ((int)($_SESSION['atype'] ?? 0) === 3);
 $canEditWorkerid = in_array((int)($_SESSION['atype'] ?? 0), [3, 4, 5], true) || $canFullFieldEdit;
+$canEditSlaTimer = $canFullFieldEdit || $isManagerAccount;
 ?>
 
 <div class="form-group">
@@ -73,8 +74,8 @@ $canEditWorkerid = in_array((int)($_SESSION['atype'] ?? 0), [3, 4, 5], true) || 
 </div>
 
 <?php
-// SLA timer - full-edit roles only
-if ($canFullFieldEdit) {
+// SLA timer - editable by full-edit roles and manager
+if ($canEditSlaTimer) {
     $eslatimer = $row['slatimer'];
     if (empty($eslatimer) || is_null($eslatimer)) {
         $slatimer = $row['datereceived'];

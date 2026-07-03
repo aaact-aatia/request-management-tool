@@ -16,10 +16,14 @@ $redirectid = base64_encode($requestuid);
 // COLLECT FORM DATA
 // ============================================================================
 
-$inTestMode = isset($_SESSION['atype']) && isset($_SESSION['primary_atype']) &&
-    (int)$_SESSION['atype'] !== (int)$_SESSION['primary_atype'];
+$inTestMode = isRoleTestMode();
+$isManagerAccount = ((int)($_SESSION['atype'] ?? 0) === 3);
+$isTeamLeadAccount = ((int)($_SESSION['atype'] ?? 0) === 4);
 $canFullFieldEdit = !$inTestMode && (!empty($_SESSION['is_superuser']) || !empty($_SESSION['is_admin']));
 $canEditStatusAndWorker = in_array((int)($_SESSION['atype'] ?? 0), [3, 4, 5], true) || $canFullFieldEdit;
+$canEditTitle = $canFullFieldEdit || $isManagerAccount || $isTeamLeadAccount;
+$canEditSlaTimer = $canFullFieldEdit || $isManagerAccount;
+$canEditCommunicationLogs = $canFullFieldEdit || $isManagerAccount || $isTeamLeadAccount;
 
 $currentRequestResult = mysqli_query($link, "SELECT * FROM tbltriage WHERE id = '$requestuid' LIMIT 1");
 $currentRequest = $currentRequestResult ? mysqli_fetch_assoc($currentRequestResult) : null;
@@ -28,6 +32,31 @@ if (!$currentRequest) {
     $langCode = $_SESSION['lang'] ?? 'en';
     header("location:/editrequest.php?lang=$langCode&id=$requestuid&status=failed");
     exit();
+}
+
+if ($isTeamLeadAccount) {
+    $teamResult = mysqli_query($link, "SELECT team FROM tblusers WHERE id = '" . (int)($_SESSION['pid'] ?? 0) . "' LIMIT 1");
+    $teamRow = $teamResult ? mysqli_fetch_assoc($teamResult) : null;
+    $teamIds = array_filter(array_map('trim', explode(',', (string)($teamRow['team'] ?? ''))));
+
+    $requestContactId = 0;
+    $subserviceIdInt = (int)($currentRequest['subserviceid'] ?? 0);
+    $serviceIdInt = (int)($currentRequest['serviceid'] ?? 0);
+    if ($subserviceIdInt > 0) {
+        $contactResult = mysqli_query($link, "SELECT contactid FROM tblsubservices WHERE id = '$subserviceIdInt' LIMIT 1");
+        $contactRow = $contactResult ? mysqli_fetch_assoc($contactResult) : null;
+        $requestContactId = (int)($contactRow['contactid'] ?? 0);
+    }
+    if ($requestContactId === 0 && $serviceIdInt > 0) {
+        $contactResult = mysqli_query($link, "SELECT contactid FROM tblservices WHERE id = '$serviceIdInt' LIMIT 1");
+        $contactRow = $contactResult ? mysqli_fetch_assoc($contactResult) : null;
+        $requestContactId = (int)($contactRow['contactid'] ?? 0);
+    }
+
+    if ($requestContactId <= 0 || !in_array((string)$requestContactId, $teamIds, true)) {
+        header("location:/index.php?lang=$lang&status=accessdenied");
+        exit();
+    }
 }
 
 $requestid = getPostValue('requestid');
@@ -81,9 +110,8 @@ if (!$canEditStatusAndWorker) {
 }
 
 if (!$canFullFieldEdit) {
-    // Only status and assignee are editable for non-full-edit roles.
+    // Non-full-edit roles are restricted; manager gets approved exceptions.
     $requestid = (string) ($currentRequest['requestid'] ?? '');
-    $requesttitle = (string) ($currentRequest['title'] ?? '');
     $clientlname = (string) ($currentRequest['clientlname'] ?? '');
     $clientfname = (string) ($currentRequest['clientfname'] ?? '');
     $clientemail = (string) ($currentRequest['clientemail'] ?? '');
@@ -93,7 +121,6 @@ if (!$canFullFieldEdit) {
     $dateupdated = (string) ($currentRequest['dateupdated'] ?? '');
     $daterequired = $currentRequest['daterequired'] ?? NULL;
     $dateresolved = $currentRequest['dateresolved'] ?? NULL;
-    $slatimer = (string) ($currentRequest['slatimer'] ?? '');
     $bdm = (string) ($currentRequest['bdm'] ?? 0);
     $attach1 = (string) ($currentRequest['attach1'] ?? '');
     $attach2 = (string) ($currentRequest['attach2'] ?? '');
@@ -110,6 +137,20 @@ if (!$canFullFieldEdit) {
     // Keep communications metadata unchanged outside full-edit scope.
     $departmentagency = '';
     $departmentagencyCommlogId = 0;
+
+    if (!$canEditTitle) {
+        $requesttitle = (string) ($currentRequest['title'] ?? '');
+    }
+    if (!$canEditSlaTimer) {
+        $slatimer = (string) ($currentRequest['slatimer'] ?? '');
+    }
+}
+
+// Never write an empty string to DATE columns.
+if (empty($dateupdated)) {
+    $dateupdated = !empty($currentRequest['dateupdated'])
+        ? (string) $currentRequest['dateupdated']
+        : getTodayDate();
 }
 
 $isTargetResolved = rmt_is_resolved_status_id($link, $statusid);
@@ -465,8 +506,8 @@ if (!empty($firstsprintenddate)) {
 $sql .= " WHERE id='$requestuid'";
 mysqli_query($link, $sql);
 
-// Update communication logs (admin only)
-if (($_SESSION['is_superuser'] || $_SESSION['is_admin'])) {
+// Update communication logs (admin/superadmin/manager)
+if ($canEditCommunicationLogs) {
     if (!empty($commlogid1)) {
         $sql = "UPDATE `tblcommlog` SET `notes` = '$commlog1' WHERE id='$commlogid1'";
         mysqli_query($link, $sql);
@@ -503,8 +544,8 @@ if ($canFullFieldEdit) {
     }
 }
 
-// Add admin notes
-if (!empty($adminnotes)) {
+// Add communications notes
+if ($canEditCommunicationLogs && !empty($adminnotes)) {
     $sql = "INSERT INTO tbladminlog(`triageid`, `dateadded`, `notes`, `creatorid`, `status`) 
             VALUES ('$requestuid', '$todaydate', '$adminnotes', '$updaterid', '1')";
     mysqli_query($link, $sql);

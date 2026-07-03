@@ -302,8 +302,8 @@ include 'includes/template/head.php';
 					}
 					$tarray = explode(",",$teams);
 					
-					// Admins see everything, other users only see requests for their teams
-					$showRequest = ($_SESSION['is_superuser'] || $_SESSION['is_admin'] || $_SESSION['atype'] == '6') || in_array($tarraycontactid, $tarray);
+					// Users with global report/list visibility see all requests; others are team-scoped.
+					$showRequest = canViewAllRequests() || in_array($tarraycontactid, $tarray);
 					
 					if($showRequest) {
 						$hasVisibleRows = true;
