@@ -92,17 +92,4 @@ if (canManageSLA()) {
 <input type="hidden" id="slatimer" name="slatimer" value="<?php echo $slatimer; ?>" />
 <?php	
 }
-
-// New request field - Admin only
-if (isset($_SESSION['firstname']) && $_SESSION['firstname'] == "Admin") {
-?>
-<div class="form-group">
-    <label for="newrequest"><span class="field-name"><?php echo $t['is_new_request']; ?></span></label>
-    <select class="form-control" id="newrequest" name="newrequest" required>
-        <option value="No" selected>No</option>
-        <option value="Yes">Yes</option>
-    </select>
-</div>
-<?php
-}
 ?>

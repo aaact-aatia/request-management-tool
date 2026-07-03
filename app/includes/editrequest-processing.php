@@ -42,8 +42,6 @@ if (empty($dateresolved) && $isTargetResolved) {
     $dateresolvedu = true;
     $dateresolved = NULL;
 }
-
-$newrequest = getPostValue('newrequest', 'No');
 $slatimer = getPostValue('slatimer');
 $audienceid = getPostValue('audience', 0);
 $bdm = getPostValue('bdm', 0);
