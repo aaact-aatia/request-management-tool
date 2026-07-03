@@ -29,6 +29,7 @@ $isAdminAccount = !$isTestingDifferentType && (
 	$effectiveAtype === 1
 );
 $isDirector = !empty($_SESSION['pid']) && $effectiveAtype === 6;
+$isEmployee = !empty($_SESSION['pid']) && $effectiveAtype === 5;
 $canSeeCoreNav = !empty($_SESSION['pid']) && (!isReadOnly() || $isDirector);
 
 // Menu text translations
@@ -93,11 +94,16 @@ $menuLangStrings = $menu_text[$lang_code];
 				?>
 					<li><a href="#" class="item"><?= htmlspecialchars($menuLangStrings['overview']) ?></a>
 						<ul class="sm list-unstyled" id="s2" role="menu">
+							<?php if ($isEmployee) { ?>
+							<li><a href="/indexonly.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['view_my']) ?></a></li>
+							<li><a href="/indexresolved.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['view_resolved']) ?></a></li>
+							<?php } else { ?>
 							<li><a href="/index.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['view_all']) ?></a></li>
 							<?php if (!$isDirector) { ?>
 							<li><a href="/indexonly.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['view_my']) ?></a></li>
 							<?php } ?>
 							<li><a href="/indexresolved.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['view_resolved']) ?></a></li>
+							<?php } ?>
 						</ul>
 					</li>
 				<?php } ?>
@@ -111,7 +117,7 @@ $menuLangStrings = $menu_text[$lang_code];
 				<?php } else { ?>
 					<li><a href="/openrequest.php?lang=<?= $lang_code ?>" class="item"><?= htmlspecialchars($menuLangStrings['new_request']) ?></a></li>
 				<?php } ?>
-				<?php if ($canSeeCoreNav) { ?>
+				<?php if ($canSeeCoreNav && !$isEmployee) { ?>
 					<li><a href="/asearch.php?lang=<?= $lang_code ?>" class="item"><?= htmlspecialchars($menuLangStrings['search']) ?></a></li>
 					<li><a href="/reports.php?lang=<?= $lang_code ?>" class="item"><?= htmlspecialchars($menuLangStrings['reports']) ?></a></li>
 				<?php

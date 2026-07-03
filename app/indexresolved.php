@@ -12,6 +12,7 @@
 // Grab MySQL connection (includes session management)
 require('sql.php');
 /** @var mysqli $link */
+require('includes/helpers.php');
 
 // Handle language from query string or session
 if (isset($_GET['lang']) && in_array($_GET['lang'], ['en', 'fr'])) {
@@ -291,19 +292,16 @@ include 'includes/template/head.php';
 					}
 					
 					// Now we need to check if this should be displayed
-					$userid = $_SESSION['pid'];
-					$result2 = mysqli_query($link, "SELECT team FROM tblusers WHERE id = '$userid'");
-					$row2 = mysqli_fetch_array($result2);
-					if (!empty($row2)){
-						$teams = $row2[0];
+					$effectiveAtype = (int)($_SESSION['atype'] ?? 0);
+					$effectiveEmployeeId = getEffectiveEmployeeUserId($link);
+
+					if ($effectiveAtype === 5) {
+						$showRequest = ((int)($row['workerid'] ?? 0) === $effectiveEmployeeId);
+					} else {
+						$tarray = getEffectiveTeamIds($link);
+						// Users with global report/list visibility see all requests; others are team-scoped.
+						$showRequest = canViewAllRequests() || in_array($tarraycontactid, $tarray);
 					}
-					if (empty($teams)){
-						$teams = '';
-					}
-					$tarray = explode(",",$teams);
-					
-					// Users with global report/list visibility see all requests; others are team-scoped.
-					$showRequest = canViewAllRequests() || in_array($tarraycontactid, $tarray);
 					
 					if($showRequest) {
 						$hasVisibleRows = true;

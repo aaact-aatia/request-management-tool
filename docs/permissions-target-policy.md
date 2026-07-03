@@ -73,7 +73,7 @@ Use the following logical permissions as the policy vocabulary.
 | `request.edit.internal_fields` | No | No | No | No | No | Yes | Yes |
 | `request.delete` | No | No | No | No | No | Yes | Yes |
 | `workflow.manage_sla` | No | No | No | Yes | No | Yes | Yes |
-| `workflow.manage_assignments` | No | No | Yes | Yes | No | Yes | Yes |
+| `workflow.manage_assignments` | No | Yes | Yes | Yes | No | Yes | Yes |
 | `workflow.internal_comms_read` | No | Scoped | Scoped | Scoped | Scoped/read-only | Yes | Yes |
 | `workflow.internal_comms_write` | No | Scoped | Scoped | Scoped | No | Yes | Yes |
 | `admin.*` | No | No | No | No | No | Yes | Yes |
@@ -156,7 +156,7 @@ The following mapping is the proposed implementation contract for role-based fie
 | Sprint fields (`firstsprintstartdate`, `firstsprintenddate`, `sprintschedule`, `sprintdefects`) | Workflow | No | No | No | Edit | Edit | Delivery planning fields. |
 | `workerid` (assignee) | Workflow | Edit | Edit | Edit | Edit | Edit | Assignment control. |
 | `slatimer` | Workflow | No | No | Edit | Edit | Edit | Manager can update SLA timer; Team Lead cannot. |
-| Communications log update (`commlog1`, `commlog2`) | Internal | No | Edit | Edit | Edit | Edit | Team Lead and Manager can update existing communication logs. |
+| Communications log update (`commlog1`, `commlog2`) | Internal | Edit | Edit | Edit | Edit | Edit | Employee, Team Lead, and Manager can update existing communication logs. |
 | Communications log add (`adminnotes`) | Internal | Edit | Edit | Edit | Edit | Edit | Employee, Team Lead, and Manager can add logs. |
 | Communications log delete | Internal | Edit | Edit | Edit | Edit | Edit | Employee, Team Lead, and Manager can delete logs. |
 | `requestid` | Internal | No | No | No | Edit | Edit | Identifier mutation should be privileged only. |
@@ -171,6 +171,10 @@ Implementation notes from current code:
 
 Communications log implementation status:
 - Communications log behavior is documented in policy but fixes are intentionally deferred to a dedicated follow-up change.
+
+Role-test scoping notes:
+- Team Lead testing may select a test team scope.
+- Employee testing may select a test employee scope; assignment-based pages and edit guards use that effective employee identity.
 
 ## Guest Policy (Required)
 

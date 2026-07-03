@@ -71,12 +71,38 @@ function canManageSLA() {
     $inTestMode = isRoleTestMode();
 
     if ($inTestMode) {
-        return isset($_SESSION['atype']) && in_array($_SESSION['atype'], [3, 4]);
+        return isset($_SESSION['atype']) && (int)$_SESSION['atype'] === 3;
     }
 
     $isAdminOrSuperuser = (isset($_SESSION['is_superuser']) && $_SESSION['is_superuser']) || 
                          (isset($_SESSION['is_admin']) && $_SESSION['is_admin']);
-    return $isAdminOrSuperuser || (isset($_SESSION['atype']) && in_array($_SESSION['atype'], [3, 4]));
+    return $isAdminOrSuperuser || (isset($_SESSION['atype']) && (int)$_SESSION['atype'] === 3);
+}
+
+function getEffectiveTeamIds($link): array {
+    // In role-test mode, allow an explicit test team override for team-scoped roles.
+    if (isRoleTestMode() && !empty($_SESSION['test_team_ids'])) {
+        return array_values(array_filter(array_map('trim', explode(',', (string)$_SESSION['test_team_ids']))));
+    }
+
+    $userId = (int)($_SESSION['pid'] ?? 0);
+    if ($userId <= 0) {
+        return [];
+    }
+
+    $teamResult = mysqli_query($link, "SELECT team FROM tblusers WHERE id = '$userId' LIMIT 1");
+    $teamRow = $teamResult ? mysqli_fetch_assoc($teamResult) : null;
+
+    return array_values(array_filter(array_map('trim', explode(',', (string)($teamRow['team'] ?? '')))));
+}
+
+function getEffectiveEmployeeUserId($link): int {
+    // In employee role-test mode, allow explicit employee override for assignment-scoped views.
+    if (isRoleTestMode() && isset($_SESSION['atype']) && (int)$_SESSION['atype'] === 5 && !empty($_SESSION['test_employee_id'])) {
+        return (int)$_SESSION['test_employee_id'];
+    }
+
+    return (int)($_SESSION['pid'] ?? 0);
 }
 
 function isReadOnly() {

@@ -319,9 +319,7 @@ if(mysqli_num_rows($result)>0){
 
 		$effectiveAtype = (int)($_SESSION['atype'] ?? 0);
 		if ($effectiveAtype === 4) {
-			$teamResult = mysqli_query($link, "SELECT team FROM tblusers WHERE id = '" . (int)($_SESSION['pid'] ?? 0) . "' LIMIT 1");
-			$teamRow = $teamResult ? mysqli_fetch_assoc($teamResult) : null;
-			$teamIds = array_filter(array_map('trim', explode(',', (string)($teamRow['team'] ?? ''))));
+			$teamIds = getEffectiveTeamIds($link);
 			if (empty($tarraycontactid) || !in_array((string)$tarraycontactid, $teamIds, true)) {
 				header("location:/index.php?lang=$lang&status=accessdenied");
 				exit();
@@ -430,6 +428,8 @@ if(mysqli_num_rows($result)>0){
 				$canEditThisRequest = false;
 				$canDeleteThisRequest = canDeleteRequests();
 				$isManagerAccount = ((int)($_SESSION['atype'] ?? 0) === 3);
+				$isEmployeeAccount = ((int)($_SESSION['atype'] ?? 0) === 5);
+				$effectiveEmployeeId = getEffectiveEmployeeUserId($link);
 				// Only authenticated users with edit permissions can see request controls.
 			if ($canShowEditControls && (isSuperAdmin() || isAdmin() || $isManagerAccount)) {	
 				$canEditThisRequest = true;
@@ -441,18 +441,17 @@ if(mysqli_num_rows($result)>0){
 			<?php
 				} elseif ($canShowEditControls) {
 				// User is 3 (Manager) or 4 (Team Leader) so check if they have permission to edit this request
-				// First grab any existing teams
-				$userid = $_SESSION['pid'];
-				$result2 = mysqli_query($link, "SELECT team FROM tblusers WHERE id = '$userid'");
-				$row2 = $result2 ? mysqli_fetch_array($result2) : null;
-				$teams = "";
-				if (!empty($row2))
-				{
-					$teams = $row2[0];
-				}
-				$tarray = explode(",",$teams);
+				if ($isEmployeeAccount) {
+					if ((int)($row['workerid'] ?? 0) === $effectiveEmployeeId) {
+						$canEditThisRequest = true;
+					}
+				} else {
+					$tarray = getEffectiveTeamIds($link);
 					if(in_array($tarraycontactid, $tarray)) {
 						$canEditThisRequest = true;
+					}
+				}
+				if ($canEditThisRequest) {
 			?>
 			<div class="pull-right">
 				<p><a class="btn btn-primary" href="editrequest.php?lang=<?php echo $lang; ?>&erid=<?php echo base64_encode($row['id']);?>&reqid=<?php echo urlencode('a11y-' . $row['requestid']); ?>">Edit <span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span></a><?php if ($canDeleteThisRequest) { ?> <a class="wb-lbx btn btn-primary" href="includes/delete-request.php?id=<?php echo $row['id'];?>">Delete<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span> </a><?php } ?></p>

@@ -17,8 +17,8 @@ Access classes:
 | `app/openrequest.php` | `PUBLIC_GUEST` | Public intake entry | Guest allowed to start request submission flow. |
 | `app/openrequest2.php` | `PUBLIC_GUEST` | Public intake step | Must remain intake-only (no internal controls). |
 | `app/openrequest3.php` | `PUBLIC_GUEST` | Public intake submit | Must only support create flow and safe redirects. |
-| `app/viewrequest.php` | `GUEST_LINK_LIMITED` and `AUTH_REQUIRED` (dual mode) | Guest link-limited view + richer internal view for authenticated roles | Requires explicit mode boundary and field-level restrictions; Director remains read-only (no edit/delete/send-resolved-email actions). |
-| `app/editrequest.php` | `ROLE_RESTRICTED` | `request.edit.client_fields` / `request.edit.workflow_fields` / `request.edit.internal_fields` | No guest or director edit access. Edit fields must be role-tier gated. |
+| `app/viewrequest.php` | `GUEST_LINK_LIMITED` and `AUTH_REQUIRED` (dual mode) | Guest link-limited view + richer internal view for authenticated roles | Requires explicit mode boundary and field-level restrictions; Director remains read-only (no edit/delete/send-resolved-email actions). Employee edit action appears only on assigned requests. |
+| `app/editrequest.php` | `ROLE_RESTRICTED` | `request.edit.client_fields` / `request.edit.workflow_fields` / `request.edit.internal_fields` | No guest or director edit access. Team Lead is team-scoped; Employee is assignment-scoped; edit fields must be role-tier gated. |
 | `app/clonerequest.php` | `ROLE_RESTRICTED` | Internal only | Scoped by role; no guest access. |
 
 ## Internal request lists and dashboards
@@ -26,8 +26,8 @@ Access classes:
 | Route | Access Class | Target Policy | Notes |
 |---|---|---|---|
 | `app/index.php` | `AUTH_REQUIRED` | Internal landing/list view | Scope by role (all vs assigned/team). |
-| `app/indexonly.php` | `AUTH_REQUIRED` | Internal list view | Scope by role. |
-| `app/indexresolved.php` | `AUTH_REQUIRED` | Internal resolved list | Scope by role. Team Lead is restricted to team-related requests. |
+| `app/indexonly.php` | `AUTH_REQUIRED` | Internal list view | Scope by role. Employee is restricted to assigned requests. |
+| `app/indexresolved.php` | `AUTH_REQUIRED` | Internal resolved list | Scope by role. Team Lead is restricted to team-related requests; Employee is restricted to assigned closed/resolved requests. |
 | `app/asearch.php` | `AUTH_REQUIRED` | Internal search | Scope by role and data visibility rules. Team Lead defaults to team-related scope and can explicitly choose all-requests search. |
 
 ## Reports and survey pages

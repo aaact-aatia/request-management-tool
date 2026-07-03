@@ -257,9 +257,7 @@ include 'includes/template/head.php';
 			$isTeamLeadAccount = ($effectiveAtype === 4);
 			$userTeamIds = [];
 			if ($isTeamLeadAccount) {
-				$teamResult = mysqli_query($link, "SELECT team FROM tblusers WHERE id = '" . (int)($_SESSION['pid'] ?? 0) . "' LIMIT 1");
-				$teamRow = $teamResult ? mysqli_fetch_assoc($teamResult) : null;
-				$userTeamIds = array_filter(array_map('trim', explode(',', (string)($teamRow['team'] ?? ''))));
+				$userTeamIds = getEffectiveTeamIds($link);
 			}
 
 			// Construct SQL statement

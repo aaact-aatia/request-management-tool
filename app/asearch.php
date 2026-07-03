@@ -108,9 +108,7 @@ $isTeamLeadAccount = ($effectiveAtype === 4);
 $searchScope = $isTeamLeadAccount ? (($_GET['searchscope'] ?? 'team') === 'all' ? 'all' : 'team') : 'all';
 $userTeamIds = [];
 if ($isTeamLeadAccount) {
-	$teamResult = mysqli_query($link, "SELECT team FROM tblusers WHERE id = '" . (int)($_SESSION['pid'] ?? 0) . "' LIMIT 1");
-	$teamRow = $teamResult ? mysqli_fetch_assoc($teamResult) : null;
-	$userTeamIds = array_values(array_filter(array_map('trim', explode(',', (string)($teamRow['team'] ?? '')))));
+	$userTeamIds = getEffectiveTeamIds($link);
 }
 
 // Process search if any parameters are submitted
@@ -603,10 +601,7 @@ include 'includes/template/head.php';
 						$canEditThisRequest = true;
 					} else {
 						$userid = $_SESSION['pid'];
-						$result2 = mysqli_query($link, "SELECT team FROM tblusers WHERE id = '$userid'");
-						$row2 = mysqli_fetch_array($result2);
-						$teams = $row2[0] ?? '';
-						$tarray = explode(",", $teams);
+							$tarray = getEffectiveTeamIds($link);
 						if (in_array($tarraycontactid, $tarray)) {
 							$canEditThisRequest = true;
 						}

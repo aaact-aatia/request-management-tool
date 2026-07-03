@@ -9,7 +9,7 @@
 
 <?php
 $x = 1;
-$canEditCommunicationLogs = in_array((int)($_SESSION['atype'] ?? 0), [3, 4], true) || !empty($_SESSION['is_superuser']) || !empty($_SESSION['is_admin']);
+$canEditCommunicationLogs = in_array((int)($_SESSION['atype'] ?? 0), [3, 4, 5], true) || !empty($_SESSION['is_superuser']) || !empty($_SESSION['is_admin']);
 // Grab existing communication logs
 $result2 = mysqli_query($link, "SELECT ID, notes FROM tblcommlog WHERE triageid = '$requestuid'");
 while ($row2 = mysqli_fetch_assoc($result2)) {

@@ -66,6 +66,11 @@ The matrix below reflects currently intended behavior for this documentation eff
 | Employee (`atype=5`) | Yes | No | No | No | No |
 | Director (`atype=6`) | No | No | Yes | Yes | No |
 
+Employee UI policy clarifications (approved):
+- Employee overview navigation is limited to assigned requests and assigned closed/resolved requests.
+- Employee request cards and detail view may show Edit, but only for requests assigned to the effective employee scope.
+- Employee edit permissions are limited to status, assignment, and communications/log updates; no SLA timer changes.
+
 ### Non-Authenticated Access Policy
 
 Current observed state:

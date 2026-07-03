@@ -19,11 +19,12 @@ $redirectid = base64_encode($requestuid);
 $inTestMode = isRoleTestMode();
 $isManagerAccount = ((int)($_SESSION['atype'] ?? 0) === 3);
 $isTeamLeadAccount = ((int)($_SESSION['atype'] ?? 0) === 4);
+$isEmployeeAccount = ((int)($_SESSION['atype'] ?? 0) === 5);
 $canFullFieldEdit = !$inTestMode && (!empty($_SESSION['is_superuser']) || !empty($_SESSION['is_admin']));
 $canEditStatusAndWorker = in_array((int)($_SESSION['atype'] ?? 0), [3, 4, 5], true) || $canFullFieldEdit;
 $canEditTitle = $canFullFieldEdit || $isManagerAccount || $isTeamLeadAccount;
 $canEditSlaTimer = $canFullFieldEdit || $isManagerAccount;
-$canEditCommunicationLogs = $canFullFieldEdit || $isManagerAccount || $isTeamLeadAccount;
+$canEditCommunicationLogs = $canFullFieldEdit || $isManagerAccount || $isTeamLeadAccount || $isEmployeeAccount;
 
 $currentRequestResult = mysqli_query($link, "SELECT * FROM tbltriage WHERE id = '$requestuid' LIMIT 1");
 $currentRequest = $currentRequestResult ? mysqli_fetch_assoc($currentRequestResult) : null;
@@ -35,9 +36,7 @@ if (!$currentRequest) {
 }
 
 if ($isTeamLeadAccount) {
-    $teamResult = mysqli_query($link, "SELECT team FROM tblusers WHERE id = '" . (int)($_SESSION['pid'] ?? 0) . "' LIMIT 1");
-    $teamRow = $teamResult ? mysqli_fetch_assoc($teamResult) : null;
-    $teamIds = array_filter(array_map('trim', explode(',', (string)($teamRow['team'] ?? ''))));
+    $teamIds = getEffectiveTeamIds($link);
 
     $requestContactId = 0;
     $subserviceIdInt = (int)($currentRequest['subserviceid'] ?? 0);
@@ -55,6 +54,14 @@ if ($isTeamLeadAccount) {
 
     if ($requestContactId <= 0 || !in_array((string)$requestContactId, $teamIds, true)) {
         header("location:/index.php?lang=$lang&status=accessdenied");
+        exit();
+    }
+}
+
+if ($isEmployeeAccount) {
+    $effectiveEmployeeId = getEffectiveEmployeeUserId($link);
+    if ((int)($currentRequest['workerid'] ?? 0) !== $effectiveEmployeeId) {
+        header("location:/indexonly.php?lang=$lang&status=accessdenied");
         exit();
     }
 }

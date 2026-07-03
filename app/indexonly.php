@@ -81,7 +81,7 @@ include 'includes/template/head.php';
 		<main role="main" property="mainContentOfPage" class="container">
 			<h1 property="name" id="wb-cont"><?= htmlspecialchars($langFile['indexonly_heading']) ?></h1>
 			<?php
-			$userid = (int)($_SESSION['pid'] ?? 0);
+			$userid = getEffectiveEmployeeUserId($link);
 			// Construct SQL statement
 			$sql = "SELECT * FROM tbltriage WHERE status = '1' AND workerid = '$userid' AND (statusid='1' OR statusid='3' OR statusid='5' OR statusid='6' OR statusid='7' OR statusid='10' OR statusid='11' OR statusid='12') ORDER BY requestid DESC";
 			

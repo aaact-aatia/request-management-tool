@@ -55,9 +55,7 @@ $isTeamLeadAccount = ($effectiveAtype === 4);
 $teamScopeClause = '';
 $teamScopeExpression = '';
 if ($isTeamLeadAccount) {
-	$teamResult = mysqli_query($link, "SELECT team FROM tblusers WHERE id = '" . (int)($_SESSION['pid'] ?? 0) . "' LIMIT 1");
-	$teamRow = $teamResult ? mysqli_fetch_assoc($teamResult) : null;
-	$teamIds = array_values(array_filter(array_map('trim', explode(',', (string)($teamRow['team'] ?? '')))));
+	$teamIds = getEffectiveTeamIds($link);
 	if (empty($teamIds)) {
 		$teamScopeClause = " AND 1=0";
 		$teamScopeExpression = '1=0';

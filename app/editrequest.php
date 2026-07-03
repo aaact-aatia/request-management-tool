@@ -268,9 +268,7 @@ include 'includes/template/head.php';
 
             $effectiveAtype = (int)($_SESSION['atype'] ?? 0);
             if ($effectiveAtype === 4) {
-                $teamResult = mysqli_query($link, "SELECT team FROM tblusers WHERE id = '" . (int)($_SESSION['pid'] ?? 0) . "' LIMIT 1");
-                $teamRow = $teamResult ? mysqli_fetch_assoc($teamResult) : null;
-                $teamIds = array_filter(array_map('trim', explode(',', (string)($teamRow['team'] ?? ''))));
+                $teamIds = getEffectiveTeamIds($link);
 
                 $requestContactId = 0;
                 $subserviceIdInt = (int)($row['subserviceid'] ?? 0);
@@ -288,6 +286,12 @@ include 'includes/template/head.php';
 
                 if ($requestContactId <= 0 || !in_array((string)$requestContactId, $teamIds, true)) {
                     header("location:/index.php?lang=$lang&status=accessdenied");
+                    exit();
+                }
+            } elseif ($effectiveAtype === 5) {
+                $effectiveEmployeeId = getEffectiveEmployeeUserId($link);
+                if ((int)($row['workerid'] ?? 0) !== $effectiveEmployeeId) {
+                    header("location:/indexonly.php?lang=$lang&status=accessdenied");
                     exit();
                 }
             }
