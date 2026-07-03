@@ -18,7 +18,7 @@ Access classes:
 | `app/openrequest2.php` | `PUBLIC_GUEST` | Public intake step | Must remain intake-only (no internal controls). |
 | `app/openrequest3.php` | `PUBLIC_GUEST` | Public intake submit | Must only support create flow and safe redirects. |
 | `app/viewrequest.php` | `GUEST_LINK_LIMITED` and `AUTH_REQUIRED` (dual mode) | Guest link-limited view + richer internal view for authenticated roles | Requires explicit mode boundary and field-level restrictions. |
-| `app/editrequest.php` | `ROLE_RESTRICTED` | `request.edit` | No guest or director edit access. |
+| `app/editrequest.php` | `ROLE_RESTRICTED` | `request.edit.client_fields` / `request.edit.workflow_fields` / `request.edit.internal_fields` | No guest or director edit access. Edit fields must be role-tier gated. |
 | `app/clonerequest.php` | `ROLE_RESTRICTED` | Internal only | Scoped by role; no guest access. |
 
 ## Internal request lists and dashboards
@@ -73,6 +73,12 @@ Access classes:
 ## Include endpoints (write actions)
 
 All write endpoints under `app/includes/add-*.php`, `app/includes/edit-*.php`, and `app/includes/delete-*.php` are `ROLE_RESTRICTED` and must be denied to guests.
+
+For request update handlers specifically, backend validation must enforce the same field-tier policy as the UI:
+- Employee: client fields only
+- Team lead and manager: client + workflow fields
+- Admin and superadmin: client + workflow + internal fields
+- Superadmin in test mode: selected role rules only
 
 ## Guest-linked limited view allowlist/denylist placeholder
 

@@ -26,7 +26,9 @@ Use the following logical permissions as the policy vocabulary.
 - `request.view_linked_limited`: guest view via client link with limited fields
 - `request.view_internal_assigned`: internal view for assigned/team scope
 - `request.view_internal_all`: internal view across all requests
-- `request.edit`: edit request content
+- `request.edit.client_fields`: edit client-facing/requester-provided fields
+- `request.edit.workflow_fields`: edit workflow and delivery-management fields
+- `request.edit.internal_fields`: edit privileged internal fields
 - `request.delete`: delete request
 
 ### Workflow and operations
@@ -66,7 +68,9 @@ Use the following logical permissions as the policy vocabulary.
 | `request.view_linked_limited` | Yes (link only) | Optional via link | Optional via link | Optional via link | Optional via link | Optional via link | Optional via link |
 | `request.view_internal_assigned` | No | Yes | Yes | Yes | Yes | Yes | Yes |
 | `request.view_internal_all` | No | No | No | No | Yes | Yes | Yes |
-| `request.edit` | No | Yes | Yes | Yes | No | Yes | Yes |
+| `request.edit.client_fields` | No | Yes | Yes | Yes | No | Yes | Yes |
+| `request.edit.workflow_fields` | No | No | Yes | Yes | No | Yes | Yes |
+| `request.edit.internal_fields` | No | No | No | No | No | Yes | Yes |
 | `request.delete` | No | No | No | No | No | Yes | Yes |
 | `workflow.manage_sla` | No | No | Yes | Yes | No | Yes | Yes |
 | `workflow.manage_assignments` | No | No | Yes | Yes | No | Yes | Yes |
@@ -81,6 +85,40 @@ Notes:
 - "Scoped" means assignment/team scope unless a role explicitly has all-request visibility.
 - Director remains read-only for request editing and SLA operations.
 - Admin and superadmin are both all-request roles; superadmin also has test-mode capability.
+
+## Role-Specific Edit Policy (Request Form)
+
+This policy defines edit behavior for request pages such as `app/editrequest.php`.
+
+### Edit tier definitions
+
+- Client fields:
+  - Intended for requester-facing content and baseline request metadata.
+  - Examples: title, client contact details, client-provided description, requester language, requester-facing dates.
+
+- Workflow fields:
+  - Intended for delivery operations.
+  - Examples: SLA due inputs, status transitions, assignment/owner, triage/workflow routing, completion flags.
+
+- Internal fields:
+  - Privileged operational and governance data.
+  - Examples: internal notes, escalation metadata, internal-only admin controls, destructive operations.
+
+### Edit matrix by role
+
+| Role | Client fields | Workflow fields | Internal fields | Notes |
+|---|---|---|---|---|
+| Guest | No | No | No | No request edit access. |
+| Employee (atype 5) | Yes | No | No | Can update only client-tier fields in permitted scope. |
+| Team Lead (atype 4) | Yes | Yes | No | Can manage delivery operations in permitted scope. |
+| Manager (atype 3) | Yes | Yes | No | Same edit tier as team lead unless later expanded. |
+| Director (atype 6) | No | No | No | Read-only role. |
+| Admin (`is_admin=1`) | Yes | Yes | Yes | Full edit across all tiers. |
+| Superadmin (`is_superuser=1`) | Yes | Yes | Yes | Full edit across all tiers, except while testing another role. |
+
+### Superadmin test-mode rule
+
+When superadmin is in role-testing mode (`atype` differs from `primary_atype`), edit permissions must match the selected test role exactly. Superadmin global override is suspended until test mode is exited.
 
 ## Guest Policy (Required)
 
@@ -129,6 +167,7 @@ The environment gate must apply to both:
 3. Enforce guest-limited view allowlist on linked request page.
 4. Remove direct session conditional duplication where possible.
 5. Add tests by role and by route class.
+6. Enforce field-tier gates in edit forms and backend update handlers.
 
 ## Decision Log Inputs Needed
 
@@ -138,3 +177,4 @@ The following business confirmations should be captured before code hardening:
 2. Exact guest linked-view field allowlist.
 3. Whether employee role can view reports beyond own/team scope.
 4. Whether director should view survey results or only request records.
+5. Final field-group mapping for `app/editrequest.php` and related includes (client/workflow/internal).
