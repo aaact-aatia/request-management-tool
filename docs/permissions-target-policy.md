@@ -175,6 +175,7 @@ Communications log implementation status:
 Role-test scoping notes:
 - Team Lead testing may select a test team scope.
 - Employee testing may select a test employee scope; assignment-based pages and edit guards use that effective employee identity.
+- Header testing banner displays the effective employee identity when Employee test mode is active.
 
 ## Guest Policy (Required)
 

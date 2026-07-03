@@ -346,6 +346,34 @@ if (!empty($_SESSION['pid'])):
 				echo ($langCode === 'en' ? 'Testing as: ' : 'Tester en tant que : ');
 				echo htmlspecialchars($testRoleRow[$nameField]) . '</span>';
 
+				if ((int)$testAtype === 5) {
+					$effectiveEmployeeId = 0;
+					if (!empty($_SESSION['test_employee_id'])) {
+						$effectiveEmployeeId = (int)$_SESSION['test_employee_id'];
+					}
+					if ($effectiveEmployeeId <= 0) {
+						$effectiveEmployeeId = (int)($_SESSION['pid'] ?? 0);
+					}
+
+					$employeeLabel = ($langCode === 'fr') ? 'Employé' : 'Employee';
+					if ($effectiveEmployeeId > 0) {
+						$employeeResult = mysqli_query($link, "SELECT firstname, lastname, email FROM tblusers WHERE id = '$effectiveEmployeeId' LIMIT 1");
+						$employeeRow = $employeeResult ? mysqli_fetch_assoc($employeeResult) : null;
+						if (!empty($employeeRow)) {
+							$fullName = trim((string)($employeeRow['firstname'] ?? '') . ' ' . (string)($employeeRow['lastname'] ?? ''));
+							$email = (string)($employeeRow['email'] ?? '');
+							if ($fullName !== '' && $email !== '') {
+								$employeeLabelValue = $fullName . ' (' . $email . ')';
+							} elseif ($fullName !== '') {
+								$employeeLabelValue = $fullName;
+							} else {
+								$employeeLabelValue = $email;
+							}
+							echo ' <span style="color: #6d5003; font-weight: bold;">| ' . htmlspecialchars($employeeLabel) . ': ' . htmlspecialchars($employeeLabelValue) . '</span>';
+						}
+					}
+				}
+
 				if ((int)$testAtype === 4) {
 					// Show effective team scope only for Team Lead role testing.
 					$effectiveTeamIds = [];
