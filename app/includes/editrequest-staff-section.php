@@ -12,9 +12,16 @@ if (isset($_SERVER['SCRIPT_FILENAME']) && realpath(__FILE__) === realpath((strin
 
 <h2><?php echo $t['staff_use_only']; ?></h2>
 
+<?php
+$inTestMode = isset($_SESSION['atype']) && isset($_SESSION['primary_atype']) &&
+    (int)$_SESSION['atype'] !== (int)$_SESSION['primary_atype'];
+$canFullFieldEdit = !$inTestMode && (!empty($_SESSION['is_superuser']) || !empty($_SESSION['is_admin']));
+$canEditWorkerid = in_array((int)($_SESSION['atype'] ?? 0), [3, 4, 5], true) || $canFullFieldEdit;
+?>
+
 <div class="form-group">
     <label for="workerid"><span class="field-name"><?php echo $t['assigned_team_member']; ?>:</span></label>
-    <select class="form-control" id="workerid" name="workerid">
+    <select class="form-control" id="workerid" name="workerid" <?php echo $canEditWorkerid ? '' : 'disabled="disabled"'; ?>>
         <option value="0"><?php echo $t['select_team_member']; ?></option>
         <?php 
         // Resolve the contact ID for this request from first-tier catalogue.
@@ -60,11 +67,14 @@ if (isset($_SERVER['SCRIPT_FILENAME']) && realpath(__FILE__) === realpath((strin
             }
         ?>
     </select>
+    <?php if (!$canEditWorkerid): ?>
+    <input type="hidden" name="workerid" value="<?php echo (int)($row['workerid'] ?? 0); ?>" />
+    <?php endif; ?>
 </div>
 
 <?php
-// SLA timer - locked to certain account types
-if (canManageSLA()) {
+// SLA timer - full-edit roles only
+if ($canFullFieldEdit) {
     $eslatimer = $row['slatimer'];
     if (empty($eslatimer) || is_null($eslatimer)) {
         $slatimer = $row['datereceived'];

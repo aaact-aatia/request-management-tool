@@ -566,6 +566,25 @@ include 'includes/template/head.php';
 				$result2 = mysqli_query($link, "SELECT $nameField FROM tblstatus WHERE id = '$statusid'");
 				$row2 = mysqli_fetch_array($result2);
 				$statusname = $row2 ? $row2[0] : '';
+
+				// Determine action availability for this request.
+				$canEditThisRequest = false;
+				if (canEditRequests()) {
+					if (isSuperAdmin() || (isset($_SESSION['is_admin']) && $_SESSION['is_admin'])) {
+						$canEditThisRequest = true;
+					} else {
+						$userid = $_SESSION['pid'];
+						$result2 = mysqli_query($link, "SELECT team FROM tblusers WHERE id = '$userid'");
+						$row2 = mysqli_fetch_array($result2);
+						$teams = $row2[0] ?? '';
+						$tarray = explode(",", $teams);
+						if (in_array($tarraycontactid, $tarray)) {
+							$canEditThisRequest = true;
+						}
+					}
+				}
+
+				$canDeleteThisRequest = canDeleteRequests();
 		?>
 		<div class="col-sm-6 col-md-4 mrgn-bttm-md">
 			<div class="panel <?= $panelClass ?> hght-inhrt">
@@ -608,48 +627,22 @@ include 'includes/template/head.php';
 					</dl>
 					<?php } ?>
 				</div>
+				<?php if ($canEditThisRequest || $canDeleteThisRequest) { ?>
 				<div class="panel-footer">
 					<div class="row">
-						<div class="col-xs-6">
-							<?php
-								// Check if the account is admin level to show this option 
-							if ($_SESSION['is_superuser'] OR $_SESSION['is_admin'] OR $_SESSION['atype']==3 OR $_SESSION['atype']==4) {
-								// Now that we know the user is logged in we need to check if this ticket is assigned to them except for superadmin/admin
-								if ($_SESSION['is_superuser'] OR $_SESSION['is_admin']) {	
-							?>
-									<a class="btn btn-sm btn-default btn-block" href="editrequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?php echo base64_encode($row['id']);?>&reqid=<?php echo urlencode('a11y-' . $row['requestid']); ?>"><?= htmlspecialchars($langFile['asearch_edit']) ?></a>
-							<?php
-									} else  {
-										// User is 3 (Manager) or 4 (Team Leader) so check if they have permission to edit this request
-										// First grab any existing teams
-										$userid = $_SESSION['pid'];
-										$result2 = mysqli_query($link, "SELECT team FROM tblusers WHERE id = '$userid'");
-										$row2 = mysqli_fetch_array($result2);
-										$teams = $row2[0];
-										$tarray = explode(",",$teams);
-											if(in_array($tarraycontactid, $tarray)) {
-									?>
-									<a class="btn btn-sm btn-default btn-block" href="editrequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?php echo base64_encode($row['id']);?>&reqid=<?php echo urlencode('a11y-' . $row['requestid']); ?>"><?= htmlspecialchars($langFile['asearch_edit']) ?></a>
-									<?php 
-											} else {
-									?>
-									<span class="text-muted"><?= htmlspecialchars($langFile['asearch_na']) ?></span>
-									<?php
-											}
-										}
-									}
-							?>
+						<?php if ($canEditThisRequest) { ?>
+						<div class="<?= $canDeleteThisRequest ? 'col-xs-6' : 'col-xs-12' ?>">
+							<a class="btn btn-default btn-block" href="editrequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?php echo base64_encode($row['id']);?>&reqid=<?php echo urlencode('a11y-' . $row['requestid']); ?>"><span class="glyphicon glyphicon-pencil" aria-hidden="true"></span><span class="mrgn-lft-sm"><?= htmlspecialchars($langFile['asearch_edit']) ?></span></a>
 						</div>
-						<div class="col-xs-6">
-						<?php if ($_SESSION['is_superuser'] OR $_SESSION['is_admin']) { ?>
-							<a class="wb-lbx btn btn-sm btn-danger btn-block" href="includes/delete-request.php?id=<?php echo $row['id'];?>"><?= htmlspecialchars($langFile['asearch_delete']) ?></a>
-							<?php } elseif(in_array('1', $_SESSION['team'])){?>
-							<a class="btn btn-sm btn-default btn-block" href="clonerequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?php echo base64_encode($row['id']);?>&toClose=2"><?= htmlspecialchars($langFile['asearch_clone']) ?></a>
-							<?php if(!$isResolvedStatus){?><a class="btn btn-sm btn-default btn-block" href="clonerequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?php echo base64_encode($row['id']);?>&toClose=1"><?= htmlspecialchars($langFile['asearch_clone_close']) ?></a><?php }?>
-							<?php }?>
+						<?php } ?>
+						<?php if ($canDeleteThisRequest) { ?>
+						<div class="<?= $canEditThisRequest ? 'col-xs-6' : 'col-xs-12' ?>">
+							<a class="wb-lbx btn btn-danger btn-block" href="includes/delete-request.php?id=<?php echo $row['id'];?>"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span><span class="mrgn-lft-sm"><?= htmlspecialchars($langFile['asearch_delete']) ?></span></a>
 						</div>
+						<?php } ?>
 					</div>
 				</div>
+				<?php } ?>
 			</div>
 		</div>
 		<?php } ?>

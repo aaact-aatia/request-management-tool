@@ -340,11 +340,11 @@ if (!empty($_SESSION['pid'])):
             // Get the current testing account type name
             $testAtype = $_SESSION['atype'];
 			$nameField = ($langCode === 'fr') ? 'namefr' : 'nameen';
-            $result = mysqli_query($link, "SELECT {$nameField} FROM tblaccounttype WHERE id = '{$testAtype}'");
-            if ($row = mysqli_fetch_array($result)) {
+			$testRoleResult = mysqli_query($link, "SELECT {$nameField} FROM tblaccounttype WHERE id = '{$testAtype}'");
+			if ($testRoleResult && ($testRoleRow = mysqli_fetch_array($testRoleResult))) {
                 echo ' <span style="color: #6d5003; font-weight: bold;">| 🔧 ';
 				echo ($langCode === 'en' ? 'Testing as: ' : 'Tester en tant que : ');
-                echo htmlspecialchars($row[$nameField]) . '</span>';
+				echo htmlspecialchars($testRoleRow[$nameField]) . '</span>';
             }
         }
         ?>

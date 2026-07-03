@@ -256,7 +256,11 @@ include 'includes/template/head.php';
             <input type="hidden" name="requestlang" value="<?php echo htmlspecialchars($originalRequestLang, ENT_QUOTES, 'UTF-8'); ?>">
 
             <?php
-            $readonly = !canEditRequests();
+            $inTestMode = isset($_SESSION['atype']) && isset($_SESSION['primary_atype']) &&
+                (int)$_SESSION['atype'] !== (int)$_SESSION['primary_atype'];
+            $canFullFieldEdit = !$inTestMode && (!empty($_SESSION['is_superuser']) || !empty($_SESSION['is_admin']));
+            $canEditStatusAndWorker = canEditRequests();
+            $readonly = !$canFullFieldEdit;
             $serviceid = $row['serviceid'];
             $catalogueid = $row['catalogueid'];
             $dateRange = getDateRange(1);
@@ -272,7 +276,7 @@ include 'includes/template/head.php';
                     while ($status = mysqli_fetch_assoc($statuses)) {
                         $statusOptions[] = $status;
                     }
-                    echo renderSelect('statusid', $t['status'], $statusOptions, $row['statusid'], true, $t['select_status']);
+                    echo renderSelect('statusid', $t['status'], $statusOptions, $row['statusid'], true, $t['select_status'], !$canEditStatusAndWorker);
                     ?>
                 </div>
             </div>
@@ -287,7 +291,7 @@ include 'includes/template/head.php';
                         <?php echo renderTextInput('requestid', $t['request_id'], $row['requestid'], true, $readonly); ?>
                     </div>
                     <div class="col-md-6">
-                        <?php echo renderTextInput('requesttitle', $t['request_title'], $row['title'], true); ?>
+                        <?php echo renderTextInput('requesttitle', $t['request_title'], $row['title'], true, $readonly); ?>
                     </div>
                 </div>
 
@@ -303,7 +307,7 @@ include 'includes/template/head.php';
                     <div class="col-md-6">
                         <div class="form-group">
                             <label for="catalogueid"><span class="field-name"><?php echo $t['catalogue_name']; ?>: <strong>(<?php echo $t['required']; ?>)</strong></span></label>
-                            <select class="form-control" id="catalogueid" name="catalogueid" onchange="ajax1(this.value)" required>
+                            <select class="form-control" id="catalogueid" name="catalogueid" onchange="ajax1(this.value)" required <?php echo $readonly ? 'disabled="disabled"' : ''; ?>>
                                 <option value=""><?php echo $t['select_catalogue']; ?></option>
                                 <?php foreach ($catalogueOptions as $option): ?>
                                 <option value="<?php echo $option['id']; ?>" <?php echo ($row['catalogueid'] == $option['id']) ? 'selected' : ''; ?>>
@@ -318,7 +322,7 @@ include 'includes/template/head.php';
                         <?php $services = getServicesByCategory($link, $row['catalogueid'], $lang); ?>
                         <div class="form-group divservice">
                             <label for="serviceid"><span class="field-name"><?php echo $t['service_name']; ?>:</span></label>
-                            <select class="form-control" id="serviceid" name="serviceid" onchange="ajax2(this.value)">
+                            <select class="form-control" id="serviceid" name="serviceid" onchange="ajax2(this.value)" <?php echo $readonly ? 'disabled="disabled"' : ''; ?>>
                                 <option value=""><?php echo $t['select_service']; ?></option>
                                 <?php while ($service = mysqli_fetch_assoc($services)): ?>
                                 <option value="<?php echo $service['id']; ?>" <?php echo ($row['serviceid'] == $service['id']) ? 'selected' : ''; ?>>
@@ -343,7 +347,7 @@ include 'includes/template/head.php';
                     <div class="col-md-6">
                         <div class="form-group divsubservice">
                             <label for="subserviceid"><span class="field-name"><?php echo $t['subservice_name']; ?>: <strong>(<?php echo $t['required']; ?>)</strong></span></label>
-                            <select class="form-control" id="subserviceid" name="subserviceid" required>
+                            <select class="form-control" id="subserviceid" name="subserviceid" required <?php echo $readonly ? 'disabled="disabled"' : ''; ?>>
                                 <option value=""><?php echo $t['select_subservice']; ?></option>
                                 <?php while ($subservice = mysqli_fetch_assoc($subservices)): ?>
                                 <option value="<?php echo $subservice['id']; ?>" <?php echo ($row['subserviceid'] == $subservice['id']) ? 'selected' : ''; ?>>
@@ -365,18 +369,18 @@ include 'includes/template/head.php';
                 <!-- Sprint fields (subserviceid 95 only) -->
                 <div class="row">
                     <div class="col-md-6">
-                        <?php echo renderDateInput('firstsprintstartdate', $t['first_sprint_start'], $row['firstsprintstartdate']); ?>
+                        <?php echo renderDateInput('firstsprintstartdate', $t['first_sprint_start'], $row['firstsprintstartdate'], false, null, null, $readonly); ?>
                     </div>
                     <div class="col-md-6">
-                        <?php echo renderDateInput('firstsprintenddate', $t['first_sprint_end'], $row['firstsprintenddate']); ?>
+                        <?php echo renderDateInput('firstsprintenddate', $t['first_sprint_end'], $row['firstsprintenddate'], false, null, null, $readonly); ?>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-md-6">
-                        <?php echo renderTextInput('sprintschedule', $t['sprint_schedule'], $row['sprintschedule']); ?>
+                        <?php echo renderTextInput('sprintschedule', $t['sprint_schedule'], $row['sprintschedule'], false, $readonly); ?>
                     </div>
                     <div class="col-md-6">
-                        <?php echo renderTextInput('sprintdefects', $t['sprint_defects'], $row['sprintdefects']); ?>
+                        <?php echo renderTextInput('sprintdefects', $t['sprint_defects'], $row['sprintdefects'], false, $readonly); ?>
                     </div>
                 </div>
                 <?php endif; ?>
@@ -390,20 +394,20 @@ include 'includes/template/head.php';
                 <!-- Row: Client Last Name | Client First Name -->
                 <div class="row">
                     <div class="col-md-6">
-                        <?php echo renderTextInput('clientlname', $t['client_lastname'], $row['clientlname']); ?>
+                        <?php echo renderTextInput('clientlname', $t['client_lastname'], $row['clientlname'], false, $readonly); ?>
                     </div>
                     <div class="col-md-6">
-                        <?php echo renderTextInput('clientfname', $t['client_firstname'], $row['clientfname']); ?>
+                        <?php echo renderTextInput('clientfname', $t['client_firstname'], $row['clientfname'], false, $readonly); ?>
                     </div>
                 </div>
 
                 <!-- Row: Client Email | Department/Agency -->
                 <div class="row">
                     <div class="col-md-6">
-                        <?php echo renderTextInput('clientemail', $t['client_email'], $row['clientemail'], false, false, 'email'); ?>
+                        <?php echo renderTextInput('clientemail', $t['client_email'], $row['clientemail'], false, $readonly, 'email'); ?>
                     </div>
                     <div class="col-md-6">
-                        <?php echo renderTextInput('departmentagency', $t['department_agency'], $departmentAgency); ?>
+                        <?php echo renderTextInput('departmentagency', $t['department_agency'], $departmentAgency, false, $readonly); ?>
                         <input type="hidden" name="departmentagency_commlogid" value="<?php echo $departmentAgencyCommlogId; ?>">
                     </div>
                 </div>
@@ -414,7 +418,7 @@ include 'includes/template/head.php';
                         <?php echo renderTextInput('requestlang_display', $t['request_language'], $originalRequestLangLabel . ' (' . $originalRequestLang . ')', false, true); ?>
                     </div>
                     <div class="col-md-6">
-                        <?php echo renderTextInput('clientphone', $t['client_phone'], $row['clientphone'], false, false, 'tel', 'data-rule-phoneUS="true"'); ?>
+                        <?php echo renderTextInput('clientphone', $t['client_phone'], $row['clientphone'], false, $readonly, 'tel', 'data-rule-phoneUS="true"'); ?>
                     </div>
                 </div>
 
@@ -428,7 +432,7 @@ include 'includes/template/head.php';
                         while ($source = mysqli_fetch_assoc($sources)) {
                             $sourceOptions[] = $source;
                         }
-                        echo renderSelect('sourceid', $t['request_source'], $sourceOptions, $row['sourceid'], true, $t['select_source']);
+                        echo renderSelect('sourceid', $t['request_source'], $sourceOptions, $row['sourceid'], true, $t['select_source'], $readonly);
                         ?>
                         <?php elseif (in_array($catalogueid, [8, 9]) && hasValue($row['audienceid'] ?? null)): ?>
                         <?php
@@ -437,7 +441,7 @@ include 'includes/template/head.php';
                         while ($audience = mysqli_fetch_assoc($audiences)) {
                             $audienceOptions[] = $audience;
                         }
-                        echo renderSelect('audience', $t['intended_audience'], $audienceOptions, $row['audienceid'], true, $t['select_audience']);
+                        echo renderSelect('audience', $t['intended_audience'], $audienceOptions, $row['audienceid'], true, $t['select_audience'], $readonly);
                         ?>
                         <?php endif; ?>
                     </div>
@@ -453,20 +457,20 @@ include 'includes/template/head.php';
                 <!-- Row: Date Received | Date Updated -->
                 <div class="row">
                     <div class="col-md-6">
-                        <?php echo renderDateInput('datereceived', $t['date_received'], $row['datereceived'], true, $dateRange['min'], $dateRange['max']); ?>
+                        <?php echo renderDateInput('datereceived', $t['date_received'], $row['datereceived'], true, $dateRange['min'], $dateRange['max'], $readonly); ?>
                     </div>
                     <div class="col-md-6">
-                        <?php echo renderDateInput('dateupdated', $t['date_updated'], $row['dateupdated'], false, $dateRange['min'], $dateRange['max']); ?>
+                        <?php echo renderDateInput('dateupdated', $t['date_updated'], $row['dateupdated'], false, $dateRange['min'], $dateRange['max'], $readonly); ?>
                     </div>
                 </div>
 
                 <!-- Row: Date Required | Date Resolved -->
                 <div class="row">
                     <div class="col-md-6">
-                        <?php echo renderDateInput('daterequired', $dateRequiredLabel, $row['daterequired'], false, $dateRange['min'], $dateRange['max']); ?>
+                        <?php echo renderDateInput('daterequired', $dateRequiredLabel, $row['daterequired'], false, $dateRange['min'], $dateRange['max'], $readonly); ?>
                     </div>
                     <div class="col-md-6">
-                        <?php echo renderDateInput('dateresolved', $t['date_resolved'], $row['dateresolved'], false, $dateRange['min'], $dateRange['max']); ?>
+                        <?php echo renderDateInput('dateresolved', $t['date_resolved'], $row['dateresolved'], false, $dateRange['min'], $dateRange['max'], $readonly); ?>
                     </div>
                 </div>
 
@@ -492,7 +496,7 @@ include 'includes/template/head.php';
                 <div class="col-md-6">
                     <div class="form-group">
                         <label for="attach<?php echo $i; ?>"><span class="field-name"><?php echo $t['attachment']; ?> <?php echo $i; ?> (<?php echo $t['url_only']; ?>)</span><?php echo $viewLink; ?></label>
-                        <input type="text" autocomplete="url" class="form-control" id="attach<?php echo $i; ?>" name="attach<?php echo $i; ?>" value="<?php echo htmlspecialchars($attachValue ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                        <input type="text" autocomplete="url" class="form-control" id="attach<?php echo $i; ?>" name="attach<?php echo $i; ?>" value="<?php echo htmlspecialchars($attachValue ?? '', ENT_QUOTES, 'UTF-8'); ?>" <?php echo $readonly ? 'readonly="readonly"' : ''; ?>>
                     </div>
                 </div>
                 <?php endfor; ?>

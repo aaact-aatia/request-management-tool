@@ -17,7 +17,14 @@ function isSuperAdmin() {
     // Returns true if user is a superuser (unless in test mode)
     $inTestMode = isset($_SESSION['atype']) && isset($_SESSION['primary_atype']) && 
                   $_SESSION['atype'] != $_SESSION['primary_atype'];
-    return !$inTestMode && isset($_SESSION['is_superuser']) && $_SESSION['is_superuser'] == 1;
+
+    if ($inTestMode) {
+        return false;
+    }
+
+    $isSuperuserFlag = isset($_SESSION['is_superuser']) && $_SESSION['is_superuser'] == 1;
+    $isAtypeSuperadmin = isset($_SESSION['atype']) && (int) $_SESSION['atype'] === 1;
+    return $isSuperuserFlag || $isAtypeSuperadmin;
 }
 
 // Alias for backward compatibility - DO NOT USE, prefer isSuperAdmin()
@@ -26,21 +33,33 @@ function isAdmin() {
 }
 
 function canEditRequests() {
-    $isAdminOrSuperuser = (isset($_SESSION['is_superuser']) && $_SESSION['is_superuser']) || 
-                         (isset($_SESSION['is_admin']) && $_SESSION['is_admin']);
     // If in test mode, only use tested atype permissions, not superuser flags
     $inTestMode = isset($_SESSION['atype']) && isset($_SESSION['primary_atype']) && 
                   $_SESSION['atype'] != $_SESSION['primary_atype'];
 
-    if (isset($_SESSION['is_superuser']) && (int)$_SESSION['is_superuser'] === 1) {
-        return true;
+    if ($inTestMode) {
+        return isset($_SESSION['atype']) && in_array((int) $_SESSION['atype'], [1, 3, 4, 5], true);
     }
 
-    if ($inTestMode) {
-        return isset($_SESSION['atype']) && in_array($_SESSION['atype'], [3, 4, 5]);
-    }
+    $isAdminOrSuperuser = (isset($_SESSION['is_superuser']) && $_SESSION['is_superuser']) || 
+                         (isset($_SESSION['is_admin']) && $_SESSION['is_admin']) ||
+                         (isset($_SESSION['atype']) && (int) $_SESSION['atype'] === 1);
 
     return $isAdminOrSuperuser || (isset($_SESSION['atype']) && in_array($_SESSION['atype'], [3, 4, 5]));
+}
+
+function canDeleteRequests() {
+    // If in test mode, only use tested atype permissions, not superuser flags
+    $inTestMode = isset($_SESSION['atype']) && isset($_SESSION['primary_atype']) &&
+                  $_SESSION['atype'] != $_SESSION['primary_atype'];
+
+    if ($inTestMode) {
+        return isset($_SESSION['atype']) && (int) $_SESSION['atype'] === 1;
+    }
+
+        return (isset($_SESSION['is_superuser']) && $_SESSION['is_superuser']) ||
+            (isset($_SESSION['is_admin']) && $_SESSION['is_admin']) ||
+            (isset($_SESSION['atype']) && (int) $_SESSION['atype'] === 1);
 }
 
 function canManageSLA() {
@@ -799,17 +818,18 @@ function renderTextInput($id, $label, $value = '', $required = false, $readonly 
 HTML;
 }
 
-function renderDateInput($id, $label, $value = '', $required = false, $min = null, $max = null) {
+function renderDateInput($id, $label, $value = '', $required = false, $min = null, $max = null, $readonly = false) {
     $requiredAttr = $required ? 'required' : '';
     $requiredLabel = $required ? ' <strong>(required)</strong>' : '';
     $minAttr = $min ? "min=\"$min\"" : '';
     $maxAttr = $max ? "max=\"$max\"" : '';
+    $readonlyAttr = $readonly ? 'readonly="readonly"' : '';
     
     return <<<HTML
     <div class="form-group">
         <label for="$id"><span class="field-name">$label$requiredLabel</span></label>
         <input type="date" class="form-control" id="$id" name="$id" 
-               value="$value" $requiredAttr $minAttr $maxAttr>
+             value="$value" $requiredAttr $minAttr $maxAttr $readonlyAttr>
     </div>
 HTML;
 }
@@ -829,14 +849,15 @@ function renderTextarea($id, $label, $value = '', $required = false, $readonly =
 HTML;
 }
 
-function renderSelect($id, $label, $options, $selectedValue = '', $required = false, $emptyText = 'Make your selection') {
+function renderSelect($id, $label, $options, $selectedValue = '', $required = false, $emptyText = 'Make your selection', $disabled = false) {
     $requiredAttr = $required ? 'required' : '';
     $requiredLabel = $required ? ' <strong>(required)</strong>' : '';
+    $disabledAttr = $disabled ? 'disabled="disabled"' : '';
     
     $html = <<<HTML
     <div class="form-group">
         <label for="$id"><span class="field-name">$label$requiredLabel</span></label>
-        <select class="form-control" id="$id" name="$id" $requiredAttr>
+        <select class="form-control" id="$id" name="$id" $requiredAttr $disabledAttr>
             <option value="">$emptyText</option>
 HTML;
     

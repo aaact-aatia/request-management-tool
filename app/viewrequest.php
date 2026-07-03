@@ -416,8 +416,10 @@ if(mysqli_num_rows($result)>0){
 			<?php } ?>
 			<?php
 				$canShowEditControls = !empty($_SESSION['pid']) && canEditRequests();
+				$canEditThisRequest = false;
 				// Only authenticated users with edit permissions can see request controls.
 			if ($canShowEditControls && ($_SESSION['is_superuser'] OR $_SESSION['is_admin'])) {	
+				$canEditThisRequest = true;
 			?>
 			<div class="pull-right">
             <p><a class="btn btn-primary" href="editrequest.php?lang=<?php echo $lang; ?>&erid=<?php echo base64_encode($row['id']);?>&reqid=<?php echo urlencode('a11y-' . $row['requestid']); ?>">Edit <span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span></a><?php if ($_SESSION['is_superuser'] OR $_SESSION['is_admin']) { ?> <a class="wb-lbx btn btn-primary" href="includes/delete-request.php?id=<?php echo $row['id'];?>">Delete<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span> </a><?php } ?></p>
@@ -429,7 +431,7 @@ if(mysqli_num_rows($result)>0){
 				// First grab any existing teams
 				$userid = $_SESSION['pid'];
 				$result2 = mysqli_query($link, "SELECT team FROM tblusers WHERE id = '$userid'");
-				$row2 = mysqli_fetch_array($result2);
+				$row2 = $result2 ? mysqli_fetch_array($result2) : null;
 				$teams = "";
 				if (!empty($row2))
 				{
@@ -437,6 +439,7 @@ if(mysqli_num_rows($result)>0){
 				}
 				$tarray = explode(",",$teams);
 					if(in_array($tarraycontactid, $tarray)) {
+						$canEditThisRequest = true;
 			?>
 			<div class="pull-right">
 				<p><a class="btn btn-primary" href="editrequest.php?lang=<?php echo $lang; ?>&erid=<?php echo base64_encode($row['id']);?>&reqid=<?php echo urlencode('a11y-' . $row['requestid']); ?>">Edit <span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span></a><?php if ($_SESSION['is_superuser'] OR $_SESSION['is_admin']) { ?> <a class="wb-lbx btn btn-primary" href="includes/delete-request.php?id=<?php echo $row['id'];?>">Delete<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span> </a><?php } ?></p>
@@ -555,13 +558,17 @@ if(mysqli_num_rows($result)>0){
 					$workerid = $row['workerid'];
 					if ($workerid != 0 AND $workerid != "") {
 						$result2 = mysqli_query($link, "SELECT firstname, lastname FROM tblusers WHERE id = '$workerid'");
-						$row2 = mysqli_fetch_array($result2);
-						$ufirstname = $row2[0];
-						$ulastname = $row2[1];
+						$row2 = $result2 ? mysqli_fetch_assoc($result2) : null;
+						$ufirstname = $row2['firstname'] ?? '';
+						$ulastname = $row2['lastname'] ?? '';
+						$assignedName = trim($ufirstname . ' ' . $ulastname);
+						if ($assignedName === '') {
+							$assignedName = ($lang === 'fr') ? 'Utilisateur indisponible' : 'User unavailable';
+						}
 				?>
 				<div style="break-inside: avoid;">
 					<dt><?= $t['assigned_member'] ?></dt>
-					<dd><?php echo $ufirstname ?> <?php echo $ulastname ?></dd>
+					<dd><?php echo htmlspecialchars($assignedName, ENT_QUOTES, 'UTF-8') ?></dd>
 				</div>
 				<?php
 					}
@@ -802,6 +809,9 @@ $blobStorage = new AzureBlobStorageManager();
 			$surveyEnabled = ((int) ($catalogueSurveyRow['survey'] ?? 0) === 1);
 
 			if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['email_action'] ?? '') === 'send_resolved_email')) {
+				if (!$canEditThisRequest) {
+					$resolvedActionStatus = 'failed';
+				} else {
 				if ($resolvedClientEmail === '') {
 					$resolvedActionStatus = 'missing_email';
 				} else {
@@ -855,6 +865,7 @@ $blobStorage = new AzureBlobStorageManager();
 						$resolvedActionStatus = 'failed';
 					}
 				}
+					}
 			}
 
 			$resolvedEmailSentDate = rmt_get_resolved_email_sent_date($link, (int) $triageid);
@@ -874,7 +885,7 @@ $blobStorage = new AzureBlobStorageManager();
 				- <?= htmlspecialchars($t['resolved_email_sent_on']) ?> <?= htmlspecialchars($resolvedEmailSentDate) ?>
 				<?php endif; ?>
 			</p>
-			<?php if (!$resolvedEmailSent): ?>
+			<?php if (!$resolvedEmailSent && $canEditThisRequest): ?>
 				<?php if ($resolvedClientEmail !== ''): ?>
 				<form method="post" action="" class="form-inline mrgn-bttm-md">
 					<input type="hidden" name="email_action" value="send_resolved_email">
@@ -1000,11 +1011,11 @@ $blobStorage = new AzureBlobStorageManager();
 					$creatorid = $row2['creatorid'];
 					// Get the name of the user
 					$result3 = mysqli_query($link, "SELECT firstname, lastname FROM tblusers WHERE id = '$creatorid'");
-					$row3 = mysqli_fetch_array($result3);
-					$cfname = $row3['firstname'];
-					$clname = $row3['lastname'];
+					$row3 = $result3 ? mysqli_fetch_assoc($result3) : null;
+					$cfname = $row3['firstname'] ?? '';
+					$clname = $row3['lastname'] ?? '';
 				?>
-				<dt><?php echo $dateadded ?><?php if($creatorid!=0) {?> - <?php echo $cfname ?> <?php echo $clname ?><?php } ?><?php if ($_SESSION['is_superuser'] OR $_SESSION['is_admin']) {?> <a class="wb-lbx" href="includes/delete-comms.php?t=a&id=<?php echo $row2['id'];?>&rid=<?php echo $triageid ?>"><span class="glyphicon glyphicon-trash"></span><span class="wb-inv"> <?= htmlspecialchars($t['delete_comment']) ?></span></a><?php } ?></dt>
+				<dt><?php echo $dateadded ?><?php if($creatorid!=0 && ($cfname !== '' || $clname !== '')) {?> - <?php echo htmlspecialchars(trim($cfname . ' ' . $clname), ENT_QUOTES, 'UTF-8') ?><?php } ?><?php if ($_SESSION['is_superuser'] OR $_SESSION['is_admin']) {?> <a class="wb-lbx" href="includes/delete-comms.php?t=a&id=<?php echo $row2['id'];?>&rid=<?php echo $triageid ?>"><span class="glyphicon glyphicon-trash"></span><span class="wb-inv"> <?= htmlspecialchars($t['delete_comment']) ?></span></a><?php } ?></dt>
 				<dd><?php echo $annotes ?></dd>
 				<?php } ?>
 			</dl>

@@ -16,6 +16,20 @@ $redirectid = base64_encode($requestuid);
 // COLLECT FORM DATA
 // ============================================================================
 
+$inTestMode = isset($_SESSION['atype']) && isset($_SESSION['primary_atype']) &&
+    (int)$_SESSION['atype'] !== (int)$_SESSION['primary_atype'];
+$canFullFieldEdit = !$inTestMode && (!empty($_SESSION['is_superuser']) || !empty($_SESSION['is_admin']));
+$canEditStatusAndWorker = in_array((int)($_SESSION['atype'] ?? 0), [3, 4, 5], true) || $canFullFieldEdit;
+
+$currentRequestResult = mysqli_query($link, "SELECT * FROM tbltriage WHERE id = '$requestuid' LIMIT 1");
+$currentRequest = $currentRequestResult ? mysqli_fetch_assoc($currentRequestResult) : null;
+
+if (!$currentRequest) {
+    $langCode = $_SESSION['lang'] ?? 'en';
+    header("location:/editrequest.php?lang=$langCode&id=$requestuid&status=failed");
+    exit();
+}
+
 $requestid = getPostValue('requestid');
 $requesttitle = getPostValue('requesttitle');
 $clientlname = getPostValue('clientlname');
@@ -26,7 +40,6 @@ $departmentagencyCommlogId = (int)getPostValue('departmentagency_commlogid', 0);
 $clientphone = getPostValue('clientphone');
 $sourceid = getPostValue('sourceid');
 $statusid = getPostValue('statusid');
-$isTargetResolved = rmt_is_resolved_status_id($link, $statusid);
 $datereceived = getPostValue('datereceived');
 $dateupdated = !empty($_POST['dateupdated']) ? getPostValue('dateupdated') : getTodayDate();
 
@@ -36,12 +49,6 @@ $daterequiredu = empty($daterequired);
 if ($daterequiredu) $daterequired = NULL;
 
 $dateresolved = getPostValue('dateresolved');
-if (empty($dateresolved) && $isTargetResolved) {
-    $dateresolved = getTodayDate();
-} elseif (empty($dateresolved)) {
-    $dateresolvedu = true;
-    $dateresolved = NULL;
-}
 $slatimer = getPostValue('slatimer');
 $audienceid = getPostValue('audience', 0);
 $bdm = getPostValue('bdm', 0);
@@ -67,6 +74,51 @@ $lang = $_SESSION['lang'] ?? 'en';
 $requestlang = app_normalize_language($lang);
 $requestuidInt = (int) $requestuid;
 $postedRequestLang = app_normalize_language(getPostValue('requestlang', ''), '');
+
+if (!$canEditStatusAndWorker) {
+    $statusid = (string) ($currentRequest['statusid'] ?? '');
+    $workerid = (string) ($currentRequest['workerid'] ?? 0);
+}
+
+if (!$canFullFieldEdit) {
+    // Only status and assignee are editable for non-full-edit roles.
+    $requestid = (string) ($currentRequest['requestid'] ?? '');
+    $requesttitle = (string) ($currentRequest['title'] ?? '');
+    $clientlname = (string) ($currentRequest['clientlname'] ?? '');
+    $clientfname = (string) ($currentRequest['clientfname'] ?? '');
+    $clientemail = (string) ($currentRequest['clientemail'] ?? '');
+    $clientphone = (string) ($currentRequest['clientphone'] ?? '');
+    $sourceid = (string) ($currentRequest['sourceid'] ?? '');
+    $datereceived = (string) ($currentRequest['datereceived'] ?? '');
+    $dateupdated = (string) ($currentRequest['dateupdated'] ?? '');
+    $daterequired = $currentRequest['daterequired'] ?? NULL;
+    $dateresolved = $currentRequest['dateresolved'] ?? NULL;
+    $slatimer = (string) ($currentRequest['slatimer'] ?? '');
+    $bdm = (string) ($currentRequest['bdm'] ?? 0);
+    $attach1 = (string) ($currentRequest['attach1'] ?? '');
+    $attach2 = (string) ($currentRequest['attach2'] ?? '');
+    $attach3 = (string) ($currentRequest['attach3'] ?? '');
+    $catalogueid = (string) ($currentRequest['catalogueid'] ?? '');
+    $serviceid = (int) ($currentRequest['serviceid'] ?? 0);
+    $subserviceid = (string) ($currentRequest['subserviceid'] ?? 0);
+    $sprintschedule = (string) ($currentRequest['sprintschedule'] ?? '');
+    $sprintdefects = (string) ($currentRequest['sprintdefects'] ?? '');
+    $audienceid = (string) ($currentRequest['audienceid'] ?? 0);
+    $firstsprintstartdate = (string) ($currentRequest['firstsprintstartdate'] ?? '');
+    $firstsprintenddate = (string) ($currentRequest['firstsprintenddate'] ?? '');
+
+    // Keep communications metadata unchanged outside full-edit scope.
+    $departmentagency = '';
+    $departmentagencyCommlogId = 0;
+}
+
+$isTargetResolved = rmt_is_resolved_status_id($link, $statusid);
+if (empty($dateresolved) && $isTargetResolved) {
+    $dateresolved = getTodayDate();
+} elseif (empty($dateresolved)) {
+    $dateresolvedu = true;
+    $dateresolved = NULL;
+}
 
 function upsertDepartmentAgencyInNotes($notes, $departmentValue, $lang) {
     $cleanedNotes = preg_replace('/^\s*(Department\/agency|Ministère\/organisme):\s*.*(?:\R|$)/miu', '', (string)$notes);
@@ -426,27 +478,29 @@ if (($_SESSION['is_superuser'] || $_SESSION['is_admin'])) {
 }
 
 // Keep Department/agency synchronized in client communications notes.
-$targetCommlogId = $departmentagencyCommlogId;
-if ($targetCommlogId <= 0) {
-    $targetResult = mysqli_query($link, "SELECT id FROM tblcommlog WHERE triageid = '$requestuid' AND status = '1' ORDER BY id ASC LIMIT 1");
-    if ($targetResult && mysqli_num_rows($targetResult) > 0) {
-        $targetRow = mysqli_fetch_assoc($targetResult);
-        $targetCommlogId = (int)$targetRow['id'];
+if ($canFullFieldEdit) {
+    $targetCommlogId = $departmentagencyCommlogId;
+    if ($targetCommlogId <= 0) {
+        $targetResult = mysqli_query($link, "SELECT id FROM tblcommlog WHERE triageid = '$requestuid' AND status = '1' ORDER BY id ASC LIMIT 1");
+        if ($targetResult && mysqli_num_rows($targetResult) > 0) {
+            $targetRow = mysqli_fetch_assoc($targetResult);
+            $targetCommlogId = (int)$targetRow['id'];
+        }
     }
-}
 
-if ($targetCommlogId > 0) {
-    $notesResult = mysqli_query($link, "SELECT notes FROM tblcommlog WHERE id = '$targetCommlogId' AND triageid = '$requestuid' AND status = '1' LIMIT 1");
-    if ($notesResult && mysqli_num_rows($notesResult) > 0) {
-        $notesRow = mysqli_fetch_assoc($notesResult);
-        $updatedNotes = upsertDepartmentAgencyInNotes($notesRow['notes'], $departmentagency, $lang);
-        $updatedNotesEscaped = mysqli_real_escape_string($link, $updatedNotes);
-        mysqli_query($link, "UPDATE tblcommlog SET notes = '$updatedNotesEscaped' WHERE id = '$targetCommlogId' AND triageid = '$requestuid' AND status = '1'");
+    if ($targetCommlogId > 0) {
+        $notesResult = mysqli_query($link, "SELECT notes FROM tblcommlog WHERE id = '$targetCommlogId' AND triageid = '$requestuid' AND status = '1' LIMIT 1");
+        if ($notesResult && mysqli_num_rows($notesResult) > 0) {
+            $notesRow = mysqli_fetch_assoc($notesResult);
+            $updatedNotes = upsertDepartmentAgencyInNotes($notesRow['notes'], $departmentagency, $lang);
+            $updatedNotesEscaped = mysqli_real_escape_string($link, $updatedNotes);
+            mysqli_query($link, "UPDATE tblcommlog SET notes = '$updatedNotesEscaped' WHERE id = '$targetCommlogId' AND triageid = '$requestuid' AND status = '1'");
+        }
+    } elseif (hasValue($departmentagency)) {
+        $departmentPrefix = ($lang === 'fr') ? 'Ministère/organisme: ' : 'Department/agency: ';
+        $departmentNote = mysqli_real_escape_string($link, $departmentPrefix . $departmentagency);
+        mysqli_query($link, "INSERT INTO tblcommlog(`triageid`, `dateadded`, `notes`, `creatorid`, `status`) VALUES ('$requestuid', '$todaydate', '$departmentNote', '$updaterid', '1')");
     }
-} elseif (hasValue($departmentagency)) {
-    $departmentPrefix = ($lang === 'fr') ? 'Ministère/organisme: ' : 'Department/agency: ';
-    $departmentNote = mysqli_real_escape_string($link, $departmentPrefix . $departmentagency);
-    mysqli_query($link, "INSERT INTO tblcommlog(`triageid`, `dateadded`, `notes`, `creatorid`, `status`) VALUES ('$requestuid', '$todaydate', '$departmentNote', '$updaterid', '1')");
 }
 
 // Add admin notes

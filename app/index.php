@@ -512,18 +512,18 @@ include 'includes/template/head.php';
 					$cardBodyHtml = ob_get_clean();
 
 					$cardFooterHtml = '';
-					if ($_SESSION['is_superuser'] || $_SESSION['is_admin'] || $_SESSION['atype'] == '3' || $_SESSION['atype'] == '4' || $_SESSION['atype'] == '6') {
+					if (canEditRequests() || canDeleteRequests()) {
 						ob_start();
 						?>
 						<div class="row">
-							<?php if ($_SESSION['is_superuser'] || $_SESSION['is_admin'] || $_SESSION['atype'] == '3' || $_SESSION['atype'] == '4'): ?>
+							<?php if (canEditRequests()): ?>
 								<div class="col-xs-6">
 									<a href="<?= $t['edit_request'] ?>?lang=<?= $lang ?>&erid=<?= base64_encode($row['id']) ?>&reqid=<?= urlencode('a11y-' . ($row['requestid'] ?? '')) ?>" class="btn btn-default btn-block"><span class="glyphicon glyphicon-pencil" aria-hidden="true"></span><span class="mrgn-lft-sm"><?= $t['edit'] ?></span></a>
 								</div>
 							<?php endif; ?>
-							<?php if ($_SESSION['is_superuser'] || $_SESSION['is_admin']): ?>
+							<?php if (canDeleteRequests()): ?>
 								<div class="col-xs-6">
-									<a href="includes/delete-request.php?id=<?= $row['id'] ?>" class="wb-lbx btn btn-default btn-block" title="<?= $t['delete_request_title'] ?>"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span><span class="mrgn-lft-sm"><?= $t['delete_label'] ?></span></a>
+									<a href="includes/delete-request.php?id=<?= $row['id'] ?>" class="wb-lbx btn btn-danger btn-block"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span><span class="mrgn-lft-sm"><?= $t['delete_label'] ?></span></a>
 								</div>
 							<?php endif; ?>
 						</div>
