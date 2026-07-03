@@ -7,6 +7,7 @@ This directory contains comprehensive documentation for the Request Management T
 ```
 docs/
 ├── README.md                    # This file
+├── permissions-model.md         # Role and permission source-of-truth (current and target policy)
 ├── migrations/                  # Step-by-step migration guides
 │   └── 001-language-files.md   # Language file consolidation guide
 └── adr/                         # Architecture Decision Records
@@ -14,6 +15,12 @@ docs/
 ```
 
 ## Documentation Types
+
+### Permissions Documentation
+
+- **[Permissions Model](permissions-model.md)**: Current and target role/permission behavior
+  - Status: Active
+  - Scope: account types, admin/superadmin flags, capability matrix, rollout phases
 
 ### Migration Guides (`migrations/`)
 Step-by-step guides for implementing specific improvements from [IMPROVEMENTS.md](../IMPROVEMENTS.md). Each migration is numbered sequentially and includes:
