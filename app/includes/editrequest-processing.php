@@ -16,6 +16,56 @@ $redirectid = base64_encode($requestuid);
 // COLLECT FORM DATA
 // ============================================================================
 
+$inTestMode = isRoleTestMode();
+$isManagerAccount = ((int)($_SESSION['atype'] ?? 0) === 3);
+$isTeamLeadAccount = ((int)($_SESSION['atype'] ?? 0) === 4);
+$isEmployeeAccount = ((int)($_SESSION['atype'] ?? 0) === 5);
+$canFullFieldEdit = !$inTestMode && (!empty($_SESSION['is_superuser']) || !empty($_SESSION['is_admin']));
+$canEditStatusAndWorker = in_array((int)($_SESSION['atype'] ?? 0), [3, 4, 5], true) || $canFullFieldEdit;
+$canEditTitle = $canFullFieldEdit || $isManagerAccount || $isTeamLeadAccount;
+$canEditSlaTimer = $canFullFieldEdit || $isManagerAccount;
+$canEditCommunicationLogs = $canFullFieldEdit || $isManagerAccount || $isTeamLeadAccount || $isEmployeeAccount;
+
+$currentRequestResult = mysqli_query($link, "SELECT * FROM tbltriage WHERE id = '$requestuid' LIMIT 1");
+$currentRequest = $currentRequestResult ? mysqli_fetch_assoc($currentRequestResult) : null;
+
+if (!$currentRequest) {
+    $langCode = $_SESSION['lang'] ?? 'en';
+    header("location:/editrequest.php?lang=$langCode&id=$requestuid&status=failed");
+    exit();
+}
+
+if ($isTeamLeadAccount) {
+    $teamIds = getEffectiveTeamIds($link);
+
+    $requestContactId = 0;
+    $subserviceIdInt = (int)($currentRequest['subserviceid'] ?? 0);
+    $serviceIdInt = (int)($currentRequest['serviceid'] ?? 0);
+    if ($subserviceIdInt > 0) {
+        $contactResult = mysqli_query($link, "SELECT contactid FROM tblsubservices WHERE id = '$subserviceIdInt' LIMIT 1");
+        $contactRow = $contactResult ? mysqli_fetch_assoc($contactResult) : null;
+        $requestContactId = (int)($contactRow['contactid'] ?? 0);
+    }
+    if ($requestContactId === 0 && $serviceIdInt > 0) {
+        $contactResult = mysqli_query($link, "SELECT contactid FROM tblservices WHERE id = '$serviceIdInt' LIMIT 1");
+        $contactRow = $contactResult ? mysqli_fetch_assoc($contactResult) : null;
+        $requestContactId = (int)($contactRow['contactid'] ?? 0);
+    }
+
+    if ($requestContactId <= 0 || !in_array((string)$requestContactId, $teamIds, true)) {
+        header("location:/index.php?lang=$lang&status=accessdenied");
+        exit();
+    }
+}
+
+if ($isEmployeeAccount) {
+    $effectiveEmployeeId = getEffectiveEmployeeUserId($link);
+    if ((int)($currentRequest['workerid'] ?? 0) !== $effectiveEmployeeId) {
+        header("location:/indexonly.php?lang=$lang&status=accessdenied");
+        exit();
+    }
+}
+
 $requestid = getPostValue('requestid');
 $requesttitle = getPostValue('requesttitle');
 $clientlname = getPostValue('clientlname');
@@ -26,7 +76,6 @@ $departmentagencyCommlogId = (int)getPostValue('departmentagency_commlogid', 0);
 $clientphone = getPostValue('clientphone');
 $sourceid = getPostValue('sourceid');
 $statusid = getPostValue('statusid');
-$isTargetResolved = rmt_is_resolved_status_id($link, $statusid);
 $datereceived = getPostValue('datereceived');
 $dateupdated = !empty($_POST['dateupdated']) ? getPostValue('dateupdated') : getTodayDate();
 
@@ -36,14 +85,6 @@ $daterequiredu = empty($daterequired);
 if ($daterequiredu) $daterequired = NULL;
 
 $dateresolved = getPostValue('dateresolved');
-if (empty($dateresolved) && $isTargetResolved) {
-    $dateresolved = getTodayDate();
-} elseif (empty($dateresolved)) {
-    $dateresolvedu = true;
-    $dateresolved = NULL;
-}
-
-$newrequest = getPostValue('newrequest', 'No');
 $slatimer = getPostValue('slatimer');
 $audienceid = getPostValue('audience', 0);
 $bdm = getPostValue('bdm', 0);
@@ -69,6 +110,63 @@ $lang = $_SESSION['lang'] ?? 'en';
 $requestlang = app_normalize_language($lang);
 $requestuidInt = (int) $requestuid;
 $postedRequestLang = app_normalize_language(getPostValue('requestlang', ''), '');
+
+if (!$canEditStatusAndWorker) {
+    $statusid = (string) ($currentRequest['statusid'] ?? '');
+    $workerid = (string) ($currentRequest['workerid'] ?? 0);
+}
+
+if (!$canFullFieldEdit) {
+    // Non-full-edit roles are restricted; manager gets approved exceptions.
+    $requestid = (string) ($currentRequest['requestid'] ?? '');
+    $clientlname = (string) ($currentRequest['clientlname'] ?? '');
+    $clientfname = (string) ($currentRequest['clientfname'] ?? '');
+    $clientemail = (string) ($currentRequest['clientemail'] ?? '');
+    $clientphone = (string) ($currentRequest['clientphone'] ?? '');
+    $sourceid = (string) ($currentRequest['sourceid'] ?? '');
+    $datereceived = (string) ($currentRequest['datereceived'] ?? '');
+    $dateupdated = (string) ($currentRequest['dateupdated'] ?? '');
+    $daterequired = $currentRequest['daterequired'] ?? NULL;
+    $dateresolved = $currentRequest['dateresolved'] ?? NULL;
+    $bdm = (string) ($currentRequest['bdm'] ?? 0);
+    $attach1 = (string) ($currentRequest['attach1'] ?? '');
+    $attach2 = (string) ($currentRequest['attach2'] ?? '');
+    $attach3 = (string) ($currentRequest['attach3'] ?? '');
+    $catalogueid = (string) ($currentRequest['catalogueid'] ?? '');
+    $serviceid = (int) ($currentRequest['serviceid'] ?? 0);
+    $subserviceid = (string) ($currentRequest['subserviceid'] ?? 0);
+    $sprintschedule = (string) ($currentRequest['sprintschedule'] ?? '');
+    $sprintdefects = (string) ($currentRequest['sprintdefects'] ?? '');
+    $audienceid = (string) ($currentRequest['audienceid'] ?? 0);
+    $firstsprintstartdate = (string) ($currentRequest['firstsprintstartdate'] ?? '');
+    $firstsprintenddate = (string) ($currentRequest['firstsprintenddate'] ?? '');
+
+    // Keep communications metadata unchanged outside full-edit scope.
+    $departmentagency = '';
+    $departmentagencyCommlogId = 0;
+
+    if (!$canEditTitle) {
+        $requesttitle = (string) ($currentRequest['title'] ?? '');
+    }
+    if (!$canEditSlaTimer) {
+        $slatimer = (string) ($currentRequest['slatimer'] ?? '');
+    }
+}
+
+// Never write an empty string to DATE columns.
+if (empty($dateupdated)) {
+    $dateupdated = !empty($currentRequest['dateupdated'])
+        ? (string) $currentRequest['dateupdated']
+        : getTodayDate();
+}
+
+$isTargetResolved = rmt_is_resolved_status_id($link, $statusid);
+if (empty($dateresolved) && $isTargetResolved) {
+    $dateresolved = getTodayDate();
+} elseif (empty($dateresolved)) {
+    $dateresolvedu = true;
+    $dateresolved = NULL;
+}
 
 function upsertDepartmentAgencyInNotes($notes, $departmentValue, $lang) {
     $cleanedNotes = preg_replace('/^\s*(Department\/agency|Ministère\/organisme):\s*.*(?:\R|$)/miu', '', (string)$notes);
@@ -119,29 +217,10 @@ if ($cstatusid != $statusid) {
 }
 
 // ============================================================================
-// FILE UPLOADS
+// FILE UPLOADS (disabled)
 // ============================================================================
 
-if (isset($_FILES['fileToUpload']) && !empty($_FILES['fileToUpload']['tmp_name'][0])) {
-    $azureBlobManager = new AzureBlobStorageManager();
-    
-    foreach ($_FILES['fileToUpload']['tmp_name'] as $key => $fileTmpPath) {
-        $fileNameWithExtension = $_FILES['fileToUpload']['name'][$key];
-        $fileType = pathinfo($fileNameWithExtension, PATHINFO_EXTENSION);
-        $fileSize = $_FILES['fileToUpload']['size'][$key] / 1024; // Convert to KB
-        $randomCode = $requestid . "-" . bin2hex(random_bytes(16)) . "." . $fileType;
-        
-        $fileName = mysqli_real_escape_string($link, $fileNameWithExtension);
-        $fileType = mysqli_real_escape_string($link, $fileType);
-        $randomCode = mysqli_real_escape_string($link, $randomCode);
-        
-        if ($azureBlobManager->uploadFile($fileTmpPath, $randomCode)) {
-            $sql = "INSERT INTO tblfiles (`requestid`, `name`, `code`, `type`, `size`) 
-                    VALUES ('$requestid', '$fileName', '$randomCode', '$fileType', '$fileSize')";
-            mysqli_query($link, $sql);
-        }
-    }
-}
+// File uploads are intentionally disabled in edit flow until storage is implemented.
 
 // ============================================================================
 // TEAM ASSIGNMENT & EMAIL NOTIFICATIONS
@@ -415,8 +494,8 @@ if (!empty($firstsprintenddate)) {
 $sql .= " WHERE id='$requestuid'";
 mysqli_query($link, $sql);
 
-// Update communication logs (admin only)
-if (($_SESSION['is_superuser'] || $_SESSION['is_admin'])) {
+// Update communication logs (admin/superadmin/manager)
+if ($canEditCommunicationLogs) {
     if (!empty($commlogid1)) {
         $sql = "UPDATE `tblcommlog` SET `notes` = '$commlog1' WHERE id='$commlogid1'";
         mysqli_query($link, $sql);
@@ -428,31 +507,33 @@ if (($_SESSION['is_superuser'] || $_SESSION['is_admin'])) {
 }
 
 // Keep Department/agency synchronized in client communications notes.
-$targetCommlogId = $departmentagencyCommlogId;
-if ($targetCommlogId <= 0) {
-    $targetResult = mysqli_query($link, "SELECT id FROM tblcommlog WHERE triageid = '$requestuid' AND status = '1' ORDER BY id ASC LIMIT 1");
-    if ($targetResult && mysqli_num_rows($targetResult) > 0) {
-        $targetRow = mysqli_fetch_assoc($targetResult);
-        $targetCommlogId = (int)$targetRow['id'];
+if ($canFullFieldEdit) {
+    $targetCommlogId = $departmentagencyCommlogId;
+    if ($targetCommlogId <= 0) {
+        $targetResult = mysqli_query($link, "SELECT id FROM tblcommlog WHERE triageid = '$requestuid' AND status = '1' ORDER BY id ASC LIMIT 1");
+        if ($targetResult && mysqli_num_rows($targetResult) > 0) {
+            $targetRow = mysqli_fetch_assoc($targetResult);
+            $targetCommlogId = (int)$targetRow['id'];
+        }
+    }
+
+    if ($targetCommlogId > 0) {
+        $notesResult = mysqli_query($link, "SELECT notes FROM tblcommlog WHERE id = '$targetCommlogId' AND triageid = '$requestuid' AND status = '1' LIMIT 1");
+        if ($notesResult && mysqli_num_rows($notesResult) > 0) {
+            $notesRow = mysqli_fetch_assoc($notesResult);
+            $updatedNotes = upsertDepartmentAgencyInNotes($notesRow['notes'], $departmentagency, $lang);
+            $updatedNotesEscaped = mysqli_real_escape_string($link, $updatedNotes);
+            mysqli_query($link, "UPDATE tblcommlog SET notes = '$updatedNotesEscaped' WHERE id = '$targetCommlogId' AND triageid = '$requestuid' AND status = '1'");
+        }
+    } elseif (hasValue($departmentagency)) {
+        $departmentPrefix = ($lang === 'fr') ? 'Ministère/organisme: ' : 'Department/agency: ';
+        $departmentNote = mysqli_real_escape_string($link, $departmentPrefix . $departmentagency);
+        mysqli_query($link, "INSERT INTO tblcommlog(`triageid`, `dateadded`, `notes`, `creatorid`, `status`) VALUES ('$requestuid', '$todaydate', '$departmentNote', '$updaterid', '1')");
     }
 }
 
-if ($targetCommlogId > 0) {
-    $notesResult = mysqli_query($link, "SELECT notes FROM tblcommlog WHERE id = '$targetCommlogId' AND triageid = '$requestuid' AND status = '1' LIMIT 1");
-    if ($notesResult && mysqli_num_rows($notesResult) > 0) {
-        $notesRow = mysqli_fetch_assoc($notesResult);
-        $updatedNotes = upsertDepartmentAgencyInNotes($notesRow['notes'], $departmentagency, $lang);
-        $updatedNotesEscaped = mysqli_real_escape_string($link, $updatedNotes);
-        mysqli_query($link, "UPDATE tblcommlog SET notes = '$updatedNotesEscaped' WHERE id = '$targetCommlogId' AND triageid = '$requestuid' AND status = '1'");
-    }
-} elseif (hasValue($departmentagency)) {
-    $departmentPrefix = ($lang === 'fr') ? 'Ministère/organisme: ' : 'Department/agency: ';
-    $departmentNote = mysqli_real_escape_string($link, $departmentPrefix . $departmentagency);
-    mysqli_query($link, "INSERT INTO tblcommlog(`triageid`, `dateadded`, `notes`, `creatorid`, `status`) VALUES ('$requestuid', '$todaydate', '$departmentNote', '$updaterid', '1')");
-}
-
-// Add admin notes
-if (!empty($adminnotes)) {
+// Add communications notes
+if ($canEditCommunicationLogs && !empty($adminnotes)) {
     $sql = "INSERT INTO tbladminlog(`triageid`, `dateadded`, `notes`, `creatorid`, `status`) 
             VALUES ('$requestuid', '$todaydate', '$adminnotes', '$updaterid', '1')";
     mysqli_query($link, $sql);

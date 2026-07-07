@@ -22,6 +22,15 @@ $lang_code = $_SESSION['lang'] ?? 'en';
 // Use permission flags for admin access instead of account type
 $isTestingDifferentType = isset($_SESSION['is_superuser']) && $_SESSION['is_superuser'] == 1 && isset($_SESSION['atype']) && (int)$_SESSION['atype'] !== 1;
 $isSuperAdmin = !$isTestingDifferentType && isset($_SESSION['is_superuser']) && $_SESSION['is_superuser'] == 1;
+$effectiveAtype = (int)($_SESSION['atype'] ?? 0);
+$isAdminAccount = !$isTestingDifferentType && (
+	(isset($_SESSION['is_admin']) && $_SESSION['is_admin'] == 1) ||
+	$effectiveAtype === 2 ||
+	$effectiveAtype === 1
+);
+$isDirector = !empty($_SESSION['pid']) && $effectiveAtype === 6;
+$isEmployee = !empty($_SESSION['pid']) && $effectiveAtype === 5;
+$canSeeCoreNav = !empty($_SESSION['pid']) && (!isReadOnly() || $isDirector);
 
 // Menu text translations
 $menu_text = [
@@ -81,13 +90,20 @@ $menuLangStrings = $menu_text[$lang_code];
 		<div class="row">
 			<ul class="list-inline menu" role="menubar">
 				<?php
-				if (!empty($_SESSION['pid']) && !isReadOnly()) {
+				if ($canSeeCoreNav) {
 				?>
 					<li><a href="#" class="item"><?= htmlspecialchars($menuLangStrings['overview']) ?></a>
 						<ul class="sm list-unstyled" id="s2" role="menu">
-							<li><a href="/index.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['view_all']) ?></a></li>
+							<?php if ($isEmployee) { ?>
 							<li><a href="/indexonly.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['view_my']) ?></a></li>
 							<li><a href="/indexresolved.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['view_resolved']) ?></a></li>
+							<?php } else { ?>
+							<li><a href="/index.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['view_all']) ?></a></li>
+							<?php if (!$isDirector) { ?>
+							<li><a href="/indexonly.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['view_my']) ?></a></li>
+							<?php } ?>
+							<li><a href="/indexresolved.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['view_resolved']) ?></a></li>
+							<?php } ?>
 						</ul>
 					</li>
 				<?php } ?>
@@ -101,7 +117,7 @@ $menuLangStrings = $menu_text[$lang_code];
 				<?php } else { ?>
 					<li><a href="/openrequest.php?lang=<?= $lang_code ?>" class="item"><?= htmlspecialchars($menuLangStrings['new_request']) ?></a></li>
 				<?php } ?>
-				<?php if (!empty($_SESSION['pid']) && !isReadOnly()) { ?>
+				<?php if ($canSeeCoreNav && !$isEmployee) { ?>
 					<li><a href="/asearch.php?lang=<?= $lang_code ?>" class="item"><?= htmlspecialchars($menuLangStrings['search']) ?></a></li>
 					<li><a href="/reports.php?lang=<?= $lang_code ?>" class="item"><?= htmlspecialchars($menuLangStrings['reports']) ?></a></li>
 				<?php
@@ -111,8 +127,8 @@ $menuLangStrings = $menu_text[$lang_code];
 					<!-- <li><a href="/batch-ace-info.php?lang=<?= $lang_code ?>">Update (batch) AAACT tickets</a></li> -->
 				<?php
 				}
-				// Only Super admins can access admin options
-				if ($isSuperAdmin) {
+				// Administration menu is restricted to admin/superadmin.
+				if ($isAdminAccount || $isSuperAdmin) {
 				?>
 					<li><a href="#s2" class="item"><?= htmlspecialchars($menuLangStrings['admin']) ?></a>
 						<ul class="sm list-unstyled" id="s2" role="menu">

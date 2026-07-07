@@ -12,6 +12,7 @@
 // Grab MySQL connection (includes session management)
 require('sql.php');
 /** @var mysqli $link */
+require('includes/helpers.php');
 
 // Handle language from query string or session
 if (isset($_GET['lang']) && in_array($_GET['lang'], ['en', 'fr'])) {
@@ -291,19 +292,16 @@ include 'includes/template/head.php';
 					}
 					
 					// Now we need to check if this should be displayed
-					$userid = $_SESSION['pid'];
-					$result2 = mysqli_query($link, "SELECT team FROM tblusers WHERE id = '$userid'");
-					$row2 = mysqli_fetch_array($result2);
-					if (!empty($row2)){
-						$teams = $row2[0];
+					$effectiveAtype = (int)($_SESSION['atype'] ?? 0);
+					$effectiveEmployeeId = getEffectiveEmployeeUserId($link);
+
+					if ($effectiveAtype === 5) {
+						$showRequest = ((int)($row['workerid'] ?? 0) === $effectiveEmployeeId);
+					} else {
+						$tarray = getEffectiveTeamIds($link);
+						// Users with global report/list visibility see all requests; others are team-scoped.
+						$showRequest = canViewAllRequests() || in_array($tarraycontactid, $tarray);
 					}
-					if (empty($teams)){
-						$teams = '';
-					}
-					$tarray = explode(",",$teams);
-					
-					// Admins see everything, other users only see requests for their teams
-					$showRequest = ($_SESSION['is_superuser'] || $_SESSION['is_admin'] || $_SESSION['atype'] == '6') || in_array($tarraycontactid, $tarray);
 					
 					if($showRequest) {
 						$hasVisibleRows = true;
@@ -399,9 +397,11 @@ include 'includes/template/head.php';
 
 						ob_start();
 						?>
-						<a class="btn btn-primary btn-block" href="editrequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?= base64_encode($row['id']) ?>&reqid=<?= urlencode('a11y-' . ($row['requestid'] ?? '')) ?>"><?= htmlspecialchars($langFile['indexresolved_edit']) ?> <span class="wb-inv">a11y-<?= htmlspecialchars($row['requestid']) ?> <?= htmlspecialchars($langFile['indexresolved_request']) ?></span></a>
-						<?php if ($_SESSION['is_superuser'] || $_SESSION['is_admin']) { ?>
-							<a class="wb-lbx btn btn-primary btn-block" href="includes/delete-request.php?id=<?= $row['id'] ?>"><?= htmlspecialchars($langFile['indexresolved_delete']) ?><span class="wb-inv"> a11y-<?= htmlspecialchars($row['requestid']) ?> <?= htmlspecialchars($langFile['indexresolved_request']) ?></span></a>
+						<?php if (canEditRequests()) { ?>
+						<a class="btn btn-default btn-block" href="editrequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?= base64_encode($row['id']) ?>&reqid=<?= urlencode('a11y-' . ($row['requestid'] ?? '')) ?>"><span class="glyphicon glyphicon-pencil" aria-hidden="true"></span><span class="mrgn-lft-sm"><?= htmlspecialchars($langFile['indexresolved_edit']) ?></span><span class="wb-inv"> a11y-<?= htmlspecialchars($row['requestid']) ?> <?= htmlspecialchars($langFile['indexresolved_request']) ?></span></a>
+						<?php } ?>
+						<?php if (canDeleteRequests()) { ?>
+							<a class="wb-lbx btn btn-danger btn-block" href="includes/delete-request.php?id=<?= $row['id'] ?>"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span><span class="mrgn-lft-sm"><?= htmlspecialchars($langFile['indexresolved_delete']) ?></span><span class="wb-inv"> a11y-<?= htmlspecialchars($row['requestid']) ?> <?= htmlspecialchars($langFile['indexresolved_request']) ?></span></a>
 						<?php } ?>
 						<?php if(in_array('1', $_SESSION['team'])){?>
 							<a class="btn btn-primary btn-block" href="clonerequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?= base64_encode($row['id']) ?>&toClose=2"><?= htmlspecialchars($langFile['indexresolved_clone']) ?> <span class="wb-inv">a11y-<?= htmlspecialchars($row['requestid']) ?> <?= htmlspecialchars($langFile['indexresolved_request']) ?></span></a>

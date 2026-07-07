@@ -103,13 +103,21 @@ else{
 	$status = "";
 }
 
+$effectiveAtype = (int)($_SESSION['atype'] ?? 0);
+$isTeamLeadAccount = ($effectiveAtype === 4);
+$searchScope = $isTeamLeadAccount ? (($_GET['searchscope'] ?? 'team') === 'all' ? 'all' : 'team') : 'all';
+$userTeamIds = [];
+if ($isTeamLeadAccount) {
+	$userTeamIds = getEffectiveTeamIds($link);
+}
+
 // Process search if any parameters are submitted
 $hasSearchParams = !empty($_GET['requestid']) || !empty($_GET['requesttitle']) || !empty($clientlname) || !empty($clientfname) || 
                     !empty($clientemail) || !empty($clientphone) || !empty($_GET['sourceid']) || !empty($_GET['datereceived']) || 
                     !empty($_GET['datereceived2']) || !empty($_GET['dateupdated']) || !empty($_GET['dateupdated2']) || 
                     !empty($_GET['daterequired']) || !empty($_GET['daterequired2']) || !empty($_GET['dateresolved']) || 
                     !empty($_GET['dateresolved2']) || !empty($_GET['statusid']) || !empty($_GET['catalogueid']) || 
-                    !empty($serviceid) || !empty($subserviceid);
+					!empty($serviceid) || !empty($subserviceid) || ($isTeamLeadAccount && isset($_GET['searchscope']));
 
 if ($hasSearchParams){
 	// Set no search value
@@ -228,11 +236,21 @@ if ($hasSearchParams){
 	$last_space_position = strrpos($SQLSV, ' ');
 	$SQLSV = substr($SQLSV, 0, $last_space_position);
 
+	$teamScopeClause = "";
+	if ($isTeamLeadAccount && $searchScope !== 'all') {
+		if (empty($userTeamIds)) {
+			$teamScopeClause = " AND 1=0";
+		} else {
+			$teamIdCsv = implode(',', array_map('intval', $userTeamIds));
+			$teamScopeClause = " AND ((serviceid IN (SELECT id FROM tblservices WHERE contactid IN ($teamIdCsv))) OR (subserviceid IN (SELECT id FROM tblsubservices WHERE contactid IN ($teamIdCsv))))";
+		}
+	}
+
 	// Create SQL statement
 	if ($nosearch) {
-		$sql = "SELECT * FROM tbltriage WHERE status = '1' ORDER BY requestid DESC LIMIT 1000";
+		$sql = "SELECT * FROM tbltriage WHERE status = '1'" . $teamScopeClause . " ORDER BY requestid DESC LIMIT 1000";
 	} else {
-		$sql = "SELECT * FROM tbltriage WHERE$SQLSV AND status = '1' ORDER BY requestid DESC";
+		$sql = "SELECT * FROM tbltriage WHERE $SQLSV AND status = '1'" . $teamScopeClause . " ORDER BY requestid DESC";
 	}
 	
 	//echo $sql;
@@ -450,6 +468,15 @@ include 'includes/template/head.php';
 			</div>
 			
 			<div class="form-group form-buttons">
+				<?php if ($isTeamLeadAccount) { ?>
+				<div class="form-group">
+					<label for="searchscope"><span class="field-name"><?php echo ($_SESSION['lang'] === 'fr') ? 'Portée de la recherche' : 'Search scope'; ?></span></label>
+					<select class="form-control" id="searchscope" name="searchscope">
+						<option value="team" <?php echo $searchScope === 'team' ? 'selected' : ''; ?>><?php echo ($_SESSION['lang'] === 'fr') ? 'Demandes liées à mon équipe' : 'Requests related to my team'; ?></option>
+						<option value="all" <?php echo $searchScope === 'all' ? 'selected' : ''; ?>><?php echo ($_SESSION['lang'] === 'fr') ? 'Toutes les demandes' : 'All requests'; ?></option>
+					</select>
+				</div>
+				<?php } ?>
 				<button type="submit" class="btn btn-default"><?= htmlspecialchars($langFile['asearch_button']) ?></button>			<button type="reset" class="btn btn-default"><?= htmlspecialchars($langFile['asearch_clear']) ?></button>			</div>
 			</form>
 			<?php
@@ -566,6 +593,22 @@ include 'includes/template/head.php';
 				$result2 = mysqli_query($link, "SELECT $nameField FROM tblstatus WHERE id = '$statusid'");
 				$row2 = mysqli_fetch_array($result2);
 				$statusname = $row2 ? $row2[0] : '';
+
+				// Determine action availability for this request.
+				$canEditThisRequest = false;
+				if (canEditRequests()) {
+					if (isSuperAdmin() || (isset($_SESSION['is_admin']) && $_SESSION['is_admin']) || (int)($_SESSION['atype'] ?? 0) === 3) {
+						$canEditThisRequest = true;
+					} else {
+						$userid = $_SESSION['pid'];
+							$tarray = getEffectiveTeamIds($link);
+						if (in_array($tarraycontactid, $tarray)) {
+							$canEditThisRequest = true;
+						}
+					}
+				}
+
+				$canDeleteThisRequest = canDeleteRequests();
 		?>
 		<div class="col-sm-6 col-md-4 mrgn-bttm-md">
 			<div class="panel <?= $panelClass ?> hght-inhrt">
@@ -608,48 +651,22 @@ include 'includes/template/head.php';
 					</dl>
 					<?php } ?>
 				</div>
+				<?php if ($canEditThisRequest || $canDeleteThisRequest) { ?>
 				<div class="panel-footer">
 					<div class="row">
-						<div class="col-xs-6">
-							<?php
-								// Check if the account is admin level to show this option 
-							if ($_SESSION['is_superuser'] OR $_SESSION['is_admin'] OR $_SESSION['atype']==3 OR $_SESSION['atype']==4) {
-								// Now that we know the user is logged in we need to check if this ticket is assigned to them except for superadmin/admin
-								if ($_SESSION['is_superuser'] OR $_SESSION['is_admin']) {	
-							?>
-									<a class="btn btn-sm btn-default btn-block" href="editrequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?php echo base64_encode($row['id']);?>&reqid=<?php echo urlencode('a11y-' . $row['requestid']); ?>"><?= htmlspecialchars($langFile['asearch_edit']) ?></a>
-							<?php
-									} else  {
-										// User is 3 (Manager) or 4 (Team Leader) so check if they have permission to edit this request
-										// First grab any existing teams
-										$userid = $_SESSION['pid'];
-										$result2 = mysqli_query($link, "SELECT team FROM tblusers WHERE id = '$userid'");
-										$row2 = mysqli_fetch_array($result2);
-										$teams = $row2[0];
-										$tarray = explode(",",$teams);
-											if(in_array($tarraycontactid, $tarray)) {
-									?>
-									<a class="btn btn-sm btn-default btn-block" href="editrequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?php echo base64_encode($row['id']);?>&reqid=<?php echo urlencode('a11y-' . $row['requestid']); ?>"><?= htmlspecialchars($langFile['asearch_edit']) ?></a>
-									<?php 
-											} else {
-									?>
-									<span class="text-muted"><?= htmlspecialchars($langFile['asearch_na']) ?></span>
-									<?php
-											}
-										}
-									}
-							?>
+						<?php if ($canEditThisRequest) { ?>
+						<div class="<?= $canDeleteThisRequest ? 'col-xs-6' : 'col-xs-12' ?>">
+							<a class="btn btn-default btn-block" href="editrequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?php echo base64_encode($row['id']);?>&reqid=<?php echo urlencode('a11y-' . $row['requestid']); ?>"><span class="glyphicon glyphicon-pencil" aria-hidden="true"></span><span class="mrgn-lft-sm"><?= htmlspecialchars($langFile['asearch_edit']) ?></span></a>
 						</div>
-						<div class="col-xs-6">
-						<?php if ($_SESSION['is_superuser'] OR $_SESSION['is_admin']) { ?>
-							<a class="wb-lbx btn btn-sm btn-danger btn-block" href="includes/delete-request.php?id=<?php echo $row['id'];?>"><?= htmlspecialchars($langFile['asearch_delete']) ?></a>
-							<?php } elseif(in_array('1', $_SESSION['team'])){?>
-							<a class="btn btn-sm btn-default btn-block" href="clonerequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?php echo base64_encode($row['id']);?>&toClose=2"><?= htmlspecialchars($langFile['asearch_clone']) ?></a>
-							<?php if(!$isResolvedStatus){?><a class="btn btn-sm btn-default btn-block" href="clonerequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?php echo base64_encode($row['id']);?>&toClose=1"><?= htmlspecialchars($langFile['asearch_clone_close']) ?></a><?php }?>
-							<?php }?>
+						<?php } ?>
+						<?php if ($canDeleteThisRequest) { ?>
+						<div class="<?= $canEditThisRequest ? 'col-xs-6' : 'col-xs-12' ?>">
+							<a class="wb-lbx btn btn-danger btn-block" href="includes/delete-request.php?id=<?php echo $row['id'];?>"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span><span class="mrgn-lft-sm"><?= htmlspecialchars($langFile['asearch_delete']) ?></span></a>
 						</div>
+						<?php } ?>
 					</div>
 				</div>
+				<?php } ?>
 			</div>
 		</div>
 		<?php } ?>

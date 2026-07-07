@@ -12,9 +12,17 @@ if (isset($_SERVER['SCRIPT_FILENAME']) && realpath(__FILE__) === realpath((strin
 
 <h2><?php echo $t['staff_use_only']; ?></h2>
 
+<?php
+$inTestMode = isRoleTestMode();
+$canFullFieldEdit = !$inTestMode && (!empty($_SESSION['is_superuser']) || !empty($_SESSION['is_admin']));
+$isManagerAccount = ((int)($_SESSION['atype'] ?? 0) === 3);
+$canEditWorkerid = in_array((int)($_SESSION['atype'] ?? 0), [3, 4, 5], true) || $canFullFieldEdit;
+$canEditSlaTimer = $canFullFieldEdit || $isManagerAccount;
+?>
+
 <div class="form-group">
     <label for="workerid"><span class="field-name"><?php echo $t['assigned_team_member']; ?>:</span></label>
-    <select class="form-control" id="workerid" name="workerid">
+    <select class="form-control" id="workerid" name="workerid" <?php echo $canEditWorkerid ? '' : 'disabled="disabled"'; ?>>
         <option value="0"><?php echo $t['select_team_member']; ?></option>
         <?php 
         // Resolve the contact ID for this request from first-tier catalogue.
@@ -60,11 +68,14 @@ if (isset($_SERVER['SCRIPT_FILENAME']) && realpath(__FILE__) === realpath((strin
             }
         ?>
     </select>
+    <?php if (!$canEditWorkerid): ?>
+    <input type="hidden" name="workerid" value="<?php echo (int)($row['workerid'] ?? 0); ?>" />
+    <?php endif; ?>
 </div>
 
 <?php
-// SLA timer - locked to certain account types
-if (canManageSLA()) {
+// SLA timer - editable by full-edit roles and manager
+if ($canEditSlaTimer) {
     $eslatimer = $row['slatimer'];
     if (empty($eslatimer) || is_null($eslatimer)) {
         $slatimer = $row['datereceived'];
@@ -91,18 +102,5 @@ if (canManageSLA()) {
 ?>
 <input type="hidden" id="slatimer" name="slatimer" value="<?php echo $slatimer; ?>" />
 <?php	
-}
-
-// New request field - Admin only
-if (isset($_SESSION['firstname']) && $_SESSION['firstname'] == "Admin") {
-?>
-<div class="form-group">
-    <label for="newrequest"><span class="field-name"><?php echo $t['is_new_request']; ?></span></label>
-    <select class="form-control" id="newrequest" name="newrequest" required>
-        <option value="No" selected>No</option>
-        <option value="Yes">Yes</option>
-    </select>
-</div>
-<?php
 }
 ?>

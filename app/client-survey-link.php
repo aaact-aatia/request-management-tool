@@ -64,6 +64,9 @@ $encodedRequestPublicId = $request !== null ? urlencode('a11y-' . (string)$reque
 $frLink = ($baseUrl !== '' ? $baseUrl : '') . '/client-survey.php?lang=fr&erid=' . $encodedTriageId . '&reqid=' . $encodedRequestPublicId;
 $enLink = ($baseUrl !== '' ? $baseUrl : '') . '/client-survey.php?lang=en&erid=' . $encodedTriageId . '&reqid=' . $encodedRequestPublicId;
 
+$returnTo = isset($_GET['return_to']) ? trim((string)$_GET['return_to']) : '';
+$isValidReturnTo = preg_match('#^/editrequest\.php\?#', $returnTo) === 1;
+
 if ($request !== null && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = isset($_POST['email_action']) ? trim((string) $_POST['email_action']) : '';
     $clientEmail = trim((string) ($request['clientemail'] ?? ''));
@@ -119,6 +122,19 @@ if ($request !== null && $_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $actionStatus = 'send_failed';
         }
+    }
+
+    if ($isValidReturnTo && $action === 'send_resolved_email') {
+        $returnStatus = 'resolvedemailfailed';
+        if ($actionStatus === 'resolved_sent') {
+            $returnStatus = 'resolvedemailsent';
+        } elseif ($actionStatus === 'missing_email') {
+            $returnStatus = 'resolvedemailmissing';
+        }
+
+        $separator = (strpos($returnTo, '?') !== false) ? '&' : '?';
+        header('Location: ' . $returnTo . $separator . 'status=' . urlencode($returnStatus));
+        exit();
     }
 }
 

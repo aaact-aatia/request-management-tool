@@ -340,11 +340,70 @@ if (!empty($_SESSION['pid'])):
             // Get the current testing account type name
             $testAtype = $_SESSION['atype'];
 			$nameField = ($langCode === 'fr') ? 'namefr' : 'nameen';
-            $result = mysqli_query($link, "SELECT {$nameField} FROM tblaccounttype WHERE id = '{$testAtype}'");
-            if ($row = mysqli_fetch_array($result)) {
+			$testRoleResult = mysqli_query($link, "SELECT {$nameField} FROM tblaccounttype WHERE id = '{$testAtype}'");
+			if ($testRoleResult && ($testRoleRow = mysqli_fetch_array($testRoleResult))) {
                 echo ' <span style="color: #6d5003; font-weight: bold;">| 🔧 ';
 				echo ($langCode === 'en' ? 'Testing as: ' : 'Tester en tant que : ');
-                echo htmlspecialchars($row[$nameField]) . '</span>';
+				echo htmlspecialchars($testRoleRow[$nameField]) . '</span>';
+
+				if ((int)$testAtype === 5) {
+					$effectiveEmployeeId = 0;
+					if (!empty($_SESSION['test_employee_id'])) {
+						$effectiveEmployeeId = (int)$_SESSION['test_employee_id'];
+					}
+					if ($effectiveEmployeeId <= 0) {
+						$effectiveEmployeeId = (int)($_SESSION['pid'] ?? 0);
+					}
+
+					$employeeLabel = ($langCode === 'fr') ? 'Employé' : 'Employee';
+					if ($effectiveEmployeeId > 0) {
+						$employeeResult = mysqli_query($link, "SELECT firstname, lastname, email FROM tblusers WHERE id = '$effectiveEmployeeId' LIMIT 1");
+						$employeeRow = $employeeResult ? mysqli_fetch_assoc($employeeResult) : null;
+						if (!empty($employeeRow)) {
+							$fullName = trim((string)($employeeRow['firstname'] ?? '') . ' ' . (string)($employeeRow['lastname'] ?? ''));
+							$email = (string)($employeeRow['email'] ?? '');
+							if ($fullName !== '' && $email !== '') {
+								$employeeLabelValue = $fullName . ' (' . $email . ')';
+							} elseif ($fullName !== '') {
+								$employeeLabelValue = $fullName;
+							} else {
+								$employeeLabelValue = $email;
+							}
+							echo ' <span style="color: #6d5003; font-weight: bold;">| ' . htmlspecialchars($employeeLabel) . ': ' . htmlspecialchars($employeeLabelValue) . '</span>';
+						}
+					}
+				}
+
+				if ((int)$testAtype === 4) {
+					// Show effective team scope only for Team Lead role testing.
+					$effectiveTeamIds = [];
+					if (!empty($_SESSION['test_team_ids'])) {
+						$effectiveTeamIds = array_values(array_filter(array_map('trim', explode(',', (string)$_SESSION['test_team_ids']))));
+					} else {
+						$currentUserId = (int)($_SESSION['pid'] ?? 0);
+						if ($currentUserId > 0) {
+							$teamResult = mysqli_query($link, "SELECT team FROM tblusers WHERE id = '$currentUserId' LIMIT 1");
+							$teamRow = $teamResult ? mysqli_fetch_assoc($teamResult) : null;
+							$effectiveTeamIds = array_values(array_filter(array_map('trim', explode(',', (string)($teamRow['team'] ?? '')))));
+						}
+					}
+
+					$teamNames = [];
+					if (!empty($effectiveTeamIds)) {
+						$teamIdCsv = implode(',', array_map('intval', $effectiveTeamIds));
+						$teamNameResult = mysqli_query($link, "SELECT {$nameField} FROM tblteams WHERE status = 1 AND id IN ($teamIdCsv) ORDER BY {$nameField} ASC");
+						while ($teamNameResult && ($teamNameRow = mysqli_fetch_assoc($teamNameResult))) {
+							if (!empty($teamNameRow[$nameField])) {
+								$teamNames[] = $teamNameRow[$nameField];
+							}
+						}
+					}
+
+					echo ' <span style="color: #6d5003; font-weight: bold;">| ';
+					echo ($langCode === 'en' ? 'Team scope: ' : 'Portée équipe : ');
+					echo htmlspecialchars(!empty($teamNames) ? implode(', ', $teamNames) : ($langCode === 'en' ? 'None selected' : 'Aucune sélectionnée'));
+					echo '</span>';
+				}
             }
         }
         ?>
