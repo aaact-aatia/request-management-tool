@@ -217,29 +217,10 @@ if ($cstatusid != $statusid) {
 }
 
 // ============================================================================
-// FILE UPLOADS
+// FILE UPLOADS (disabled)
 // ============================================================================
 
-if (isset($_FILES['fileToUpload']) && !empty($_FILES['fileToUpload']['tmp_name'][0])) {
-    $azureBlobManager = new AzureBlobStorageManager();
-    
-    foreach ($_FILES['fileToUpload']['tmp_name'] as $key => $fileTmpPath) {
-        $fileNameWithExtension = $_FILES['fileToUpload']['name'][$key];
-        $fileType = pathinfo($fileNameWithExtension, PATHINFO_EXTENSION);
-        $fileSize = $_FILES['fileToUpload']['size'][$key] / 1024; // Convert to KB
-        $randomCode = $requestid . "-" . bin2hex(random_bytes(16)) . "." . $fileType;
-        
-        $fileName = mysqli_real_escape_string($link, $fileNameWithExtension);
-        $fileType = mysqli_real_escape_string($link, $fileType);
-        $randomCode = mysqli_real_escape_string($link, $randomCode);
-        
-        if ($azureBlobManager->uploadFile($fileTmpPath, $randomCode)) {
-            $sql = "INSERT INTO tblfiles (`requestid`, `name`, `code`, `type`, `size`) 
-                    VALUES ('$requestid', '$fileName', '$randomCode', '$fileType', '$fileSize')";
-            mysqli_query($link, $sql);
-        }
-    }
-}
+// File uploads are intentionally disabled in edit flow until storage is implemented.
 
 // ============================================================================
 // TEAM ASSIGNMENT & EMAIL NOTIFICATIONS

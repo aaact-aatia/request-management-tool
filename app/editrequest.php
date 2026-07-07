@@ -596,9 +596,6 @@ include 'includes/template/head.php';
                 <?php endfor; ?>
             </div>
             <?php endif; ?>
-
-            <?php include 'includes/editrequest-files-section.php'; ?>
-            
             <?php include 'includes/editrequest-communications-section.php'; ?>
             
             <?php if (canEditRequests()): ?>
