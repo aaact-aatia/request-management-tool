@@ -75,8 +75,8 @@ Access classes:
 All write endpoints under `app/includes/add-*.php`, `app/includes/edit-*.php`, and `app/includes/delete-*.php` are `ROLE_RESTRICTED` and must be denied to guests.
 
 For request update handlers specifically, backend validation must enforce the same field-tier policy as the UI:
-- Employee: client fields only
-- Team lead and manager: client + workflow fields
+- Employee: scoped workflow updates only (status, assignment, communications log)
+- Team lead and manager: scoped workflow updates; Team Lead cannot manage SLA
 - Admin and superadmin: client + workflow + internal fields
 - Superadmin in test mode: selected role rules only
 

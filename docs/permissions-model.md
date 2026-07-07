@@ -120,42 +120,37 @@ Director UI policy clarifications (approved):
 - Request-card footers should be hidden when no permitted actions remain.
 - Directors must not see request-detail actions that trigger outbound workflow (for example, send resolved/survey email actions).
 
-## Known Enforcement Gaps (To Be Addressed)
+## Remaining Enforcement Gaps
 
-Current code discovery identified these high-priority inconsistencies:
+Most role-hardening work is now implemented for Director, Manager, Team Lead, and Employee flows. The remaining high-priority gaps are:
 
-1. Route intent is not fully documented as public vs authenticated vs role-restricted.
-2. Some endpoints/pages do not enforce an explicit policy boundary (public intake, limited guest view, or authenticated-only).
-3. AJAX endpoints have inconsistent authentication expectations.
-4. Mixed direct session checks and helper-based checks.
-5. Duplicated role logic in multiple files.
-6. Magic-number account-type checks (`3`, `4`, `5`, `6`) repeated across pages.
+1. Non-authenticated/public route hardening is still incomplete for all endpoints (especially AJAX/public dependencies).
+2. Guest linked-view field allowlist/denylist enforcement still needs explicit verification against implementation.
+3. Some pages still use direct session conditionals instead of helper-only checks.
+4. Employee report access is not fully assignment-scoped when reached directly by URL (menu is scoped, route guard remains broad).
+5. Automated permission tests are still missing; validation is currently lint + manual smoke testing.
 
 ## Rollout Plan
 
 ### Phase 1: Documentation and Source-of-Truth
 
-- Publish this permissions model document.
-- Add architecture decision record for permission centralization.
-- Add a route/access inventory for sensitive pages and endpoints.
+- Completed: publish and maintain permissions model and route/access inventory.
+- Remaining: add architecture decision record for permission centralization.
 
 ### Phase 2: Helper Consolidation
 
-- Centralize role checks in helper functions.
-- Remove duplicated inline role conditionals.
-- Normalize account-type comparisons to strict integer checks.
+- Completed in large part: helper-based role checks and scoped test-mode helpers are in place.
+- Remaining: remove residual inline conditionals and normalize all account-type checks to strict integer comparisons.
 
 ### Phase 3: Guard Enforcement
 
-- Add/verify login checks for sensitive pages.
-- Add explicit auth guards to AJAX endpoints.
-- Ensure role-based action checks call centralized helpers.
+- Completed in large part for internal list/detail/edit/report scope behavior.
+- Remaining: finish explicit auth and public-data boundary checks for AJAX/public routes.
 
 ### Phase 4: Verification
 
-- Update permission unit tests to match this matrix.
-- Run Docker PHP lint on changed files.
-- Run role-based manual smoke checks (superadmin/admin/manager/team lead/employee/director).
+- Completed repeatedly: Docker PHP lint for changed files and role-based manual smoke checks.
+- Remaining: add and run automated permission tests to match this matrix.
 
 ## Test and Validation Strategy
 
@@ -180,4 +175,3 @@ Planned follow-up docs:
 
 - `docs/adr/002-permissions-source-of-truth.md`
 - `docs/migrations/002-permissions-hardening.md`
-- `docs/permissions-route-access-map.md`
