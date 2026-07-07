@@ -146,8 +146,8 @@ The following mapping is the proposed implementation contract for role-based fie
 | `clientemail`, `clientphone` | Client | No | No | No | Edit | Edit | Client contact fields. |
 | `departmentagency` | Client | No | No | No | Edit | Edit | Stored in communications note prefix; keep client-tier. |
 | `attach1`, `attach2`, `attach3` (URL attachments) | Client | Edit | Edit | Edit | Edit | Edit | Deferred for now in implementation scope. |
-| File uploads (`fileToUpload`) | Workflow | No | Edit | Edit | Edit | Edit | Deferred for now in implementation scope. |
-| File delete actions | Internal | No | No | No | Edit | Edit | Deferred for now in implementation scope. |
+| File uploads (`fileToUpload`) | Workflow | No | No | No | No | No | Disabled in edit flow until storage is implemented. |
+| File delete actions | Internal | No | No | No | Edit | Edit | Edit-flow file deletion unavailable while storage migration is pending. |
 | `catalogueid`, `serviceid`, `subserviceid` | Workflow | No | No | No | Edit | Edit | Routing and service ownership impact. |
 | `statusid` | Workflow | Edit | Edit | Edit | Edit | Edit | Workflow/state transition field. |
 | `datereceived`, `dateupdated`, `daterequired`, `dateresolved` | Workflow | No | No | No | Edit | Edit | Operational timeline fields. |
@@ -158,19 +158,20 @@ The following mapping is the proposed implementation contract for role-based fie
 | `slatimer` | Workflow | No | No | Edit | Edit | Edit | Manager can update SLA timer; Team Lead cannot. |
 | Communications log update (`commlog1`, `commlog2`) | Internal | Edit | Edit | Edit | Edit | Edit | Employee, Team Lead, and Manager can update existing communication logs. |
 | Communications log add (`adminnotes`) | Internal | Edit | Edit | Edit | Edit | Edit | Employee, Team Lead, and Manager can add logs. |
-| Communications log delete | Internal | Edit | Edit | Edit | Edit | Edit | Employee, Team Lead, and Manager can delete logs. |
+| Communications log delete | Internal | No | No | No | Edit | Edit | Request-detail comm-log delete controls currently follow request-delete permissions. |
 | `requestid` | Internal | No | No | No | Edit | Edit | Identifier mutation should be privileged only. |
 | `newrequest` | Internal | No | No | No | Edit | Edit | Legacy field currently shown when session first name equals "Admin"; candidate for removal. |
 
 Implementation notes from current code:
-- `app/editrequest.php` currently grants broad edit form access with `canEditRequests()` and does not yet gate most fields by role tier.
-- `app/includes/editrequest-processing.php` currently updates many fields regardless of role, except communications updates that are admin-gated.
-- `app/includes/editrequest-communications-section.php` textareas are read-only only for read-only role, but backend accepts updates only for admin/superadmin; UI/backend mismatch should be normalized.
-- Communications delete currently appears admin/superadmin-only in request views and should be updated to reflect approved Employee/Lead/Manager delete policy.
-- `app/viewrequest.php` action buttons must stay aligned to request-level edit permission (including hidden/blocked resolved-email send action for non-edit roles).
+- Team Lead and Employee scoping is enforced in overview, resolved, detail, and edit flows using effective test-mode identities where applicable.
+- Edit processing now enforces role-tier restrictions for Employee, Team Lead, and Manager workflow fields.
+- Communications log add/update is enabled for Employee, Team Lead, and Manager in edit flow.
+- Edit-flow file uploads are intentionally disabled until storage implementation is complete.
+- Request-detail communication delete actions still follow request-delete permission boundaries.
 
 Communications log implementation status:
-- Communications log behavior is documented in policy but fixes are intentionally deferred to a dedicated follow-up change.
+- Add/update behavior for Employee, Team Lead, and Manager is implemented in edit flow.
+- Delete behavior remains aligned to request-delete controls and may be revisited in a dedicated follow-up change.
 
 Role-test scoping notes:
 - Team Lead testing may select a test team scope.
