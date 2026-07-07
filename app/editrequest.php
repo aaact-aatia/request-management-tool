@@ -57,6 +57,9 @@ $translations = [
         'client_lastname' => 'Client last name',
         'client_firstname' => 'Client first name',
         'client_email' => 'Client email',
+        'request_language' => 'Original requested language',
+        'language_english' => 'English',
+        'language_french' => 'French',
         'department_agency' => 'Department/agency',
         'client_phone' => 'Client phone #',
         'request_source' => 'Request source',
@@ -103,8 +106,15 @@ $translations = [
         'assigned_team_member' => 'Assigned AAACT team member',
         'select_team_member' => 'Select a team member',
         'reset_sla_timer' => 'Need to reset the SLA timer? Choose the new start date',
-        'is_new_request' => 'Is this a new request ?',
         'update_request' => 'Update request',
+        'resolved_email_status' => 'Resolved email to client',
+        'resolved_email_sent' => 'Sent',
+        'resolved_email_not_sent' => 'Not sent',
+        'resolved_email_sent_on' => 'Sent on',
+        'resolved_email_send_button' => 'Send resolved + survey email now',
+        'resolved_email_missing_client' => 'Client email is required before sending this message.',
+        'resolved_email_send_success' => 'Resolved + survey email was sent successfully.',
+        'resolved_email_send_failed' => 'Failed to send resolved + survey email. Please try again.',
         'required' => 'required',
         'fieldset_request_details' => 'Request details',
         'fieldset_client_info' => 'Client information',
@@ -126,6 +136,9 @@ $translations = [
         'client_lastname' => 'Nom du client',
         'client_firstname' => 'Prénom du client',
         'client_email' => 'Courriel du client',
+        'request_language' => 'Langue demandee initialement',
+        'language_english' => 'Anglais',
+        'language_french' => 'Francais',
         'department_agency' => 'Ministère/organisme',
         'client_phone' => 'Numéro de téléphone client',
         'request_source' => 'Source de la demande',
@@ -172,8 +185,15 @@ $translations = [
         'assigned_team_member' => 'Membre assigné de l\'équipe AATIA',
         'select_team_member' => 'Sélectionnez un membre de l\'équipe',
         'reset_sla_timer' => 'Besoin de réinitialiser la minuterie SLA? Choisissez la nouvelle date de début',
-        'is_new_request' => 'C\'est une nouvelle requete ??',
         'update_request' => 'Mettre à jour',
+        'resolved_email_status' => 'Courriel de resolution au client',
+        'resolved_email_sent' => 'Envoye',
+        'resolved_email_not_sent' => 'Non envoye',
+        'resolved_email_sent_on' => 'Envoye le',
+        'resolved_email_send_button' => 'Envoyer le courriel de resolution + sondage',
+        'resolved_email_missing_client' => 'Une adresse courriel client est requise avant l\'envoi.',
+        'resolved_email_send_success' => 'Le courriel de resolution + sondage a ete envoye avec succes.',
+        'resolved_email_send_failed' => 'Echec de l\'envoi du courriel de resolution + sondage. Veuillez reessayer.',
         'required' => 'requis',
         'fieldset_request_details' => 'Détails de la demande',
         'fieldset_client_info' => 'Renseignements sur le client',
@@ -216,10 +236,25 @@ include 'includes/template/head.php';
             <h2><?php echo $t['success_heading']; ?></h2>
             <ul><li><?php echo $t['success_message']; ?></li></ul>
         </section>
+        <?php elseif ($status == 'resolvedemailsent'): ?>
+        <section class="alert alert-success">
+            <h2><?php echo $t['success_heading']; ?></h2>
+            <ul><li><?php echo $t['resolved_email_send_success']; ?></li></ul>
+        </section>
         <?php elseif ($status == 'failed'): ?>
         <section class="alert alert-danger">
             <h2><?php echo $t['failed_heading']; ?></h2>
             <ul><li><?php echo $t['failed_message']; ?></li></ul>
+        </section>
+        <?php elseif ($status == 'resolvedemailmissing'): ?>
+        <section class="alert alert-danger">
+            <h2><?php echo $t['failed_heading']; ?></h2>
+            <ul><li><?php echo $t['resolved_email_missing_client']; ?></li></ul>
+        </section>
+        <?php elseif ($status == 'resolvedemailfailed'): ?>
+        <section class="alert alert-danger">
+            <h2><?php echo $t['failed_heading']; ?></h2>
+            <ul><li><?php echo $t['resolved_email_send_failed']; ?></li></ul>
         </section>
         <?php endif; ?>
         
@@ -231,8 +266,40 @@ include 'includes/template/head.php';
         if (mysqli_num_rows($result) > 0) {
             $row = mysqli_fetch_assoc($result);
 
+            $effectiveAtype = (int)($_SESSION['atype'] ?? 0);
+            if ($effectiveAtype === 4) {
+                $teamIds = getEffectiveTeamIds($link);
+
+                $requestContactId = 0;
+                $subserviceIdInt = (int)($row['subserviceid'] ?? 0);
+                $serviceIdInt = (int)($row['serviceid'] ?? 0);
+                if ($subserviceIdInt > 0) {
+                    $contactResult = mysqli_query($link, "SELECT contactid FROM tblsubservices WHERE id = '$subserviceIdInt' LIMIT 1");
+                    $contactRow = $contactResult ? mysqli_fetch_assoc($contactResult) : null;
+                    $requestContactId = (int)($contactRow['contactid'] ?? 0);
+                }
+                if ($requestContactId === 0 && $serviceIdInt > 0) {
+                    $contactResult = mysqli_query($link, "SELECT contactid FROM tblservices WHERE id = '$serviceIdInt' LIMIT 1");
+                    $contactRow = $contactResult ? mysqli_fetch_assoc($contactResult) : null;
+                    $requestContactId = (int)($contactRow['contactid'] ?? 0);
+                }
+
+                if ($requestContactId <= 0 || !in_array((string)$requestContactId, $teamIds, true)) {
+                    header("location:/index.php?lang=$lang&status=accessdenied");
+                    exit();
+                }
+            } elseif ($effectiveAtype === 5) {
+                $effectiveEmployeeId = getEffectiveEmployeeUserId($link);
+                if ((int)($row['workerid'] ?? 0) !== $effectiveEmployeeId) {
+                    header("location:/indexonly.php?lang=$lang&status=accessdenied");
+                    exit();
+                }
+            }
+
             $departmentAgency = '';
             $departmentAgencyCommlogId = 0;
+            $originalRequestLang = rmt_get_request_language($link, (int) $requestuid, $_SESSION['lang'] ?? 'en');
+            $originalRequestLangLabel = ($originalRequestLang === 'fr') ? $t['language_french'] : $t['language_english'];
             $deptPrefixRegex = '/^(Department\/agency|Ministère\/organisme):\s*(.+)$/miu';
 
             $deptResult = mysqli_query($link, "SELECT id, notes FROM tblcommlog WHERE triageid = '$requestuid' AND status = '1' ORDER BY id ASC");
@@ -247,8 +314,16 @@ include 'includes/template/head.php';
         
         <form method="POST" enctype="multipart/form-data" action="editrequest.php?lang=<?php echo $lang; ?>&id=<?php echo $row['id']; ?>">
 
+            <input type="hidden" name="requestlang" value="<?php echo htmlspecialchars($originalRequestLang, ENT_QUOTES, 'UTF-8'); ?>">
+
             <?php
-            $readonly = !isAdmin();
+            $inTestMode = isRoleTestMode();
+            $canFullFieldEdit = !$inTestMode && (!empty($_SESSION['is_superuser']) || !empty($_SESSION['is_admin']));
+            $isManagerAccount = ((int)($_SESSION['atype'] ?? 0) === 3);
+            $isTeamLeadAccount = ((int)($_SESSION['atype'] ?? 0) === 4);
+            $canEditStatusAndWorker = canEditRequests();
+            $canEditTitle = $canFullFieldEdit || $isManagerAccount || $isTeamLeadAccount;
+            $readonly = !$canFullFieldEdit;
             $serviceid = $row['serviceid'];
             $catalogueid = $row['catalogueid'];
             $dateRange = getDateRange(1);
@@ -264,7 +339,7 @@ include 'includes/template/head.php';
                     while ($status = mysqli_fetch_assoc($statuses)) {
                         $statusOptions[] = $status;
                     }
-                    echo renderSelect('statusid', $t['status'], $statusOptions, $row['statusid'], true, $t['select_status']);
+                    echo renderSelect('statusid', $t['status'], $statusOptions, $row['statusid'], true, $t['select_status'], !$canEditStatusAndWorker);
                     ?>
                 </div>
             </div>
@@ -279,7 +354,7 @@ include 'includes/template/head.php';
                         <?php echo renderTextInput('requestid', $t['request_id'], $row['requestid'], true, $readonly); ?>
                     </div>
                     <div class="col-md-6">
-                        <?php echo renderTextInput('requesttitle', $t['request_title'], $row['title'], true); ?>
+                        <?php echo renderTextInput('requesttitle', $t['request_title'], $row['title'], true, !$canEditTitle); ?>
                     </div>
                 </div>
 
@@ -295,7 +370,7 @@ include 'includes/template/head.php';
                     <div class="col-md-6">
                         <div class="form-group">
                             <label for="catalogueid"><span class="field-name"><?php echo $t['catalogue_name']; ?>: <strong>(<?php echo $t['required']; ?>)</strong></span></label>
-                            <select class="form-control" id="catalogueid" name="catalogueid" onchange="ajax1(this.value)" required>
+                            <select class="form-control" id="catalogueid" name="catalogueid" onchange="ajax1(this.value)" required <?php echo $readonly ? 'disabled="disabled"' : ''; ?>>
                                 <option value=""><?php echo $t['select_catalogue']; ?></option>
                                 <?php foreach ($catalogueOptions as $option): ?>
                                 <option value="<?php echo $option['id']; ?>" <?php echo ($row['catalogueid'] == $option['id']) ? 'selected' : ''; ?>>
@@ -310,7 +385,7 @@ include 'includes/template/head.php';
                         <?php $services = getServicesByCategory($link, $row['catalogueid'], $lang); ?>
                         <div class="form-group divservice">
                             <label for="serviceid"><span class="field-name"><?php echo $t['service_name']; ?>:</span></label>
-                            <select class="form-control" id="serviceid" name="serviceid" onchange="ajax2(this.value)">
+                            <select class="form-control" id="serviceid" name="serviceid" onchange="ajax2(this.value)" <?php echo $readonly ? 'disabled="disabled"' : ''; ?>>
                                 <option value=""><?php echo $t['select_service']; ?></option>
                                 <?php while ($service = mysqli_fetch_assoc($services)): ?>
                                 <option value="<?php echo $service['id']; ?>" <?php echo ($row['serviceid'] == $service['id']) ? 'selected' : ''; ?>>
@@ -335,7 +410,7 @@ include 'includes/template/head.php';
                     <div class="col-md-6">
                         <div class="form-group divsubservice">
                             <label for="subserviceid"><span class="field-name"><?php echo $t['subservice_name']; ?>: <strong>(<?php echo $t['required']; ?>)</strong></span></label>
-                            <select class="form-control" id="subserviceid" name="subserviceid" required>
+                            <select class="form-control" id="subserviceid" name="subserviceid" required <?php echo $readonly ? 'disabled="disabled"' : ''; ?>>
                                 <option value=""><?php echo $t['select_subservice']; ?></option>
                                 <?php while ($subservice = mysqli_fetch_assoc($subservices)): ?>
                                 <option value="<?php echo $subservice['id']; ?>" <?php echo ($row['subserviceid'] == $subservice['id']) ? 'selected' : ''; ?>>
@@ -357,18 +432,18 @@ include 'includes/template/head.php';
                 <!-- Sprint fields (subserviceid 95 only) -->
                 <div class="row">
                     <div class="col-md-6">
-                        <?php echo renderDateInput('firstsprintstartdate', $t['first_sprint_start'], $row['firstsprintstartdate']); ?>
+                        <?php echo renderDateInput('firstsprintstartdate', $t['first_sprint_start'], $row['firstsprintstartdate'], false, null, null, $readonly); ?>
                     </div>
                     <div class="col-md-6">
-                        <?php echo renderDateInput('firstsprintenddate', $t['first_sprint_end'], $row['firstsprintenddate']); ?>
+                        <?php echo renderDateInput('firstsprintenddate', $t['first_sprint_end'], $row['firstsprintenddate'], false, null, null, $readonly); ?>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-md-6">
-                        <?php echo renderTextInput('sprintschedule', $t['sprint_schedule'], $row['sprintschedule']); ?>
+                        <?php echo renderTextInput('sprintschedule', $t['sprint_schedule'], $row['sprintschedule'], false, $readonly); ?>
                     </div>
                     <div class="col-md-6">
-                        <?php echo renderTextInput('sprintdefects', $t['sprint_defects'], $row['sprintdefects']); ?>
+                        <?php echo renderTextInput('sprintdefects', $t['sprint_defects'], $row['sprintdefects'], false, $readonly); ?>
                     </div>
                 </div>
                 <?php endif; ?>
@@ -382,20 +457,20 @@ include 'includes/template/head.php';
                 <!-- Row: Client Last Name | Client First Name -->
                 <div class="row">
                     <div class="col-md-6">
-                        <?php echo renderTextInput('clientlname', $t['client_lastname'], $row['clientlname']); ?>
+                        <?php echo renderTextInput('clientlname', $t['client_lastname'], $row['clientlname'], false, $readonly); ?>
                     </div>
                     <div class="col-md-6">
-                        <?php echo renderTextInput('clientfname', $t['client_firstname'], $row['clientfname']); ?>
+                        <?php echo renderTextInput('clientfname', $t['client_firstname'], $row['clientfname'], false, $readonly); ?>
                     </div>
                 </div>
 
                 <!-- Row: Client Email | Department/Agency -->
                 <div class="row">
                     <div class="col-md-6">
-                        <?php echo renderTextInput('clientemail', $t['client_email'], $row['clientemail'], false, false, 'email'); ?>
+                        <?php echo renderTextInput('clientemail', $t['client_email'], $row['clientemail'], false, $readonly, 'email'); ?>
                     </div>
                     <div class="col-md-6">
-                        <?php echo renderTextInput('departmentagency', $t['department_agency'], $departmentAgency); ?>
+                        <?php echo renderTextInput('departmentagency', $t['department_agency'], $departmentAgency, false, $readonly); ?>
                         <input type="hidden" name="departmentagency_commlogid" value="<?php echo $departmentAgencyCommlogId; ?>">
                     </div>
                 </div>
@@ -403,32 +478,38 @@ include 'includes/template/head.php';
                 <!-- Row: Client Phone | Request Source (catalogue 4) | Audience (catalogues 8/9) -->
                 <div class="row">
                     <div class="col-md-6">
-                        <?php echo renderTextInput('clientphone', $t['client_phone'], $row['clientphone'], false, false, 'tel', 'data-rule-phoneUS="true"'); ?>
+                        <?php echo renderTextInput('requestlang_display', $t['request_language'], $originalRequestLangLabel . ' (' . $originalRequestLang . ')', false, true); ?>
                     </div>
-                    <?php if ($catalogueid == 4): ?>
                     <div class="col-md-6">
+                        <?php echo renderTextInput('clientphone', $t['client_phone'], $row['clientphone'], false, $readonly, 'tel', 'data-rule-phoneUS="true"'); ?>
+                    </div>
+                </div>
+
+                <?php if ($catalogueid == 4 || (in_array($catalogueid, [8, 9]) && hasValue($row['audienceid'] ?? null))): ?>
+                <div class="row">
+                    <div class="col-md-6">
+                        <?php if ($catalogueid == 4): ?>
                         <?php
                         $sources = getDropdownOptions($link, 'tblsources', $lang);
                         $sourceOptions = [];
                         while ($source = mysqli_fetch_assoc($sources)) {
                             $sourceOptions[] = $source;
                         }
-                        echo renderSelect('sourceid', $t['request_source'], $sourceOptions, $row['sourceid'], true, $t['select_source']);
+                        echo renderSelect('sourceid', $t['request_source'], $sourceOptions, $row['sourceid'], true, $t['select_source'], $readonly);
                         ?>
-                    </div>
-                    <?php elseif (in_array($catalogueid, [8, 9]) && hasValue($row['audienceid'] ?? null)): ?>
-                    <div class="col-md-6">
+                        <?php elseif (in_array($catalogueid, [8, 9]) && hasValue($row['audienceid'] ?? null)): ?>
                         <?php
                         $audiences = getDropdownOptions($link, 'tblaudience', $lang);
                         $audienceOptions = [];
                         while ($audience = mysqli_fetch_assoc($audiences)) {
                             $audienceOptions[] = $audience;
                         }
-                        echo renderSelect('audience', $t['intended_audience'], $audienceOptions, $row['audienceid'], true, $t['select_audience']);
+                        echo renderSelect('audience', $t['intended_audience'], $audienceOptions, $row['audienceid'], true, $t['select_audience'], $readonly);
                         ?>
+                        <?php endif; ?>
                     </div>
-                    <?php endif; ?>
                 </div>
+                <?php endif; ?>
 
             </fieldset>
 
@@ -439,24 +520,55 @@ include 'includes/template/head.php';
                 <!-- Row: Date Received | Date Updated -->
                 <div class="row">
                     <div class="col-md-6">
-                        <?php echo renderDateInput('datereceived', $t['date_received'], $row['datereceived'], true, $dateRange['min'], $dateRange['max']); ?>
+                        <?php echo renderDateInput('datereceived', $t['date_received'], $row['datereceived'], true, $dateRange['min'], $dateRange['max'], $readonly); ?>
                     </div>
                     <div class="col-md-6">
-                        <?php echo renderDateInput('dateupdated', $t['date_updated'], $row['dateupdated'], false, $dateRange['min'], $dateRange['max']); ?>
+                        <?php echo renderDateInput('dateupdated', $t['date_updated'], $row['dateupdated'], false, $dateRange['min'], $dateRange['max'], $readonly); ?>
                     </div>
                 </div>
 
                 <!-- Row: Date Required | Date Resolved -->
                 <div class="row">
                     <div class="col-md-6">
-                        <?php echo renderDateInput('daterequired', $dateRequiredLabel, $row['daterequired'], false, $dateRange['min'], $dateRange['max']); ?>
+                        <?php echo renderDateInput('daterequired', $dateRequiredLabel, $row['daterequired'], false, $dateRange['min'], $dateRange['max'], $readonly); ?>
                     </div>
                     <div class="col-md-6">
-                        <?php echo renderDateInput('dateresolved', $t['date_resolved'], $row['dateresolved'], false, $dateRange['min'], $dateRange['max']); ?>
+                        <?php echo renderDateInput('dateresolved', $t['date_resolved'], $row['dateresolved'], false, $dateRange['min'], $dateRange['max'], $readonly); ?>
                     </div>
                 </div>
 
             </fieldset>
+
+            <?php
+            $resolvedEmailSentDate = rmt_get_resolved_email_sent_date($link, (int)$requestuid);
+            $resolvedEmailSent = ($resolvedEmailSentDate !== null && $resolvedEmailSentDate !== '');
+            $isResolvedStatus = rmt_is_resolved_status_id($link, (int)($row['statusid'] ?? 0));
+            $encodedRequestId = base64_encode((string)$requestuid);
+            $returnToEdit = rawurlencode('/editrequest.php?lang=' . $lang . '&id=' . (int)$row['id']);
+            ?>
+            <?php if ($isResolvedStatus): ?>
+            <h2><?php echo $t['resolved_email_status']; ?></h2>
+            <p>
+                <strong><?php echo $resolvedEmailSent ? $t['resolved_email_sent'] : $t['resolved_email_not_sent']; ?></strong>
+                <?php if ($resolvedEmailSent): ?>
+                - <?php echo $t['resolved_email_sent_on']; ?> <?php echo htmlspecialchars($resolvedEmailSentDate, ENT_QUOTES, 'UTF-8'); ?>
+                <?php endif; ?>
+            </p>
+            <?php if (!$resolvedEmailSent): ?>
+                <?php if (!empty($row['clientemail'])): ?>
+                <div class="form-group form-buttons">
+                    <button type="submit"
+                            class="btn btn-primary"
+                            formaction="/client-survey-link.php?lang=<?php echo $lang; ?>&erid=<?php echo urlencode($encodedRequestId); ?>&return_to=<?php echo $returnToEdit; ?>"
+                            formmethod="post"
+                            name="email_action"
+                            value="send_resolved_email"><?php echo $t['resolved_email_send_button']; ?></button>
+                </div>
+                <?php else: ?>
+                <p><?php echo $t['resolved_email_missing_client']; ?></p>
+                <?php endif; ?>
+            <?php endif; ?>
+            <?php endif; ?>
 
             <?php
             // Attachments section
@@ -478,15 +590,12 @@ include 'includes/template/head.php';
                 <div class="col-md-6">
                     <div class="form-group">
                         <label for="attach<?php echo $i; ?>"><span class="field-name"><?php echo $t['attachment']; ?> <?php echo $i; ?> (<?php echo $t['url_only']; ?>)</span><?php echo $viewLink; ?></label>
-                        <input type="text" autocomplete="url" class="form-control" id="attach<?php echo $i; ?>" name="attach<?php echo $i; ?>" value="<?php echo htmlspecialchars($attachValue ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                        <input type="text" autocomplete="url" class="form-control" id="attach<?php echo $i; ?>" name="attach<?php echo $i; ?>" value="<?php echo htmlspecialchars($attachValue ?? '', ENT_QUOTES, 'UTF-8'); ?>" <?php echo $readonly ? 'readonly="readonly"' : ''; ?>>
                     </div>
                 </div>
                 <?php endfor; ?>
             </div>
             <?php endif; ?>
-
-            <?php include 'includes/editrequest-files-section.php'; ?>
-            
             <?php include 'includes/editrequest-communications-section.php'; ?>
             
             <?php if (canEditRequests()): ?>

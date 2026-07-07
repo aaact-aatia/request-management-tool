@@ -16,6 +16,56 @@ $redirectid = base64_encode($requestuid);
 // COLLECT FORM DATA
 // ============================================================================
 
+$inTestMode = isRoleTestMode();
+$isManagerAccount = ((int)($_SESSION['atype'] ?? 0) === 3);
+$isTeamLeadAccount = ((int)($_SESSION['atype'] ?? 0) === 4);
+$isEmployeeAccount = ((int)($_SESSION['atype'] ?? 0) === 5);
+$canFullFieldEdit = !$inTestMode && (!empty($_SESSION['is_superuser']) || !empty($_SESSION['is_admin']));
+$canEditStatusAndWorker = in_array((int)($_SESSION['atype'] ?? 0), [3, 4, 5], true) || $canFullFieldEdit;
+$canEditTitle = $canFullFieldEdit || $isManagerAccount || $isTeamLeadAccount;
+$canEditSlaTimer = $canFullFieldEdit || $isManagerAccount;
+$canEditCommunicationLogs = $canFullFieldEdit || $isManagerAccount || $isTeamLeadAccount || $isEmployeeAccount;
+
+$currentRequestResult = mysqli_query($link, "SELECT * FROM tbltriage WHERE id = '$requestuid' LIMIT 1");
+$currentRequest = $currentRequestResult ? mysqli_fetch_assoc($currentRequestResult) : null;
+
+if (!$currentRequest) {
+    $langCode = $_SESSION['lang'] ?? 'en';
+    header("location:/editrequest.php?lang=$langCode&id=$requestuid&status=failed");
+    exit();
+}
+
+if ($isTeamLeadAccount) {
+    $teamIds = getEffectiveTeamIds($link);
+
+    $requestContactId = 0;
+    $subserviceIdInt = (int)($currentRequest['subserviceid'] ?? 0);
+    $serviceIdInt = (int)($currentRequest['serviceid'] ?? 0);
+    if ($subserviceIdInt > 0) {
+        $contactResult = mysqli_query($link, "SELECT contactid FROM tblsubservices WHERE id = '$subserviceIdInt' LIMIT 1");
+        $contactRow = $contactResult ? mysqli_fetch_assoc($contactResult) : null;
+        $requestContactId = (int)($contactRow['contactid'] ?? 0);
+    }
+    if ($requestContactId === 0 && $serviceIdInt > 0) {
+        $contactResult = mysqli_query($link, "SELECT contactid FROM tblservices WHERE id = '$serviceIdInt' LIMIT 1");
+        $contactRow = $contactResult ? mysqli_fetch_assoc($contactResult) : null;
+        $requestContactId = (int)($contactRow['contactid'] ?? 0);
+    }
+
+    if ($requestContactId <= 0 || !in_array((string)$requestContactId, $teamIds, true)) {
+        header("location:/index.php?lang=$lang&status=accessdenied");
+        exit();
+    }
+}
+
+if ($isEmployeeAccount) {
+    $effectiveEmployeeId = getEffectiveEmployeeUserId($link);
+    if ((int)($currentRequest['workerid'] ?? 0) !== $effectiveEmployeeId) {
+        header("location:/indexonly.php?lang=$lang&status=accessdenied");
+        exit();
+    }
+}
+
 $requestid = getPostValue('requestid');
 $requesttitle = getPostValue('requesttitle');
 $clientlname = getPostValue('clientlname');
@@ -26,7 +76,6 @@ $departmentagencyCommlogId = (int)getPostValue('departmentagency_commlogid', 0);
 $clientphone = getPostValue('clientphone');
 $sourceid = getPostValue('sourceid');
 $statusid = getPostValue('statusid');
-$isTargetResolved = rmt_is_resolved_status_id($link, $statusid);
 $datereceived = getPostValue('datereceived');
 $dateupdated = !empty($_POST['dateupdated']) ? getPostValue('dateupdated') : getTodayDate();
 
@@ -36,14 +85,6 @@ $daterequiredu = empty($daterequired);
 if ($daterequiredu) $daterequired = NULL;
 
 $dateresolved = getPostValue('dateresolved');
-if (empty($dateresolved) && $isTargetResolved) {
-    $dateresolved = getTodayDate();
-} elseif (empty($dateresolved)) {
-    $dateresolvedu = true;
-    $dateresolved = NULL;
-}
-
-$newrequest = getPostValue('newrequest', 'No');
 $slatimer = getPostValue('slatimer');
 $audienceid = getPostValue('audience', 0);
 $bdm = getPostValue('bdm', 0);
@@ -65,6 +106,67 @@ $commlogid2 = getPostValue('commlogid2');
 $adminnotes = getPostValue('adminnotes');
 $updaterid = $_SESSION['pid'];
 $todaydate = getTodayDate();
+$lang = $_SESSION['lang'] ?? 'en';
+$requestlang = app_normalize_language($lang);
+$requestuidInt = (int) $requestuid;
+$postedRequestLang = app_normalize_language(getPostValue('requestlang', ''), '');
+
+if (!$canEditStatusAndWorker) {
+    $statusid = (string) ($currentRequest['statusid'] ?? '');
+    $workerid = (string) ($currentRequest['workerid'] ?? 0);
+}
+
+if (!$canFullFieldEdit) {
+    // Non-full-edit roles are restricted; manager gets approved exceptions.
+    $requestid = (string) ($currentRequest['requestid'] ?? '');
+    $clientlname = (string) ($currentRequest['clientlname'] ?? '');
+    $clientfname = (string) ($currentRequest['clientfname'] ?? '');
+    $clientemail = (string) ($currentRequest['clientemail'] ?? '');
+    $clientphone = (string) ($currentRequest['clientphone'] ?? '');
+    $sourceid = (string) ($currentRequest['sourceid'] ?? '');
+    $datereceived = (string) ($currentRequest['datereceived'] ?? '');
+    $dateupdated = (string) ($currentRequest['dateupdated'] ?? '');
+    $daterequired = $currentRequest['daterequired'] ?? NULL;
+    $dateresolved = $currentRequest['dateresolved'] ?? NULL;
+    $bdm = (string) ($currentRequest['bdm'] ?? 0);
+    $attach1 = (string) ($currentRequest['attach1'] ?? '');
+    $attach2 = (string) ($currentRequest['attach2'] ?? '');
+    $attach3 = (string) ($currentRequest['attach3'] ?? '');
+    $catalogueid = (string) ($currentRequest['catalogueid'] ?? '');
+    $serviceid = (int) ($currentRequest['serviceid'] ?? 0);
+    $subserviceid = (string) ($currentRequest['subserviceid'] ?? 0);
+    $sprintschedule = (string) ($currentRequest['sprintschedule'] ?? '');
+    $sprintdefects = (string) ($currentRequest['sprintdefects'] ?? '');
+    $audienceid = (string) ($currentRequest['audienceid'] ?? 0);
+    $firstsprintstartdate = (string) ($currentRequest['firstsprintstartdate'] ?? '');
+    $firstsprintenddate = (string) ($currentRequest['firstsprintenddate'] ?? '');
+
+    // Keep communications metadata unchanged outside full-edit scope.
+    $departmentagency = '';
+    $departmentagencyCommlogId = 0;
+
+    if (!$canEditTitle) {
+        $requesttitle = (string) ($currentRequest['title'] ?? '');
+    }
+    if (!$canEditSlaTimer) {
+        $slatimer = (string) ($currentRequest['slatimer'] ?? '');
+    }
+}
+
+// Never write an empty string to DATE columns.
+if (empty($dateupdated)) {
+    $dateupdated = !empty($currentRequest['dateupdated'])
+        ? (string) $currentRequest['dateupdated']
+        : getTodayDate();
+}
+
+$isTargetResolved = rmt_is_resolved_status_id($link, $statusid);
+if (empty($dateresolved) && $isTargetResolved) {
+    $dateresolved = getTodayDate();
+} elseif (empty($dateresolved)) {
+    $dateresolvedu = true;
+    $dateresolved = NULL;
+}
 
 function upsertDepartmentAgencyInNotes($notes, $departmentValue, $lang) {
     $cleanedNotes = preg_replace('/^\s*(Department\/agency|Ministère\/organisme):\s*.*(?:\R|$)/miu', '', (string)$notes);
@@ -115,42 +217,27 @@ if ($cstatusid != $statusid) {
 }
 
 // ============================================================================
-// FILE UPLOADS
+// FILE UPLOADS (disabled)
 // ============================================================================
 
-if (isset($_FILES['fileToUpload']) && !empty($_FILES['fileToUpload']['tmp_name'][0])) {
-    $azureBlobManager = new AzureBlobStorageManager();
-    
-    foreach ($_FILES['fileToUpload']['tmp_name'] as $key => $fileTmpPath) {
-        $fileNameWithExtension = $_FILES['fileToUpload']['name'][$key];
-        $fileType = pathinfo($fileNameWithExtension, PATHINFO_EXTENSION);
-        $fileSize = $_FILES['fileToUpload']['size'][$key] / 1024; // Convert to KB
-        $randomCode = $requestid . "-" . bin2hex(random_bytes(16)) . "." . $fileType;
-        
-        $fileName = mysqli_real_escape_string($link, $fileNameWithExtension);
-        $fileType = mysqli_real_escape_string($link, $fileType);
-        $randomCode = mysqli_real_escape_string($link, $randomCode);
-        
-        if ($azureBlobManager->uploadFile($fileTmpPath, $randomCode)) {
-            $sql = "INSERT INTO tblfiles (`requestid`, `name`, `code`, `type`, `size`) 
-                    VALUES ('$requestid', '$fileName', '$randomCode', '$fileType', '$fileSize')";
-            mysqli_query($link, $sql);
-        }
-    }
-}
+// File uploads are intentionally disabled in edit flow until storage is implemented.
 
 // ============================================================================
 // TEAM ASSIGNMENT & EMAIL NOTIFICATIONS
 // ============================================================================
 
-// Get previous values
-$result2 = mysqli_query($link, "SELECT catalogueid, serviceid, subserviceid, workerid 
-                                FROM tbltriage WHERE id = '$requestuid'");
+// Get previous values for reassignment checks.
+$result2 = mysqli_query($link, "SELECT catalogueid, serviceid, subserviceid, workerid FROM tbltriage WHERE id = '$requestuid'");
 $row2 = mysqli_fetch_assoc($result2);
 $ccatalogueid = $row2['catalogueid'];
 $cserviceid = $row2['serviceid'];
 $csubserviceid = $row2['subserviceid'];
 $prevWorkerid = $row2['workerid'];
+
+// Always honor the request's original language preference for outbound client notifications.
+$requestlang = in_array($postedRequestLang, ['en', 'fr'], true)
+    ? $postedRequestLang
+    : rmt_get_request_language($link, $requestuidInt, $requestlang);
 
 // Determine team contact
 $contactid = -1;
@@ -204,15 +291,17 @@ $row = mysqli_fetch_assoc($result);
 $statusEn = $row ? $row['nameen'] : "";
 $statusFr = $row ? $row['namefr'] : "";
 
-$domain = "https://gcdc-ssc-ictaccess-linux-aaact-rmt-dev-asv.azurewebsites.net/";
+$domain = app_base_url();
 $nrequestemailid = base64_encode($requestuid);
 
 $personalisation = [
     "requestid" => $requestid,
     "nrequestid" => $requestid,
     "teamname" => $teamname,
+    "team_email" => $teamemail,
     "requesttitle" => $requesttitle,
     "nrequestemailid" => $nrequestemailid,
+    "nrequestemail" => $clientemail,
     "client_fname" => $clientfname,
     "client_lname" => $clientlname,
     "client_email" => $clientemail,
@@ -222,24 +311,15 @@ $personalisation = [
     "service_name" => $servicename,
     "status_en" => $statusEn,
     "status_fr" => $statusFr,
-    "url" => $domain . "/viewrequest.php?lang=en&erid=" . $nrequestemailid . "&reqid=" . urlencode("a11y-" . $requestid)
+    "url" => app_url("viewrequest.php?lang=" . $requestlang . "&erid=" . $nrequestemailid . "&reqid=" . urlencode("a11y-" . $requestid))
 ];
 
 // Send emails based on status changes
 if (!$isCurrentResolved && $isTargetResolved) {
     // Queue one survey send for newly resolved requests only.
     mysqli_query($link, "UPDATE tbltriage SET cssurvey = 0 WHERE id = '$requestuid' AND (cssurvey IS NULL)");
-
-    // Request resolved
-    sendEmail($teamemail, "5dc8291c-a0b4-4fa0-8733-40c28d3ddf6d", json_encode($personalisation));
-    if ($teamemail != "daiu-anci@ssc-spc.gc.ca") {
-        sendEmail($clientemail, "49ffefeb-21d0-4508-ac5f-46b41c0f3348", json_encode($personalisation));
-    }
 } elseif ($cstatusid != $statusid) {
-    // Status changed (not to resolved)
-    if ($teamemail != "daiu-anci@ssc-spc.gc.ca") {
-        sendEmail($clientemail, "393948e5-39fe-418e-b16f-73a1f084a0f2", json_encode($personalisation));
-    }
+    // Status changed (not to resolved) - client notifications are manual only.
 }
 
 // Send emails for service/subservice changes
@@ -262,12 +342,20 @@ if ($csubserviceid != $subserviceid && hasValue($subserviceid)) {
         $result = mysqli_query($link, "SELECT * FROM tblteams WHERE id = '$contactid'");
         $row = mysqli_fetch_assoc($result);
         $personalisation['teamname'] = $row['nameen'];
+        $personalisation['team_email'] = $row['email'];
         $newTeamEmail = $row['email'];
         
-        sendEmail($newTeamEmail, "8270de12-b994-4d29-aa22-428434fd9896", json_encode($personalisation));
-        if ($newTeamEmail != "daiu-anci@ssc-spc.gc.ca") {
-            sendEmail($clientemail, "8bb9cc70-dd1a-46d6-9843-c73cbe4e70f0", json_encode($personalisation));
-        }
+        $reassignedTemplate = app_notify_template_id('notification_generic');
+        $reassignedCategory = rmt_notification_template_category('reassigned');
+        $reassignedTeamPersonalisation = $personalisation + [
+            'notification_event' => 'reassigned',
+            'template_category_id' => $reassignedCategory['id'],
+            'template_category_name_en' => $reassignedCategory['name_en'],
+            'template_category_name_fr' => $reassignedCategory['name_fr'],
+            'subject' => rmt_notification_subject('reassigned', 'internal', 'en', $personalisation),
+            'message' => rmt_notification_message('reassigned', 'internal', 'en', $personalisation),
+        ];
+        sendEmail($newTeamEmail, $reassignedTemplate, json_encode($reassignedTeamPersonalisation), ['recipientType' => 'internal']);
     }
 } elseif ($cserviceid != $serviceid) {
     // Service changed
@@ -283,12 +371,59 @@ if ($csubserviceid != $subserviceid && hasValue($subserviceid)) {
         $result = mysqli_query($link, "SELECT * FROM tblteams WHERE id = '$contactid'");
         $row = mysqli_fetch_assoc($result);
         $personalisation['teamname'] = $row['nameen'];
+        $personalisation['team_email'] = $row['email'];
         $newTeamEmail = $row['email'];
         
-        sendEmail($newTeamEmail, "8270de12-b994-4d29-aa22-428434fd9896", json_encode($personalisation));
-        if ($newTeamEmail != "daiu-anci@ssc-spc.gc.ca") {
-            sendEmail($clientemail, "8bb9cc70-dd1a-46d6-9843-c73cbe4e70f0", json_encode($personalisation));
+        $reassignedTemplate = app_notify_template_id('notification_generic');
+        $reassignedCategory = rmt_notification_template_category('reassigned');
+        $reassignedTeamPersonalisation = $personalisation + [
+            'notification_event' => 'reassigned',
+            'template_category_id' => $reassignedCategory['id'],
+            'template_category_name_en' => $reassignedCategory['name_en'],
+            'template_category_name_fr' => $reassignedCategory['name_fr'],
+            'subject' => rmt_notification_subject('reassigned', 'internal', 'en', $personalisation),
+            'message' => rmt_notification_message('reassigned', 'internal', 'en', $personalisation),
+        ];
+        sendEmail($newTeamEmail, $reassignedTemplate, json_encode($reassignedTeamPersonalisation), ['recipientType' => 'internal']);
+    }
+}
+
+// Send notification when assigned worker changes.
+$prevWorkerIdInt = (int) ($prevWorkerid ?? 0);
+$workerIdInt = (int) ($workerid ?? 0);
+if ($workerIdInt > 0 && $workerIdInt !== $prevWorkerIdInt) {
+    $workerResult = mysqli_query($link, "SELECT firstname, lastname, email, atype FROM tblusers WHERE id = '$workerIdInt' AND status = '1' LIMIT 1");
+    $workerRow = $workerResult ? mysqli_fetch_assoc($workerResult) : null;
+    $workerEmail = trim((string) ($workerRow['email'] ?? ''));
+
+    if ($workerEmail !== '') {
+        $workerName = trim(((string) ($workerRow['firstname'] ?? '')) . ' ' . ((string) ($workerRow['lastname'] ?? '')));
+        if ($workerName !== '') {
+            $personalisation['teamname'] = $workerName;
         }
+        $personalisation['team_email'] = $workerEmail;
+
+        $workerRoleKey = 'assignee';
+        $workerAtype = (int) ($workerRow['atype'] ?? 0);
+        if ($workerAtype === 3) {
+            $workerRoleKey = 'manager';
+        } elseif ($workerAtype === 4) {
+            $workerRoleKey = 'team_lead';
+        } elseif ($workerAtype === 1) {
+            $workerRoleKey = 'admin';
+        }
+
+        $reassignedTemplate = app_notify_template_id('notification_generic');
+        $reassignedCategory = rmt_notification_template_category('reassigned');
+        $reassignedWorkerPersonalisation = $personalisation + [
+            'notification_event' => 'reassigned',
+            'template_category_id' => $reassignedCategory['id'],
+            'template_category_name_en' => $reassignedCategory['name_en'],
+            'template_category_name_fr' => $reassignedCategory['name_fr'],
+            'subject' => rmt_notification_subject('reassigned', 'internal', 'en', $personalisation),
+            'message' => rmt_notification_message('reassigned', 'internal', 'en', $personalisation),
+        ];
+        sendEmail($workerEmail, $reassignedTemplate, json_encode($reassignedWorkerPersonalisation), ['recipientType' => 'internal', 'recipientRole' => $workerRoleKey]);
     }
 }
 
@@ -359,8 +494,8 @@ if (!empty($firstsprintenddate)) {
 $sql .= " WHERE id='$requestuid'";
 mysqli_query($link, $sql);
 
-// Update communication logs (admin only)
-if (($_SESSION['is_superuser'] || $_SESSION['is_admin'])) {
+// Update communication logs (admin/superadmin/manager)
+if ($canEditCommunicationLogs) {
     if (!empty($commlogid1)) {
         $sql = "UPDATE `tblcommlog` SET `notes` = '$commlog1' WHERE id='$commlogid1'";
         mysqli_query($link, $sql);
@@ -372,31 +507,33 @@ if (($_SESSION['is_superuser'] || $_SESSION['is_admin'])) {
 }
 
 // Keep Department/agency synchronized in client communications notes.
-$targetCommlogId = $departmentagencyCommlogId;
-if ($targetCommlogId <= 0) {
-    $targetResult = mysqli_query($link, "SELECT id FROM tblcommlog WHERE triageid = '$requestuid' AND status = '1' ORDER BY id ASC LIMIT 1");
-    if ($targetResult && mysqli_num_rows($targetResult) > 0) {
-        $targetRow = mysqli_fetch_assoc($targetResult);
-        $targetCommlogId = (int)$targetRow['id'];
+if ($canFullFieldEdit) {
+    $targetCommlogId = $departmentagencyCommlogId;
+    if ($targetCommlogId <= 0) {
+        $targetResult = mysqli_query($link, "SELECT id FROM tblcommlog WHERE triageid = '$requestuid' AND status = '1' ORDER BY id ASC LIMIT 1");
+        if ($targetResult && mysqli_num_rows($targetResult) > 0) {
+            $targetRow = mysqli_fetch_assoc($targetResult);
+            $targetCommlogId = (int)$targetRow['id'];
+        }
+    }
+
+    if ($targetCommlogId > 0) {
+        $notesResult = mysqli_query($link, "SELECT notes FROM tblcommlog WHERE id = '$targetCommlogId' AND triageid = '$requestuid' AND status = '1' LIMIT 1");
+        if ($notesResult && mysqli_num_rows($notesResult) > 0) {
+            $notesRow = mysqli_fetch_assoc($notesResult);
+            $updatedNotes = upsertDepartmentAgencyInNotes($notesRow['notes'], $departmentagency, $lang);
+            $updatedNotesEscaped = mysqli_real_escape_string($link, $updatedNotes);
+            mysqli_query($link, "UPDATE tblcommlog SET notes = '$updatedNotesEscaped' WHERE id = '$targetCommlogId' AND triageid = '$requestuid' AND status = '1'");
+        }
+    } elseif (hasValue($departmentagency)) {
+        $departmentPrefix = ($lang === 'fr') ? 'Ministère/organisme: ' : 'Department/agency: ';
+        $departmentNote = mysqli_real_escape_string($link, $departmentPrefix . $departmentagency);
+        mysqli_query($link, "INSERT INTO tblcommlog(`triageid`, `dateadded`, `notes`, `creatorid`, `status`) VALUES ('$requestuid', '$todaydate', '$departmentNote', '$updaterid', '1')");
     }
 }
 
-if ($targetCommlogId > 0) {
-    $notesResult = mysqli_query($link, "SELECT notes FROM tblcommlog WHERE id = '$targetCommlogId' AND triageid = '$requestuid' AND status = '1' LIMIT 1");
-    if ($notesResult && mysqli_num_rows($notesResult) > 0) {
-        $notesRow = mysqli_fetch_assoc($notesResult);
-        $updatedNotes = upsertDepartmentAgencyInNotes($notesRow['notes'], $departmentagency, $lang);
-        $updatedNotesEscaped = mysqli_real_escape_string($link, $updatedNotes);
-        mysqli_query($link, "UPDATE tblcommlog SET notes = '$updatedNotesEscaped' WHERE id = '$targetCommlogId' AND triageid = '$requestuid' AND status = '1'");
-    }
-} elseif (hasValue($departmentagency)) {
-    $departmentPrefix = ($lang === 'fr') ? 'Ministère/organisme: ' : 'Department/agency: ';
-    $departmentNote = mysqli_real_escape_string($link, $departmentPrefix . $departmentagency);
-    mysqli_query($link, "INSERT INTO tblcommlog(`triageid`, `dateadded`, `notes`, `creatorid`, `status`) VALUES ('$requestuid', '$todaydate', '$departmentNote', '$updaterid', '1')");
-}
-
-// Add admin notes
-if (!empty($adminnotes)) {
+// Add communications notes
+if ($canEditCommunicationLogs && !empty($adminnotes)) {
     $sql = "INSERT INTO tbladminlog(`triageid`, `dateadded`, `notes`, `creatorid`, `status`) 
             VALUES ('$requestuid', '$todaydate', '$adminnotes', '$updaterid', '1')";
     mysqli_query($link, $sql);

@@ -12,22 +12,40 @@ if (isset($_SERVER['SCRIPT_FILENAME']) && realpath(__FILE__) === realpath((strin
 
 <h2><?php echo $t['staff_use_only']; ?></h2>
 
+<?php
+$inTestMode = isRoleTestMode();
+$canFullFieldEdit = !$inTestMode && (!empty($_SESSION['is_superuser']) || !empty($_SESSION['is_admin']));
+$isManagerAccount = ((int)($_SESSION['atype'] ?? 0) === 3);
+$canEditWorkerid = in_array((int)($_SESSION['atype'] ?? 0), [3, 4, 5], true) || $canFullFieldEdit;
+$canEditSlaTimer = $canFullFieldEdit || $isManagerAccount;
+?>
+
 <div class="form-group">
     <label for="workerid"><span class="field-name"><?php echo $t['assigned_team_member']; ?>:</span></label>
-    <select class="form-control" id="workerid" name="workerid">
+    <select class="form-control" id="workerid" name="workerid" <?php echo $canEditWorkerid ? '' : 'disabled="disabled"'; ?>>
         <option value="0"><?php echo $t['select_team_member']; ?></option>
         <?php 
-        // Resolve the contact ID for this request from subservice or service
+        // Resolve the contact ID for this request from first-tier catalogue.
+        // Fall back to legacy service/subservice ownership for older records.
         $contactid = 0;
-        if (!empty($row['subserviceid'])) {
-            $r = mysqli_query($link, "SELECT contactid FROM tblsubservices WHERE id='" . (int)$row['subserviceid'] . "'");
+        $hasCatalogueContact = function_exists('rmt_db_column_exists')
+            && rmt_db_column_exists($link, 'tblcatalogue', 'contactid');
+        if ($hasCatalogueContact && !empty($row['catalogueid'])) {
+            $r = mysqli_query($link, "SELECT contactid FROM tblcatalogue WHERE id='" . (int)$row['catalogueid'] . "'");
             $cr = mysqli_fetch_assoc($r);
-            $contactid = $cr['contactid'] ?? 0;
+            $contactid = (int)($cr['contactid'] ?? 0);
+        }
+        if (!empty($row['subserviceid'])) {
+            if (!$contactid) {
+                $r = mysqli_query($link, "SELECT contactid FROM tblsubservices WHERE id='" . (int)$row['subserviceid'] . "'");
+                $cr = mysqli_fetch_assoc($r);
+                $contactid = (int)($cr['contactid'] ?? 0);
+            }
         }
         if (!$contactid && !empty($row['serviceid'])) {
             $r = mysqli_query($link, "SELECT contactid FROM tblservices WHERE id='" . (int)$row['serviceid'] . "'");
             $cr = mysqli_fetch_assoc($r);
-            $contactid = $cr['contactid'] ?? 0;
+            $contactid = (int)($cr['contactid'] ?? 0);
         }
 
         // Default to AAACT (contactid=1) when service has no team assignment
@@ -50,11 +68,14 @@ if (isset($_SERVER['SCRIPT_FILENAME']) && realpath(__FILE__) === realpath((strin
             }
         ?>
     </select>
+    <?php if (!$canEditWorkerid): ?>
+    <input type="hidden" name="workerid" value="<?php echo (int)($row['workerid'] ?? 0); ?>" />
+    <?php endif; ?>
 </div>
 
 <?php
-// SLA timer - locked to certain account types
-if (canManageSLA()) {
+// SLA timer - editable by full-edit roles and manager
+if ($canEditSlaTimer) {
     $eslatimer = $row['slatimer'];
     if (empty($eslatimer) || is_null($eslatimer)) {
         $slatimer = $row['datereceived'];
@@ -81,18 +102,5 @@ if (canManageSLA()) {
 ?>
 <input type="hidden" id="slatimer" name="slatimer" value="<?php echo $slatimer; ?>" />
 <?php	
-}
-
-// New request field - Admin only
-if (isset($_SESSION['firstname']) && $_SESSION['firstname'] == "Admin") {
-?>
-<div class="form-group">
-    <label for="newrequest"><span class="field-name"><?php echo $t['is_new_request']; ?></span></label>
-    <select class="form-control" id="newrequest" name="newrequest" required>
-        <option value="No" selected>No</option>
-        <option value="Yes">Yes</option>
-    </select>
-</div>
-<?php
 }
 ?>

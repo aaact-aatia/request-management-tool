@@ -114,6 +114,41 @@ include 'includes/template/head.php';
 						}
 					?></strong></p>
 				</div>
+				<?php
+				$selectedTestTeamId = '';
+				$showTestTeamScope = ((int)$currentAtype === 4);
+				$selectedTestEmployeeId = '';
+				$showTestEmployeeScope = ((int)$currentAtype === 5);
+				if (!empty($_SESSION['test_team_ids'])) {
+					$parts = array_values(array_filter(array_map('trim', explode(',', (string)$_SESSION['test_team_ids']))));
+					$selectedTestTeamId = $parts[0] ?? '';
+				}
+				if (!empty($_SESSION['test_employee_id'])) {
+					$selectedTestEmployeeId = (string)$_SESSION['test_employee_id'];
+				}
+				$teamNameField = $_SESSION['lang'] == 'fr' ? 'namefr' : 'nameen';
+				$teamResult = mysqli_query($link, "SELECT id, $teamNameField AS name FROM tblteams WHERE status='1' ORDER BY $teamNameField ASC");
+				$employeeResult = mysqli_query($link, "SELECT id, firstname, lastname, email FROM tblusers WHERE status='1' AND atype = 5 ORDER BY firstname ASC, lastname ASC");
+				?>
+				<div class="form-group" id="test-team-scope-group"<?php if (!$showTestTeamScope) { ?> style="display:none;"<?php } ?>>
+					<label for="test_team_id"><span class="field-name"><?= $_SESSION['lang'] == 'fr' ? 'Équipe de test (pour les rôles à portée d\'équipe)' : 'Test team scope (for team-scoped roles)' ?></span></label>
+					<select class="form-control" id="test_team_id" name="test_team_id"<?php if (!$showTestTeamScope) { ?> disabled="disabled"<?php } ?>>
+						<option value=""><?= $_SESSION['lang'] == 'fr' ? 'Aucune substitution d\'équipe (utiliser équipe réelle)' : 'No team override (use real account team)' ?></option>
+						<?php while ($teamRow = mysqli_fetch_assoc($teamResult)): ?>
+							<option value="<?= (int)$teamRow['id'] ?>" <?= ((string)$selectedTestTeamId === (string)$teamRow['id']) ? 'selected' : '' ?>><?= htmlspecialchars($teamRow['name']) ?></option>
+						<?php endwhile; ?>
+					</select>
+				</div>
+				<div class="form-group" id="test-employee-scope-group"<?php if (!$showTestEmployeeScope) { ?> style="display:none;"<?php } ?>>
+					<label for="test_employee_id"><span class="field-name"><?= $_SESSION['lang'] == 'fr' ? 'Employé de test (pour la portée des demandes assignées)' : 'Test employee scope (for assigned-request scope)' ?></span></label>
+					<select class="form-control" id="test_employee_id" name="test_employee_id"<?php if (!$showTestEmployeeScope) { ?> disabled="disabled"<?php } ?>>
+						<option value=""><?= $_SESSION['lang'] == 'fr' ? 'Aucune substitution d\'employé (utiliser mon compte)' : 'No employee override (use my account)' ?></option>
+						<?php while ($employeeRow = mysqli_fetch_assoc($employeeResult)): ?>
+							<?php $employeeLabel = trim(($employeeRow['firstname'] ?? '') . ' ' . ($employeeRow['lastname'] ?? '')) . ' (' . ($employeeRow['email'] ?? '') . ')'; ?>
+							<option value="<?= (int)$employeeRow['id'] ?>" <?= ((string)$selectedTestEmployeeId === (string)$employeeRow['id']) ? 'selected' : '' ?>><?= htmlspecialchars($employeeLabel) ?></option>
+						<?php endwhile; ?>
+					</select>
+				</div>
 				<div class="form-group form-buttons">
 					<button type="submit" class="btn btn-primary"><?= $_SESSION['lang'] == 'fr' ? 'Changer le type de compte' : 'Switch Account Type' ?></button>
 					<?php if ((int)$currentAtype !== 1): ?>
@@ -145,6 +180,37 @@ include 'includes/template/head.php';
 		</main>
 		
 		<?php include 'includes/template/footer.php'; include 'includes/template/scripts.php'; ?>
+		<script>
+		(function () {
+			var accountTypeSelect = document.getElementById('test_atype');
+			var teamGroup = document.getElementById('test-team-scope-group');
+			var teamSelect = document.getElementById('test_team_id');
+			var employeeGroup = document.getElementById('test-employee-scope-group');
+			var employeeSelect = document.getElementById('test_employee_id');
+			if (!accountTypeSelect || !teamGroup || !teamSelect || !employeeGroup || !employeeSelect) {
+				return;
+			}
+
+			function refreshTeamScopeVisibility() {
+				var isTeamLead = accountTypeSelect.value === '4';
+				var isEmployee = accountTypeSelect.value === '5';
+				teamGroup.style.display = isTeamLead ? '' : 'none';
+				teamSelect.disabled = !isTeamLead;
+				if (!isTeamLead) {
+					teamSelect.value = '';
+				}
+
+				employeeGroup.style.display = isEmployee ? '' : 'none';
+				employeeSelect.disabled = !isEmployee;
+				if (!isEmployee) {
+					employeeSelect.value = '';
+				}
+			}
+
+			accountTypeSelect.addEventListener('change', refreshTeamScopeVisibility);
+			refreshTeamScopeVisibility();
+		})();
+		</script>
 	</body>
 </html>
 <?php

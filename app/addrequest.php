@@ -103,6 +103,9 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	{
 		$clientphone = "";
 	}
+
+	$requestlang = (isset($_SESSION['lang']) && in_array($_SESSION['lang'], ['en', 'fr'], true)) ? $_SESSION['lang'] : 'en';
+	$requestlang = mysqli_real_escape_string($link, $requestlang);
 	
 	if (!empty($_POST['sourceid']))
 	{
@@ -226,7 +229,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	}
 	
 	// Create SQL statement
-	$sql = "INSERT INTO tbltriage(`requestid`, `title`, `clientlname`, `clientfname`, `clientemail`, `clientphone`, `sourceid`, `datereceived`, `dateupdated`, `daterequired`, `dateresolved`, `statusid`, `catalogueid`, `serviceid`, `subserviceid`, `creatorid`, `updaterid`, `status`) VALUES ('$requestid', '$requesttitle', '$clientlname', '$clientfname', '$clientemail', '$clientphone', '$sourceid', '$datereceived', '$dateupdated', '$daterequired', '$dateresolved', '$statusid', '$catalogueid', '$serviceid', '$subserviceid', '$creatorid', '$updaterid', '$status')";
+	$sql = "INSERT INTO tbltriage(`requestid`, `title`, `clientlname`, `clientfname`, `clientemail`, `clientphone`, `requestlang`, `sourceid`, `datereceived`, `dateupdated`, `daterequired`, `dateresolved`, `statusid`, `catalogueid`, `serviceid`, `subserviceid`, `creatorid`, `updaterid`, `status`) VALUES ('$requestid', '$requesttitle', '$clientlname', '$clientfname', '$clientemail', '$clientphone', '$requestlang', '$sourceid', '$datereceived', '$dateupdated', '$daterequired', '$dateresolved', '$statusid', '$catalogueid', '$serviceid', '$subserviceid', '$creatorid', '$updaterid', '$status')";
 	//echo $sql;
 	//exit();
 	mysqli_query($link,$sql);

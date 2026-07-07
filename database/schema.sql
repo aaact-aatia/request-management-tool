@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS `tblcatalogue` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `nameen` varchar(255) NOT NULL,
   `namefr` varchar(255) NOT NULL,
+  `contactid` int(11) DEFAULT 1,
   `survey` tinyint(1) DEFAULT 1,
   `status` tinyint(1) DEFAULT 1,
   PRIMARY KEY (`id`)
@@ -100,6 +101,7 @@ CREATE TABLE IF NOT EXISTS `tbltriage` (
   `clientfname` varchar(100) DEFAULT NULL,
   `clientemail` varchar(255) DEFAULT NULL,
   `clientphone` varchar(50) DEFAULT NULL,
+  `requestlang` varchar(2) NOT NULL DEFAULT 'en',
   `sourceid` int(11) DEFAULT NULL,
   `datereceived` date DEFAULT NULL,
   `dateupdated` date DEFAULT NULL,

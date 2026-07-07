@@ -235,6 +235,12 @@ return [
     'client_survey_response_time' => 'Temps de réponse',
     'client_survey_comments_label' => 'Avez-vous des suggestions pour améliorer notre service ou des commentaires supplémentaires ?',
     'client_survey_submit' => 'Soumettre',
+
+    // Client Survey Thank You page (client-survey-thank-you.php)
+    'client_survey_thank_you_page_title' => 'Merci - Outil de gestion des demandes - Bureau de l\'accessibilité de la TI',
+    'client_survey_thank_you_heading' => 'Merci',
+    'client_survey_thank_you_message' => 'Votre sondage a été soumis avec succès. Nous vous remercions de votre rétroaction.',
+    'client_survey_thank_you_new_request_link' => 'Soumettre une nouvelle demande',
     
     // Client Survey Pending page (client-survey-pending.php)
     'client_survey_pending_page_title' => 'Sondage sur la satisfaction de la clientèle - Request Management Tool - IT Accessibility Office',
@@ -243,7 +249,6 @@ return [
     'client_survey_pending_col_title' => 'Titre',
     'client_survey_pending_col_actions' => 'Actions',
     'client_survey_pending_details' => 'détails',
-    'client_survey_pending_generate_email' => 'Générer le courriel du sondage',
     'client_survey_pending_view_links' => 'Voir les liens du sondage',
     'client_survey_pending_mark_sent' => 'Marquer comme envoyé',
     'client_survey_pending_no_surveys' => 'Aucun sondage disponible!',
@@ -257,8 +262,15 @@ return [
     'client_survey_link_french' => 'Lien du sondage en français',
     'client_survey_link_english' => 'Lien du sondage en anglais',
     'client_survey_link_email_client' => 'Ouvrir un courriel prérempli au client',
+    'client_survey_link_send_resolved' => 'Envoyer le courriel de resolution + sondage au client',
+    'client_survey_link_resolved_sent' => 'Le courriel de resolution a ete envoye au client (avec liens de sondage si actives).',
+    'client_survey_link_missing_email' => 'Le courriel du client est manquant pour cette demande.',
+    'client_survey_link_send_failed' => 'Le courriel n\'a pas pu etre envoye. Verifiez la configuration de GC Notify et reessayez.',
     'client_survey_link_back_request' => 'Retour à la demande',
     'client_survey_link_survey_disabled' => 'Ce catalogue est actuellement marqué comme ne nécessitant pas de sondage.',
+    'client_survey_link_survey_status_label' => 'Sondage active',
+    'client_survey_link_survey_status_enabled' => 'Oui',
+    'client_survey_link_survey_status_disabled' => 'Non',
     
     // Batch AAACT Info page (batch-ace-info.php)
     'batch_ace_no_details' => 'Aucun détail disponible',
@@ -337,6 +349,9 @@ return [
     'catalogue_heading' => 'Gestion du catalogue de services',
     'catalogue_add_button' => 'Ajouter un nouveau service dans le catalogue',
     'catalogue_name_column' => 'Nom du catalogue',
+    'catalogue_contact_group_column' => 'Groupe de contact',
+    'catalogue_contact_group_field' => 'Groupe de contact',
+    'catalogue_contact_group_unassigned' => 'Non assigne',
     'catalogue_services_column' => 'Services',
     'catalogue_item_label' => 'élément de catalogue',
     'catalogue_surveys_not_sent' => 'Les sondages ne sont pas envoyés',
@@ -377,8 +392,22 @@ return [
     'settings_heading' => 'Paramètres du compte',
     'settings_add_request_heading' => 'Ajouter manuellement une nouvelle demande',
     'settings_add_request_link' => 'Ajouter une demande (admin. uniquement)',
+    'settings_quick_test_request_link' => 'Créer une demande de test rapide (dev seulement)',
+    'settings_gcnotify_link' => 'Parametres GC Notify (admin. uniquement)',
 
     'settings_password_heading' => 'Réinitialisation du mot de passe',
+
+    // Page des parametres GC Notify (gcnotify-settings.php)
+    'gcnotify_settings_heading' => 'Parametres GC Notify',
+    'gcnotify_settings_intro' => 'Gerez les parametres GC Notify non sensibles depuis l\'application. Les valeurs enregistrees ici remplacent les valeurs d\'environnement pour la meme cle.',
+    'gcnotify_settings_saved' => 'Les parametres GC Notify ont ete enregistres avec succes.',
+    'gcnotify_settings_secret_note_title' => 'Gestion des secrets',
+    'gcnotify_settings_secret_note_body' => 'GCNOTIFY_API_KEY demeure uniquement dans l\'environnement et n\'est pas modifiable ici.',
+    'gcnotify_settings_delivery_heading' => 'Parametres de distribution et de routage',
+    'gcnotify_settings_templates_heading' => 'Remplacements des ID de gabarits',
+    'gcnotify_settings_templates_intro' => 'Les gabarits GC Notify doivent d abord etre crees et geres dans GC Notify. Entrez ici les UUID de gabarit pour que cette application puisse les referencer et les utiliser.',
+    'gcnotify_settings_save' => 'Enregistrer les parametres GC Notify',
+    'gcnotify_settings_back' => 'Retour aux parametres du compte',
     
     // Users management page (users.php)
     'users_page_title' => 'Gestion des utilisateurs - Outil de gestion des demandes - Bureau de l\'accessibilité de la TI',
@@ -386,7 +415,7 @@ return [
     'users_add_button' => 'Ajouter un nouvel utilisateur',
     'users_col_name' => 'Nom complet',
     'users_col_email' => 'Courriel',
-    'users_col_account_type' => 'Type de compte',
+    'users_col_account_type' => 'Role',
     'users_col_team' => 'Équipe(s)',
     'users_edit_button' => 'Modifier l\'utilisateur',
     'users_delete_button' => 'Supprimer l\'utilisateur',

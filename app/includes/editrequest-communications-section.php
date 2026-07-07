@@ -9,6 +9,7 @@
 
 <?php
 $x = 1;
+$canEditCommunicationLogs = in_array((int)($_SESSION['atype'] ?? 0), [3, 4, 5], true) || !empty($_SESSION['is_superuser']) || !empty($_SESSION['is_admin']);
 // Grab existing communication logs
 $result2 = mysqli_query($link, "SELECT ID, notes FROM tblcommlog WHERE triageid = '$requestuid'");
 while ($row2 = mysqli_fetch_assoc($result2)) {
@@ -22,7 +23,7 @@ while ($row2 = mysqli_fetch_assoc($result2)) {
 <div class="form-group">
     <label for="commlog<?php echo $x; ?>"><span class="field-name"><?php echo $t['edit_original_commlog']; ?>:</span></label>
     <textarea class="form-control" id="commlog<?php echo $x; ?>" name="commlog<?php echo $x; ?>" 
-              cols="50" rows="10" <?php echo isReadOnly() ? 'readonly' : ''; ?>><?php echo htmlspecialchars($ocommlog, ENT_QUOTES, 'UTF-8'); ?></textarea>
+              cols="50" rows="10" <?php echo $canEditCommunicationLogs ? '' : 'readonly'; ?>><?php echo htmlspecialchars($ocommlog, ENT_QUOTES, 'UTF-8'); ?></textarea>
     <input type="hidden" id="commlogid<?php echo $x; ?>" name="commlogid<?php echo $x; ?>" value="<?php echo $ocommlogid; ?>" />
 </div>
 <?php
@@ -38,5 +39,5 @@ while ($row2 = mysqli_fetch_assoc($result2)) {
 
 <div class="form-group">
     <label for="adminnotes"><span class="field-name"><?php echo $t['add_new_commlog']; ?>:</span></label>
-    <textarea class="form-control" id="adminnotes" name="adminnotes" cols="50" rows="10"></textarea>
+    <textarea class="form-control" id="adminnotes" name="adminnotes" cols="50" rows="10" <?php echo $canEditCommunicationLogs ? '' : 'readonly'; ?>></textarea>
 </div>

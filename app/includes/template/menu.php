@@ -22,6 +22,15 @@ $lang_code = $_SESSION['lang'] ?? 'en';
 // Use permission flags for admin access instead of account type
 $isTestingDifferentType = isset($_SESSION['is_superuser']) && $_SESSION['is_superuser'] == 1 && isset($_SESSION['atype']) && (int)$_SESSION['atype'] !== 1;
 $isSuperAdmin = !$isTestingDifferentType && isset($_SESSION['is_superuser']) && $_SESSION['is_superuser'] == 1;
+$effectiveAtype = (int)($_SESSION['atype'] ?? 0);
+$isAdminAccount = !$isTestingDifferentType && (
+	(isset($_SESSION['is_admin']) && $_SESSION['is_admin'] == 1) ||
+	$effectiveAtype === 2 ||
+	$effectiveAtype === 1
+);
+$isDirector = !empty($_SESSION['pid']) && $effectiveAtype === 6;
+$isEmployee = !empty($_SESSION['pid']) && $effectiveAtype === 5;
+$canSeeCoreNav = !empty($_SESSION['pid']) && (!isReadOnly() || $isDirector);
 
 // Menu text translations
 $menu_text = [
@@ -32,12 +41,15 @@ $menu_text = [
 		'view_my' => 'View my requests only',
 		'view_resolved' => 'View closed requests',
 		'new_request' => 'New request',
+		'new_request_standard' => 'Standard request',
+		'new_request_quick_test' => 'Quick test request (dev only)',
 		'search' => 'Search requests',
 		'reports' => 'Reports',
 		'admin' => 'Administration',
 		'contacts' => 'Teams',
 		'catalogue' => 'Service catalogue',
 		'holidays' => 'Holidays',
+		'gcnotify_settings' => 'GC Notify settings',
 		'sources' => 'Sources',
 		'status' => 'Status',
 		'users' => 'Users',
@@ -52,12 +64,15 @@ $menu_text = [
 		'view_my' => 'Afficher mes demandes uniquement',
 		'view_resolved' => 'Afficher les demandes fermées',
 		'new_request' => 'Nouvelle demande',
+		'new_request_standard' => 'Demande standard',
+		'new_request_quick_test' => 'Demande de test rapide (dev seulement)',
 		'search' => 'Recherche d\'une demande',
 		'reports' => 'Rapports',
 		'admin' => 'Administration',
 		'contacts' => 'Équipes',
 		'catalogue' => 'Catalogue de services',
 		'holidays' => 'Jours fériés',
+		'gcnotify_settings' => 'Parametres GC Notify',
 		'sources' => 'Sources',
 		'status' => 'Statuts',
 		'users' => 'Utilisateurs',
@@ -75,18 +90,34 @@ $menuLangStrings = $menu_text[$lang_code];
 		<div class="row">
 			<ul class="list-inline menu" role="menubar">
 				<?php
-				if (!empty($_SESSION['pid']) && !isReadOnly()) {
+				if ($canSeeCoreNav) {
 				?>
 					<li><a href="#" class="item"><?= htmlspecialchars($menuLangStrings['overview']) ?></a>
 						<ul class="sm list-unstyled" id="s2" role="menu">
-							<li><a href="/index.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['view_all']) ?></a></li>
+							<?php if ($isEmployee) { ?>
 							<li><a href="/indexonly.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['view_my']) ?></a></li>
 							<li><a href="/indexresolved.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['view_resolved']) ?></a></li>
+							<?php } else { ?>
+							<li><a href="/index.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['view_all']) ?></a></li>
+							<?php if (!$isDirector) { ?>
+							<li><a href="/indexonly.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['view_my']) ?></a></li>
+							<?php } ?>
+							<li><a href="/indexresolved.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['view_resolved']) ?></a></li>
+							<?php } ?>
 						</ul>
 					</li>
 				<?php } ?>
-				<li><a href="/openrequest.php?lang=<?= $lang_code ?>" class="item"><?= htmlspecialchars($menuLangStrings['new_request']) ?></a></li>
-				<?php if (!empty($_SESSION['pid']) && !isReadOnly()) { ?>
+				<?php if ($isSuperAdmin && !app_is_production()) { ?>
+					<li><a href="#s-new-request" class="item"><?= htmlspecialchars($menuLangStrings['new_request']) ?></a>
+						<ul class="sm list-unstyled" id="s-new-request" role="menu">
+							<li><a href="/openrequest.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['new_request_standard']) ?></a></li>
+							<li><a href="/dev-create-test-request.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['new_request_quick_test']) ?></a></li>
+						</ul>
+					</li>
+				<?php } else { ?>
+					<li><a href="/openrequest.php?lang=<?= $lang_code ?>" class="item"><?= htmlspecialchars($menuLangStrings['new_request']) ?></a></li>
+				<?php } ?>
+				<?php if ($canSeeCoreNav && !$isEmployee) { ?>
 					<li><a href="/asearch.php?lang=<?= $lang_code ?>" class="item"><?= htmlspecialchars($menuLangStrings['search']) ?></a></li>
 					<li><a href="/reports.php?lang=<?= $lang_code ?>" class="item"><?= htmlspecialchars($menuLangStrings['reports']) ?></a></li>
 				<?php
@@ -96,8 +127,8 @@ $menuLangStrings = $menu_text[$lang_code];
 					<!-- <li><a href="/batch-ace-info.php?lang=<?= $lang_code ?>">Update (batch) AAACT tickets</a></li> -->
 				<?php
 				}
-				// Only Super admins can access admin options
-				if ($isSuperAdmin) {
+				// Administration menu is restricted to admin/superadmin.
+				if ($isAdminAccount || $isSuperAdmin) {
 				?>
 					<li><a href="#s2" class="item"><?= htmlspecialchars($menuLangStrings['admin']) ?></a>
 						<ul class="sm list-unstyled" id="s2" role="menu">
@@ -108,6 +139,7 @@ $menuLangStrings = $menu_text[$lang_code];
 							?>
 							<li><a href="/catalogue.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['catalogue']) ?></a></li>
 							<li><a href="/holidays-mgmt.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['holidays']) ?></a></li>
+							<li><a href="/gcnotify-settings.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['gcnotify_settings']) ?></a></li>
 							<?php } ?>
 							<li><a href="/sources.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['sources']) ?></a></li>
 							<li><a href="/status.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['status']) ?></a></li>

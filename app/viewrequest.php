@@ -29,6 +29,9 @@ $translations = [
 		'last_name' => 'Last name',
 		'first_name' => 'First name',
 		'client_email' => 'Client email',
+		'request_language' => 'Original requested language',
+		'language_english' => 'English',
+		'language_french' => 'French',
 		'send_email' => 'Send email',
 		'department_agency' => 'Department/agency',
 		'client_phone' => 'Client phone number',
@@ -68,15 +71,22 @@ $translations = [
 		'download_all' => 'Download All',
 		'download' => 'Download',
 		'css_completed' => 'Client satisfaction survey',
+		'resolved_email_status' => 'Resolved email to client',
+		'resolved_email_sent' => 'Sent',
+		'resolved_email_not_sent' => 'Not sent',
+		'resolved_email_sent_on' => 'Sent on',
+		'resolved_email_send_button' => 'Send resolved + survey email now',
+		'resolved_email_missing_client' => 'Client email is missing for this request.',
+		'resolved_email_send_success' => 'Resolved email sent to the client.',
+		'resolved_email_send_failed' => 'Email could not be sent. Please verify GC Notify settings and try again.',
 		'completed' => 'completed',
 		'not_completed' => 'not completed',
 		'overall_satisfaction' => 'Over-all satisfaction',
 		'response_time' => 'Response time',
 		'comments' => 'Comments',
 		'na' => 'N/A',
-		'css_send' => 'Please send the client satisfaction survey link to the client using the copy function below.',
-		'view_links' => 'View survey links',
-		'generate_email' => 'Generate email with survey link',
+		'css_send' => 'Use the resolved email action above to send the survey links.',
+		'view_links' => 'Open client notification page',
 		'survey_sent' => 'Survey was sent',
 		'resend' => 'resend?',
 		'mark_sent' => 'Mark survey as sent',
@@ -115,6 +125,9 @@ $translations = [
 		'last_name' => 'Nom',
 		'first_name' => 'Prénom',
 		'client_email' => 'Courriel du client',
+		'request_language' => 'Langue demandee initiale',
+		'language_english' => 'Anglais',
+		'language_french' => 'Francais',
 		'send_email' => 'Envoyer un courriel',
 		'department_agency' => 'Ministère/organisme',
 		'client_phone' => 'Numéro de téléphone client',
@@ -154,15 +167,22 @@ $translations = [
 		'download_all' => 'Tout télécharger',
 		'download' => 'Télécharger',
 		'css_completed' => 'Sondage de satisfaction de la clientèle',
+		'resolved_email_status' => 'Courriel de resolution au client',
+		'resolved_email_sent' => 'Envoye',
+		'resolved_email_not_sent' => 'Non envoye',
+		'resolved_email_sent_on' => 'Envoye le',
+		'resolved_email_send_button' => 'Envoyer le courriel de resolution + sondage',
+		'resolved_email_missing_client' => 'Le courriel du client est manquant pour cette demande.',
+		'resolved_email_send_success' => 'Le courriel de resolution a ete envoye au client.',
+		'resolved_email_send_failed' => 'Le courriel n\'a pas pu etre envoye. Verifiez la configuration de GC Notify et reessayez.',
 		'completed' => 'complété',
 		'not_completed' => 'non complété',
 		'overall_satisfaction' => 'Satisfaction globale',
 		'response_time' => 'Temps de réponse',
 		'comments' => 'Commentaires',
 		'na' => 'S.O.',
-		'css_send' => 'Veuillez envoyer le lien du sondage de satisfaction de la clientèle au client en utilisant la fonction de copie ci-dessous.',
-		'view_links' => 'Voir les liens du sondage',
-		'generate_email' => 'Générer un courriel avec le lien du sondage',
+		'css_send' => 'Utilisez l\'action de courriel de resolution ci-dessus pour envoyer les liens du sondage.',
+		'view_links' => 'Ouvrir la page de notification client',
 		'survey_sent' => 'Le sondage a été envoyé',
 		'resend' => 'renvoyer?',
 		'mark_sent' => 'Marquer le sondage comme envoyé',
@@ -190,6 +210,7 @@ require('BlobStorage.php');
 require('includes/httpscheck.php');
 require('includes/sla-calculator.php');
 require('includes/helpers.php');
+require('emailController.php');
 // Include file for calculating business days
 require('includes/calculate-bdays.php');
 /** @var array $holidays */
@@ -252,6 +273,8 @@ if(mysqli_num_rows($result)>0){
 		$servicename = '';
 		$cataloguename = '';
 		$departmentAgency = '';
+		$requestLanguageCode = rmt_get_request_language($link, (int) $triageid, $lang);
+		$requestLanguageLabel = ($requestLanguageCode === 'fr') ? $t['language_french'] : $t['language_english'];
 		
 		if ($subserviceid!=0) {
 			// Sub-service is not empty so grab the name
@@ -294,6 +317,15 @@ if(mysqli_num_rows($result)>0){
 		$cataloguename = $row2 ? $row2[0] : '';
 	}
 
+		$effectiveAtype = (int)($_SESSION['atype'] ?? 0);
+		if ($effectiveAtype === 4) {
+			$teamIds = getEffectiveTeamIds($link);
+			if (empty($tarraycontactid) || !in_array((string)$tarraycontactid, $teamIds, true)) {
+				header("location:/index.php?lang=$lang&status=accessdenied");
+				exit();
+			}
+		}
+
 		if ($audienceid!=0 && $audienceid != null) {
 			// Sub-service is not empty so grab the name
 			$result2 = mysqli_query($link, "SELECT $nameField FROM tblaudience WHERE id = '$audienceid'");
@@ -329,6 +361,7 @@ if(mysqli_num_rows($result)>0){
 		$cBdays = calculateSLA($link, $row['requestid'], $ndatereceived);
 
 		$sla2 = $sla - 1;
+		$suppressSlaWarning = rmt_is_resolved_status_id($link, $row['statusid']) || in_array((int)$row['statusid'], [5, 6], true);
 		// Now check if the SLA is close
 		if ($uReview==false) {
 			if ($cBdays > $dsla) {
@@ -344,7 +377,6 @@ if(mysqli_num_rows($result)>0){
 			if ($cBdays >= $sla2) {
 				$closedue = true;
 			}
-			$suppressSlaWarning = rmt_is_resolved_status_id($link, $row['statusid']) || in_array((int)$row['statusid'], [5, 6], true);
 		}
 ?>
 	<?php
@@ -393,30 +425,36 @@ if(mysqli_num_rows($result)>0){
 			<?php } ?>
 			<?php
 				$canShowEditControls = !empty($_SESSION['pid']) && canEditRequests();
+				$canEditThisRequest = false;
+				$canDeleteThisRequest = canDeleteRequests();
+				$isManagerAccount = ((int)($_SESSION['atype'] ?? 0) === 3);
+				$isEmployeeAccount = ((int)($_SESSION['atype'] ?? 0) === 5);
+				$effectiveEmployeeId = getEffectiveEmployeeUserId($link);
 				// Only authenticated users with edit permissions can see request controls.
-			if ($canShowEditControls && ($_SESSION['is_superuser'] OR $_SESSION['is_admin'])) {	
+			if ($canShowEditControls && (isSuperAdmin() || isAdmin() || $isManagerAccount)) {	
+				$canEditThisRequest = true;
 			?>
 			<div class="pull-right">
-            <p><a class="btn btn-primary" href="editrequest.php?lang=<?php echo $lang; ?>&erid=<?php echo base64_encode($row['id']);?>&reqid=<?php echo urlencode('a11y-' . $row['requestid']); ?>">Edit <span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span></a><?php if ($_SESSION['is_superuser'] OR $_SESSION['is_admin']) { ?> <a class="wb-lbx btn btn-primary" href="includes/delete-request.php?id=<?php echo $row['id'];?>">Delete<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span> </a><?php } ?></p>
+			<p><a class="btn btn-primary" href="editrequest.php?lang=<?php echo $lang; ?>&erid=<?php echo base64_encode($row['id']);?>&reqid=<?php echo urlencode('a11y-' . $row['requestid']); ?>">Edit <span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span></a><?php if ($canDeleteThisRequest) { ?> <a class="wb-lbx btn btn-primary" href="includes/delete-request.php?id=<?php echo $row['id'];?>">Delete<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span> </a><?php } ?></p>
 			</div>
 			<div class="clearfix"></div>
 			<?php
 				} elseif ($canShowEditControls) {
 				// User is 3 (Manager) or 4 (Team Leader) so check if they have permission to edit this request
-				// First grab any existing teams
-				$userid = $_SESSION['pid'];
-				$result2 = mysqli_query($link, "SELECT team FROM tblusers WHERE id = '$userid'");
-				$row2 = mysqli_fetch_array($result2);
-				$teams = "";
-				if (!empty($row2))
-				{
-					$teams = $row2[0];
-				}
-				$tarray = explode(",",$teams);
+				if ($isEmployeeAccount) {
+					if ((int)($row['workerid'] ?? 0) === $effectiveEmployeeId) {
+						$canEditThisRequest = true;
+					}
+				} else {
+					$tarray = getEffectiveTeamIds($link);
 					if(in_array($tarraycontactid, $tarray)) {
+						$canEditThisRequest = true;
+					}
+				}
+				if ($canEditThisRequest) {
 			?>
 			<div class="pull-right">
-				<p><a class="btn btn-primary" href="editrequest.php?lang=<?php echo $lang; ?>&erid=<?php echo base64_encode($row['id']);?>&reqid=<?php echo urlencode('a11y-' . $row['requestid']); ?>">Edit <span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span></a><?php if ($_SESSION['is_superuser'] OR $_SESSION['is_admin']) { ?> <a class="wb-lbx btn btn-primary" href="includes/delete-request.php?id=<?php echo $row['id'];?>">Delete<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span> </a><?php } ?></p>
+				<p><a class="btn btn-primary" href="editrequest.php?lang=<?php echo $lang; ?>&erid=<?php echo base64_encode($row['id']);?>&reqid=<?php echo urlencode('a11y-' . $row['requestid']); ?>">Edit <span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span></a><?php if ($canDeleteThisRequest) { ?> <a class="wb-lbx btn btn-primary" href="includes/delete-request.php?id=<?php echo $row['id'];?>">Delete<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span> </a><?php } ?></p>
 			</div>
 			<div class="clearfix"></div>
 			<?php 
@@ -532,13 +570,17 @@ if(mysqli_num_rows($result)>0){
 					$workerid = $row['workerid'];
 					if ($workerid != 0 AND $workerid != "") {
 						$result2 = mysqli_query($link, "SELECT firstname, lastname FROM tblusers WHERE id = '$workerid'");
-						$row2 = mysqli_fetch_array($result2);
-						$ufirstname = $row2[0];
-						$ulastname = $row2[1];
+						$row2 = $result2 ? mysqli_fetch_assoc($result2) : null;
+						$ufirstname = $row2['firstname'] ?? '';
+						$ulastname = $row2['lastname'] ?? '';
+						$assignedName = trim($ufirstname . ' ' . $ulastname);
+						if ($assignedName === '') {
+							$assignedName = ($lang === 'fr') ? 'Utilisateur indisponible' : 'User unavailable';
+						}
 				?>
 				<div style="break-inside: avoid;">
 					<dt><?= $t['assigned_member'] ?></dt>
-					<dd><?php echo $ufirstname ?> <?php echo $ulastname ?></dd>
+					<dd><?php echo htmlspecialchars($assignedName, ENT_QUOTES, 'UTF-8') ?></dd>
 				</div>
 				<?php
 					}
@@ -567,6 +609,10 @@ if(mysqli_num_rows($result)>0){
 					<dd><a href="mailto:<?php echo htmlspecialchars($row['clientemail']) ?>?Subject=a11y-<?php echo $row['requestid'] ?> - <?php echo htmlspecialchars($row['title']) ?>"><?php echo htmlspecialchars($row['clientemail']) ?> <span class="glyphicon glyphicon-envelope"></span><span class="wb-inv">- <?= $t['send_email'] ?></span></a></dd>
 				</div>
 				<?php } ?>
+				<div style="break-inside: avoid;">
+					<dt><?= $t['request_language'] ?></dt>
+					<dd><?php echo htmlspecialchars($requestLanguageLabel, ENT_QUOTES, 'UTF-8'); ?></dd>
+				</div>
 				<?php if ($row['clientphone'] != "") { ?>
 				<div style="break-inside: avoid;">
 					<dt><?= $t['client_phone'] ?></dt>
@@ -763,15 +809,106 @@ $blobStorage = new AzureBlobStorageManager();
 
 			<?php if($_SESSION['pid']!=""){ ?>
 			<?php
-			// Check if status is resolved, if it is then display the client satisfaction survey link and results if available
+			// Check if status is resolved, if it is then display the client satisfaction survey status
 			if (rmt_is_resolved_status_id($link, $statusid)){
-			// First check if surveys are enabled for this catalogue
+			$resolvedClientEmail = trim((string) ($row['clientemail'] ?? ''));
+			$resolvedActionStatus = '';
+
+			// Check if surveys are enabled for this catalogue
 			$catalogueSurveySql = "SELECT survey FROM tblcatalogue WHERE id = '$catalogueid'";
 			$catalogueSurveyResult = mysqli_query($link, $catalogueSurveySql);
 			$catalogueSurveyRow = mysqli_fetch_array($catalogueSurveyResult);
-			$surveyEnabled = $catalogueSurveyRow['survey'];
-			
-			if ($surveyEnabled == 1) {
+			$surveyEnabled = ((int) ($catalogueSurveyRow['survey'] ?? 0) === 1);
+			$allowResolvedEmailSendInView = false;
+
+			if ($allowResolvedEmailSendInView && $_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['email_action'] ?? '') === 'send_resolved_email')) {
+				if (!$canEditThisRequest) {
+					$resolvedActionStatus = 'failed';
+				} else {
+				if ($resolvedClientEmail === '') {
+					$resolvedActionStatus = 'missing_email';
+				} else {
+					$requestLanguage = rmt_get_request_language($link, (int) $triageid, $lang);
+					$encodedTriageId = base64_encode((string) $triageid);
+					$encodedRequestPublicId = urlencode('a11y-' . (string) $row['requestid']);
+					$requestViewUrl = app_url('viewrequest.php?lang=' . $requestLanguage . '&erid=' . $encodedTriageId . '&reqid=' . $encodedRequestPublicId);
+					$frSurveyLink = app_url('client-survey.php?lang=fr&erid=' . $encodedTriageId . '&reqid=' . $encodedRequestPublicId);
+					$enSurveyLink = app_url('client-survey.php?lang=en&erid=' . $encodedTriageId . '&reqid=' . $encodedRequestPublicId);
+
+					$resolvedContext = [
+						'requestid' => (string) $row['requestid'],
+						'client_fname' => (string) ($row['clientfname'] ?? ''),
+						'client_lname' => (string) ($row['clientlname'] ?? ''),
+						'url' => $requestViewUrl,
+					];
+					if ($surveyEnabled) {
+						$resolvedContext['survey_link_en'] = $enSurveyLink;
+						$resolvedContext['survey_link_fr'] = $frSurveyLink;
+					}
+
+					$category = rmt_notification_template_category('resolved');
+					$personalisation = [
+						'requestid' => (string) $row['requestid'],
+						'requesttitle' => (string) ($row['title'] ?? ''),
+						'client_fname' => (string) ($row['clientfname'] ?? ''),
+						'client_lname' => (string) ($row['clientlname'] ?? ''),
+						'url' => $requestViewUrl,
+						'notification_event' => 'resolved',
+						'template_category_id' => $category['id'],
+						'template_category_name_en' => $category['name_en'],
+						'template_category_name_fr' => $category['name_fr'],
+						'subject' => rmt_notification_subject('resolved', 'client', $requestLanguage, ['requestid' => (string) $row['requestid']]),
+						'message' => rmt_notification_message('resolved', 'client', $requestLanguage, $resolvedContext),
+					];
+
+					$templateId = app_notify_template_id('notification_generic');
+					$sent = sendEmail($resolvedClientEmail, $templateId, json_encode($personalisation), ['recipientType' => 'client']);
+					if ($sent) {
+						if ($surveyEnabled) {
+							$currentSurveySentCount = (int) ($row['cssurvey'] ?? 0);
+							$updatedSurveySentCount = ($currentSurveySentCount <= 0) ? 1 : ($currentSurveySentCount + 1);
+							mysqli_query($link, "UPDATE tbltriage SET cssurvey = '$updatedSurveySentCount' WHERE id = '$triageid'");
+							$row['cssurvey'] = $updatedSurveySentCount;
+						}
+
+						$senderId = isset($_SESSION['pid']) ? (int) $_SESSION['pid'] : 0;
+						rmt_mark_resolved_email_sent($link, (int) $triageid, $senderId);
+						$resolvedActionStatus = 'success';
+					} else {
+						$resolvedActionStatus = 'failed';
+					}
+				}
+					}
+			}
+
+			$resolvedEmailSentDate = rmt_get_resolved_email_sent_date($link, (int) $triageid);
+			$resolvedEmailSent = ($resolvedEmailSentDate !== null && $resolvedEmailSentDate !== '');
+			?>
+			<h2><?= htmlspecialchars($t['resolved_email_status']) ?></h2>
+			<?php if ($resolvedActionStatus === 'success'): ?>
+			<p class="text-success"><strong><?= htmlspecialchars($t['resolved_email_send_success']) ?></strong></p>
+			<?php elseif ($resolvedActionStatus === 'failed'): ?>
+			<p class="text-danger"><strong><?= htmlspecialchars($t['resolved_email_send_failed']) ?></strong></p>
+			<?php elseif ($resolvedActionStatus === 'missing_email'): ?>
+			<p class="text-danger"><strong><?= htmlspecialchars($t['resolved_email_missing_client']) ?></strong></p>
+			<?php endif; ?>
+			<p>
+				<strong><?= htmlspecialchars($resolvedEmailSent ? $t['resolved_email_sent'] : $t['resolved_email_not_sent']) ?></strong>
+				<?php if ($resolvedEmailSent): ?>
+				- <?= htmlspecialchars($t['resolved_email_sent_on']) ?> <?= htmlspecialchars($resolvedEmailSentDate) ?>
+				<?php endif; ?>
+			</p>
+			<?php if ($allowResolvedEmailSendInView && !$resolvedEmailSent && $canEditThisRequest): ?>
+				<?php if ($resolvedClientEmail !== ''): ?>
+				<form method="post" action="" class="form-inline mrgn-bttm-md">
+					<input type="hidden" name="email_action" value="send_resolved_email">
+					<button type="submit" class="btn btn-primary"><?= htmlspecialchars($t['resolved_email_send_button']) ?></button>
+				</form>
+				<?php else: ?>
+				<p><?= htmlspecialchars($t['resolved_email_missing_client']) ?></p>
+				<?php endif; ?>
+			<?php endif; ?>
+			<?php if ($surveyEnabled) {
 				// Status is resolved and surveys are enabled, so first check if a client survey has been completed.
 				$surveySql = "SELECT * FROM tblcss WHERE requestid='$triageid' AND status=1";
 				$surveyResult = mysqli_query($link,$surveySql);
@@ -794,35 +931,12 @@ $blobStorage = new AzureBlobStorageManager();
 			</dl>
 			<?php
 				} else {
-					// No results so display copy form link for triage agent
-				    $surveySentCount = $row['cssurvey'];
+					$surveySentCount = (int) ($row['cssurvey'] ?? 0);
 			?>
 			<h2><?= htmlspecialchars($t['css_completed']) ?> <span class="glyphicon glyphicon-remove"></span><span class="wb-inv"><?= htmlspecialchars($t['not_completed']) ?></span></h2>
 			
 			<p><?= htmlspecialchars($t['css_send']) ?></p>
-			
-			<?php
-			// Prepare email
-			$erequestnum = $row['requestid'];
-			$eclientemail = $row['clientemail'];
-			$esubject = "Sondage sur la satisfaction de la clientèle pour / Client satisfaction survey for a11y-".$erequestnum;
-			$erequestPublicId = urlencode('a11y-' . $erequestnum);
-			
-			// Build dynamic base URL using current server
-			$emailScheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-			$emailHost = isset($_SERVER['HTTP_HOST']) ? trim((string)$_SERVER['HTTP_HOST']) : '';
-			$emailBaseUrl = $emailHost !== '' ? ($emailScheme . '://' . $emailHost) : 'https://gcdc-ssc-ictaccess-linux-aaact-rmt-dev-asv.azurewebsites.net';
-			
-			$ebodyText = "Bonjour,\r\n\r\nVotre demande d’accessibilité a été complété par un membre de notre équipe, serait-il possible pour vous de compléter sondage sur la satisfaction de la clientèle? Ce sondage nous aidera à mieux servir nos clients et ne prendra que 30 secondes à remplir.\r\n\r\n"
-				. $emailBaseUrl . "/client-survey.php?lang=fr&erid=".$nrequestid."&reqid=".$erequestPublicId
-				. "\r\n\r\n**********************************************************\r\n\r\nHello,\r\n\r\nYour accessibility request has now been completed by one of our team members, could you please fill out the following client satisfaction survey? This survey will help us serve our clients better and will only take 30 seconds to complete.\r\n\r\n"
-				. $emailBaseUrl . "/client-survey.php?lang=en&erid=".$nrequestid."&reqid=".$erequestPublicId
-				. "\r\n\r\nMerci / Thank you";
-			$encodedSubject = rawurlencode($esubject);
-			$encodedBody = rawurlencode($ebodyText);
-			?>
-			
-			<p><a class="btn btn-primary" href="/client-survey-link.php?lang=<?= htmlspecialchars($_SESSION['lang']) ?>&erid=<?php echo $nrequestid; ?>"><?= htmlspecialchars($t['view_links']) ?></a> <a class="btn btn-default" href="mailto:<?php echo htmlspecialchars($eclientemail) ?>?subject=<?php echo $encodedSubject ?>&body=<?php echo $encodedBody ?>"><?= htmlspecialchars($t['generate_email']) ?></a> <?php if ($surveySentCount>=1) { ?><a class="wb-lbx btn btn-primary" href="includes/client-survey-sent.php?id=<?php echo $row['id'];?>"><?= htmlspecialchars($t['survey_sent']) ?> (<?php echo $surveySentCount ?>), <?= htmlspecialchars($t['resend']) ?> <span class="glyphicon glyphicon-ok"></span></a><?php } else {?><a class="wb-lbx btn btn-primary" href="includes/client-survey-sent.php?id=<?php echo $row['id'];?>"><?= htmlspecialchars($t['mark_sent']) ?></a><?php } ?></p>
+			<?php if ($surveySentCount>=1) { ?><p><span class="label label-success"><?= htmlspecialchars($t['survey_sent']) ?> (<?php echo $surveySentCount ?>)</span></p><?php } ?>
 			
 			<?php
 				}
@@ -874,7 +988,7 @@ $blobStorage = new AzureBlobStorageManager();
 					$nnotes = nl2br(htmlspecialchars($notes));
 				?>
 				
-            <dt><?php echo $dateadded ?><?php if ($_SESSION['is_superuser'] OR $_SESSION['is_admin']) {?> <a class="wb-lbx" href="includes/delete-comms.php?t=c&id=<?php echo $row2['id'];?>&rid=<?php echo $triageid ?>"><span class="glyphicon glyphicon-trash"></span><span class="wb-inv"> <?= htmlspecialchars($t['delete_comment']) ?></span></a><?php } ?></dt>
+			<dt><?php echo $dateadded ?><?php if ($canDeleteThisRequest) {?> <a class="wb-lbx" href="includes/delete-comms.php?t=c&id=<?php echo $row2['id'];?>&rid=<?php echo $triageid ?>"><span class="glyphicon glyphicon-trash"></span><span class="wb-inv"> <?= htmlspecialchars($t['delete_comment']) ?></span></a><?php } ?></dt>
 				<dd><?php echo $nnotes ?></dd>
 				<?php } ?>
 			</dl>
@@ -910,11 +1024,11 @@ $blobStorage = new AzureBlobStorageManager();
 					$creatorid = $row2['creatorid'];
 					// Get the name of the user
 					$result3 = mysqli_query($link, "SELECT firstname, lastname FROM tblusers WHERE id = '$creatorid'");
-					$row3 = mysqli_fetch_array($result3);
-					$cfname = $row3['firstname'];
-					$clname = $row3['lastname'];
+					$row3 = $result3 ? mysqli_fetch_assoc($result3) : null;
+					$cfname = $row3['firstname'] ?? '';
+					$clname = $row3['lastname'] ?? '';
 				?>
-				<dt><?php echo $dateadded ?><?php if($creatorid!=0) {?> - <?php echo $cfname ?> <?php echo $clname ?><?php } ?><?php if ($_SESSION['is_superuser'] OR $_SESSION['is_admin']) {?> <a class="wb-lbx" href="includes/delete-comms.php?t=a&id=<?php echo $row2['id'];?>&rid=<?php echo $triageid ?>"><span class="glyphicon glyphicon-trash"></span><span class="wb-inv"> <?= htmlspecialchars($t['delete_comment']) ?></span></a><?php } ?></dt>
+				<dt><?php echo $dateadded ?><?php if($creatorid!=0 && ($cfname !== '' || $clname !== '')) {?> - <?php echo htmlspecialchars(trim($cfname . ' ' . $clname), ENT_QUOTES, 'UTF-8') ?><?php } ?><?php if ($canDeleteThisRequest) {?> <a class="wb-lbx" href="includes/delete-comms.php?t=a&id=<?php echo $row2['id'];?>&rid=<?php echo $triageid ?>"><span class="glyphicon glyphicon-trash"></span><span class="wb-inv"> <?= htmlspecialchars($t['delete_comment']) ?></span></a><?php } ?></dt>
 				<dd><?php echo $annotes ?></dd>
 				<?php } ?>
 			</dl>

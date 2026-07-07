@@ -21,6 +21,9 @@ $isAuthenticated = !empty($_SESSION['pid']);
 $appName = $config['app']['name'][$langCode];
 $orgName = $config['app']['organization'][$langCode];
 $orgUrl = $config['app']['organization_url'][$langCode];
+$notifyMode = function_exists('app_notify_mode') ? app_notify_mode() : 'live';
+$showEnvironmentBanner = function_exists('app_is_production') ? !app_is_production() : false;
+$notifyRedirectEmail = function_exists('app_notify_redirect_recipient') ? app_notify_redirect_recipient() : null;
 
 // Header-specific language strings
 $headerTranslations = [
@@ -41,6 +44,25 @@ $headerTranslations = [
 		'close_overlay' => 'Close overlay',
 		'close_esc' => 'Close: Menu (escape key)',
 		'breadcrumbs_heading' => 'You are here:',
+		'dev_notice_label' => 'Development environment notice',
+		'dev_notice_prefix' => 'Development environment.',
+		'dev_notice_redirect' => 'Email notifications are redirected to a safe test recipient.',
+		'dev_notice_redirect_email' => 'Email notifications are redirected to:',
+		'dev_notice_disabled' => 'Email notifications are disabled.',
+		'dev_notice_live' => 'Email notifications are being sent to their intended recipients.',
+		'dev_preview_title' => 'Notification preview (development)',
+		'dev_preview_client' => 'Client',
+		'dev_preview_internal' => 'Team',
+		'dev_preview_general' => 'Recipient',
+		'dev_preview_role_team' => 'Team',
+		'dev_preview_role_manager' => 'Manager',
+		'dev_preview_role_team_lead' => 'Team lead',
+		'dev_preview_role_admin' => 'Admin',
+		'dev_preview_role_assignee' => 'Assignee',
+		'dev_preview_role_user' => 'Employee',
+		'dev_preview_disabled' => 'Disabled mode: would send to',
+		'dev_preview_sent' => 'Sent to',
+		'dev_preview_intended' => 'intended',
 	],
 	'fr' => [
 		'skip_heading' => 'Ignorer les liens',
@@ -59,10 +81,49 @@ $headerTranslations = [
 		'close_overlay' => 'Fermer la fenêtre superposée',
 		'close_esc' => 'Fermer : Menu (touche d\'échappement)',
 		'breadcrumbs_heading' => 'Vous êtes ici :',
+		'dev_notice_label' => 'Avis sur l\'environnement de développement',
+		'dev_notice_prefix' => 'Environnement de développement.',
+		'dev_notice_redirect' => 'Les notifications par courriel sont redirigées vers un destinataire d\'essai sécuritaire.',
+		'dev_notice_redirect_email' => 'Les notifications par courriel sont redirigées vers :',
+		'dev_notice_disabled' => 'Les notifications par courriel sont désactivées.',
+		'dev_notice_live' => 'Les notifications par courriel sont envoyées à leurs destinataires prévus.',
+		'dev_preview_title' => 'Apercu des notifications (developpement)',
+		'dev_preview_client' => 'Client',
+		'dev_preview_internal' => 'Equipe',
+		'dev_preview_general' => 'Destinataire',
+		'dev_preview_role_team' => 'Equipe',
+		'dev_preview_role_manager' => 'Gestionnaire',
+		'dev_preview_role_team_lead' => 'Chef d equipe',
+		'dev_preview_role_admin' => 'Administrateur',
+		'dev_preview_role_assignee' => 'Personne assignee',
+		'dev_preview_role_user' => 'Employe',
+		'dev_preview_disabled' => 'Mode desactive : envoi prevu a',
+		'dev_preview_sent' => 'Envoye a',
+		'dev_preview_intended' => 'prevu',
 	]
 ];
 
 	$headerLangStrings = $headerTranslations[$langCode];
+	$statusParam = strtolower(trim((string) ($_GET['status'] ?? '')));
+	$showDevNotificationPreview = in_array($statusParam, ['newrequestcomplete'], true);
+	$devNotificationPreviewEntries = [];
+	if (function_exists('app_dev_notification_preview_consume')) {
+		if ($showDevNotificationPreview) {
+			$devNotificationPreviewEntries = app_dev_notification_preview_consume();
+		} else {
+			// Prevent previews from leaking into unrelated pages.
+			app_dev_notification_preview_consume();
+		}
+	}
+	$notifyModeMessage = $headerLangStrings['dev_notice_live'];
+	if ($notifyMode === 'redirect') {
+		$notifyModeMessage = $headerLangStrings['dev_notice_redirect'];
+		if (!empty($notifyRedirectEmail)) {
+			$notifyModeMessage = $headerLangStrings['dev_notice_redirect_email'] . ' ' . $notifyRedirectEmail;
+		}
+	} elseif ($notifyMode === 'disabled') {
+		$notifyModeMessage = $headerLangStrings['dev_notice_disabled'];
+	}
 ?>
 <body vocab="https://schema.org/" typeof="WebPage">
 	<nav aria-label="<?= $headerLangStrings['skip_heading'] ?>">
@@ -187,28 +248,87 @@ $headerTranslations = [
 		</nav>
 	</header>
 
-<?php
-// Show development environment banner if applicable
-if (isset($cenvironment) && $cenvironment == 1):
-?>
-<div style="padding:15px;position:fixed;bottom:0;right:0;width:35%;z-index:9999999;background-color:#FFF;border-style:solid;">
-    <div style="padding:5px;">
-        <div class="alert alert-danger" style="margin:0 auto;">
-			<h3><?= $langCode === 'en' ? 'Development environment' : 'Environnement de développement' ?></h3>
-            <p>
-				<?= $langCode === 'en' 
-                    ? 'You are currently viewing the development environment, no changes will be made in production. Use account settings to switch back to production.'
-                    : 'Vous consultez actuellement l\'environnement de développement, aucune modification ne sera apportée en production. Utilisez les paramètres du compte pour revenir à la production.'
-                ?>
-            </p>
-        </div>
-    </div>
+<?php if ($showEnvironmentBanner): ?>
+<div class="container mrgn-tp-md">
+	<section class="alert alert-warning" aria-label="<?= htmlspecialchars($headerLangStrings['dev_notice_label']) ?>">
+		<p class="mrgn-bttm-0">
+			<strong><?= htmlspecialchars($headerLangStrings['dev_notice_prefix']) ?></strong>
+			<?= htmlspecialchars($notifyModeMessage) ?>
+		</p>
+	</section>
+</div>
+<?php endif; ?>
+
+<?php if ($showEnvironmentBanner && $showDevNotificationPreview && !empty($devNotificationPreviewEntries)): ?>
+<div class="container mrgn-tp-md">
+	<section class="alert alert-info" aria-label="<?= htmlspecialchars($headerLangStrings['dev_preview_title']) ?>">
+		<p><strong><?= htmlspecialchars($headerLangStrings['dev_preview_title']) ?></strong></p>
+		<ul class="mrgn-bttm-0">
+			<?php foreach ($devNotificationPreviewEntries as $previewEntry): ?>
+				<?php
+				$recipientType = (string) ($previewEntry['recipientType'] ?? 'general');
+				$recipientRole = trim((string) ($previewEntry['recipientRole'] ?? ''));
+				$intendedRecipient = (string) ($previewEntry['intendedRecipient'] ?? '');
+				$finalRecipient = (string) ($previewEntry['finalRecipient'] ?? '');
+				$previewResult = (string) ($previewEntry['result'] ?? 'attempted');
+				$hasCustomRecipientLabel = false;
+
+				if ($recipientType === 'internal' && $recipientRole === '' && isset($link) && ($link instanceof mysqli)) {
+					$emailToClassify = $finalRecipient !== '' ? $finalRecipient : $intendedRecipient;
+					if ($emailToClassify !== '') {
+						$escapedEmail = mysqli_real_escape_string($link, $emailToClassify);
+						$roleNameField = $langCode === 'fr' ? 'namefr' : 'nameen';
+						$roleResult = mysqli_query($link, "
+							SELECT u.atype, at.$roleNameField AS role_name
+							FROM tblusers u
+							LEFT JOIN tblaccounttype at ON at.id = u.atype
+							WHERE LOWER(u.email) = LOWER('$escapedEmail') AND u.status = '1'
+							ORDER BY u.id DESC
+							LIMIT 1
+						");
+						$roleRow = $roleResult ? mysqli_fetch_assoc($roleResult) : null;
+						if (!empty($roleRow)) {
+							$recipientRole = 'user';
+							$roleName = trim((string) ($roleRow['role_name'] ?? ''));
+							if ($roleName !== '') {
+								$recipientLabel = $roleName;
+								$hasCustomRecipientLabel = true;
+							}
+						}
+					}
+				}
+
+				if (!isset($recipientLabel)) {
+					$recipientLabel = $headerLangStrings['dev_preview_general'];
+				}
+				$roleLabelKey = 'dev_preview_role_' . $recipientRole;
+				if (!$hasCustomRecipientLabel && $recipientRole !== '' && isset($headerLangStrings[$roleLabelKey])) {
+					$recipientLabel = $headerLangStrings[$roleLabelKey];
+				} elseif (!$hasCustomRecipientLabel && $recipientType === 'client') {
+					$recipientLabel = $headerLangStrings['dev_preview_client'];
+				} elseif (!$hasCustomRecipientLabel && $recipientType === 'internal') {
+					$recipientLabel = $headerLangStrings['dev_preview_internal'];
+				}
+
+				if ($previewResult === 'disabled') {
+					$detail = $headerLangStrings['dev_preview_disabled'] . ' ' . $intendedRecipient;
+				} elseif ($finalRecipient !== '' && strcasecmp($finalRecipient, $intendedRecipient) !== 0) {
+					$detail = $headerLangStrings['dev_preview_sent'] . ' ' . $finalRecipient . ' (' . $headerLangStrings['dev_preview_intended'] . ': ' . $intendedRecipient . ')';
+				} else {
+					$detail = $headerLangStrings['dev_preview_sent'] . ' ' . ($finalRecipient !== '' ? $finalRecipient : $intendedRecipient);
+				}
+				?>
+				<li><strong><?= htmlspecialchars($recipientLabel) ?>:</strong> <?= htmlspecialchars($detail) ?></li>
+			<?php endforeach; ?>
+		</ul>
+	</section>
 </div>
 <?php endif; ?>
 
 <?php
 // Show logged-in user info and account type testing notice
 if (!empty($_SESSION['pid'])):
+	/** @var mysqli $link */
 ?>
 <div class="container">
     <p>
@@ -220,11 +340,70 @@ if (!empty($_SESSION['pid'])):
             // Get the current testing account type name
             $testAtype = $_SESSION['atype'];
 			$nameField = ($langCode === 'fr') ? 'namefr' : 'nameen';
-            $result = mysqli_query($link, "SELECT {$nameField} FROM tblaccounttype WHERE id = '{$testAtype}'");
-            if ($row = mysqli_fetch_array($result)) {
+			$testRoleResult = mysqli_query($link, "SELECT {$nameField} FROM tblaccounttype WHERE id = '{$testAtype}'");
+			if ($testRoleResult && ($testRoleRow = mysqli_fetch_array($testRoleResult))) {
                 echo ' <span style="color: #6d5003; font-weight: bold;">| 🔧 ';
 				echo ($langCode === 'en' ? 'Testing as: ' : 'Tester en tant que : ');
-                echo htmlspecialchars($row[$nameField]) . '</span>';
+				echo htmlspecialchars($testRoleRow[$nameField]) . '</span>';
+
+				if ((int)$testAtype === 5) {
+					$effectiveEmployeeId = 0;
+					if (!empty($_SESSION['test_employee_id'])) {
+						$effectiveEmployeeId = (int)$_SESSION['test_employee_id'];
+					}
+					if ($effectiveEmployeeId <= 0) {
+						$effectiveEmployeeId = (int)($_SESSION['pid'] ?? 0);
+					}
+
+					$employeeLabel = ($langCode === 'fr') ? 'Employé' : 'Employee';
+					if ($effectiveEmployeeId > 0) {
+						$employeeResult = mysqli_query($link, "SELECT firstname, lastname, email FROM tblusers WHERE id = '$effectiveEmployeeId' LIMIT 1");
+						$employeeRow = $employeeResult ? mysqli_fetch_assoc($employeeResult) : null;
+						if (!empty($employeeRow)) {
+							$fullName = trim((string)($employeeRow['firstname'] ?? '') . ' ' . (string)($employeeRow['lastname'] ?? ''));
+							$email = (string)($employeeRow['email'] ?? '');
+							if ($fullName !== '' && $email !== '') {
+								$employeeLabelValue = $fullName . ' (' . $email . ')';
+							} elseif ($fullName !== '') {
+								$employeeLabelValue = $fullName;
+							} else {
+								$employeeLabelValue = $email;
+							}
+							echo ' <span style="color: #6d5003; font-weight: bold;">| ' . htmlspecialchars($employeeLabel) . ': ' . htmlspecialchars($employeeLabelValue) . '</span>';
+						}
+					}
+				}
+
+				if ((int)$testAtype === 4) {
+					// Show effective team scope only for Team Lead role testing.
+					$effectiveTeamIds = [];
+					if (!empty($_SESSION['test_team_ids'])) {
+						$effectiveTeamIds = array_values(array_filter(array_map('trim', explode(',', (string)$_SESSION['test_team_ids']))));
+					} else {
+						$currentUserId = (int)($_SESSION['pid'] ?? 0);
+						if ($currentUserId > 0) {
+							$teamResult = mysqli_query($link, "SELECT team FROM tblusers WHERE id = '$currentUserId' LIMIT 1");
+							$teamRow = $teamResult ? mysqli_fetch_assoc($teamResult) : null;
+							$effectiveTeamIds = array_values(array_filter(array_map('trim', explode(',', (string)($teamRow['team'] ?? '')))));
+						}
+					}
+
+					$teamNames = [];
+					if (!empty($effectiveTeamIds)) {
+						$teamIdCsv = implode(',', array_map('intval', $effectiveTeamIds));
+						$teamNameResult = mysqli_query($link, "SELECT {$nameField} FROM tblteams WHERE status = 1 AND id IN ($teamIdCsv) ORDER BY {$nameField} ASC");
+						while ($teamNameResult && ($teamNameRow = mysqli_fetch_assoc($teamNameResult))) {
+							if (!empty($teamNameRow[$nameField])) {
+								$teamNames[] = $teamNameRow[$nameField];
+							}
+						}
+					}
+
+					echo ' <span style="color: #6d5003; font-weight: bold;">| ';
+					echo ($langCode === 'en' ? 'Team scope: ' : 'Portée équipe : ');
+					echo htmlspecialchars(!empty($teamNames) ? implode(', ', $teamNames) : ($langCode === 'en' ? 'None selected' : 'Aucune sélectionnée'));
+					echo '</span>';
+				}
             }
         }
         ?>

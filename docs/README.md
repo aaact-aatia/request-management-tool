@@ -7,6 +7,9 @@ This directory contains comprehensive documentation for the Request Management T
 ```
 docs/
 ├── README.md                    # This file
+├── permissions-model.md         # Role and permission source-of-truth (current and target policy)
+├── permissions-target-policy.md # Target permission catalog and role matrix
+├── permissions-route-access-map.md # Route-by-route access class map
 ├── migrations/                  # Step-by-step migration guides
 │   └── 001-language-files.md   # Language file consolidation guide
 └── adr/                         # Architecture Decision Records
@@ -14,6 +17,18 @@ docs/
 ```
 
 ## Documentation Types
+
+### Permissions Documentation
+
+- **[Permissions Model](permissions-model.md)**: Current and target role/permission behavior
+  - Status: Active
+  - Scope: account types, admin/superadmin flags, capability matrix, rollout phases
+- **[Permissions Target Policy](permissions-target-policy.md)**: Target permission vocabulary and role mapping
+  - Status: Draft
+  - Scope: permission catalog, role matrix, guest policy, environment controls
+- **[Permissions Route Access Map](permissions-route-access-map.md)**: Route and endpoint access classes
+  - Status: Draft
+  - Scope: page-level visibility, endpoint classification, guest-linked view boundaries
 
 ### Migration Guides (`migrations/`)
 Step-by-step guides for implementing specific improvements from [IMPROVEMENTS.md](../IMPROVEMENTS.md). Each migration is numbered sequentially and includes:

@@ -13,9 +13,9 @@ require('sql.php');
 if (!isset($link) || !($link instanceof mysqli)) {
     throw new RuntimeException('Database connection was not initialized in sql.php');
 }
-require('includes/helpers.php');
-require('BlobStorage.php');
-require('emailController.php');
+require_once('includes/helpers.php');
+require_once('BlobStorage.php');
+require_once('emailController.php');
 
 // Detect language
 $lang = detectLanguage();
@@ -39,6 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $clientemail = getPostValue('clientemail');
     $departmentagency = getPostValue('departmentagency');
     $clientphone = getPostValue('clientphone');
+    $requestlang = app_normalize_language($lang);
     $bdm = getPostValue('bdm', 0);
     $attach1 = getPostValue('attach1');
     $attach2 = getPostValue('attach2');
@@ -125,6 +126,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $daterequiredSql = $daterequiredu ? 'NULL' : "'$daterequired'";
     $columns = "requestid, creatorid, catalogueid, serviceid, subserviceid, statusid, datereceived, slatimer, isreaudit, title, clientlname, clientfname, clientemail, clientphone, daterequired, bdm, attach1, attach2, attach3, status";
     $values  = "'$nrequestid', $userid, $catalogueid, $serviceid, $subserviceid, $statusid, '$dateopened', '$slatimer', $reauditFlag, '$requesttitle', '$clientlname', '$clientfname', '$clientemail', '$clientphone', $daterequiredSql, '$bdm', '$attach1', '$attach2', '$attach3', '$status'";
+
+    $hasRequestLangColumn = function_exists('rmt_db_column_exists')
+        && rmt_db_column_exists($link, 'tbltriage', 'requestlang');
+    if ($hasRequestLangColumn) {
+        $columns .= ", requestlang";
+        $values  .= ", '$requestlang'";
+    }
     
     if ($firstsprintenddate) {
         $columns .= ", firstsprintenddate";
@@ -139,6 +147,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     mysqli_query($link, $sql);
     $latestid = mysqli_insert_id($link);
     $nrequestemailid = base64_encode($latestid);
+
+    // Preserve original request language even on older schemas that may not include tbltriage.requestlang.
+    rmt_save_request_language_metadata($link, (int) $latestid, $requestlang, (int) $creatorid);
     
     // Add client notes to communication log if provided
     $datereceived = date("Y-m-d");
@@ -162,10 +173,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         mysqli_query($link, $sql);
     }
     
-    // Determine the team to notify based on service/subservice
+    // Determine the team to notify based on first-tier catalogue ownership.
+    // Fall back to legacy service/subservice contact ownership for older data.
     $contactid = -1;
+    $hasCatalogueContact = function_exists('rmt_db_column_exists')
+        && rmt_db_column_exists($link, 'tblcatalogue', 'contactid');
+
+    if ($hasCatalogueContact && $catalogueid && $catalogueid != 0) {
+        $result = mysqli_query($link, "SELECT contactid FROM tblcatalogue WHERE id = '$catalogueid'");
+        $row = mysqli_fetch_array($result);
+        if (!empty($row) && !empty($row[0])) {
+            $contactid = (int)$row[0];
+        }
+    }
     
-    if ($subserviceid && $subserviceid != 0) {
+    if (($contactid <= 0) && $subserviceid && $subserviceid != 0) {
         // Get serviceid from subservice
         $result = mysqli_query($link, "SELECT serviceid FROM tblsubservices WHERE id = '$subserviceid'");
         $row = mysqli_fetch_array($result);
@@ -179,24 +201,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if (!empty($row)) {
             $contactid = $row[0];
         }
-        
-        // Get team details
-        $result = mysqli_query($link, "SELECT * FROM tblteams WHERE id = '$contactid'");
-        $row = mysqli_fetch_array($result);
-        if (!empty($row)) {
-            $teamname = $isFrench ? $row['namefr'] : $row['nameen'];
-            $teamemail = $row['email'];
-            $contactname = $row['contactname'];
-            $contactemail = $row['contactemail'];
-        }
-    } elseif ($serviceid && $serviceid != 0) {
+    }
+
+    if (($contactid <= 0) && $serviceid && $serviceid != 0) {
         // Get contact from service directly
         $result = mysqli_query($link, "SELECT contactid FROM tblservices WHERE id = '$serviceid'");
         $row = mysqli_fetch_array($result);
         if (!empty($row)) {
             $contactid = $row[0];
         }
-        
+    }
+
+    if ($contactid > 0) {
         // Get team details
         $result = mysqli_query($link, "SELECT * FROM tblteams WHERE id = '$contactid'");
         $row = mysqli_fetch_array($result);
@@ -206,12 +222,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $contactname = $row['contactname'];
             $contactemail = $row['contactemail'];
         }
-    } else {
-        // Fallback to AAACT triage
+    }
+
+    if (empty($teamemail)) {
+        // Fallback to AAACT triage when team ownership is not configured.
         $teamname = "AAACT Triage";
         $teamemail = "daiu-anci@ssc-spc.gc.ca";
         $contactname = "Brad Souster";
         $contactemail = "Brad.Souster@ssc-spc.gc.ca";
+    } else {
+        $teamname = $teamname ?? "";
+        $teamemail = $teamemail ?? "";
+        $contactname = $contactname ?? "";
+        $contactemail = $contactemail ?? "";
     }
     
     // Prepare email data
@@ -235,15 +258,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $servicename = $row[$nameField];
     }
     
-    $domain = "https://gcdc-ssc-ictaccess-linux-aaact-rmt-dev-asv.azurewebsites.net/";
+    $domain = app_base_url();
     
     // Email personalization data
     $personalisation = [
         "requestid" => $nrequestid,
         "nrequestid" => $nrequestid,
         "teamname" => $teamname,
+        "team_email" => $teamemail,
         "requesttitle" => $requesttitle,
         "nrequestemailid" => $nrequestemailid,
+        "nrequestemail" => $clientemail,
         "client_fname" => $clientfname,
         "client_lname" => $clientlname,
         "client_email" => $clientemail,
@@ -251,7 +276,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         "client_communications" => $clientnotes,
         "catalogue_name" => $cataloguename,
         "service_name" => $servicename,
-        "url" => $domain . "/viewrequest.php?lang=" . $lang . "&erid=" . $nrequestemailid . "&reqid=" . urlencode("a11y-" . $nrequestid)
+        "url" => app_url("viewrequest.php?lang=" . $lang . "&erid=" . $nrequestemailid . "&reqid=" . urlencode("a11y-" . $nrequestid))
     ];
     
     $encoded_personalisation = json_encode($personalisation);
@@ -259,10 +284,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Send email notifications based on settings
     if ($notification == "Y") {
         // Request with notification enabled
-        $template_id = $isFrench ? "86fb7784-b1cc-40b5-88e5-f7ea43ee75c0" : "d9c219be-799f-4713-950f-21884d5d3c3c";
+        $template_id = app_notify_template_id('notification_generic');
         
         if ($afterfact == "Y") {
-            $template_id = $isFrench ? "c5ea62d8-9e11-482a-acfc-ae8a450de06c" : "949c6248-ef73-4cf2-b1ea-5136c8c856c2";
+            $template_id = app_notify_template_id('notification_generic');
         }
         
         if (empty($contactemail)) {
@@ -272,37 +297,76 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         
         // Send to team
         if (!empty($teamemail)) {
+            $teamMessageEvent = ($afterfact == "Y") ? 'request_afterfact' : 'request_created';
+            $teamCategory = rmt_notification_template_category($teamMessageEvent);
+            $teamPersonalisation = $personalisation + [
+                'notification_event' => $teamMessageEvent,
+                'template_category_id' => $teamCategory['id'],
+                'template_category_name_en' => $teamCategory['name_en'],
+                'template_category_name_fr' => $teamCategory['name_fr'],
+                'subject' => rmt_notification_subject($teamMessageEvent, 'internal', 'en', $personalisation),
+                'message' => rmt_notification_message($teamMessageEvent, 'internal', 'en', $personalisation),
+            ];
             if ($teamemail == "daiu-anci@ssc-spc.gc.ca") {
-                sendEmail($teamemail, "35388592-27f3-47f5-ae09-ac3f9ddf7904", $encoded_personalisation);
+                $aaactCategory = rmt_notification_template_category('request_aaact');
+                $teamPersonalisation['message'] = rmt_notification_message('request_aaact', 'internal', 'en', $personalisation);
+                $teamPersonalisation['subject'] = rmt_notification_subject('request_aaact', 'internal', 'en', $personalisation);
+                $teamPersonalisation['notification_event'] = 'request_aaact';
+                $teamPersonalisation['template_category_id'] = $aaactCategory['id'];
+                $teamPersonalisation['template_category_name_en'] = $aaactCategory['name_en'];
+                $teamPersonalisation['template_category_name_fr'] = $aaactCategory['name_fr'];
+                sendEmail($teamemail, $template_id, json_encode($teamPersonalisation), ['recipientType' => 'internal']);
             } else {
-                sendEmail($teamemail, $template_id, $encoded_personalisation);
+                sendEmail($teamemail, $template_id, json_encode($teamPersonalisation), ['recipientType' => 'internal']);
             }
         }
         
-        // Send to client (not for AAACT)
-        if ($teamemail != "daiu-anci@ssc-spc.gc.ca") {
-            $clientTemplate = $isFrench ? "d4fb66f3-e9f3-442f-9b7b-8b8e24f8799d" : "9e4e2ca4-ad1a-4204-ba1e-4be61a12f51c";
-            sendEmail($clientemail, $clientTemplate, $encoded_personalisation);
-        }
+        // Always send to client for new submissions.
+        $clientCategory = rmt_notification_template_category('request_created');
+        $clientPersonalisation = $personalisation + [
+            'notification_event' => 'request_created',
+            'template_category_id' => $clientCategory['id'],
+            'template_category_name_en' => $clientCategory['name_en'],
+            'template_category_name_fr' => $clientCategory['name_fr'],
+            'subject' => rmt_notification_subject('request_created', 'client', $requestlang, $personalisation),
+            'message' => rmt_notification_message('request_created', 'client', $requestlang, $personalisation),
+        ];
+        sendEmail($clientemail, $template_id, json_encode($clientPersonalisation), ['recipientType' => 'client']);
         
     } elseif ($notification != "N" || $notification == 1) {
-        // Default notification behavior (not for AAACT)
-        if ($teamemail != "daiu-anci@ssc-spc.gc.ca") {
-            // Team notification
-            $template_id = $isFrench ? "c72c5e69-8a8c-42a2-9bb9-dfcf2c5f7d84" : "265e8009-741e-4a79-8e89-bfedaf071494";
-            
-            if ($catalogueid == 9 || $catalogueid == 8) {
-                $template_id = "35388592-27f3-47f5-ae09-ac3f9ddf7904";
-            }
-            
-            if (!empty($teamemail)) {
-                sendEmail($teamemail, $template_id, $encoded_personalisation);
-            }
-            
-            // Client notification
-            $clientTemplate = $isFrench ? "36125c35-b1af-4989-9a94-f65b8e5cf49f" : "dcc97e6e-1fdf-4309-9351-a957ff5f6dcb";
-            sendEmail($clientemail, $clientTemplate, $encoded_personalisation);
+        // Default notification behavior.
+        $template_id = app_notify_template_id('notification_generic');
+		
+        if ($catalogueid == 9 || $catalogueid == 8) {
+            $template_id = app_notify_template_id('notification_generic');
         }
+		
+        // Team notification
+        if (!empty($teamemail)) {
+            $teamMessageEvent = ($catalogueid == 9 || $catalogueid == 8) ? 'request_aaact' : 'request_created';
+            $teamCategory = rmt_notification_template_category($teamMessageEvent);
+            $teamPersonalisation = $personalisation + [
+                'notification_event' => $teamMessageEvent,
+                'template_category_id' => $teamCategory['id'],
+                'template_category_name_en' => $teamCategory['name_en'],
+                'template_category_name_fr' => $teamCategory['name_fr'],
+                'subject' => rmt_notification_subject($teamMessageEvent, 'internal', 'en', $personalisation),
+                'message' => rmt_notification_message($teamMessageEvent, 'internal', 'en', $personalisation),
+            ];
+            sendEmail($teamemail, $template_id, json_encode($teamPersonalisation), ['recipientType' => 'internal']);
+        }
+		
+        // Always send to client for new submissions.
+        $clientCategory = rmt_notification_template_category('request_created');
+        $clientPersonalisation = $personalisation + [
+            'notification_event' => 'request_created',
+            'template_category_id' => $clientCategory['id'],
+            'template_category_name_en' => $clientCategory['name_en'],
+            'template_category_name_fr' => $clientCategory['name_fr'],
+            'subject' => rmt_notification_subject('request_created', 'client', $requestlang, $personalisation),
+            'message' => rmt_notification_message('request_created', 'client', $requestlang, $personalisation),
+        ];
+        sendEmail($clientemail, $template_id, json_encode($clientPersonalisation), ['recipientType' => 'client']);
     }
     
     // Redirect to view request page

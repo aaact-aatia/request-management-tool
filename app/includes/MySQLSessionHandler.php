@@ -155,7 +155,11 @@ class MySQLSessionHandler implements SessionHandlerInterface
             
             return true;
         } catch (Throwable $e) {
-            error_log('MySQLSessionHandler: Write failed (connection may be closed): ' . $e->getMessage());
+            $message = (string) $e->getMessage();
+            // Common during shutdown if page code already called mysqli_close($link).
+            if (stripos($message, 'already closed') === false) {
+                error_log('MySQLSessionHandler: Write failed (connection may be closed): ' . $message);
+            }
             return true;  // Return true to suppress PHP's session write warning during shutdown
         }
     }

@@ -237,6 +237,12 @@ return [
     'client_survey_response_time' => 'Response time',
     'client_survey_comments_label' => 'Do you have any suggestions to improve our service or any additional comments?',
     'client_survey_submit' => 'Submit',
+
+    // Client Survey Thank You page (client-survey-thank-you.php)
+    'client_survey_thank_you_page_title' => 'Thank you - Request Management Tool - IT Accessibility Office',
+    'client_survey_thank_you_heading' => 'Thank you',
+    'client_survey_thank_you_message' => 'Your survey has been submitted successfully. We appreciate your feedback.',
+    'client_survey_thank_you_new_request_link' => 'Submit a new request',
     
     // Client Survey Pending page (client-survey-pending.php)
     'client_survey_pending_page_title' => 'Client satisfaction surveys - Request Management Tool - IT Accessibility Office',
@@ -245,7 +251,6 @@ return [
     'client_survey_pending_col_title' => 'Title',
     'client_survey_pending_col_actions' => 'Actions',
     'client_survey_pending_details' => 'details',
-    'client_survey_pending_generate_email' => 'Generate survey email',
     'client_survey_pending_view_links' => 'View survey links',
     'client_survey_pending_mark_sent' => 'Mark as sent',
     'client_survey_pending_no_surveys' => 'No surveys available!',
@@ -259,8 +264,15 @@ return [
     'client_survey_link_french' => 'French survey link',
     'client_survey_link_english' => 'English survey link',
     'client_survey_link_email_client' => 'Open a draft email to the client',
+    'client_survey_link_send_resolved' => 'Send resolved + survey email to client',
+    'client_survey_link_resolved_sent' => 'Resolved email sent to the client (with survey links when enabled).',
+    'client_survey_link_missing_email' => 'Client email is missing for this request.',
+    'client_survey_link_send_failed' => 'Email could not be sent. Please verify GC Notify settings and try again.',
     'client_survey_link_back_request' => 'Back to request',
     'client_survey_link_survey_disabled' => 'This catalogue is currently marked as not requiring surveys.',
+    'client_survey_link_survey_status_label' => 'Survey enabled',
+    'client_survey_link_survey_status_enabled' => 'Yes',
+    'client_survey_link_survey_status_disabled' => 'No',
     
     // Batch AAACT Info page (batch-ace-info.php)
     'batch_ace_no_details' => 'No details available',
@@ -339,6 +351,9 @@ return [
     'catalogue_heading' => 'Service catalogue management',
     'catalogue_add_button' => 'Add new catalogue item',
     'catalogue_name_column' => 'Catalogue name',
+    'catalogue_contact_group_column' => 'Contact group',
+    'catalogue_contact_group_field' => 'Contact group',
+    'catalogue_contact_group_unassigned' => 'Not assigned',
     'catalogue_services_column' => 'Services',
     'catalogue_item_label' => 'catalogue item',
     'catalogue_surveys_not_sent' => 'Surveys are not being sent',
@@ -379,7 +394,21 @@ return [
     'settings_heading' => 'Account settings',
     'settings_add_request_heading' => 'Manually add a new request',
     'settings_add_request_link' => 'Add request (admin only)',
+    'settings_quick_test_request_link' => 'Create quick test request (dev only)',
+    'settings_gcnotify_link' => 'GC Notify settings (admin only)',
     'settings_password_heading' => 'Reset password for Request Management Tool',
+
+    // GC Notify settings page (gcnotify-settings.php)
+    'gcnotify_settings_heading' => 'GC Notify settings',
+    'gcnotify_settings_intro' => 'Manage non-secret GC Notify settings from the application. Values saved here override environment values for the same key.',
+    'gcnotify_settings_saved' => 'GC Notify settings were saved successfully.',
+    'gcnotify_settings_secret_note_title' => 'Secret handling',
+    'gcnotify_settings_secret_note_body' => 'GCNOTIFY_API_KEY remains environment-only and is not editable here.',
+    'gcnotify_settings_delivery_heading' => 'Delivery and routing settings',
+    'gcnotify_settings_templates_heading' => 'Template ID overrides',
+    'gcnotify_settings_templates_intro' => 'GC Notify templates must be created and managed in GC Notify first. Enter the template UUIDs here so this application can reference and use them.',
+    'gcnotify_settings_save' => 'Save GC Notify settings',
+    'gcnotify_settings_back' => 'Back to account settings',
     
     // Users management page (users.php)
     'users_page_title' => 'User management - Request Management Tool - IT Accessibility Office',
@@ -387,7 +416,7 @@ return [
     'users_add_button' => 'Add new user',
     'users_col_name' => 'Full name',
     'users_col_email' => 'Email',
-    'users_col_account_type' => 'Account type',
+    'users_col_account_type' => 'Role',
     'users_col_team' => 'Team(s)',
     'users_edit_button' => 'Edit user',
     'users_delete_button' => 'Delete user',
