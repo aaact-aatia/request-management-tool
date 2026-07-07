@@ -141,6 +141,7 @@ include 'includes/template/head.php';
 			//echo $sql;
 			
 			$result = mysqli_query($link,$sql);
+			$tableName = 'tblusers';
 			//List it
 			if(mysqli_num_rows($result)>0){
 			?>
@@ -272,11 +273,11 @@ include 'includes/template/head.php';
 			<?php } ?>
 			</tbody>
 			</table>
-			<?php $tableName = 'tblusers'; include('includes/admin-csv-buttons.php'); ?>
 			
 			<?php } else { ?>
 			<p><strong><?= htmlspecialchars($langFile['users_no_users']) ?></strong></p>
 			<?php } ?>
+			<?php include('includes/admin-csv-buttons.php'); ?>
 			
 			<?php include 'includes/template/page-details.php'; ?>
 		</main>

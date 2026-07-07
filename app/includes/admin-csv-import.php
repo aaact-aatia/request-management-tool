@@ -48,6 +48,52 @@ if ($handle === false) {
 
 $columns = $csvTables[$table]['columns'];
 
+// Ensure import expects headers compatible with the live schema.
+// Some environments may still have legacy NOT NULL columns.
+$schemaColumns = [];
+$requiredExtraColumns = [];
+$requiredNoDefaultColumns = [];
+$columnsResult = mysqli_query($link, "SHOW COLUMNS FROM `$table`");
+if ($columnsResult) {
+	while ($columnMeta = mysqli_fetch_assoc($columnsResult)) {
+		$field = (string)($columnMeta['Field'] ?? '');
+		if ($field === '') {
+			continue;
+		}
+
+		$schemaColumns[] = $field;
+		$isAutoIncrement = stripos((string)($columnMeta['Extra'] ?? ''), 'auto_increment') !== false;
+		$isRequired = strtoupper((string)($columnMeta['Null'] ?? 'YES')) === 'NO'
+			&& $columnMeta['Default'] === null
+			&& !$isAutoIncrement;
+
+		if ($isRequired) {
+			$requiredNoDefaultColumns[$field] = true;
+		}
+
+		if ($isRequired && !in_array($field, $columns, true)) {
+			$requiredExtraColumns[] = $field;
+		}
+	}
+}
+
+if (!empty($schemaColumns)) {
+	$columns = array_values(array_filter($columns, function ($column) use ($schemaColumns) {
+		return in_array($column, $schemaColumns, true);
+	}));
+}
+
+if (!empty($requiredExtraColumns)) {
+	// Legacy tblteams contact columns are auto-populated below when present in schema.
+	if ($table === 'tblteams') {
+		$requiredExtraColumns = array_values(array_filter($requiredExtraColumns, function ($column) {
+			return !in_array($column, ['contactname', 'contactemail'], true);
+		}));
+	}
+
+	$columns = array_values(array_unique(array_merge($columns, $requiredExtraColumns)));
+}
+
 // Skip comment rows and UTF-8 BOM
 $header = null;
 while (($header = fgetcsv($handle)) !== false) {
@@ -119,14 +165,41 @@ while (($row = fgetcsv($handle)) !== false) {
 		continue;
 	}
 
+	// Legacy schema compatibility for tblteams.
+	// If old required contact fields exist in DB, derive sensible defaults from team data.
+	if ($table === 'tblteams') {
+		$nameEn = trim((string)($assoc['nameen'] ?? ''));
+		$nameFr = trim((string)($assoc['namefr'] ?? ''));
+		$teamEmail = trim((string)($assoc['email'] ?? ''));
+
+		if (!array_key_exists('contactname', $assoc) || trim((string)$assoc['contactname']) === '') {
+			$assoc['contactname'] = ($nameEn !== '') ? $nameEn : (($nameFr !== '') ? $nameFr : 'Team Contact');
+		}
+
+		if (!array_key_exists('contactemail', $assoc) || trim((string)$assoc['contactemail']) === '') {
+			$assoc['contactemail'] = $teamEmail;
+		}
+	}
+
 	$idRaw = isset($assoc['id']) ? trim((string)$assoc['id']) : '';
 	$idValue = ($idRaw !== '' && ctype_digit($idRaw)) ? (int)$idRaw : null;
+
+	$insertColumnList = $columns;
+	if ($table === 'tblteams') {
+		if (isset($requiredNoDefaultColumns['contactname']) && !in_array('contactname', $insertColumnList, true)) {
+			$insertColumnList[] = 'contactname';
+		}
+		if (isset($requiredNoDefaultColumns['contactemail']) && !in_array('contactemail', $insertColumnList, true)) {
+			$insertColumnList[] = 'contactemail';
+		}
+	}
 
 	$insertColumns = [];
 	$insertValues = [];
 	$updateParts = [];
+	$missingRequiredColumn = null;
 
-	foreach ($columns as $column) {
+	foreach ($insertColumnList as $column) {
 		if ($column === 'id' && $idValue === null) {
 			continue;
 		}
@@ -139,6 +212,10 @@ while (($row = fgetcsv($handle)) !== false) {
 
 		$value = trim((string)($assoc[$column] ?? ''));
 		if ($value === '') {
+			if ($column !== 'id' && isset($requiredNoDefaultColumns[$column])) {
+				$missingRequiredColumn = $column;
+				break;
+			}
 			$insertValues[] = 'NULL';
 		} else {
 			$insertValues[] = "'" . mysqli_real_escape_string($link, $value) . "'";
@@ -147,6 +224,12 @@ while (($row = fgetcsv($handle)) !== false) {
 		if ($column !== 'id') {
 			$updateParts[] = "`$column` = VALUES(`$column`)";
 		}
+	}
+
+	if ($missingRequiredColumn !== null) {
+		$failCount++;
+		$errorDetails[] = "Missing required value for column: " . $missingRequiredColumn;
+		continue;
 	}
 
 	if (empty($insertColumns)) {
@@ -160,11 +243,16 @@ while (($row = fgetcsv($handle)) !== false) {
 		$sql .= " ON DUPLICATE KEY UPDATE " . implode(', ', $updateParts);
 	}
 
-	if (mysqli_query($link, $sql)) {
-		$okCount++;
-	} else {
+	try {
+		if (mysqli_query($link, $sql)) {
+			$okCount++;
+		} else {
+			$failCount++;
+			$errorDetails[] = "SQL Error: " . mysqli_error($link);
+		}
+	} catch (mysqli_sql_exception $e) {
 		$failCount++;
-		$errorDetails[] = "SQL Error: " . mysqli_error($link);
+		$errorDetails[] = "SQL Exception: " . $e->getMessage();
 	}
 }
 

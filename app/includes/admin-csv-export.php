@@ -26,6 +26,47 @@ if (!isset($csvTables[$table])) {
 $columns = $csvTables[$table]['columns'];
 $orderBy = $csvTables[$table]['order_by'];
 
+// Ensure export columns are compatible with the live schema.
+// Some environments may still have legacy NOT NULL columns (for example in tblteams).
+$schemaColumns = [];
+$requiredExtraColumns = [];
+$columnsResult = mysqli_query($link, "SHOW COLUMNS FROM `$table`");
+if ($columnsResult) {
+	while ($columnMeta = mysqli_fetch_assoc($columnsResult)) {
+		$field = (string)($columnMeta['Field'] ?? '');
+		if ($field === '') {
+			continue;
+		}
+
+		$schemaColumns[] = $field;
+		$isAutoIncrement = stripos((string)($columnMeta['Extra'] ?? ''), 'auto_increment') !== false;
+		$isRequired = strtoupper((string)($columnMeta['Null'] ?? 'YES')) === 'NO'
+			&& $columnMeta['Default'] === null
+			&& !$isAutoIncrement;
+
+		if ($isRequired && !in_array($field, $columns, true)) {
+			$requiredExtraColumns[] = $field;
+		}
+	}
+}
+
+if (!empty($schemaColumns)) {
+	$columns = array_values(array_filter($columns, function ($column) use ($schemaColumns) {
+		return in_array($column, $schemaColumns, true);
+	}));
+}
+
+if (!empty($requiredExtraColumns)) {
+	// Legacy tblteams columns should be auto-derived during import; keep templates minimal.
+	if ($table === 'tblteams') {
+		$requiredExtraColumns = array_values(array_filter($requiredExtraColumns, function ($column) {
+			return !in_array($column, ['contactname', 'contactemail'], true);
+		}));
+	}
+
+	$columns = array_values(array_unique(array_merge($columns, $requiredExtraColumns)));
+}
+
 $selectColumns = [];
 foreach ($columns as $column) {
 	$selectColumns[] = "`$column`";

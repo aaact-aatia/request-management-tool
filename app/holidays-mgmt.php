@@ -179,6 +179,7 @@ include 'includes/template/head.php';
                 </form>
             </div>
         </div>
+        <?php $tableName = 'tblholidays'; ?>
         
         <?php if (mysqli_num_rows($result) > 0): ?>
             <p><?= $t['total_holidays'] ?><?= $lang == 'fr' ? ' :' : ':' ?> <strong><?= mysqli_num_rows($result) ?></strong></p>
@@ -207,10 +208,10 @@ include 'includes/template/head.php';
                     <?php endwhile; ?>
                 </tbody>
             </table>
-            <?php $tableName = 'tblholidays'; include('includes/admin-csv-buttons.php'); ?>
         <?php else: ?>
             <p><?= $t['no_holidays'] ?></p>
         <?php endif; ?>
+        <?php include('includes/admin-csv-buttons.php'); ?>
         
         <!-- Add Holiday Modal -->
         <section id="addHolidayModal" class="mfp-hide modal-dialog modal-content overlay-def">
