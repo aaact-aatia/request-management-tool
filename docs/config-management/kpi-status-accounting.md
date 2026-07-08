@@ -19,12 +19,14 @@ Track a small set of configuration management metrics to measure integrity, trac
 
 | Month | CI completeness | CI recency | Traceability | High findings | Drift correction days | Config incidents |
 |---|---|---|---|---|---|---|
-| 2026-07 (baseline) | 100% (12 of 12 baseline CIs) | 100% (documentation baseline verification dated 2026-07-08) | 10% (1 baseline change record established; historical set pending) | 2 | N/A (first cycle) | N/A (not yet measured in this doc set) |
+| 2026-07 (baseline) | 100% (14 of 14 baseline CIs) | 100% (documentation baseline verification dated 2026-07-08) | 40% (4 documented records in current baseline set; historical set still incomplete) | 0 | N/A (first cycle) | N/A (not yet measured in this doc set) |
 
 ## Measurement Notes
 
 - Baseline source: docs/config-management initial inventory and audit pass.
-- Traceability is intentionally low for baseline month because historical records are not backfilled yet.
+- Traceability improved after initial backfill of three additional records, but full historical coverage remains in progress.
+- Dependency mapping now covers intake, reporting/status, and survey lifecycle services.
+- Secret-hygiene workflow is documented with baseline scan evidence, but monthly attestation cadence is still maturing.
 - Drift correction time and incident trend start once at least one full monthly cycle is complete.
 - High findings count is aligned to unresolved high items in config-audit-checklist.md.
 
@@ -38,12 +40,12 @@ For each month, record:
 ### Example Entry
 
 - Month: 2026-07
-- Improvement: Initial CI inventory and dependency map baseline established.
-- Regression: Change traceability remains incomplete until historical records are backfilled.
+- Improvement: CI inventory expanded to include reporting and survey components, dependency map coverage expanded, and secret-hygiene workflow documented with baseline evidence.
+- Regression: Change traceability is improved but still incomplete until remaining historical records are captured and approvals are formalized.
 - Actions:
-  1. Backfill change records for production-impacting changes in active release scope.
-  2. Add a recurring monthly drift check and record mean correction time.
-  3. Add service-level incident tagging for confirmed config-related incidents.
+  1. Complete backfill for remaining production-impacting changes in earlier release windows.
+  2. Operationalize monthly secret-hygiene owner attestation and approval capture.
+  3. Add a recurring monthly drift check and record mean correction time.
 
 ## Reporting Rhythm
 
