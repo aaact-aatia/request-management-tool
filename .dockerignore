@@ -9,7 +9,6 @@
 !.env.example
 dbdata
 
-docs
 tests
 database
 
