@@ -7,6 +7,14 @@ This directory contains comprehensive documentation for the Request Management T
 ```
 docs/
 ├── README.md                    # This file
+├── config-management/           # Lightweight configuration management framework
+│   ├── README.md                # Scope, ownership, cadence
+│   ├── ci-inventory-standard.md # CI metadata standard and quality rules
+│   ├── change-control-sop.md    # Change governance and approval flow
+│   ├── config-audit-checklist.md # Monthly/pre-release audit checklist
+│   ├── dependency-map-template.md # Service dependency mapping template
+│   ├── change-record-template.md # Standard change record template
+│   └── kpi-status-accounting.md # KPI baseline and monthly tracking
 ├── permissions-model.md         # Role and permission source-of-truth (current and target policy)
 ├── permissions-target-policy.md # Target permission catalog and role matrix
 ├── permissions-route-access-map.md # Route-by-route access class map
@@ -29,6 +37,30 @@ docs/
 - **[Permissions Route Access Map](permissions-route-access-map.md)**: Route and endpoint access classes
   - Status: Draft
   - Scope: page-level visibility, endpoint classification, guest-linked view boundaries
+
+### Configuration Management Documentation
+
+- **[Config Management Overview](config-management/README.md)**: Lightweight framework scope, ownership, and cadence
+  - Status: Active
+  - Scope: CI standards, change control, audits, dependency mapping, KPI tracking
+- **[CI Inventory Standard](config-management/ci-inventory-standard.md)**: Minimum CI metadata and quality rules
+  - Status: Active
+  - Scope: CI classes, required attributes, naming convention, validation rules
+- **[Change Control SOP](config-management/change-control-sop.md)**: Change categories, approvals, and execution procedure
+  - Status: Active
+  - Scope: standard/normal/emergency changes, validation evidence, post-implementation review
+- **[Configuration Audit Checklist](config-management/config-audit-checklist.md)**: Repeatable integrity and traceability checks
+  - Status: Active
+  - Scope: inventory health, drift checks, dependency accuracy, security hygiene
+- **[Dependency Map Template](config-management/dependency-map-template.md)**: Service-to-CI relationship template
+  - Status: Active
+  - Scope: upstream/downstream dependencies, integration points, impact notes
+- **[Change Record Template](config-management/change-record-template.md)**: Standardized change evidence capture
+  - Status: Active
+  - Scope: impacted CIs, risk/rollback, approvals, execution log, outcome
+- **[KPI and Status Accounting](config-management/kpi-status-accounting.md)**: Lightweight metrics and trend tracking
+  - Status: Active
+  - Scope: completeness, verification recency, traceability, drift correction, incident trend
 
 ### Migration Guides (`migrations/`)
 Step-by-step guides for implementing specific improvements from [IMPROVEMENTS.md](../IMPROVEMENTS.md). Each migration is numbered sequentially and includes:
