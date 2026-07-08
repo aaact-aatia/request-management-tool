@@ -420,6 +420,7 @@ return [
     'users_edit_button' => 'Modifier l\'utilisateur',
     'users_delete_button' => 'Supprimer l\'utilisateur',
     'users_no_users' => 'Aucun utilisateur disponible',
+    'users_duplicate_email_message' => 'Un utilisateur avec ce courriel existe deja. Veuillez utiliser une autre adresse courriel.',
 
     // Outils CSV d'administration (admin-csv.php)
     'admin_csv_heading' => 'Import/export CSV d\'administration',

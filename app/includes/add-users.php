@@ -93,6 +93,14 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 		header("location:/users.php?lang={$lang_code}&status=failed"); 
 		exit();
 	}
+
+	// Prevent fatal database errors on duplicate user email.
+	$existingEmailSql = "SELECT id FROM tblusers WHERE email='$email' LIMIT 1";
+	$existingEmailResult = rmt_admin_query($link, $existingEmailSql);
+	if (rmt_result_num_rows($existingEmailResult) > 0) {
+		header("location:/users.php?lang={$lang_code}&status=duplicate_email");
+		exit();
+	}
 	
 	$npassword = password_hash($password, PASSWORD_DEFAULT);
 	
@@ -114,7 +122,16 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	$sql = "INSERT INTO tblusers($insertColumns) VALUES ($insertValues)";
 	//echo $sql;
 	//exit();
-	rmt_admin_query($link,$sql);
+	try {
+		rmt_admin_query($link,$sql);
+	} catch (mysqli_sql_exception $e) {
+		if ((int)$e->getCode() === 1062) {
+			header("location:/users.php?lang={$lang_code}&status=duplicate_email");
+			exit();
+		}
+
+		throw $e;
+	}
 	
 	// Now redirect
 	header("location:/users.php?lang={$lang_code}&status=success"); 

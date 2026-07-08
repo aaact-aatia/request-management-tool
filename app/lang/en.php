@@ -421,6 +421,7 @@ return [
     'users_edit_button' => 'Edit user',
     'users_delete_button' => 'Delete user',
     'users_no_users' => 'No users available',
+    'users_duplicate_email_message' => 'A user with this email already exists. Please use a different email address.',
 
     // Admin CSV tools (admin-csv.php)
     'admin_csv_heading' => 'Administration CSV import/export',
