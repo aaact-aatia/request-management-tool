@@ -78,12 +78,8 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 			$teamstring = !empty($selectedTeams) ? (string)$selectedTeams[0] : "";
 		}
 	} elseif ($accounttype == '4') {
-		// Team Lead: must have at least 1 team
-		if (count($selectedTeams) < 1) {
-			$noerror = true;
-		} else {
-			$teamstring = implode(',', $selectedTeams);
-		}
+		// Team Lead: teams are optional and may include multiple values
+		$teamstring = !empty($selectedTeams) ? implode(',', $selectedTeams) : "";
 	} elseif ($accounttype == '3') {
 		// Manager: can optionally have multiple teams
 		// (If superuser role is set, they can manage globally or per-team)
@@ -163,7 +159,7 @@ $translations = [
 		'extra_roles' => 'Permissions supplémentaires :',
 		'extra_superuser' => 'Privilèges de Super administrateur',
 		'extra_admin' => 'Privilèges d\'administrateur',
-		'extra_roles_hint' => 'Seul un Super administrateur peut attribuer ces privilèges. Super administrateur remplace administrateur.'
+		'extra_roles_hint' => 'Seul un Super administrateur peut attribuer ces privileges. Super administrateur remplace administrateur.'
 	]
 ];
 
