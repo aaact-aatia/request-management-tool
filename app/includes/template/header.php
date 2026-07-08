@@ -16,6 +16,10 @@ $langCode = $_SESSION['lang'] ?? 'en';
 $otherLanguage = $langCode === 'en' ? 'Français' : 'English';
 $otherLang = $langCode === 'en' ? 'fr' : 'en';
 $toggleUrl = get_language_toggle_url();
+$hideLanguageToggle = isset($hideLanguageToggle) ? (bool) $hideLanguageToggle : false;
+if ($hideLanguageToggle) {
+	$toggleUrl = null;
+}
 $isAuthenticated = !empty($_SESSION['pid']);
 
 $appName = $config['app']['name'][$langCode];
