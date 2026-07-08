@@ -18,9 +18,11 @@ require('includes/httpscheck.php');
 // Grab MySQL connection
 require('sql.php');
 /** @var mysqli $link */
+require_once __DIR__ . '/includes/help_docs.php';
 
 use League\CommonMark\Environment\Environment;
 use League\CommonMark\Extension\CommonMark\CommonMarkCoreExtension;
+use League\CommonMark\Extension\GithubFlavoredMarkdownExtension;
 use League\CommonMark\MarkdownConverter;
 
 // Handle language from query string or session
@@ -53,60 +55,19 @@ $pageDescription = $page['description'][$_SESSION['lang']];
 
 $isAdminUser = !empty($_SESSION['pid']) && isset($_SESSION['atype']) && (int) $_SESSION['atype'] === 1;
 $isEnglishHelp = $_SESSION['lang'] === 'en';
+$maxMarkdownBytes = 262144;
+$maxMarkdownReadSeconds = 0.25;
 
 $docsRoot = dirname(__DIR__) . '/docs';
 $markdownDocuments = [];
 $markdownDocumentsByPath = [];
 $groupedMarkdownDocuments = [];
-$requestedDoc = isset($_GET['doc']) ? trim((string) $_GET['doc']) : '';
+$requestedDocRaw = isset($_GET['doc']) ? trim((string) $_GET['doc']) : '';
+$requestedDoc = rmt_docs_sanitize_request_doc($requestedDocRaw);
+$requestedDocInvalid = $requestedDocRaw !== '' && $requestedDoc === '';
 $selectedDocument = null;
 
-$extractMarkdownHeading = static function (string $markdown): string {
-	$lines = preg_split('/\R/', $markdown) ?: [];
-	$lineCount = count($lines);
-
-	for ($i = 0; $i < $lineCount; $i++) {
-		$line = trim($lines[$i]);
-		if ($line === '') {
-			continue;
-		}
-
-		if (preg_match('/^#{1,6}\s+(.+)$/', $line, $matches) === 1) {
-			$title = trim($matches[1]);
-			$title = preg_replace('/\s+#+$/', '', $title);
-			return trim((string) $title);
-		}
-
-		if ($i + 1 < $lineCount) {
-			$nextLine = trim($lines[$i + 1]);
-			if (preg_match('/^=+$/', $nextLine) === 1 || preg_match('/^-+$/', $nextLine) === 1) {
-				return $line;
-			}
-		}
-	}
-
-	return '';
-};
-
-$formatGroupTitle = static function (string $groupKey): string {
-	$normalized = trim($groupKey);
-	if ($normalized === '') {
-		return '';
-	}
-
-	if (strtolower($normalized) === 'adr') {
-		return 'Architecture Decision Records (ADR)';
-	}
-
-	if (strpos($normalized, '-') === false && strpos($normalized, '_') === false && strlen($normalized) <= 4) {
-		return strtoupper($normalized);
-	}
-
-	$label = str_replace(['-', '_'], ' ', $normalized);
-	return ucwords($label);
-};
-
-if ($isAdminUser && $isEnglishHelp && is_dir($docsRoot)) {
+if (rmt_docs_should_show_index($isAdminUser, $_SESSION['lang']) && is_dir($docsRoot)) {
 	$iterator = new RecursiveIteratorIterator(
 		new RecursiveDirectoryIterator($docsRoot, FilesystemIterator::SKIP_DOTS)
 	);
@@ -116,18 +77,33 @@ if ($isAdminUser && $isEnglishHelp && is_dir($docsRoot)) {
 			continue;
 		}
 
-		if (strtolower($fileInfo->getExtension()) !== 'md') {
+		if (!rmt_docs_is_allowed_extension($fileInfo->getExtension())) {
 			continue;
 		}
 
 		$absolutePath = $fileInfo->getPathname();
 		$relativePath = str_replace('\\', '/', substr($absolutePath, strlen($docsRoot) + 1));
+		if (rmt_docs_is_denied_path($relativePath)) {
+			continue;
+		}
+
 		$displayName = preg_replace('/\.md$/i', '', basename($relativePath));
-		$markdownContent = @file_get_contents($absolutePath);
+		$mtime = (int) @filemtime($absolutePath);
+		$headingCacheKey = rmt_docs_build_cache_key('heading', $relativePath, $mtime);
+		$cachedHeading = rmt_docs_cache_fetch($headingCacheKey);
 		$headingTitle = '';
 
-		if (is_string($markdownContent) && $markdownContent !== '') {
-			$headingTitle = $extractMarkdownHeading($markdownContent);
+		if (is_string($cachedHeading) && $cachedHeading !== '') {
+			$headingTitle = $cachedHeading;
+		} else {
+			$readResult = rmt_docs_read_file_with_limits($absolutePath, $maxMarkdownBytes, $maxMarkdownReadSeconds);
+			if (!empty($readResult['ok']) && !empty($readResult['content'])) {
+				$headingTitle = rmt_docs_extract_markdown_heading((string) $readResult['content']);
+			}
+
+			if ($headingTitle !== '') {
+				rmt_docs_cache_store($headingCacheKey, $headingTitle);
+			}
 		}
 
 		$markdownDocuments[] = [
@@ -136,6 +112,7 @@ if ($isAdminUser && $isEnglishHelp && is_dir($docsRoot)) {
 			'display_name' => $displayName,
 			'link_title' => $headingTitle !== '' ? $headingTitle : $displayName,
 			'url_path' => rawurlencode($relativePath),
+			'mtime' => $mtime,
 		];
 	}
 
@@ -145,36 +122,12 @@ if ($isAdminUser && $isEnglishHelp && is_dir($docsRoot)) {
 
 	foreach ($markdownDocuments as $doc) {
 		$markdownDocumentsByPath[$doc['relative_path']] = $doc;
-
-		$directory = dirname($doc['relative_path']);
-		$groupKey = $directory === '.' ? '__root__' : explode('/', $directory)[0];
-
-		if (!isset($groupedMarkdownDocuments[$groupKey])) {
-			$groupedMarkdownDocuments[$groupKey] = [
-				'title' => $groupKey === '__root__' ? '' : $formatGroupTitle($groupKey),
-				'documents' => [],
-			];
-		}
-
-		$groupedMarkdownDocuments[$groupKey]['documents'][] = $doc;
 	}
 
-	if (isset($groupedMarkdownDocuments['__root__'])) {
-		$rootGroup = ['__root__' => $groupedMarkdownDocuments['__root__']];
-		unset($groupedMarkdownDocuments['__root__']);
-		ksort($groupedMarkdownDocuments, SORT_NATURAL | SORT_FLAG_CASE);
-		$groupedMarkdownDocuments = $rootGroup + $groupedMarkdownDocuments;
-	} else {
-		ksort($groupedMarkdownDocuments, SORT_NATURAL | SORT_FLAG_CASE);
-	}
+	$groupedMarkdownDocuments = rmt_docs_group_by_top_level($markdownDocuments);
 
 	if ($requestedDoc !== '') {
-		$requestedDoc = str_replace('\\', '/', rawurldecode($requestedDoc));
-		$hasTraversal = strpos($requestedDoc, '..') !== false;
-		$hasNullByte = strpos($requestedDoc, "\0") !== false;
-		$isAbsolute = strpos($requestedDoc, '/') === 0;
-
-		if (!$hasTraversal && !$hasNullByte && !$isAbsolute && isset($markdownDocumentsByPath[$requestedDoc])) {
+		if (isset($markdownDocumentsByPath[$requestedDoc])) {
 			$selectedDocument = $markdownDocumentsByPath[$requestedDoc];
 		}
 	}
@@ -187,8 +140,28 @@ if ($isAdminUser && class_exists(MarkdownConverter::class)) {
 		'allow_unsafe_links' => false,
 	]);
 	$environment->addExtension(new CommonMarkCoreExtension());
+	$environment->addExtension(new GithubFlavoredMarkdownExtension());
 	$markdownConverter = new MarkdownConverter($environment);
 }
+
+$addTableClasses = static function (string $html): string {
+	return (string) preg_replace_callback('/<table(\s[^>]*)?>/i', static function (array $matches): string {
+		$attrs = $matches[1] ?? '';
+		if ($attrs === '') {
+			return '<table class="table table-bordered">';
+		}
+
+		if (preg_match('/\bclass\s*=\s*(["\'])(.*?)\1/i', $attrs, $classMatch) === 1) {
+			$existing = preg_split('/\s+/', trim($classMatch[2])) ?: [];
+			$merged = array_values(array_unique(array_merge($existing, ['table', 'table-bordered'])));
+			$newClass = 'class=' . $classMatch[1] . implode(' ', $merged) . $classMatch[1];
+			$attrs = str_replace($classMatch[0], $newClass, $attrs);
+			return '<table' . $attrs . '>';
+		}
+
+		return '<table' . $attrs . ' class="table table-bordered">';
+	}, $html);
+};
 
 // Page-specific language strings
 $translations = [
@@ -205,6 +178,8 @@ $translations = [
 		'docs_back' => 'Back to all documentation',
 		'docs_not_found' => 'The requested document was not found.',
 		'docs_load_error' => 'This file could not be loaded.',
+		'docs_load_too_large' => 'This markdown file is too large to display in Help.',
+		'docs_load_timeout' => 'This markdown file took too long to load.',
 		'docs_parser_unavailable' => 'Markdown parser is unavailable. Showing raw content.',
 		'docs_english_only' => 'Documentation pages are available in English only.',
 	],
@@ -221,6 +196,8 @@ $translations = [
 		'docs_back' => 'Retour a toute la documentation',
 		'docs_not_found' => 'Le document demande est introuvable.',
 		'docs_load_error' => 'Ce fichier n\'a pas pu etre charge.',
+		'docs_load_too_large' => 'Ce fichier Markdown est trop volumineux pour etre affiche dans l\'aide.',
+		'docs_load_timeout' => 'Ce fichier Markdown prend trop de temps a charger.',
 		'docs_parser_unavailable' => 'Le convertisseur Markdown est indisponible. Affichage du contenu brut.',
 		'docs_english_only' => 'Les pages de documentation sont disponibles en anglais seulement.',
 	]
@@ -230,22 +207,71 @@ $langStrings = $translations[$_SESSION['lang']];
 
 $hideLanguageToggle = $isAdminUser && $selectedDocument !== null;
 
+if ($selectedDocument !== null) {
+	$pageTitle = $selectedDocument['link_title'];
+}
+
 // Include template head
 include 'includes/template/head.php';
 ?>
 		<?php include 'includes/template/header.php'; ?>
 		<main role="main" property="mainContentOfPage" class="container">
-			<h1 property="name" id="wb-cont"><?= $pageTitle ?></h1>
-			
-			<h2><?= $langStrings['legend_heading'] ?></h2>
-			
-			<ul class="list-unstyled">
-				<li><span class="glyphicon glyphicon-eye-open"></span> = <?= $langStrings['icon_view'] ?></li>
-				<li><span class="glyphicon glyphicon-new-window"></span> = <?= $langStrings['icon_new_window'] ?></li>
-				<li><span class="glyphicon glyphicon-warning-sign"></span> = <?= $langStrings['icon_warning'] ?></li>
-			</ul>
+			<?php if ($selectedDocument !== null): ?>
+				<?php
+				$markdownContent = '';
+				$renderedHtml = '';
+				$readResult = rmt_docs_read_file_with_limits(
+					$selectedDocument['absolute_path'],
+					$maxMarkdownBytes,
+					$maxMarkdownReadSeconds
+				);
 
-			<?php if ($isAdminUser): ?>
+				if (empty($readResult['ok'])) {
+					$errorCode = (string) ($readResult['error'] ?? '');
+					if ($errorCode === 'too_large') {
+						$renderedHtml = '<div class="alert alert-warning" role="status">' . htmlspecialchars($langStrings['docs_load_too_large']) . '</div>';
+					} elseif ($errorCode === 'timeout') {
+						$renderedHtml = '<div class="alert alert-warning" role="status">' . htmlspecialchars($langStrings['docs_load_timeout']) . '</div>';
+					} else {
+						$renderedHtml = '<div class="alert alert-danger" role="status">' . htmlspecialchars($langStrings['docs_load_error']) . '</div>';
+					}
+				} else {
+					$markdownContent = (string) $readResult['content'];
+				}
+
+				if ($renderedHtml === '' && $markdownContent === '') {
+					$renderedHtml = '<div class="alert alert-danger" role="status">' . htmlspecialchars($langStrings['docs_load_error']) . '</div>';
+				} elseif ($renderedHtml === '' && $markdownConverter instanceof MarkdownConverter) {
+					$renderCacheKey = rmt_docs_build_cache_key('render', $selectedDocument['relative_path'], (int) $selectedDocument['mtime']);
+					$cachedRender = rmt_docs_cache_fetch($renderCacheKey);
+					if (is_string($cachedRender) && $cachedRender !== '') {
+						$renderedHtml = $cachedRender;
+					} else {
+						$markdownBody = rmt_docs_strip_first_heading($markdownContent);
+						$renderedHtml = $markdownConverter->convert($markdownBody)->getContent();
+						rmt_docs_cache_store($renderCacheKey, $renderedHtml);
+					}
+				} elseif ($renderedHtml === '') {
+					$renderedHtml = '<div class="alert alert-warning" role="status">' . htmlspecialchars($langStrings['docs_parser_unavailable']) . '</div>'
+						. '<pre>' . htmlspecialchars($markdownContent) . '</pre>';
+				}
+
+				$renderedHtml = $addTableClasses($renderedHtml);
+				?>
+
+				<h1 property="name" id="wb-cont"><?= htmlspecialchars($selectedDocument['link_title']) ?></h1>
+				<?= $renderedHtml ?>
+			<?php elseif ($isAdminUser): ?>
+				<h1 property="name" id="wb-cont"><?= $pageTitle ?></h1>
+
+				<h2><?= $langStrings['legend_heading'] ?></h2>
+
+				<ul class="list-unstyled">
+					<li><span class="glyphicon glyphicon-eye-open"></span> = <?= $langStrings['icon_view'] ?></li>
+					<li><span class="glyphicon glyphicon-new-window"></span> = <?= $langStrings['icon_new_window'] ?></li>
+					<li><span class="glyphicon glyphicon-warning-sign"></span> = <?= $langStrings['icon_warning'] ?></li>
+				</ul>
+
 				<h2><?= htmlspecialchars($langStrings['docs_heading']) ?></h2>
 				<p><?= htmlspecialchars($langStrings['docs_intro']) ?></p>
 
@@ -258,40 +284,13 @@ include 'includes/template/head.php';
 						<?= htmlspecialchars($langStrings['docs_empty']) ?>
 					</div>
 				<?php else: ?>
-					<?php if ($requestedDoc !== '' && $selectedDocument === null): ?>
+					<?php if (($requestedDoc !== '' || $requestedDocInvalid) && $selectedDocument === null): ?>
 						<div class="alert alert-warning" role="status">
 							<?= htmlspecialchars($langStrings['docs_not_found']) ?>
 						</div>
 					<?php endif; ?>
 
-					<?php if ($selectedDocument !== null): ?>
-						<?php
-						$markdownContent = @file_get_contents($selectedDocument['absolute_path']);
-						$renderedHtml = '';
-
-						if ($markdownContent === false) {
-							$renderedHtml = '<div class="alert alert-danger" role="status">' . htmlspecialchars($langStrings['docs_load_error']) . '</div>';
-						} elseif ($markdownConverter instanceof MarkdownConverter) {
-							$renderedHtml = $markdownConverter->convert($markdownContent)->getContent();
-						} else {
-							$renderedHtml = '<div class="alert alert-warning" role="status">' . htmlspecialchars($langStrings['docs_parser_unavailable']) . '</div>'
-								. '<pre>' . htmlspecialchars($markdownContent) . '</pre>';
-						}
-						?>
-
-						<p>
-							<a href="help.php?lang=<?= urlencode($_SESSION['lang']) ?>"><?= htmlspecialchars($langStrings['docs_back']) ?></a>
-						</p>
-						<section class="panel panel-default" style="margin-bottom: 1.5em;">
-							<header class="panel-heading">
-								<h3 class="panel-title" style="margin: 0;"><?= htmlspecialchars($selectedDocument['link_title']) ?></h3>
-								<p style="margin: 0.5em 0 0;"><small><?= htmlspecialchars($selectedDocument['relative_path']) ?></small></p>
-							</header>
-							<div class="panel-body">
-								<?= $renderedHtml ?>
-							</div>
-						</section>
-					<?php else: ?>
+					<?php if ($selectedDocument === null): ?>
 						<h3><?= htmlspecialchars($langStrings['docs_list_heading']) ?></h3>
 
 						<?php if (isset($groupedMarkdownDocuments['__root__']) && !empty($groupedMarkdownDocuments['__root__']['documents'])): ?>
@@ -322,6 +321,8 @@ include 'includes/template/head.php';
 						<?php endforeach; ?>
 					<?php endif; ?>
 				<?php endif; ?>
+			<?php else: ?>
+				<h1 property="name" id="wb-cont"><?= $pageTitle ?></h1>
 			<?php endif; ?>
 			
 			<?php include 'includes/template/page-details.php'; ?>
