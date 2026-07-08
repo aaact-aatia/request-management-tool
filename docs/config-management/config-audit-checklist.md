@@ -23,7 +23,7 @@ Use this checklist for monthly and pre-release configuration integrity reviews.
 - [ ] All production-impacting changes have a change record
 - [x] Each change record references affected CI IDs
 - [ ] Required approvals are present based on change type
-- [ ] Validation evidence is attached for each completed change
+- [x] Validation evidence is attached for each completed change
 
 ## Section C: Configuration Drift
 
@@ -35,7 +35,7 @@ Use this checklist for monthly and pre-release configuration integrity reviews.
 
 - [x] Critical service dependency map exists and is current
 - [x] New integrations from this period are reflected in dependencies
-- [ ] Removed dependencies are cleaned up in documentation
+- [x] Removed dependencies are cleaned up in documentation
 
 ## Section E: Security and Compliance Hygiene
 
@@ -47,21 +47,20 @@ Use this checklist for monthly and pre-release configuration integrity reviews.
 
 | ID | Severity | Finding | Owner | Target Date | Status |
 |---|---|---|---|---|---|
-| CFG-001 | high | Historical production-impacting changes are not yet fully backfilled with standardized change records | Release Owner | 2026-08-15 | open |
-| CFG-002 | high | Secret-handling evidence is not yet formalized in this doc set and needs explicit validation workflow | Security and DevOps Owners | 2026-08-15 | open |
+| CFG-001 | medium | Historical production-impacting changes are partially backfilled, but full historical coverage is still incomplete | Release Owner | 2026-08-15 | in progress |
+| CFG-002 | medium | Secret-hygiene workflow is now documented with baseline scan evidence; monthly owner attestation remains to be operationalized | Security and DevOps Owners | 2026-08-15 | in progress |
 | CFG-003 | medium | Configuration drift checks are manual and not yet measured against a documented baseline | DevOps Owner | 2026-08-29 | open |
-| CFG-004 | medium | Dependency mapping currently covers one critical service and should be extended to reporting/survey services | Application Team | 2026-09-12 | open |
+| CFG-004 | medium | Dependency mapping expansion to reporting and survey service capabilities completed | Application Team | 2026-07-08 | closed |
 
 ## Audit Outcome
 
 - Overall status: conditional pass
 - High-risk blockers:
-	- standardized change record coverage for historical and current production-impacting changes
-	- explicit secret-handling validation evidence
+	- none currently identified in high severity category
 - Required follow-up actions:
-	1. Backfill change records for key production-impacting changes from current release window.
-	2. Add a documented monthly secret-hygiene validation step and owner.
-	3. Extend dependency maps to reporting and survey service capabilities.
+	1. Complete remaining historical change-record backfill for prior production-impacting work.
+	2. Operationalize monthly secret-hygiene owner attestation and approval capture.
+	3. Add owner-confirmed recovery procedures per high-risk dependency map.
 
 ## Sign-off
 

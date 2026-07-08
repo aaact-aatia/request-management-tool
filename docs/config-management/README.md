@@ -49,7 +49,10 @@ Only configuration items that affect deployment, security, availability, support
 - [CI Inventory Standard](ci-inventory-standard.md)
 - [Change Control SOP](change-control-sop.md)
 - [Configuration Audit Checklist](config-audit-checklist.md)
-- [Dependency Map Template](dependency-map-template.md)
+- [Dependency Map: Request Intake and Triage](dependency-map-template.md)
+- [Dependency Map: Reporting and Status](dependency-map-reporting-status-service.md)
+- [Dependency Map: Client Survey Lifecycle](dependency-map-client-survey-service.md)
+- [Secret Hygiene Validation Workflow](secret-hygiene-validation.md)
 - [Change Record Template](change-record-template.md)
 - [KPI and Status Accounting](kpi-status-accounting.md)
 
