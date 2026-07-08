@@ -146,6 +146,7 @@ include 'includes/template/head.php';
 			
 			<div class="pull-right"><a class="wb-lbx btn btn-primary mrgn-bttm-md" href="includes/add-teams.php"><?= htmlspecialchars($langFile['teams_add_button']) ?></a></div>
 			<div class="clearfix"></div>
+			<?php $tableName = 'tblteams'; ?>
 			
 			<?php
 			// Determine which field to use for team name based on language
@@ -201,11 +202,11 @@ include 'includes/template/head.php';
 				<?php } ?>
 			</tbody>
 			</table>
-			<?php $tableName = 'tblteams'; include('includes/admin-csv-buttons.php'); ?>
 			
 			<?php } else { ?>
 			<p><strong><?= htmlspecialchars($langFile['teams_no_teams']) ?></strong></p>
 			<?php } ?>
+			<?php include('includes/admin-csv-buttons.php'); ?>
 			
 			<?php include 'includes/template/page-details.php'; ?>
 		</main>

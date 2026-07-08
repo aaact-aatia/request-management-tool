@@ -135,6 +135,7 @@ include 'includes/template/head.php';
 			
 <div class="pull-right"><a class="wb-lbx btn btn-primary mrgn-bttm-md" href="includes/add-source.php"><?= htmlspecialchars($langFile['sources_add_button']) ?></a></div>
 			<div class="clearfix"></div>
+			<?php $tableName = 'tblsources'; ?>
 			
 			<?php
 			// Construct SQL statement
@@ -169,11 +170,11 @@ include 'includes/template/head.php';
 				<?php } ?>
 				</tbody>
 			</table>
-			<?php $tableName = 'tblsources'; include('includes/admin-csv-buttons.php'); ?>
 			
 			<?php } else { ?>
 			<p><strong><?= htmlspecialchars($langFile['sources_no_sources']) ?></strong></p>
 			<?php } ?>
+			<?php include('includes/admin-csv-buttons.php'); ?>
 			
 			<?php include 'includes/template/page-details.php'; ?>
 		</main>

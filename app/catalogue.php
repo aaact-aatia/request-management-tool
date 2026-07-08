@@ -138,6 +138,7 @@ include 'includes/template/head.php';
 			
 <div class="pull-right"><a class="wb-lbx btn btn-primary mrgn-bttm-md" href="includes/add-catalogue.php"><?= htmlspecialchars($langFile['catalogue_add_button']) ?></a></div>
 			<div class="clearfix"></div>
+			<?php $tableName = 'tblcatalogue'; ?>
 			
 			<?php
 			// Construct SQL statement
@@ -213,11 +214,11 @@ include 'includes/template/head.php';
 					<?php } ?>
 				</tbody>
 			</table>
-			<?php $tableName = 'tblcatalogue'; include('includes/admin-csv-buttons.php'); ?>
 			
 			<?php } else { ?>
 			<p><strong><?= htmlspecialchars($langFile['catalogue_no_items']) ?></strong></p>
 			<?php } ?>
+			<?php include('includes/admin-csv-buttons.php'); ?>
 			
 			<?php include 'includes/template/page-details.php'; ?>
 		</main>

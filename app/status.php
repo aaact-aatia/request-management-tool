@@ -135,6 +135,7 @@ include 'includes/template/head.php';
 			
 <div class="pull-right"><a class="wb-lbx btn btn-primary mrgn-bttm-md" href="includes/add-status.php"><?= htmlspecialchars($langFile['status_add_button']) ?></a></div>
 			<div class="clearfix"></div>
+			<?php $tableName = 'tblstatus'; ?>
 			
 			<?php
 			// Construct SQL statement
@@ -169,11 +170,11 @@ include 'includes/template/head.php';
 					<?php } ?>
 				</tbody>
 			</table>
-			<?php $tableName = 'tblstatus'; include('includes/admin-csv-buttons.php'); ?>
 			
 			<?php } else { ?>
 			<p><strong><?= htmlspecialchars($langFile['status_no_status']) ?></strong></p>
 			<?php } ?>
+			<?php include('includes/admin-csv-buttons.php'); ?>
 			
 			<?php include 'includes/template/page-details.php'; ?>
 		</main>
