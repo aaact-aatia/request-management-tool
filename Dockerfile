@@ -20,6 +20,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends unzip curl git 
 WORKDIR /var/www/html
 
 COPY app/ /var/www/html/
+COPY docs/ /var/www/docs/
 COPY --from=vendor /app/vendor /var/www/html/vendor
 COPY entrypoint.sh /entrypoint.sh
 

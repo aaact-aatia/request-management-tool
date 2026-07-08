@@ -5,7 +5,8 @@
 	"type": "project",
 	"require": {
 		"vlucas/phpdotenv": "^5.5",
-		"sendgrid/sendgrid": "^7.11"
+		"sendgrid/sendgrid": "^7.11",
+		"league/commonmark": "^2.7"
 	},
 	"autoload": {
 		"psr-4": {

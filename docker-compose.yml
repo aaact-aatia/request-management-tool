@@ -8,6 +8,7 @@ services:
       - db
     volumes:
       - ./app:/var/www/html
+      - ./docs:/var/www/docs:ro
       - vendor_data:/var/www/html/vendor
     environment:
       APP_ENV: ${APP_ENV:-development}
