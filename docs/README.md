@@ -24,6 +24,11 @@ docs/
     └── 001-language-file-system.md
 ```
 
+Quick directory links:
+- [config-management](config-management/)
+- [migrations](migrations/)
+- [adr](adr/)
+
 ## Documentation Types
 
 ### Permissions Documentation
