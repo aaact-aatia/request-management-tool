@@ -46,12 +46,12 @@ Only configuration items that affect deployment, security, availability, support
 
 ## Document Set
 
-- ci-inventory-standard.md
-- change-control-sop.md
-- config-audit-checklist.md
-- dependency-map-template.md
-- change-record-template.md
-- kpi-status-accounting.md
+- [CI Inventory Standard](ci-inventory-standard.md)
+- [Change Control SOP](change-control-sop.md)
+- [Configuration Audit Checklist](config-audit-checklist.md)
+- [Dependency Map Template](dependency-map-template.md)
+- [Change Record Template](change-record-template.md)
+- [KPI and Status Accounting](kpi-status-accounting.md)
 
 ## Source of Truth
 
