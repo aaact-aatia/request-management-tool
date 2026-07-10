@@ -25,11 +25,64 @@ $langFile = require("lang/{$_SESSION['lang']}.php");
 // Grab HTTPS check
 require('includes/httpscheck.php');
 
+/**
+ * Resolve the team contact for a survey request.
+ */
+function rmt_get_survey_team_contact(mysqli $link, int $requestId, string $language = 'en'): array {
+	$fallback = [
+		'email' => 'aaact-aatia@ssc-spc.gc.ca',
+		'label' => 'Accessibility, Accommodation and Adaptive Computer Technology (AAACT)',
+	];
+
+	if ($requestId <= 0) {
+		return $fallback;
+	}
+
+	$isFrench = ($language === 'fr');
+
+	$sql = "SELECT t.email AS team_email,
+				   t.nameen AS team_name_en,
+				   t.namefr AS team_name_fr,
+				   c2.teamemail AS contact_team_email,
+				   c2.teamnameen AS contact_team_name_en,
+				   c2.teamnamefr AS contact_team_name_fr
+			FROM tbltriage tr
+			LEFT JOIN tblcatalogue cat ON cat.id = tr.catalogueid
+			LEFT JOIN tblteams t ON t.id = cat.contactid
+			LEFT JOIN tblcontacts c2 ON c2.id = cat.contactid
+			WHERE tr.id = '$requestId'
+			LIMIT 1";
+	$result = mysqli_query($link, $sql);
+	if ($result && mysqli_num_rows($result) > 0) {
+		$row = mysqli_fetch_assoc($result);
+		$teamLabel = trim((string)($isFrench ? ($row['team_name_fr'] ?? '') : ($row['team_name_en'] ?? '')));
+		$contactTeamLabel = trim((string)($isFrench ? ($row['contact_team_name_fr'] ?? '') : ($row['contact_team_name_en'] ?? '')));
+		$teamEmail = trim((string)($row['team_email'] ?? ''));
+
+		if ($teamEmail !== '') {
+			return [
+				'email' => $teamEmail,
+				'label' => ($teamLabel !== '') ? $teamLabel : $fallback['label'],
+			];
+		}
+
+		$contactTeamEmail = trim((string)($row['contact_team_email'] ?? ''));
+		if ($contactTeamEmail !== '') {
+			return [
+				'email' => $contactTeamEmail,
+				'label' => ($contactTeamLabel !== '') ? $contactTeamLabel : $fallback['label'],
+			];
+		}
+	}
+
+	return $fallback;
+}
+
 // Process the add product form
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 	// Grab form elements
-	$requestid = mysqli_real_escape_string($link, $_POST['requestid']);
+	$requestid = (int)($_POST['requestid'] ?? 0);
 	$overall = mysqli_real_escape_string($link, $_POST['satisfaction']);
 	$response = mysqli_real_escape_string($link, $_POST['response']);
 	$comments = mysqli_real_escape_string($link, $_POST['comments']);
@@ -42,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 	$noerror = false;
 
 	// Custom form validation
-	if ($requestid == "" or $overall == "" or $response == "") {
+	if ($requestid <= 0 or $overall == "" or $response == "") {
 		$noerror = true;
 	}
 
@@ -52,13 +105,46 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 		exit();
 	}
 
-	// Create SQL statement
-	$sql = "INSERT INTO tblcss(`requestid`, `overall`, `response`, `comments`, `status`) VALUES ('$requestid', '$overall', '$response', '$comments', '$status')";
-	mysqli_query($link, $sql);
+	mysqli_begin_transaction($link);
 
-	// Now redirect
-	header("location:/client-survey-thank-you.php?lang=" . $_SESSION['lang']);
-	exit();
+	try {
+		$lockSql = "SELECT id FROM tbltriage WHERE id = '$requestid' LIMIT 1 FOR UPDATE";
+		$lockResult = mysqli_query($link, $lockSql);
+		if (!$lockResult || mysqli_num_rows($lockResult) === 0) {
+			mysqli_rollback($link);
+			header("location:/client-survey.php?lang=" . $_SESSION['lang'] . "&status=failed");
+			exit();
+		}
+
+		$existingSql = "SELECT id FROM tblcss WHERE requestid = '$requestid' LIMIT 1 FOR UPDATE";
+		$existingResult = mysqli_query($link, $existingSql);
+		if (!$existingResult) {
+			mysqli_rollback($link);
+			header("location:/client-survey.php?lang=" . $_SESSION['lang'] . "&status=failed&erid=$nrequestid");
+			exit();
+		}
+		if ($existingResult && mysqli_num_rows($existingResult) > 0) {
+			mysqli_rollback($link);
+			header("location:/client-survey.php?lang=" . $_SESSION['lang'] . "&status=complete&erid=$nrequestid");
+			exit();
+		}
+
+		$insertSql = "INSERT INTO tblcss(`requestid`, `overall`, `response`, `comments`, `status`) VALUES ('$requestid', '$overall', '$response', '$comments', '$status')";
+		$insertResult = mysqli_query($link, $insertSql);
+		if (!$insertResult) {
+			mysqli_rollback($link);
+			header("location:/client-survey.php?lang=" . $_SESSION['lang'] . "&status=failed&erid=$nrequestid");
+			exit();
+		}
+
+		mysqli_commit($link);
+		header("location:/client-survey-thank-you.php?lang=" . $_SESSION['lang']);
+		exit();
+	} catch (Throwable $e) {
+		mysqli_rollback($link);
+		header("location:/client-survey.php?lang=" . $_SESSION['lang'] . "&status=failed&erid=$nrequestid");
+		exit();
+	}
 }
 
 // Check if there is a status
@@ -71,11 +157,22 @@ if (!empty($_GET['status'])) {
 // Grab the request ID
 if (!empty($_GET['erid'])) {
 	// There is an id so grab it
-	$requestid = base64_decode($_GET['erid']);
+	$requestid = (int)base64_decode((string)$_GET['erid']);
 } else {
 	// There was no request ID
 	$requestid = null;
 	$status = "failed";
+}
+
+$surveyTeamContact = rmt_get_survey_team_contact($link, (int)$requestid, $_SESSION['lang']);
+$surveyTeamEmail = trim((string)($surveyTeamContact['email'] ?? 'aaact-aatia@ssc-spc.gc.ca'));
+$surveyTeamLabel = trim((string)($surveyTeamContact['label'] ?? 'Accessibility, Accommodation and Adaptive Computer Technology (AAACT)'));
+
+if ($surveyTeamEmail === '') {
+	$surveyTeamEmail = 'aaact-aatia@ssc-spc.gc.ca';
+}
+if ($surveyTeamLabel === '') {
+	$surveyTeamLabel = 'Accessibility, Accommodation and Adaptive Computer Technology (AAACT)';
 }
 
 // Check if this survey was already completed
@@ -99,7 +196,11 @@ include 'includes/template/head.php';
 include 'includes/template/header.php';
 ?>
 <main role="main" property="mainContentOfPage" class="container">
-	<h1 property="name" id="wb-cont"><?= htmlspecialchars($langFile['client_survey_heading']) ?></h1>
+	<?php if ($status == 'complete') { ?>
+		<h1 property="name" id="wb-cont"><?= htmlspecialchars($langFile['client_survey_complete_heading']) ?></h1>
+	<?php } else { ?>
+		<h1 property="name" id="wb-cont"><?= htmlspecialchars($langFile['client_survey_heading']) ?></h1>
+	<?php } ?>
 
 	<?php
 	if ($status == 'failed') {
@@ -122,12 +223,12 @@ include 'includes/template/header.php';
 	<?php
 	} elseif ($status == 'complete') {
 	?>
-		<section class="alert alert-danger">
-			<h2><?= htmlspecialchars($langFile['client_survey_failed_heading']) ?></h2>
-			<ul>
-				<li><?= htmlspecialchars($langFile['client_survey_complete_message']) ?></li>
-			</ul>
-		</section>
+			<p>
+				<?= sprintf(
+					htmlspecialchars($langFile['client_survey_complete_message_with_team']),
+					'<a href="mailto:' . htmlspecialchars($surveyTeamEmail) . '">' . htmlspecialchars($surveyTeamLabel) . '</a>'
+				) ?>
+			</p>
 		<?php
 	}
 	if ($status != 'failed' and $status != 'complete') {

@@ -205,7 +205,8 @@ CREATE TABLE IF NOT EXISTS `tblcss` (
   `comments` text,
   `status` tinyint(1) DEFAULT 1,
   `dateadded` timestamp DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_tblcss_requestid` (`requestid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `StatusHistory` (
