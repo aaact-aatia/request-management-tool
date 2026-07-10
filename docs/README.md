@@ -28,6 +28,7 @@ Quick directory links:
 - [config-management](config-management/)
 - [migrations](migrations/)
 - [adr](adr/)
+- [SLA Calculation](sla-calculation.md)
 
 ## Documentation Types
 

@@ -196,6 +196,20 @@ By default in seed/reference data, the "Resolved / Résolu" row is configured as
 
 This documentation provides an overview of the purpose and usage of each table within the application's data model. It serves as a reference for understanding the relationships between different data entities and their roles in supporting the application's functionality.
 
+## SLA Calculation
+
+SLA setup and calculation behavior is documented in detail here:
+
+- [docs/sla-calculation.md](docs/sla-calculation.md)
+
+Quick notes:
+
+- SLA elapsed time is calculated in business days from status history.
+- Weekends and active holidays in `tblholidays` are excluded.
+- On hold and pending-like statuses pause SLA elapsed counting.
+- Status changes can log SLA snapshots (clock start, due date, elapsed days) when StatusHistory columns are present.
+- Existing databases should run migration `database/migrations/011-add-statushistory-audit-sla-columns.sql`.
+
 ## AJAX actions
 
 The RMT takes actions via AJAX to fill in extra information required to search or add a new request.

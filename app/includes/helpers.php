@@ -184,6 +184,53 @@ function getSubservicesByService($link, $serviceid, $lang = 'en') {
     );
 }
 
+function rmt_get_sla_days_required_for_request($link, int $serviceId = 0, int $subserviceId = 0): int {
+    $subserviceId = (int) $subserviceId;
+    $serviceId = (int) $serviceId;
+
+    if ($subserviceId > 0) {
+        $safeSubserviceId = mysqli_real_escape_string($link, (string) $subserviceId);
+        $subserviceResult = mysqli_query($link, "SELECT sds FROM tblsubservices WHERE id = '$safeSubserviceId' LIMIT 1");
+        $subserviceRow = $subserviceResult ? mysqli_fetch_assoc($subserviceResult) : null;
+        $subserviceSla = (int) ($subserviceRow['sds'] ?? 0);
+        if ($subserviceSla > 0) {
+            return $subserviceSla;
+        }
+    }
+
+    if ($serviceId > 0) {
+        // Preserve legacy special-case SLA handling.
+        if (in_array($serviceId, [21, 22, 23, 24], true)) {
+            return 15;
+        }
+
+        $safeServiceId = mysqli_real_escape_string($link, (string) $serviceId);
+        $serviceResult = mysqli_query($link, "SELECT sds FROM tblservices WHERE id = '$safeServiceId' LIMIT 1");
+        $serviceRow = $serviceResult ? mysqli_fetch_assoc($serviceResult) : null;
+        return (int) ($serviceRow['sds'] ?? 0);
+    }
+
+    return 0;
+}
+
+function rmt_get_sla_clock_start_date($slaTimer, $dateReceived): string {
+    $candidate = trim((string) $slaTimer);
+    if ($candidate === '' || $candidate === '0000-00-00') {
+        $candidate = trim((string) $dateReceived);
+    }
+
+    if ($candidate === '') {
+        return '';
+    }
+
+    $timestamp = strtotime($candidate);
+    if ($timestamp === false) {
+        return '';
+    }
+
+    return date('Y-m-d', $timestamp);
+}
+
 function rmt_table_has_column($link, string $tableName, string $columnName): bool {
     $tableName = mysqli_real_escape_string($link, $tableName);
     $columnName = mysqli_real_escape_string($link, $columnName);
