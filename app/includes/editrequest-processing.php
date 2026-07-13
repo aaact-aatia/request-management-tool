@@ -217,6 +217,27 @@ function rmt_append_request_change(array &$changes, string $fieldName, $oldValue
     ];
 }
 
+function rmt_normalize_intish($value): string {
+    $normalized = rmt_audit_normalize_value($value);
+    if ($normalized === null) {
+        return '0';
+    }
+
+    return (string) ((int) $normalized);
+}
+
+function rmt_lookup_label(array $labels, string $key): string {
+    return $labels[$key] ?? $key;
+}
+
+function rmt_append_changed_label(array &$labels, array $localizedLabels, string $key, $oldValue, $newValue): void {
+    if (rmt_audit_values_equal($oldValue, $newValue)) {
+        return;
+    }
+
+    $labels[] = rmt_lookup_label($localizedLabels, $key);
+}
+
 // ============================================================================
 // STATUS CHANGE TRACKING
 // ============================================================================
@@ -559,6 +580,138 @@ if ($requestFieldHistoryEnabled) {
         (string) ($currentRequest['title'] ?? ''),
         (string) $requesttitle
     );
+    rmt_append_request_change(
+        $generalRequestChanges,
+        'client_last_name',
+        (string) ($currentRequest['clientlname'] ?? ''),
+        (string) $clientlname
+    );
+    rmt_append_request_change(
+        $generalRequestChanges,
+        'client_first_name',
+        (string) ($currentRequest['clientfname'] ?? ''),
+        (string) $clientfname
+    );
+    rmt_append_request_change(
+        $generalRequestChanges,
+        'client_email',
+        (string) ($currentRequest['clientemail'] ?? ''),
+        (string) $clientemail
+    );
+    rmt_append_request_change(
+        $generalRequestChanges,
+        'client_phone',
+        (string) ($currentRequest['clientphone'] ?? ''),
+        (string) $clientphone
+    );
+    rmt_append_request_change(
+        $generalRequestChanges,
+        'request_source',
+        (string) ($currentRequest['sourceid'] ?? '0'),
+        (string) ($sourceid ?? '0')
+    );
+    rmt_append_request_change(
+        $generalRequestChanges,
+        'date_received',
+        $currentRequest['datereceived'] ?? null,
+        $datereceived
+    );
+    rmt_append_request_change(
+        $generalRequestChanges,
+        'date_updated',
+        $currentRequest['dateupdated'] ?? null,
+        $dateupdated
+    );
+    rmt_append_request_change(
+        $generalRequestChanges,
+        'date_required',
+        $currentRequest['daterequired'] ?? null,
+        $daterequired
+    );
+    rmt_append_request_change(
+        $generalRequestChanges,
+        'date_resolved',
+        $currentRequest['dateresolved'] ?? null,
+        $dateresolved
+    );
+    rmt_append_request_change(
+        $generalRequestChanges,
+        'sla_timer',
+        $currentRequest['slatimer'] ?? null,
+        $slatimer
+    );
+    rmt_append_request_change(
+        $generalRequestChanges,
+        'intended_audience',
+        (string) ($currentRequest['audienceid'] ?? '0'),
+        (string) ($audienceid ?? '0')
+    );
+    rmt_append_request_change(
+        $generalRequestChanges,
+        'catalogue_name',
+        (string) ($currentRequest['catalogueid'] ?? '0'),
+        (string) ($catalogueid ?? '0')
+    );
+    rmt_append_request_change(
+        $generalRequestChanges,
+        'service_name',
+        (string) ($currentRequest['serviceid'] ?? '0'),
+        (string) ($serviceid ?? '0')
+    );
+    rmt_append_request_change(
+        $generalRequestChanges,
+        'subservice_name',
+        (string) ($currentRequest['subserviceid'] ?? '0'),
+        (string) ($subserviceid ?? '0')
+    );
+    rmt_append_request_change(
+        $generalRequestChanges,
+        'assigned_team_member',
+        (string) ($currentRequest['workerid'] ?? '0'),
+        (string) ($workerid ?? '0')
+    );
+    rmt_append_request_change(
+        $generalRequestChanges,
+        'sprint_schedule',
+        (string) ($currentRequest['sprintschedule'] ?? ''),
+        (string) $sprintschedule
+    );
+    rmt_append_request_change(
+        $generalRequestChanges,
+        'sprint_defects',
+        (string) ($currentRequest['sprintdefects'] ?? ''),
+        (string) $sprintdefects
+    );
+    rmt_append_request_change(
+        $generalRequestChanges,
+        'first_sprint_start',
+        $currentRequest['firstsprintstartdate'] ?? null,
+        $firstsprintstartdate
+    );
+    rmt_append_request_change(
+        $generalRequestChanges,
+        'first_sprint_end',
+        $currentRequest['firstsprintenddate'] ?? null,
+        $firstsprintenddate
+    );
+    rmt_append_request_change(
+        $generalRequestChanges,
+        'attachment_1',
+        (string) ($currentRequest['attach1'] ?? ''),
+        (string) $attach1
+    );
+    rmt_append_request_change(
+        $generalRequestChanges,
+        'attachment_2',
+        (string) ($currentRequest['attach2'] ?? ''),
+        (string) $attach2
+    );
+    rmt_append_request_change(
+        $generalRequestChanges,
+        'attachment_3',
+        (string) ($currentRequest['attach3'] ?? ''),
+        (string) $attach3
+    );
 }
 
 $sql = "UPDATE `tbltriage` SET 
@@ -682,6 +835,216 @@ if ($daterequiredu) {
 if (isset($dateresolvedu)) {
     mysqli_query($link, "UPDATE `tbltriage` SET `dateresolved` = NULL WHERE id='$requestuid'");
 }
+
+$statusNameField = ($lang === 'fr') ? 'namefr' : 'nameen';
+$statusFeedback = null;
+$changedFieldLabels = [];
+
+$feedbackFieldLabels = [
+    'request_title' => [
+        'en' => 'Request title update',
+        'fr' => 'Mise a jour du titre de la demande',
+    ],
+    'client_last_name' => [
+        'en' => 'Last name',
+        'fr' => 'Nom',
+    ],
+    'client_first_name' => [
+        'en' => 'First name',
+        'fr' => 'Prenom',
+    ],
+    'client_email' => [
+        'en' => 'Client email',
+        'fr' => 'Courriel du client',
+    ],
+    'department_agency' => [
+        'en' => 'Department/agency',
+        'fr' => 'Ministere/organisme',
+    ],
+    'client_phone' => [
+        'en' => 'Client phone number',
+        'fr' => 'Numero de telephone client',
+    ],
+    'status' => [
+        'en' => 'Status',
+        'fr' => 'Statut',
+    ],
+    'date_received' => [
+        'en' => 'Date received',
+        'fr' => 'Date de reception',
+    ],
+    'date_updated' => [
+        'en' => 'Date updated',
+        'fr' => 'Date de mise a jour',
+    ],
+    'date_required' => [
+        'en' => 'Date required',
+        'fr' => 'Date requise',
+    ],
+    'date_resolved' => [
+        'en' => 'Date resolved',
+        'fr' => 'Date de resolution',
+    ],
+    'sla_timer' => [
+        'en' => 'SLA due date',
+        'fr' => 'Date d echeance du SLA',
+    ],
+    'intended_audience' => [
+        'en' => 'Audience',
+        'fr' => 'Audience',
+    ],
+    'assigned_team_member' => [
+        'en' => 'Assigned AAACT team member',
+        'fr' => 'Membre assigne de l equipe AATIA',
+    ],
+    'catalogue_name' => [
+        'en' => 'Catalogue name',
+        'fr' => 'Nom du catalogue',
+    ],
+    'service_name' => [
+        'en' => 'Service name',
+        'fr' => 'Nom du service',
+    ],
+    'subservice_name' => [
+        'en' => 'Sub-service name',
+        'fr' => 'Nom du sous-service',
+    ],
+    'request_source' => [
+        'en' => 'Source',
+        'fr' => 'Source',
+    ],
+    'sprint_schedule' => [
+        'en' => 'Sprint schedule',
+        'fr' => 'Calendrier du sprint',
+    ],
+    'sprint_defects' => [
+        'en' => 'Sprint defect',
+        'fr' => 'Defauts du sprint',
+    ],
+    'first_sprint_start' => [
+        'en' => 'Sprint Start Date',
+        'fr' => 'Date de debut du sprint',
+    ],
+    'first_sprint_end' => [
+        'en' => 'Sprint End Date',
+        'fr' => 'Date de fin du sprint',
+    ],
+    'attachment_1' => [
+        'en' => 'Attachment 1',
+        'fr' => 'Piece jointe 1',
+    ],
+    'attachment_2' => [
+        'en' => 'Attachment 2',
+        'fr' => 'Piece jointe 2',
+    ],
+    'attachment_3' => [
+        'en' => 'Attachment 3',
+        'fr' => 'Piece jointe 3',
+    ],
+    'client_communication_log' => [
+        'en' => 'Client communication log update',
+        'fr' => 'Mise a jour du journal des communications client',
+    ],
+    'staff_communication_log' => [
+        'en' => 'Staff communication log update',
+        'fr' => 'Mise a jour du journal des communications du personnel',
+    ],
+    'staff_note_added' => [
+        'en' => 'Staff note added',
+        'fr' => 'Note du personnel ajoutee',
+    ],
+];
+
+$labelsForLang = [];
+foreach ($feedbackFieldLabels as $key => $localizedLabels) {
+    $labelsForLang[$key] = $localizedLabels[$lang] ?? $localizedLabels['en'];
+}
+
+$oldStatusId = rmt_normalize_intish($currentRequest['statusid'] ?? '0');
+$newStatusId = rmt_normalize_intish($statusid);
+if ($oldStatusId !== $newStatusId) {
+    $statusIdList = array_values(array_unique([$oldStatusId, $newStatusId]));
+    $statusNamesById = [];
+
+    if (!empty($statusIdList)) {
+        $statusIdCsv = implode(',', array_map('intval', $statusIdList));
+        $statusNameResult = mysqli_query($link, "SELECT id, $statusNameField AS statusName FROM tblstatus WHERE id IN ($statusIdCsv)");
+        while ($statusNameResult && $statusNameRow = mysqli_fetch_assoc($statusNameResult)) {
+            $statusNamesById[(string) ((int) $statusNameRow['id'])] = trim((string) ($statusNameRow['statusName'] ?? ''));
+        }
+    }
+
+    $oldStatusName = $statusNamesById[$oldStatusId] ?? $oldStatusId;
+    $newStatusName = $statusNamesById[$newStatusId] ?? $newStatusId;
+    $statusFeedback = [
+        'from' => $oldStatusName,
+        'to' => $newStatusName,
+    ];
+}
+
+$oldWorkerId = rmt_normalize_intish($currentRequest['workerid'] ?? '0');
+$newWorkerId = rmt_normalize_intish($workerid);
+if ($oldWorkerId !== $newWorkerId) {
+    $changedFieldLabels[] = rmt_lookup_label($labelsForLang, 'assigned_team_member');
+}
+
+rmt_append_changed_label($changedFieldLabels, $labelsForLang, 'request_title', $currentRequest['title'] ?? '', $requesttitle);
+rmt_append_changed_label($changedFieldLabels, $labelsForLang, 'client_last_name', $currentRequest['clientlname'] ?? '', $clientlname);
+rmt_append_changed_label($changedFieldLabels, $labelsForLang, 'client_first_name', $currentRequest['clientfname'] ?? '', $clientfname);
+rmt_append_changed_label($changedFieldLabels, $labelsForLang, 'client_email', $currentRequest['clientemail'] ?? '', $clientemail);
+rmt_append_changed_label($changedFieldLabels, $labelsForLang, 'client_phone', $currentRequest['clientphone'] ?? '', $clientphone);
+rmt_append_changed_label($changedFieldLabels, $labelsForLang, 'date_received', $currentRequest['datereceived'] ?? null, $datereceived);
+rmt_append_changed_label($changedFieldLabels, $labelsForLang, 'date_updated', $currentRequest['dateupdated'] ?? null, $dateupdated);
+rmt_append_changed_label($changedFieldLabels, $labelsForLang, 'date_required', $currentRequest['daterequired'] ?? null, $daterequired);
+rmt_append_changed_label($changedFieldLabels, $labelsForLang, 'date_resolved', $currentRequest['dateresolved'] ?? null, $dateresolved);
+rmt_append_changed_label($changedFieldLabels, $labelsForLang, 'sla_timer', $currentRequest['slatimer'] ?? null, $slatimer);
+rmt_append_changed_label($changedFieldLabels, $labelsForLang, 'intended_audience', $currentRequest['audienceid'] ?? '0', $audienceid);
+rmt_append_changed_label($changedFieldLabels, $labelsForLang, 'sprint_schedule', $currentRequest['sprintschedule'] ?? '', $sprintschedule);
+rmt_append_changed_label($changedFieldLabels, $labelsForLang, 'sprint_defects', $currentRequest['sprintdefects'] ?? '', $sprintdefects);
+rmt_append_changed_label($changedFieldLabels, $labelsForLang, 'first_sprint_start', $currentRequest['firstsprintstartdate'] ?? null, $firstsprintstartdate);
+rmt_append_changed_label($changedFieldLabels, $labelsForLang, 'first_sprint_end', $currentRequest['firstsprintenddate'] ?? null, $firstsprintenddate);
+rmt_append_changed_label($changedFieldLabels, $labelsForLang, 'attachment_1', $currentRequest['attach1'] ?? '', $attach1);
+rmt_append_changed_label($changedFieldLabels, $labelsForLang, 'attachment_2', $currentRequest['attach2'] ?? '', $attach2);
+rmt_append_changed_label($changedFieldLabels, $labelsForLang, 'attachment_3', $currentRequest['attach3'] ?? '', $attach3);
+
+$oldCatalogueId = rmt_normalize_intish($currentRequest['catalogueid'] ?? '0');
+$newCatalogueId = rmt_normalize_intish($catalogueid);
+if ($oldCatalogueId !== $newCatalogueId) {
+    $changedFieldLabels[] = rmt_lookup_label($labelsForLang, 'catalogue_name');
+}
+
+$oldServiceId = rmt_normalize_intish($currentRequest['serviceid'] ?? '0');
+$newServiceId = rmt_normalize_intish($serviceid);
+if ($oldServiceId !== $newServiceId) {
+    $changedFieldLabels[] = rmt_lookup_label($labelsForLang, 'service_name');
+}
+
+$oldSubserviceId = rmt_normalize_intish($currentRequest['subserviceid'] ?? '0');
+$newSubserviceId = rmt_normalize_intish($subserviceid);
+if ($oldSubserviceId !== $newSubserviceId) {
+    $changedFieldLabels[] = rmt_lookup_label($labelsForLang, 'subservice_name');
+}
+
+$oldSourceId = rmt_normalize_intish($currentRequest['sourceid'] ?? '0');
+$newSourceId = rmt_normalize_intish($sourceid);
+if ($oldSourceId !== $newSourceId) {
+    $changedFieldLabels[] = rmt_lookup_label($labelsForLang, 'request_source');
+}
+
+foreach ($generalRequestChanges as $change) {
+    $fieldName = (string) ($change['field'] ?? '');
+    if ($fieldName === '' || !isset($labelsForLang[$fieldName])) {
+        continue;
+    }
+    $changedFieldLabels[] = rmt_lookup_label($labelsForLang, $fieldName);
+}
+
+$changedFieldLabels = array_values(array_unique($changedFieldLabels));
+
+$_SESSION['request_update_feedback'] = [
+    'status_change' => $statusFeedback,
+    'changed_fields' => $changedFieldLabels,
+];
 
 if ($requestFieldHistoryEnabled && !empty($generalRequestChanges)) {
     $auditChangeTime = date('Y-m-d H:i:s');
