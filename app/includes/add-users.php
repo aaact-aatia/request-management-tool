@@ -150,6 +150,8 @@ $translations = [
 		'teams' => 'Team(s):',
 		'required' => '(required)',
 		'add_button' => 'Add',
+		'add_in_progress_label' => 'Adding...',
+		'add_in_progress_status' => 'Adding user, please wait...',
 		'account_sort_field' => 'nameen',
 		'team_sort_field' => 'nameen',
 		'team_none_hint' => 'No team is assigned for Admin, Super Admin, and External accounts.',
@@ -169,6 +171,8 @@ $translations = [
 		'teams' => 'Équipe(s):',
 		'required' => '(requis)',
 		'add_button' => 'Ajouter',
+		'add_in_progress_label' => 'Ajout...',
+		'add_in_progress_status' => 'Ajout de l\'utilisateur, veuillez patienter...',
 		'account_sort_field' => 'namefr',
 		'team_sort_field' => 'namefr',
 		'team_none_hint' => 'Aucune équipe n\'est assignée aux comptes Administrateur, Super administrateur et Externe.',
@@ -187,7 +191,7 @@ $t = $translations[$lang_code];
 		<h2 class="modal-title"><?= htmlspecialchars($t['modal_title']) ?></h2>
 	</header>
 	<div class="modal-body">
-		<form method="post" action="/includes/add-users.php">
+		<form method="post" action="/includes/add-users.php" data-busy-label="<?= htmlspecialchars($t['add_in_progress_label']) ?>" data-busy-status="<?= htmlspecialchars($t['add_in_progress_status']) ?>">
 		<div class="form-group">
 			<label for="firstname"><span class="field-name"><?= htmlspecialchars($t['first_name']) ?> <strong><?= htmlspecialchars($t['required']) ?></strong></span></label>
 			<input type="text" class="form-control" id="firstname" name="firstname" value="" required>
@@ -259,6 +263,9 @@ $t = $translations[$lang_code];
 		<div class="form-group form-buttons">
 			<button type="submit" class="btn btn-default"><?= htmlspecialchars($t['add_button']) ?></button>
 			<button type="button" class="btn btn-default popup-modal-dismiss"><?= $lang_code === 'fr' ? 'Annuler' : 'Cancel' ?></button>
+		</div>
+		<div class="form-group">
+			<p class="small wb-inv" data-add-user-status role="status" aria-live="polite" aria-atomic="true"></p>
 		</div>
 		<script src="/public/js/user-teams.js"></script>
 		</form>

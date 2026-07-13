@@ -424,6 +424,8 @@ return [
     'users_delete_button' => 'Supprimer l\'utilisateur',
     'users_no_users' => 'Aucun utilisateur disponible',
     'users_duplicate_email_message' => 'Un utilisateur avec ce courriel existe deja. Veuillez utiliser une autre adresse courriel.',
+    'users_add_in_progress_label' => 'Ajout...',
+    'users_add_in_progress_status' => 'Ajout de l\'utilisateur, veuillez patienter...',
 
     // Outils CSV d'administration (admin-csv.php)
     'admin_csv_heading' => 'Import/export CSV d\'administration',
