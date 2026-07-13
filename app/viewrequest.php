@@ -12,6 +12,8 @@ $translations = [
 		'title_suffix' => ' - Request Management Tool - IT Accessibility Office',
 		'success' => 'Success',
 		'success_updated' => 'You have successfully updated the request, thank you!',
+		'success_status_updated' => 'Status updated from %s to %s.',
+		'success_fields_updated' => 'Request details updated:',
 		'success_submitted' => 'You have successfully submitted a new request, details are below. Thank you!',
 		'success_css' => 'You have successfully submitted the client satisfaction survey. Thank you!',
 		'success_css_sent' => 'You have successfully marked the survey as sent. Thank you!',
@@ -132,6 +134,8 @@ $translations = [
 		'title_suffix' => ' - Outil de gestion des demandes - Bureau de l\'accessibilité des TI',
 		'success' => 'Succès',
 		'success_updated' => 'Vous avez mis à jour la demande avec succès, merci!',
+		'success_status_updated' => 'Le statut a ete mis a jour de %s a %s.',
+		'success_fields_updated' => 'Details de la demande mis a jour :',
 		'success_submitted' => 'Vous avez soumis une nouvelle demande avec succès, les détails sont ci-dessous. Merci!',
 		'success_css' => 'Vous avez soumis le sondage de satisfaction de la clientèle avec succès. Merci!',
 		'success_css_sent' => 'Vous avez marqué le sondage comme envoyé avec succès. Merci!',
@@ -251,6 +255,35 @@ $translations = [
 
 $t = $translations[$lang];
 
+function buildSuccessDetailMessages(array $translations, array $feedback): array {
+	$messages = [
+		'messages' => [],
+		'changed_fields' => [],
+	];
+
+	$statusChange = $feedback['status_change'] ?? null;
+	if (is_array($statusChange)) {
+		$statusFrom = trim((string) ($statusChange['from'] ?? ''));
+		$statusTo = trim((string) ($statusChange['to'] ?? ''));
+		if ($statusFrom !== '' && $statusTo !== '' && $statusFrom !== $statusTo) {
+			$messages['messages'][] = sprintf($translations['success_status_updated'], $statusFrom, $statusTo);
+		}
+	}
+
+	$changedFields = $feedback['changed_fields'] ?? [];
+	if (is_array($changedFields) && !empty($changedFields)) {
+		$cleanFields = array_values(array_filter(array_map('trim', $changedFields), static function ($field) {
+			return $field !== '';
+		}));
+
+		if (!empty($cleanFields)) {
+			$messages['changed_fields'] = $cleanFields;
+		}
+	}
+
+	return $messages;
+}
+
 // Start session
 require_once __DIR__ . '/includes/session_start.php';
 require('BlobStorage.php');
@@ -258,6 +291,18 @@ require('BlobStorage.php');
 require('includes/httpscheck.php');
 require('includes/sla-calculator.php');
 require('includes/helpers.php');
+
+$status = getGetValue('status');
+$successDetailMessages = ['messages' => [], 'changed_fields' => []];
+if ($status === 'success') {
+	$feedback = [];
+	if (isset($_SESSION['request_update_feedback']) && is_array($_SESSION['request_update_feedback'])) {
+		$feedback = $_SESSION['request_update_feedback'];
+		unset($_SESSION['request_update_feedback']);
+	}
+
+	$successDetailMessages = buildSuccessDetailMessages($t, $feedback);
+}
 require('emailController.php');
 // Include file for calculating business days
 require('includes/calculate-bdays.php');
@@ -439,12 +484,35 @@ if(mysqli_num_rows($result)>0){
 			<?php 
 			if ($status == 'success') {
 			?>
-			<section class="alert alert-success">
+			<section id="request-update-success" class="alert alert-success" role="alert" aria-live="assertive" aria-atomic="true" tabindex="-1">
 				<h2><?= $t['success'] ?></h2>
+				<p><?= htmlspecialchars($t['success_updated'], ENT_QUOTES, 'UTF-8'); ?></p>
+				<?php if (!empty($successDetailMessages['messages']) || !empty($successDetailMessages['changed_fields'])): ?>
 				<ul>
-					<li><?= $t['success_updated'] ?></li>
+					<?php foreach ($successDetailMessages['messages'] as $successMessage): ?>
+					<li><?= htmlspecialchars($successMessage, ENT_QUOTES, 'UTF-8'); ?></li>
+					<?php endforeach; ?>
+					<?php if (!empty($successDetailMessages['changed_fields'])): ?>
+					<li>
+						<?= htmlspecialchars($t['success_fields_updated'], ENT_QUOTES, 'UTF-8'); ?>
+						<ul>
+							<?php foreach ($successDetailMessages['changed_fields'] as $changedField): ?>
+							<li><?= htmlspecialchars($changedField, ENT_QUOTES, 'UTF-8'); ?></li>
+							<?php endforeach; ?>
+						</ul>
+					</li>
+					<?php endif; ?>
 				</ul>
+				<?php endif; ?>
 			</section>
+			<script>
+				document.addEventListener('DOMContentLoaded', function () {
+					var successAlert = document.getElementById('request-update-success');
+					if (successAlert) {
+						successAlert.focus();
+					}
+				});
+			</script>
 			<?php 
 			} elseif ($status == 'newrequestcomplete') {
 			?>
@@ -1185,10 +1253,102 @@ $blobStorage = new AzureBlobStorageManager();
 				if ($otherChangeResult && mysqli_num_rows($otherChangeResult) > 0) {
 					$otherChangeFieldMap = [
 						'request_title' => $t['other_change_request_title'],
+						'client_last_name' => $t['last_name'],
+						'client_first_name' => $t['first_name'],
+						'client_email' => $t['client_email'],
+						'client_phone' => $t['client_phone'],
+						'request_source' => $t['source'],
+						'date_received' => $t['date_received'],
+						'date_updated' => $t['date_updated'],
+						'date_required' => $t['date_required'],
+						'date_resolved' => $t['date_resolved'],
+						'sla_timer' => $t['sla_due_date'],
+						'intended_audience' => $t['audience'],
+						'catalogue_name' => $t['catalogue_name'],
+						'service_name' => $t['service_name'],
+						'subservice_name' => $t['subservice_name'],
+						'assigned_team_member' => $t['assigned_member'],
+						'sprint_schedule' => $t['sprint_schedule'],
+						'sprint_defects' => $t['sprint_defect'],
+						'first_sprint_start' => $t['sprint_start'],
+						'first_sprint_end' => $t['sprint_end'],
+						'attachment_1' => $t['attachment_url'] . ' 1',
+						'attachment_2' => $t['attachment_url'] . ' 2',
+						'attachment_3' => $t['attachment_url'] . ' 3',
 						'client_communication_log' => $t['other_change_client_comms'],
 						'staff_communication_log' => $t['other_change_staff_comms'],
 						'staff_note_added' => $t['other_change_staff_note'],
 					];
+
+					$sourceValueMap = ['0' => $t['na']];
+					$sourceValueResult = mysqli_query($link, "SELECT id, $nameField AS label FROM tblsources");
+					while ($sourceValueResult && $sourceValueRow = mysqli_fetch_assoc($sourceValueResult)) {
+						$sourceValueMap[(string) ((int) ($sourceValueRow['id'] ?? 0))] = trim((string) ($sourceValueRow['label'] ?? ''));
+					}
+
+					$catalogueValueMap = ['0' => $t['na']];
+					$catalogueValueResult = mysqli_query($link, "SELECT id, $nameField AS label FROM tblcatalogue");
+					while ($catalogueValueResult && $catalogueValueRow = mysqli_fetch_assoc($catalogueValueResult)) {
+						$catalogueValueMap[(string) ((int) ($catalogueValueRow['id'] ?? 0))] = trim((string) ($catalogueValueRow['label'] ?? ''));
+					}
+
+					$serviceValueMap = ['0' => $t['na']];
+					$serviceValueResult = mysqli_query($link, "SELECT id, $nameField AS label FROM tblservices");
+					while ($serviceValueResult && $serviceValueRow = mysqli_fetch_assoc($serviceValueResult)) {
+						$serviceValueMap[(string) ((int) ($serviceValueRow['id'] ?? 0))] = trim((string) ($serviceValueRow['label'] ?? ''));
+					}
+
+					$subserviceValueMap = ['0' => $t['na']];
+					$subserviceValueResult = mysqli_query($link, "SELECT id, $nameField AS label FROM tblsubservices");
+					while ($subserviceValueResult && $subserviceValueRow = mysqli_fetch_assoc($subserviceValueResult)) {
+						$subserviceValueMap[(string) ((int) ($subserviceValueRow['id'] ?? 0))] = trim((string) ($subserviceValueRow['label'] ?? ''));
+					}
+
+					$audienceValueMap = ['0' => $t['na']];
+					$audienceValueResult = mysqli_query($link, "SELECT id, $nameField AS label FROM tblaudience");
+					while ($audienceValueResult && $audienceValueRow = mysqli_fetch_assoc($audienceValueResult)) {
+						$audienceValueMap[(string) ((int) ($audienceValueRow['id'] ?? 0))] = trim((string) ($audienceValueRow['label'] ?? ''));
+					}
+
+					$assignedMemberValueMap = ['0' => $t['na']];
+					$assignedMemberValueResult = mysqli_query($link, "SELECT id, firstname, lastname FROM tblusers");
+					while ($assignedMemberValueResult && $assignedMemberValueRow = mysqli_fetch_assoc($assignedMemberValueResult)) {
+						$assignedMemberName = trim(((string) ($assignedMemberValueRow['firstname'] ?? '')) . ' ' . ((string) ($assignedMemberValueRow['lastname'] ?? '')));
+						$assignedMemberValueMap[(string) ((int) ($assignedMemberValueRow['id'] ?? 0))] = $assignedMemberName !== '' ? $assignedMemberName : $t['unknown_user'];
+					}
+
+					$resolveHistoryDisplayValue = static function (string $fieldName, $rawValue) use ($sourceValueMap, $catalogueValueMap, $serviceValueMap, $subserviceValueMap, $audienceValueMap, $assignedMemberValueMap, $t): string {
+						if ($rawValue === null || $rawValue === '') {
+							return $t['na'];
+						}
+
+						$valueKey = trim((string) $rawValue);
+						if ($fieldName === 'request_source') {
+							return $sourceValueMap[$valueKey] ?? $valueKey;
+						}
+
+						if ($fieldName === 'catalogue_name') {
+							return $catalogueValueMap[$valueKey] ?? $valueKey;
+						}
+
+						if ($fieldName === 'service_name') {
+							return $serviceValueMap[$valueKey] ?? $valueKey;
+						}
+
+						if ($fieldName === 'subservice_name') {
+							return $subserviceValueMap[$valueKey] ?? $valueKey;
+						}
+
+						if ($fieldName === 'intended_audience') {
+							return $audienceValueMap[$valueKey] ?? $valueKey;
+						}
+
+						if ($fieldName === 'assigned_team_member') {
+							return $assignedMemberValueMap[$valueKey] ?? $valueKey;
+						}
+
+						return $valueKey;
+					};
 			?>
 			<table class="wb-tables table table-striped" data-paging="false" data-order='[[4, "desc"]]'>
 				<thead>
@@ -1204,12 +1364,8 @@ $blobStorage = new AzureBlobStorageManager();
 					<?php while ($otherRow = mysqli_fetch_assoc($otherChangeResult)) {
 						$fieldNameRaw = (string)($otherRow['fieldName'] ?? '');
 						$fieldNameLabel = $otherChangeFieldMap[$fieldNameRaw] ?? ($fieldNameRaw !== '' ? $fieldNameRaw : $t['na']);
-						$oldValueLabel = array_key_exists('oldValue', $otherRow) && $otherRow['oldValue'] !== null && $otherRow['oldValue'] !== ''
-							? (string)$otherRow['oldValue']
-							: $t['na'];
-						$newValueLabel = array_key_exists('newValue', $otherRow) && $otherRow['newValue'] !== null && $otherRow['newValue'] !== ''
-							? (string)$otherRow['newValue']
-							: $t['na'];
+						$oldValueLabel = $resolveHistoryDisplayValue($fieldNameRaw, $otherRow['oldValue'] ?? null);
+						$newValueLabel = $resolveHistoryDisplayValue($fieldNameRaw, $otherRow['newValue'] ?? null);
 
 						$otherActorUserId = (int)($otherRow['actorUserID'] ?? 0);
 						$otherActorLabel = $t['na'];
