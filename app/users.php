@@ -127,6 +127,15 @@ include 'includes/template/head.php';
 				</ul>
 			</section>
 			<?php
+			} elseif ($status == 'duplicate_email') {
+			?>
+			<section class="alert alert-danger">
+				<h2><?= htmlspecialchars($langFile['failed_heading']) ?></h2>
+				<ul>
+					<li><?= htmlspecialchars($langFile['users_duplicate_email_message']) ?></li>
+				</ul>
+			</section>
+			<?php
 			}
 			?>
 			

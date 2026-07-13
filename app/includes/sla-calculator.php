@@ -18,7 +18,7 @@ function calculateSLA($link, $requestId, $dateCreated, $dateResolved = null) {
 
     // If no status history exists, assume default status and calculate directly
     if (mysqli_num_rows($result) == 0) {
-        return shouldCountStatus(1) ? calculateBusinessDays($dateCreated, $endDate, $link) : 0;
+        return shouldCountStatusForSla(1, $link) ? calculateBusinessDays($dateCreated, $endDate, $link) : 0;
     }
 
     // Initialize the first status
@@ -41,7 +41,7 @@ function calculateSLA($link, $requestId, $dateCreated, $dateResolved = null) {
         $currentBusinessDays = calculateBusinessDays($previousChangeDate, $nextChangeDate, $link);
 
         // Only count business days for statuses that should be counted
-        if (shouldCountStatus($previousStatus)) {
+        if (shouldCountStatusForSla($previousStatus, $link)) {
             $totalCountableDays += $currentBusinessDays;
         }
 
@@ -53,7 +53,7 @@ function calculateSLA($link, $requestId, $dateCreated, $dateResolved = null) {
             "toStatus" => $nextStatus,
             "businessDaysBetween" => $currentBusinessDays,
             "accumulatedTotal" => $totalCountableDays,
-            "counts" => shouldCountStatus($previousStatus)
+            "counts" => shouldCountStatusForSla($previousStatus, $link)
         ];
 
         // Update previous values
@@ -64,7 +64,7 @@ function calculateSLA($link, $requestId, $dateCreated, $dateResolved = null) {
     // Ensure last interval is respected within `dateResolved`
     if ($previousChangeDate < $endDate) {
         $currentBusinessDays = calculateBusinessDays($previousChangeDate, $endDate, $link);
-        if (shouldCountStatus($previousStatus)) {
+        if (shouldCountStatusForSla($previousStatus, $link)) {
             $totalCountableDays += $currentBusinessDays;
         }
         $calculationSteps[] = [
@@ -74,7 +74,7 @@ function calculateSLA($link, $requestId, $dateCreated, $dateResolved = null) {
             "toStatus" => "resolved",
             "businessDaysBetween" => $currentBusinessDays,
             "accumulatedTotal" => $totalCountableDays,
-            "counts" => shouldCountStatus($previousStatus)
+            "counts" => shouldCountStatusForSla($previousStatus, $link)
         ];
     }
 
@@ -85,6 +85,49 @@ function calculateSLA($link, $requestId, $dateCreated, $dateResolved = null) {
 function shouldCountStatus($status) {
     $excludedStatuses = [2, 4, 5, 11, 12];
     return !in_array($status, $excludedStatuses);
+}
+
+function shouldCountStatusForSla($statusId, $link = null) {
+    $statusId = (int) $statusId;
+
+    // Keep legacy exclusions and explicitly include historical On Hold IDs.
+    $excludedStatuses = [2, 4, 5, 8, 11, 12];
+    if (in_array($statusId, $excludedStatuses, true)) {
+        return false;
+    }
+
+    if ($statusId <= 0 || $link === null) {
+        return true;
+    }
+
+    static $pausedStatusCache = [];
+    if (array_key_exists($statusId, $pausedStatusCache)) {
+        return !$pausedStatusCache[$statusId];
+    }
+
+    $safeStatusId = mysqli_real_escape_string($link, (string) $statusId);
+    $statusResult = mysqli_query($link, "SELECT nameen, namefr FROM tblstatus WHERE id = '$safeStatusId' LIMIT 1");
+    $statusRow = $statusResult ? mysqli_fetch_assoc($statusResult) : null;
+
+    $statusNameEn = (string) ($statusRow['nameen'] ?? '');
+    $statusNameFr = (string) ($statusRow['namefr'] ?? '');
+
+    $isPaused = isSlaPausedStatusLabel($statusNameEn) || isSlaPausedStatusLabel($statusNameFr);
+    $pausedStatusCache[$statusId] = $isPaused;
+
+    return !$isPaused;
+}
+
+function isSlaPausedStatusLabel($statusLabel) {
+    $normalized = strtolower(trim((string) $statusLabel));
+    if ($normalized === '') {
+        return false;
+    }
+
+    return str_contains($normalized, 'hold')
+        || str_contains($normalized, 'pending')
+        || str_contains($normalized, 'attente')
+        || str_contains($normalized, 'pause');
 }
 
 function calculateBusinessDays($startDate, $endDate, $link = null) {

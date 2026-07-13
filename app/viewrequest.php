@@ -96,6 +96,30 @@ $translations = [
 		'delete_comment' => 'Delete comment',
 		'no_comms' => 'No communications available!',
 		'staff_comms' => 'AAACT communications log',
+		'status_change_log' => 'Status change log',
+		'status_change_previous' => 'Previous status',
+		'status_change_new' => 'New status',
+		'status_change_changed_on' => 'Changed on',
+		'status_change_actor' => 'Changed by',
+		'status_change_type' => 'Change type',
+		'status_change_assignment_from' => 'Assignment from',
+		'status_change_assignment_to' => 'Assignment to',
+		'status_change_type_status' => 'Status change',
+		'status_change_type_assignment' => 'Assignment change',
+		'status_change_type_status_and_assignment' => 'Status and assignment change',
+		'status_change_sla_due' => 'SLA due date snapshot',
+		'status_change_sla_elapsed' => 'SLA elapsed snapshot',
+		'status_change_no_entries' => 'No status changes logged yet.',
+		'other_change_log' => 'Other request changes',
+		'other_change_field' => 'Field',
+		'other_change_old' => 'Previous value',
+		'other_change_new' => 'New value',
+		'other_change_no_entries' => 'No other request changes logged yet.',
+		'other_change_client_comms' => 'Client communication log update',
+		'other_change_staff_comms' => 'Staff communication log update',
+		'other_change_staff_note' => 'Staff note added',
+		'other_change_request_title' => 'Request title update',
+		'unknown_user' => 'Unknown user',
 		'not_found_title' => 'Request not found!',
 		'not_found_msg' => 'Sorry something went wrong with your request, please try again!',
 		'image_preview_opened' => 'Image preview opened.',
@@ -192,6 +216,30 @@ $translations = [
 		'delete_comment' => 'Supprimer le commentaire',
 		'no_comms' => 'Aucune communication disponible!',
 		'staff_comms' => 'Journal des communications du AATIA',
+		'status_change_log' => 'Journal des changements de statut',
+		'status_change_previous' => 'Statut precedent',
+		'status_change_new' => 'Nouveau statut',
+		'status_change_changed_on' => 'Date du changement',
+		'status_change_actor' => 'Modifie par',
+		'status_change_type' => 'Type de changement',
+		'status_change_assignment_from' => 'Affectation precedente',
+		'status_change_assignment_to' => 'Nouvelle affectation',
+		'status_change_type_status' => 'Changement de statut',
+		'status_change_type_assignment' => 'Changement d affectation',
+		'status_change_type_status_and_assignment' => 'Changement de statut et d affectation',
+		'status_change_sla_due' => 'Date d echeance SLA (instantane)',
+		'status_change_sla_elapsed' => 'SLA ecoule (instantane)',
+		'status_change_no_entries' => 'Aucun changement de statut enregistre.',
+		'other_change_log' => 'Autres changements de la demande',
+		'other_change_field' => 'Champ',
+		'other_change_old' => 'Valeur precedente',
+		'other_change_new' => 'Nouvelle valeur',
+		'other_change_no_entries' => 'Aucun autre changement enregistre.',
+		'other_change_client_comms' => 'Mise a jour du journal des communications client',
+		'other_change_staff_comms' => 'Mise a jour du journal des communications du personnel',
+		'other_change_staff_note' => 'Note du personnel ajoutee',
+		'other_change_request_title' => 'Mise a jour du titre de la demande',
+		'unknown_user' => 'Utilisateur inconnu',
 		'not_found_title' => 'Demande introuvable!',
 		'not_found_msg' => 'Désolé, quelque chose s\'est mal passé avec votre demande, veuillez réessayer!',
 		'image_preview_opened' => 'Aperçu de l\'image ouvert.',
@@ -998,6 +1046,205 @@ $blobStorage = new AzureBlobStorageManager();
 			<?php } else { ?>
 			<p><?= htmlspecialchars($t['no_comms']) ?></p>
 			<?php } } ?>
+
+			<?php
+			$canViewStatusChangeLog = isSuperAdmin()
+				|| !empty($_SESSION['is_admin'])
+				|| in_array((int)($_SESSION['atype'] ?? 0), [1, 3, 4], true);
+
+			if ($canViewStatusChangeLog) {
+				$hasPreviousStatusColumn = rmt_table_has_column($link, 'StatusHistory', 'previousStatusID');
+				$hasActorUserColumn = rmt_table_has_column($link, 'StatusHistory', 'actorUserID');
+				$hasChangeTypeColumn = rmt_table_has_column($link, 'StatusHistory', 'changeType');
+				$hasPreviousWorkerColumn = rmt_table_has_column($link, 'StatusHistory', 'previousWorkerID');
+				$hasNewWorkerColumn = rmt_table_has_column($link, 'StatusHistory', 'newWorkerID');
+				$hasSlaDueDateColumn = rmt_table_has_column($link, 'StatusHistory', 'slaDueDate');
+				$hasSlaElapsedColumn = rmt_table_has_column($link, 'StatusHistory', 'slaElapsedBusinessDays');
+				$hasRequestFieldHistoryTable = rmt_table_has_column($link, 'RequestFieldHistory', 'requestID');
+
+				$requestIdEscaped = mysqli_real_escape_string($link, (string) $row['requestid']);
+				$previousStatusSelect = $hasPreviousStatusColumn
+					? 'sh.previousStatusID AS previousStatusID'
+					: "(SELECT sh_prev.statusID FROM StatusHistory sh_prev WHERE sh_prev.requestID = sh.requestID AND sh_prev.id < sh.id ORDER BY sh_prev.id DESC LIMIT 1) AS previousStatusID";
+				$actorUserSelect = $hasActorUserColumn ? 'sh.actorUserID AS actorUserID' : 'NULL AS actorUserID';
+				$changeTypeSelect = $hasChangeTypeColumn ? 'sh.changeType AS changeType' : "'status_change' AS changeType";
+				$previousWorkerSelect = $hasPreviousWorkerColumn ? 'sh.previousWorkerID AS previousWorkerID' : 'NULL AS previousWorkerID';
+				$newWorkerSelect = $hasNewWorkerColumn ? 'sh.newWorkerID AS newWorkerID' : 'NULL AS newWorkerID';
+				$slaDueDateSelect = $hasSlaDueDateColumn ? 'sh.slaDueDate AS slaDueDate' : 'NULL AS slaDueDate';
+				$slaElapsedSelect = $hasSlaElapsedColumn ? 'sh.slaElapsedBusinessDays AS slaElapsedBusinessDays' : 'NULL AS slaElapsedBusinessDays';
+
+				$statusHistorySql = "SELECT sh.id, sh.changeTimeStamp, sh.statusID AS newStatusID, $previousStatusSelect, $actorUserSelect, $changeTypeSelect, $previousWorkerSelect, $newWorkerSelect, $slaDueDateSelect, $slaElapsedSelect FROM StatusHistory sh WHERE sh.requestID = '$requestIdEscaped' ORDER BY sh.id DESC";
+				$statusHistoryResult = mysqli_query($link, $statusHistorySql);
+
+				$statusMap = [];
+				$statusMapResult = mysqli_query($link, "SELECT id, $nameField AS status_name FROM tblstatus");
+				if ($statusMapResult && mysqli_num_rows($statusMapResult) > 0) {
+					while ($statusMapRow = mysqli_fetch_assoc($statusMapResult)) {
+						$statusMap[(int)$statusMapRow['id']] = (string)$statusMapRow['status_name'];
+					}
+				}
+				$userNameCache = [];
+			?>
+			<h2><?= htmlspecialchars($t['status_change_log']) ?></h2>
+			<?php if ($statusHistoryResult && mysqli_num_rows($statusHistoryResult) > 0) { ?>
+			<table class="wb-tables table table-striped" data-paging="false" data-order='[[5, "desc"]]'>
+				<thead>
+					<tr>
+						<th><?= htmlspecialchars($t['status_change_type']) ?></th>
+						<th><?= htmlspecialchars($t['status_change_previous']) ?></th>
+						<th><?= htmlspecialchars($t['status_change_new']) ?></th>
+						<th><?= htmlspecialchars($t['status_change_assignment_from']) ?></th>
+						<th><?= htmlspecialchars($t['status_change_assignment_to']) ?></th>
+						<th><?= htmlspecialchars($t['status_change_changed_on']) ?></th>
+						<th><?= htmlspecialchars($t['status_change_actor']) ?></th>
+						<th><?= htmlspecialchars($t['status_change_sla_due']) ?></th>
+						<th><?= htmlspecialchars($t['status_change_sla_elapsed']) ?></th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php while ($historyRow = mysqli_fetch_assoc($statusHistoryResult)) {
+						$changeTypeRaw = (string)($historyRow['changeType'] ?? 'status_change');
+						$changeTypeLabel = $t['status_change_type_status'];
+						if ($changeTypeRaw === 'assignment_change') {
+							$changeTypeLabel = $t['status_change_type_assignment'];
+						} elseif ($changeTypeRaw === 'status_and_assignment_change') {
+							$changeTypeLabel = $t['status_change_type_status_and_assignment'];
+						}
+
+						$previousStatusId = (int)($historyRow['previousStatusID'] ?? 0);
+						$newStatusId = (int)($historyRow['newStatusID'] ?? 0);
+						$previousStatusLabel = $previousStatusId > 0 && isset($statusMap[$previousStatusId]) ? $statusMap[$previousStatusId] : $t['na'];
+						$newStatusLabel = $newStatusId > 0 && isset($statusMap[$newStatusId]) ? $statusMap[$newStatusId] : $t['na'];
+
+						$actorUserId = (int)($historyRow['actorUserID'] ?? 0);
+						$actorLabel = $t['na'];
+						if ($actorUserId > 0) {
+							if (!isset($userNameCache[$actorUserId])) {
+								$actorUserEscaped = mysqli_real_escape_string($link, (string)$actorUserId);
+								$actorResult = mysqli_query($link, "SELECT firstname, lastname FROM tblusers WHERE id = '$actorUserEscaped' LIMIT 1");
+								$actorRow = $actorResult ? mysqli_fetch_assoc($actorResult) : null;
+								$actorName = trim(((string)($actorRow['firstname'] ?? '')) . ' ' . ((string)($actorRow['lastname'] ?? '')));
+								$userNameCache[$actorUserId] = $actorName !== '' ? $actorName : $t['unknown_user'];
+							}
+							$actorLabel = $userNameCache[$actorUserId];
+						}
+
+						$previousWorkerId = (int)($historyRow['previousWorkerID'] ?? 0);
+						$newWorkerId = (int)($historyRow['newWorkerID'] ?? 0);
+						$previousWorkerLabel = $t['na'];
+						$newWorkerLabel = $t['na'];
+						if ($previousWorkerId > 0) {
+							if (!isset($userNameCache[$previousWorkerId])) {
+								$previousWorkerEscaped = mysqli_real_escape_string($link, (string)$previousWorkerId);
+								$previousWorkerResult = mysqli_query($link, "SELECT firstname, lastname FROM tblusers WHERE id = '$previousWorkerEscaped' LIMIT 1");
+								$previousWorkerRow = $previousWorkerResult ? mysqli_fetch_assoc($previousWorkerResult) : null;
+								$previousWorkerName = trim(((string)($previousWorkerRow['firstname'] ?? '')) . ' ' . ((string)($previousWorkerRow['lastname'] ?? '')));
+								$userNameCache[$previousWorkerId] = $previousWorkerName !== '' ? $previousWorkerName : $t['unknown_user'];
+							}
+							$previousWorkerLabel = $userNameCache[$previousWorkerId];
+						}
+						if ($newWorkerId > 0) {
+							if (!isset($userNameCache[$newWorkerId])) {
+								$newWorkerEscaped = mysqli_real_escape_string($link, (string)$newWorkerId);
+								$newWorkerResult = mysqli_query($link, "SELECT firstname, lastname FROM tblusers WHERE id = '$newWorkerEscaped' LIMIT 1");
+								$newWorkerRow = $newWorkerResult ? mysqli_fetch_assoc($newWorkerResult) : null;
+								$newWorkerName = trim(((string)($newWorkerRow['firstname'] ?? '')) . ' ' . ((string)($newWorkerRow['lastname'] ?? '')));
+								$userNameCache[$newWorkerId] = $newWorkerName !== '' ? $newWorkerName : $t['unknown_user'];
+							}
+							$newWorkerLabel = $userNameCache[$newWorkerId];
+						}
+
+						$slaDueDateLabel = !empty($historyRow['slaDueDate']) ? (string)$historyRow['slaDueDate'] : $t['na'];
+						$slaElapsedLabel = isset($historyRow['slaElapsedBusinessDays']) && $historyRow['slaElapsedBusinessDays'] !== null
+							? (int)$historyRow['slaElapsedBusinessDays'] . ' ' . $t['business_days']
+							: $t['na'];
+					?>
+					<tr>
+						<td><?= htmlspecialchars($changeTypeLabel) ?></td>
+						<td><?= htmlspecialchars($previousStatusLabel) ?></td>
+						<td><?= htmlspecialchars($newStatusLabel) ?></td>
+						<td><?= htmlspecialchars($previousWorkerLabel) ?></td>
+						<td><?= htmlspecialchars($newWorkerLabel) ?></td>
+						<td><?= htmlspecialchars((string)$historyRow['changeTimeStamp']) ?></td>
+						<td><?= htmlspecialchars($actorLabel) ?></td>
+						<td><?= htmlspecialchars($slaDueDateLabel) ?></td>
+						<td><?= htmlspecialchars($slaElapsedLabel) ?></td>
+					</tr>
+					<?php } ?>
+				</tbody>
+			</table>
+			<?php } else { ?>
+			<p><?= htmlspecialchars($t['status_change_no_entries']) ?></p>
+			<?php } ?>
+
+			<h2><?= htmlspecialchars($t['other_change_log']) ?></h2>
+			<?php
+			if ($hasRequestFieldHistoryTable) {
+				$otherChangeSql = "SELECT id, fieldName, oldValue, newValue, actorUserID, changeTimeStamp FROM RequestFieldHistory WHERE requestID = '$requestIdEscaped' ORDER BY id DESC";
+				$otherChangeResult = mysqli_query($link, $otherChangeSql);
+				if ($otherChangeResult && mysqli_num_rows($otherChangeResult) > 0) {
+					$otherChangeFieldMap = [
+						'request_title' => $t['other_change_request_title'],
+						'client_communication_log' => $t['other_change_client_comms'],
+						'staff_communication_log' => $t['other_change_staff_comms'],
+						'staff_note_added' => $t['other_change_staff_note'],
+					];
+			?>
+			<table class="wb-tables table table-striped" data-paging="false" data-order='[[4, "desc"]]'>
+				<thead>
+					<tr>
+						<th><?= htmlspecialchars($t['other_change_field']) ?></th>
+						<th><?= htmlspecialchars($t['other_change_old']) ?></th>
+						<th><?= htmlspecialchars($t['other_change_new']) ?></th>
+						<th><?= htmlspecialchars($t['status_change_actor']) ?></th>
+						<th><?= htmlspecialchars($t['status_change_changed_on']) ?></th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php while ($otherRow = mysqli_fetch_assoc($otherChangeResult)) {
+						$fieldNameRaw = (string)($otherRow['fieldName'] ?? '');
+						$fieldNameLabel = $otherChangeFieldMap[$fieldNameRaw] ?? ($fieldNameRaw !== '' ? $fieldNameRaw : $t['na']);
+						$oldValueLabel = array_key_exists('oldValue', $otherRow) && $otherRow['oldValue'] !== null && $otherRow['oldValue'] !== ''
+							? (string)$otherRow['oldValue']
+							: $t['na'];
+						$newValueLabel = array_key_exists('newValue', $otherRow) && $otherRow['newValue'] !== null && $otherRow['newValue'] !== ''
+							? (string)$otherRow['newValue']
+							: $t['na'];
+
+						$otherActorUserId = (int)($otherRow['actorUserID'] ?? 0);
+						$otherActorLabel = $t['na'];
+						if ($otherActorUserId > 0) {
+							if (!isset($userNameCache[$otherActorUserId])) {
+								$otherActorEscaped = mysqli_real_escape_string($link, (string)$otherActorUserId);
+								$otherActorResult = mysqli_query($link, "SELECT firstname, lastname FROM tblusers WHERE id = '$otherActorEscaped' LIMIT 1");
+								$otherActorRow = $otherActorResult ? mysqli_fetch_assoc($otherActorResult) : null;
+								$otherActorName = trim(((string)($otherActorRow['firstname'] ?? '')) . ' ' . ((string)($otherActorRow['lastname'] ?? '')));
+								$userNameCache[$otherActorUserId] = $otherActorName !== '' ? $otherActorName : $t['unknown_user'];
+							}
+							$otherActorLabel = $userNameCache[$otherActorUserId];
+						}
+					?>
+					<tr>
+						<td><?= htmlspecialchars($fieldNameLabel) ?></td>
+						<td><?= htmlspecialchars($oldValueLabel) ?></td>
+						<td><?= htmlspecialchars($newValueLabel) ?></td>
+						<td><?= htmlspecialchars($otherActorLabel) ?></td>
+						<td><?= htmlspecialchars((string)($otherRow['changeTimeStamp'] ?? '')) ?></td>
+					</tr>
+					<?php } ?>
+				</tbody>
+			</table>
+			<?php
+				} else {
+			?>
+			<p><?= htmlspecialchars($t['other_change_no_entries']) ?></p>
+			<?php
+				}
+			} else {
+			?>
+			<p><?= htmlspecialchars($t['other_change_no_entries']) ?></p>
+			<?php } ?>
+			<?php } ?>
 			
 			<?php
 			// Check if the account is admin level to show this option 

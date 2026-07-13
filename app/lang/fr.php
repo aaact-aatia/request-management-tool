@@ -226,9 +226,12 @@ return [
     'client_survey_page_title' => 'Sondage sur la satisfaction de la clientèle - Outil de gestion des demandes - Bureau de l\'accessibilité de la TI',
     'client_survey_heading' => 'Sondage sur la satisfaction de la clientèle',
     'client_survey_failed_heading' => 'Échec',
+    'client_survey_complete_heading' => 'Impossible de soumettre le sondage sur la satisfaction de la clientèle',
     'client_survey_failed_message' => 'Le sondage n\'a pas fonctionné, veuillez réessayer le lien dans le courriel, merci!',
     'client_survey_incomplete_message' => 'Le sondage est incomplète, veuillez réessayer, merci!',
     'client_survey_complete_message' => 'Le sondage est déjà terminée! Veuillez contacter le Bureau de l\'accessibilité de la TI. si vous pensez qu\'il s\'agit d\'une erreur, merci!',
+    'client_survey_complete_contact_message' => 'Ce sondage est deja termine. Si vous pensez qu\'il s\'agit d\'une erreur, veuillez contacter :',
+    'client_survey_complete_message_with_team' => 'Le sondage est déjà terminé! Veuillez contacter %s si vous pensez qu\'il s\'agit d\'une erreur, merci!',
     'client_survey_intro' => 'Vous avez récemment reçu un service de la part du Bureau de l\'accessibilité de la TI. Nous aimerions obtenir votre rétroaction afin d\'améliorer notre service. Nous vous serions très reconnaissants si vous pouviez prendre quelques minutes pour répondre au court sondage suivant :',
     'client_survey_legend' => 'Sur une échelle de 1 (très insatisfait) à 10 (très satisfait), veuillez évaluer :',
     'client_survey_overall' => 'Satisfaction globale',
@@ -420,6 +423,7 @@ return [
     'users_edit_button' => 'Modifier l\'utilisateur',
     'users_delete_button' => 'Supprimer l\'utilisateur',
     'users_no_users' => 'Aucun utilisateur disponible',
+    'users_duplicate_email_message' => 'Un utilisateur avec ce courriel existe deja. Veuillez utiliser une autre adresse courriel.',
 
     // Outils CSV d'administration (admin-csv.php)
     'admin_csv_heading' => 'Import/export CSV d\'administration',

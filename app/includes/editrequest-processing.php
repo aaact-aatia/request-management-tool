@@ -4,6 +4,8 @@ if (isset($_SERVER['SCRIPT_FILENAME']) && realpath(__FILE__) === realpath((strin
     exit();
 }
 
+require_once __DIR__ . '/sla-calculator.php';
+
 /**
  * Edit Request Form Processing
  * Extracted from main editrequest.php for better organization
@@ -186,33 +188,140 @@ function upsertDepartmentAgencyInNotes($notes, $departmentValue, $lang) {
     return $line . "\n\n" . $cleanedNotes;
 }
 
+function rmt_audit_normalize_value($value) {
+    if (is_null($value)) {
+        return null;
+    }
+
+    $normalized = trim((string) $value);
+    if ($normalized === '' || $normalized === '0000-00-00') {
+        return null;
+    }
+
+    return $normalized;
+}
+
+function rmt_audit_values_equal($oldValue, $newValue) {
+    return rmt_audit_normalize_value($oldValue) === rmt_audit_normalize_value($newValue);
+}
+
+function rmt_append_request_change(array &$changes, string $fieldName, $oldValue, $newValue): void {
+    if (rmt_audit_values_equal($oldValue, $newValue)) {
+        return;
+    }
+
+    $changes[] = [
+        'field' => $fieldName,
+        'old' => rmt_audit_normalize_value($oldValue),
+        'new' => rmt_audit_normalize_value($newValue),
+    ];
+}
+
 // ============================================================================
 // STATUS CHANGE TRACKING
 // ============================================================================
 
-$result2 = mysqli_query($link, "SELECT statusid FROM tbltriage WHERE id = '$requestuid'");
-$row2 = mysqli_fetch_assoc($result2);
-$cstatusid = $row2['statusid'];
+$cstatusid = (string) ($currentRequest['statusid'] ?? '');
+$previousWorkerIdForHistory = (int) ($currentRequest['workerid'] ?? 0);
+$newWorkerIdForHistory = (int) $workerid;
+$statusChanged = ((string) $cstatusid !== (string) $statusid);
+$assignmentChanged = ($previousWorkerIdForHistory !== $newWorkerIdForHistory);
 $isCurrentResolved = rmt_is_resolved_status_id($link, $cstatusid);
 
-if ($cstatusid != $statusid) {
+if ($statusChanged || $assignmentChanged) {
     $exactTime = date('Y-m-d H:i:s');
-    $sql = "INSERT INTO StatusHistory(`requestID`,`statusID`,`changeTimeStamp`) 
-            VALUES ('$requestid', '$statusid', '$exactTime')";
+    $statusHistoryColumns = ['requestID', 'statusID', 'changeTimeStamp'];
+    $statusHistoryValues = ["'$requestid'", "'$statusid'", "'$exactTime'"];
+
+    $hasPreviousStatusColumn = rmt_table_has_column($link, 'StatusHistory', 'previousStatusID');
+    $hasActorUserColumn = rmt_table_has_column($link, 'StatusHistory', 'actorUserID');
+    $hasChangeTypeColumn = rmt_table_has_column($link, 'StatusHistory', 'changeType');
+    $hasPreviousWorkerColumn = rmt_table_has_column($link, 'StatusHistory', 'previousWorkerID');
+    $hasNewWorkerColumn = rmt_table_has_column($link, 'StatusHistory', 'newWorkerID');
+    $hasSlaClockStartColumn = rmt_table_has_column($link, 'StatusHistory', 'slaClockStartDate');
+    $hasSlaDueDateColumn = rmt_table_has_column($link, 'StatusHistory', 'slaDueDate');
+    $hasSlaElapsedColumn = rmt_table_has_column($link, 'StatusHistory', 'slaElapsedBusinessDays');
+
+    $slaClockStartDate = rmt_get_sla_clock_start_date($slatimer, $datereceived);
+    $slaDueDate = '';
+    $slaElapsedBusinessDays = null;
+
+    if ($slaClockStartDate !== '') {
+        $slaClockStartForCalculation = date('Y-m-d H:i:s', strtotime($slaClockStartDate . ' +1 day'));
+        $slaElapsedBusinessDays = calculateSLA($link, $requestid, $slaClockStartForCalculation);
+
+        $slaDaysRequired = rmt_get_sla_days_required_for_request($link, (int) $serviceid, (int) $subserviceid);
+        if ($slaDaysRequired > 0) {
+            $slaDueDate = addBusinessDays($slaClockStartDate, $slaDaysRequired, $link);
+        }
+    }
+
+    if ($hasPreviousStatusColumn) {
+        $statusHistoryColumns[] = 'previousStatusID';
+        $statusHistoryValues[] = "'" . (int) $cstatusid . "'";
+    }
+    if ($hasActorUserColumn) {
+        $statusHistoryColumns[] = 'actorUserID';
+        $statusHistoryValues[] = "'" . (int) $updaterid . "'";
+    }
+    if ($hasChangeTypeColumn) {
+        $statusHistoryColumns[] = 'changeType';
+        $changeType = 'status_change';
+        if ($statusChanged && $assignmentChanged) {
+            $changeType = 'status_and_assignment_change';
+        } elseif ($assignmentChanged) {
+            $changeType = 'assignment_change';
+        }
+        $statusHistoryValues[] = "'" . mysqli_real_escape_string($link, $changeType) . "'";
+    }
+    if ($hasPreviousWorkerColumn) {
+        $statusHistoryColumns[] = 'previousWorkerID';
+        $statusHistoryValues[] = ($previousWorkerIdForHistory > 0)
+            ? "'" . $previousWorkerIdForHistory . "'"
+            : 'NULL';
+    }
+    if ($hasNewWorkerColumn) {
+        $statusHistoryColumns[] = 'newWorkerID';
+        $statusHistoryValues[] = ($newWorkerIdForHistory > 0)
+            ? "'" . $newWorkerIdForHistory . "'"
+            : 'NULL';
+    }
+    if ($hasSlaClockStartColumn) {
+        $statusHistoryColumns[] = 'slaClockStartDate';
+        $statusHistoryValues[] = ($slaClockStartDate !== '')
+            ? "'" . mysqli_real_escape_string($link, $slaClockStartDate) . "'"
+            : 'NULL';
+    }
+    if ($hasSlaDueDateColumn) {
+        $statusHistoryColumns[] = 'slaDueDate';
+        $statusHistoryValues[] = ($slaDueDate !== '')
+            ? "'" . mysqli_real_escape_string($link, $slaDueDate) . "'"
+            : 'NULL';
+    }
+    if ($hasSlaElapsedColumn) {
+        $statusHistoryColumns[] = 'slaElapsedBusinessDays';
+        $statusHistoryValues[] = ($slaElapsedBusinessDays !== null)
+            ? "'" . (int) $slaElapsedBusinessDays . "'"
+            : 'NULL';
+    }
+
+    $sql = "INSERT INTO StatusHistory(`" . implode('`,`', $statusHistoryColumns) . "`) VALUES (" . implode(', ', $statusHistoryValues) . ")";
     mysqli_query($link, $sql);
-    
+
     // Update previous status duration
-    $sqlSelect = "SELECT `id`, `ChangeTimestamp`, `statusID` FROM StatusHistory 
-                  WHERE `requestID` = '$requestid' 
-                  ORDER BY `id` DESC LIMIT 1";
-    $result = mysqli_query($link, $sqlSelect);
-    $row = mysqli_fetch_assoc($result);
-    
-    if ($row && $row['statusID'] != $statusid) {
-        $cBdays = getWorkingDays($row['ChangeTimestamp'], $exactTime, $holidays);
-        $prevId = $row['id'];
-        $sqlUpdate = "UPDATE StatusHistory SET `DurationInDays` = $cBdays WHERE `id` = '$prevId'";
-        mysqli_query($link, $sqlUpdate);
+    if ($statusChanged) {
+        $sqlSelect = "SELECT `id`, `ChangeTimestamp`, `statusID` FROM StatusHistory 
+                      WHERE `requestID` = '$requestid' 
+                      ORDER BY `id` DESC LIMIT 1";
+        $result = mysqli_query($link, $sqlSelect);
+        $row = mysqli_fetch_assoc($result);
+
+        if ($row && $row['statusID'] != $statusid) {
+            $cBdays = getWorkingDays($row['ChangeTimestamp'], $exactTime, $holidays);
+            $prevId = $row['id'];
+            $sqlUpdate = "UPDATE StatusHistory SET `DurationInDays` = $cBdays WHERE `id` = '$prevId'";
+            mysqli_query($link, $sqlUpdate);
+        }
     }
 }
 
@@ -441,6 +550,17 @@ if (empty($requestid) || empty($requesttitle) || empty($datereceived) ||
 // UPDATE DATABASE
 // ============================================================================
 
+$requestFieldHistoryEnabled = rmt_table_has_column($link, 'RequestFieldHistory', 'requestID');
+$generalRequestChanges = [];
+if ($requestFieldHistoryEnabled) {
+    rmt_append_request_change(
+        $generalRequestChanges,
+        'request_title',
+        (string) ($currentRequest['title'] ?? ''),
+        (string) $requesttitle
+    );
+}
+
 $sql = "UPDATE `tbltriage` SET 
     `requestid` = '$requestid',
     `title` = '$requesttitle',
@@ -497,10 +617,20 @@ mysqli_query($link, $sql);
 // Update communication logs (admin/superadmin/manager)
 if ($canEditCommunicationLogs) {
     if (!empty($commlogid1)) {
+        if ($requestFieldHistoryEnabled) {
+            $existingCommlog1Result = mysqli_query($link, "SELECT notes FROM tblcommlog WHERE id='$commlogid1' LIMIT 1");
+            $existingCommlog1Row = $existingCommlog1Result ? mysqli_fetch_assoc($existingCommlog1Result) : null;
+            rmt_append_request_change($generalRequestChanges, 'client_communication_log', (string) ($existingCommlog1Row['notes'] ?? ''), $commlog1);
+        }
         $sql = "UPDATE `tblcommlog` SET `notes` = '$commlog1' WHERE id='$commlogid1'";
         mysqli_query($link, $sql);
     }
     if (!empty($commlogid2)) {
+        if ($requestFieldHistoryEnabled) {
+            $existingCommlog2Result = mysqli_query($link, "SELECT notes FROM tblcommlog WHERE id='$commlogid2' LIMIT 1");
+            $existingCommlog2Row = $existingCommlog2Result ? mysqli_fetch_assoc($existingCommlog2Result) : null;
+            rmt_append_request_change($generalRequestChanges, 'staff_communication_log', (string) ($existingCommlog2Row['notes'] ?? ''), $commlog2);
+        }
         $sql = "UPDATE `tblcommlog` SET `notes` = '$commlog2' WHERE id='$commlogid2'";
         mysqli_query($link, $sql);
     }
@@ -534,6 +664,9 @@ if ($canFullFieldEdit) {
 
 // Add communications notes
 if ($canEditCommunicationLogs && !empty($adminnotes)) {
+    if ($requestFieldHistoryEnabled) {
+        rmt_append_request_change($generalRequestChanges, 'staff_note_added', null, $adminnotes);
+    }
     $sql = "INSERT INTO tbladminlog(`triageid`, `dateadded`, `notes`, `creatorid`, `status`) 
             VALUES ('$requestuid', '$todaydate', '$adminnotes', '$updaterid', '1')";
     mysqli_query($link, $sql);
@@ -548,6 +681,29 @@ if ($daterequiredu) {
 }
 if (isset($dateresolvedu)) {
     mysqli_query($link, "UPDATE `tbltriage` SET `dateresolved` = NULL WHERE id='$requestuid'");
+}
+
+if ($requestFieldHistoryEnabled && !empty($generalRequestChanges)) {
+    $auditChangeTime = date('Y-m-d H:i:s');
+    $safeRequestId = mysqli_real_escape_string($link, (string) $requestid);
+    $safeActorId = (int) $updaterid;
+
+    foreach ($generalRequestChanges as $change) {
+        $safeField = mysqli_real_escape_string($link, (string) ($change['field'] ?? ''));
+        if ($safeField === '') {
+            continue;
+        }
+
+        $oldValueSql = is_null($change['old'])
+            ? 'NULL'
+            : "'" . mysqli_real_escape_string($link, (string) $change['old']) . "'";
+        $newValueSql = is_null($change['new'])
+            ? 'NULL'
+            : "'" . mysqli_real_escape_string($link, (string) $change['new']) . "'";
+
+        $sqlAudit = "INSERT INTO RequestFieldHistory(`requestID`, `fieldName`, `oldValue`, `newValue`, `actorUserID`, `changeTimeStamp`) VALUES ('$safeRequestId', '$safeField', $oldValueSql, $newValueSql, '$safeActorId', '$auditChangeTime')";
+        mysqli_query($link, $sqlAudit);
+    }
 }
 
 // Redirect on success.

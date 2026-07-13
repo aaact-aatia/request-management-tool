@@ -205,13 +205,33 @@ CREATE TABLE IF NOT EXISTS `tblcss` (
   `comments` text,
   `status` tinyint(1) DEFAULT 1,
   `dateadded` timestamp DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_tblcss_requestid` (`requestid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `StatusHistory` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `requestID` varchar(50) NOT NULL,
+  `previousStatusID` int(11) DEFAULT NULL,
   `statusID` int(11) NOT NULL,
+  `actorUserID` int(11) DEFAULT NULL,
+  `changeType` varchar(50) DEFAULT NULL,
+  `previousWorkerID` int(11) DEFAULT NULL,
+  `newWorkerID` int(11) DEFAULT NULL,
+  `changeTimeStamp` varchar(50) DEFAULT NULL,
+  `slaClockStartDate` date DEFAULT NULL,
+  `slaDueDate` date DEFAULT NULL,
+  `slaElapsedBusinessDays` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `RequestFieldHistory` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `requestID` varchar(50) NOT NULL,
+  `fieldName` varchar(100) NOT NULL,
+  `oldValue` text,
+  `newValue` text,
+  `actorUserID` int(11) DEFAULT NULL,
   `changeTimeStamp` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
