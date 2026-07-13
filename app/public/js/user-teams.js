@@ -6,6 +6,11 @@
 	var accountType = document.getElementById('accounttype');
 	var teamBoxes = document.querySelectorAll('.team-option');
 	var managerSelect = document.getElementById('manager_id');
+	var userForm = document.querySelector('form[action="/includes/add-users.php"]');
+	var submitButton = userForm ? userForm.querySelector('button[type="submit"]') : null;
+	var busyStatus = userForm ? userForm.querySelector('[data-add-user-status]') : null;
+	var originalButtonLabel = submitButton ? submitButton.textContent : '';
+	var isSubmitting = false;
 
 	function updateTeamSelectionRules() {
 		var role = accountType.value;
@@ -47,6 +52,48 @@
 				checked.slice(1).forEach(function (cb) { cb.checked = false; });
 			}
 		}
+	}
+
+	function setSubmittingState(isBusy) {
+		if (!userForm || !submitButton) {
+			return;
+		}
+
+		if (isBusy) {
+			submitButton.disabled = true;
+			submitButton.setAttribute('aria-busy', 'true');
+			submitButton.textContent = userForm.dataset.busyLabel || originalButtonLabel;
+			if (busyStatus) {
+				busyStatus.textContent = userForm.dataset.busyStatus || submitButton.textContent;
+			}
+			return;
+		}
+
+		submitButton.disabled = false;
+		submitButton.removeAttribute('aria-busy');
+		submitButton.textContent = originalButtonLabel;
+		if (busyStatus) {
+			busyStatus.textContent = '';
+		}
+	}
+
+	if (userForm && submitButton) {
+		userForm.addEventListener('submit', function (event) {
+			if (isSubmitting) {
+				event.preventDefault();
+				return;
+			}
+
+			isSubmitting = true;
+			setSubmittingState(true);
+		});
+
+		window.addEventListener('pageshow', function (event) {
+			if (event.persisted) {
+				isSubmitting = false;
+				setSubmittingState(false);
+			}
+		});
 	}
 
 	teamBoxes.forEach(function (cb) {
