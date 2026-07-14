@@ -143,6 +143,9 @@ function hasValue($value) {
 }
 
 function rmt_file_upload_policy(): array {
+    $storageMode = strtolower(trim((string) app_env('FILE_STORAGE_MODE', '')));
+    $enabled = ($storageMode !== 'disabled');
+
     $maxFiles = (int) app_env('FILE_UPLOAD_MAX_FILES', '5');
     if ($maxFiles <= 0) {
         $maxFiles = 5;
@@ -154,6 +157,7 @@ function rmt_file_upload_policy(): array {
     }
 
     return [
+        'enabled' => $enabled,
         'max_files' => $maxFiles,
         'max_file_size_mb' => $maxSizeMb,
         'max_file_size_bytes' => $maxSizeMb * 1024 * 1024,
@@ -198,6 +202,17 @@ function rmt_file_upload_hint(string $lang = 'en'): string {
 function rmt_validate_uploaded_files(array $fileUpload, string $lang = 'en'): array {
     $policy = rmt_file_upload_policy();
     $language = app_normalize_language($lang);
+
+    if (!$policy['enabled']) {
+        return [
+            'files' => [],
+            'errors' => [
+                $language === 'fr'
+                    ? "Le t\u00e9l\u00e9versement de fichiers n'est pas disponible pour le moment."
+                    : 'File uploads are not available at this time.',
+            ],
+        ];
+    }
 
     $names = $fileUpload['name'] ?? [];
     $tmpNames = $fileUpload['tmp_name'] ?? [];
