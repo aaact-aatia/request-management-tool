@@ -69,8 +69,7 @@
 	- .github/workflows/publish-container.yml
 - Incident linkage (if any): none
 - Follow-up actions:
-	1. Create equivalent production record when prod automation is introduced.
-	2. Add periodic secret validity verification for Azure login credentials.
+	1. Add periodic secret validity verification for Azure login credentials.
 
 ---
 

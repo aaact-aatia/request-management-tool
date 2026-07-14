@@ -10,6 +10,10 @@ on:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    env:
+      AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+      AZURE_WEBAPP_NAME_DEV: ${{ vars.AZURE_WEBAPP_NAME_DEV }}
+      AZURE_WEBAPP_NAME_PROD: ${{ vars.AZURE_WEBAPP_NAME_PROD }}
 
     permissions:
       contents: read
@@ -45,19 +49,30 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/request-management-tool:${{ steps.tag.outputs.tag }}
             ghcr.io/${{ github.repository_owner }}/request-management-tool:${{ steps.tag.outputs.tag }}-${{ github.sha }}
 
-      - name: Log in to Azure for dev restart
-        if: github.ref_name == 'dev'
+      - name: Log in to Azure for App Service restart
+        if: github.ref_name == 'dev' || github.ref_name == 'main'
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_8808B0DB8D7142538A762B63809F54F8 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_24543EE9DED84AE599E00F3855DFB8C3 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_DB9A2EB06BD5474C85B1B0A02D18F408 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID || secrets.AZUREAPPSERVICE_CLIENTID_8808B0DB8D7142538A762B63809F54F8 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID || secrets.AZUREAPPSERVICE_TENANTID_24543EE9DED84AE599E00F3855DFB8C3 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID || secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_DB9A2EB06BD5474C85B1B0A02D18F408 }}
 
-      - name: Restart Azure dev App Service
-        if: github.ref_name == 'dev'
+      - name: Restart Azure App Service for branch environment
+        if: github.ref_name == 'dev' || github.ref_name == 'main'
         uses: azure/cli@v2
         with:
           inlineScript: |
+            if [ "${{ github.ref_name }}" = "main" ]; then
+              target_app="$AZURE_WEBAPP_NAME_PROD"
+            else
+              target_app="$AZURE_WEBAPP_NAME_DEV"
+            fi
+
+            if [ -z "$AZURE_RESOURCE_GROUP" ] || [ -z "$target_app" ]; then
+              echo "Missing required Azure workflow variables. Set AZURE_RESOURCE_GROUP and the branch-specific web app name variables."
+              exit 1
+            fi
+
             az webapp restart \
-              --resource-group GcDc-SSC_ICTAccess_Project-rg \
-              --name GcDc-SSC-ICTAccess-Linux-aaact-rmt-dev-asv
+              --resource-group "$AZURE_RESOURCE_GROUP" \
+              --name "$target_app"
