@@ -33,7 +33,7 @@ $currentRequest = $currentRequestResult ? mysqli_fetch_assoc($currentRequestResu
 
 if (!$currentRequest) {
     $langCode = $_SESSION['lang'] ?? 'en';
-    header("location:/editrequest.php?lang=$langCode&id=$requestuid&status=failed");
+    header("location:/editrequest.php?lang=$langCode&id=$requestuid&status=failed&focus=update");
     exit();
 }
 
@@ -112,7 +112,10 @@ $lang = $_SESSION['lang'] ?? 'en';
 $requestlang = app_normalize_language($lang);
 $requestuidInt = (int) $requestuid;
 $postedRequestLang = app_normalize_language(getPostValue('requestlang', ''), '');
-$uploadOnlyRequested = ((int) getPostValue('upload_only', 0) === 1);
+$formAction = trim((string) getPostValue('form_action', 'update_request'));
+if (!in_array($formAction, ['update_request', 'upload_files', 'add_log'], true)) {
+    $formAction = 'update_request';
+}
 
 if (!$canEditStatusAndWorker) {
     $statusid = (string) ($currentRequest['statusid'] ?? '');
@@ -250,7 +253,7 @@ $statusChanged = ((string) $cstatusid !== (string) $statusid);
 $assignmentChanged = ($previousWorkerIdForHistory !== $newWorkerIdForHistory);
 $isCurrentResolved = rmt_is_resolved_status_id($link, $cstatusid);
 
-if ($statusChanged || $assignmentChanged) {
+if ($formAction === 'update_request' && ($statusChanged || $assignmentChanged)) {
     $exactTime = date('Y-m-d H:i:s');
     $statusHistoryColumns = ['requestID', 'statusID', 'changeTimeStamp'];
     $statusHistoryValues = ["'$requestid'", "'$statusid'", "'$exactTime'"];
@@ -355,17 +358,19 @@ $uploadedFileNames = [];
 
 if (isset($_FILES['fileToUpload'])) {
     $validatedUploads = rmt_validate_uploaded_files($_FILES['fileToUpload'], $lang);
-    if ($uploadOnlyRequested && empty($validatedUploads['errors']) && empty($validatedUploads['files'])) {
+    if ($formAction === 'upload_files' && empty($validatedUploads['errors']) && empty($validatedUploads['files'])) {
         $_SESSION['upload_error_message'] = ($lang === 'fr')
             ? 'Veuillez choisir au moins un fichier a televerser.'
             : 'Please choose at least one file to upload.';
-        header("location: /editrequest.php?lang=$lang&id=$requestuid&status=uploadfailed");
+        $_SESSION['edit_section_status'] = ['status' => 'uploadfailed', 'focus' => 'upload'];
+        header("location: /editrequest.php?lang=$lang&id=$requestuid&status=uploadfailed&focus=upload");
         exit();
     }
 
     if (!empty($validatedUploads['errors'])) {
         $_SESSION['upload_error_message'] = implode(' ', $validatedUploads['errors']);
-        header("location: /editrequest.php?lang=$lang&id=$requestuid&status=uploadfailed");
+        $_SESSION['edit_section_status'] = ['status' => 'uploadfailed', 'focus' => 'upload'];
+        header("location: /editrequest.php?lang=$lang&id=$requestuid&status=uploadfailed&focus=upload");
         exit();
     }
 
@@ -392,8 +397,67 @@ if (isset($_FILES['fileToUpload'])) {
     }
 }
 
-if ($uploadOnlyRequested) {
-    header("location:/editrequest.php?lang=$lang&id=$requestuid&status=uploadsuccess");
+if ($formAction === 'upload_files') {
+    if (empty($uploadedFileNames)) {
+        $_SESSION['upload_error_message'] = ($lang === 'fr')
+            ? 'Veuillez choisir au moins un fichier a televerser.'
+            : 'Please choose at least one file to upload.';
+        $_SESSION['edit_section_status'] = ['status' => 'uploadfailed', 'focus' => 'upload'];
+        header("location:/editrequest.php?lang=$lang&id=$requestuid&status=uploadfailed&focus=upload");
+        exit();
+    }
+
+    $touchDateUpdated = mysqli_real_escape_string($link, getTodayDate());
+    mysqli_query($link, "UPDATE tbltriage SET dateupdated='$touchDateUpdated', updaterid='" . (int) $updaterid . "' WHERE id='$requestuid'");
+
+    if (rmt_table_has_column($link, 'RequestFieldHistory', 'requestID')) {
+        $auditChangeTime = date('Y-m-d H:i:s');
+        $safeRequestId = mysqli_real_escape_string($link, (string) $requestid);
+        foreach ($uploadedFileNames as $uploadedFileName) {
+            $safeField = mysqli_real_escape_string($link, 'uploaded_file');
+            $newValueSql = "'" . mysqli_real_escape_string($link, (string) $uploadedFileName) . "'";
+            $sqlAudit = "INSERT INTO RequestFieldHistory(`requestID`, `fieldName`, `oldValue`, `newValue`, `actorUserID`, `changeTimeStamp`) VALUES ('$safeRequestId', '$safeField', NULL, $newValueSql, '" . (int) $updaterid . "', '$auditChangeTime')";
+            mysqli_query($link, $sqlAudit);
+        }
+    }
+
+    $_SESSION['edit_section_status'] = ['status' => 'uploadsuccess', 'focus' => 'upload'];
+    header("location:/editrequest.php?lang=$lang&id=$requestuid&status=uploadsuccess&focus=upload");
+    exit();
+}
+
+if ($formAction === 'add_log') {
+    if (!$canEditCommunicationLogs) {
+        $_SESSION['edit_section_status'] = ['status' => 'logfailed', 'focus' => 'log'];
+        header("location:/editrequest.php?lang=$lang&id=$requestuid&status=logfailed&focus=log");
+        exit();
+    }
+
+    $adminnotesTrimmed = trim((string) $adminnotes);
+    if ($adminnotesTrimmed === '') {
+        $_SESSION['edit_section_status'] = ['status' => 'logfailed', 'focus' => 'log'];
+        header("location:/editrequest.php?lang=$lang&id=$requestuid&status=logfailed&focus=log");
+        exit();
+    }
+
+    $safeAdminNotes = mysqli_real_escape_string($link, $adminnotesTrimmed);
+    $sql = "INSERT INTO tbladminlog(`triageid`, `dateadded`, `notes`, `creatorid`, `status`) VALUES ('$requestuid', '$todaydate', '$safeAdminNotes', '$updaterid', '1')";
+    mysqli_query($link, $sql);
+
+    $touchDateUpdated = mysqli_real_escape_string($link, getTodayDate());
+    mysqli_query($link, "UPDATE tbltriage SET dateupdated='$touchDateUpdated', updaterid='" . (int) $updaterid . "' WHERE id='$requestuid'");
+
+    if (rmt_table_has_column($link, 'RequestFieldHistory', 'requestID')) {
+        $auditChangeTime = date('Y-m-d H:i:s');
+        $safeRequestId = mysqli_real_escape_string($link, (string) $requestid);
+        $safeField = mysqli_real_escape_string($link, 'staff_note_added');
+        $newValueSql = "'" . mysqli_real_escape_string($link, $adminnotesTrimmed) . "'";
+        $sqlAudit = "INSERT INTO RequestFieldHistory(`requestID`, `fieldName`, `oldValue`, `newValue`, `actorUserID`, `changeTimeStamp`) VALUES ('$safeRequestId', '$safeField', NULL, $newValueSql, '" . (int) $updaterid . "', '$auditChangeTime')";
+        mysqli_query($link, $sqlAudit);
+    }
+
+    $_SESSION['edit_section_status'] = ['status' => 'logsuccess', 'focus' => 'log'];
+    header("location:/editrequest.php?lang=$lang&id=$requestuid&status=logsuccess&focus=log");
     exit();
 }
 
@@ -608,7 +672,7 @@ if ($workerIdInt > 0 && $workerIdInt !== $prevWorkerIdInt) {
 
 if (empty($requestid) || empty($requesttitle) || empty($datereceived) || 
     empty($statusid) || empty($catalogueid)) {
-    header("location: /editrequest.php?lang=$lang&id=$requestuid&status=failed");
+    header("location: /editrequest.php?lang=$lang&id=$requestuid&status=failed&focus=update");
     exit();
 }
 
@@ -1150,6 +1214,6 @@ if (!$isCurrentResolved && $isTargetResolved) {
     exit();
 }
 
-header("location:/viewrequest.php?lang=$lang&erid=$redirectid&reqid=" . urlencode("a11y-" . $requestid) . "&status=success");
+header("location:/editrequest.php?lang=$lang&id=$requestuid&status=success&focus=update");
 exit();
 ?>

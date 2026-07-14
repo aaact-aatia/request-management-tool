@@ -46,6 +46,8 @@ $translations = [
         'tool_name' => 'Request Management Tool - IT Accessibility Office',
         'success_heading' => 'Success',
         'success_message' => 'You have successfully updated the database, thank you!',
+        'updated_fields_label' => 'Updated fields',
+        'status_changed_label' => 'Status changed',
         'failed_heading' => 'Failed',
         'failed_message' => 'The database update you requested did not work, please try again, thank you!',
         'upload_failed_heading' => 'File upload failed',
@@ -53,6 +55,11 @@ $translations = [
         'upload_success_heading' => 'Upload complete',
         'upload_success_message' => 'Your file upload was successful.',
         'upload_button' => 'Upload',
+        'log_success_heading' => 'Communication log added',
+        'log_success_message' => 'Your communication log entry was added successfully.',
+        'log_failed_heading' => 'Communication log not added',
+        'log_failed_message' => 'Please add a communication log message before submitting.',
+        'add_log_button' => 'Add communication log',
         'request_id' => 'Request ID #',
         'request_title' => 'Request title',
         'first_sprint_start' => 'First Sprint Start Date',
@@ -113,6 +120,8 @@ $translations = [
         'select_team_member' => 'Select a team member',
         'reset_sla_timer' => 'Need to reset the SLA timer? Choose the new start date',
         'update_request' => 'Update request',
+        'cancel' => 'Cancel',
+        'back_to_request' => 'Back to request details',
         'resolved_email_status' => 'Resolved email to client',
         'resolved_email_sent' => 'Sent',
         'resolved_email_not_sent' => 'Not sent',
@@ -131,6 +140,8 @@ $translations = [
         'tool_name' => 'Outil de gestion des demandes - Bureau de l\'accessibilité de la TI',
         'success_heading' => 'Succès',
         'success_message' => 'Vous avez mis à jour la base de données, merci!',
+        'updated_fields_label' => 'Champs mis a jour',
+        'status_changed_label' => 'Statut modifie',
         'failed_heading' => 'Échec',
         'failed_message' => 'La mise à jour de la base de données que vous avez demandée n\'a pas fonctionné, veuillez réessayer, merci!',
         'upload_failed_heading' => 'Échec du téléversement',
@@ -138,6 +149,11 @@ $translations = [
         'upload_success_heading' => 'Televersement termine',
         'upload_success_message' => 'Le televersement du fichier a reussi.',
         'upload_button' => 'Televerser',
+        'log_success_heading' => 'Journal de communications ajoute',
+        'log_success_message' => 'Votre entree de journal de communications a ete ajoutee avec succes.',
+        'log_failed_heading' => 'Journal de communications non ajoute',
+        'log_failed_message' => 'Veuillez ajouter un message au journal de communications avant de soumettre.',
+        'add_log_button' => 'Ajouter le journal de communications',
         'request_id' => '# de la demande',
         'request_title' => 'Titre de la demande',
         'first_sprint_start' => 'Date de début du premier sprint',
@@ -198,6 +214,8 @@ $translations = [
         'select_team_member' => 'Sélectionnez un membre de l\'équipe',
         'reset_sla_timer' => 'Besoin de réinitialiser la minuterie SLA? Choisissez la nouvelle date de début',
         'update_request' => 'Mettre à jour',
+        'cancel' => 'Annuler',
+        'back_to_request' => 'Retour aux details de la demande',
         'resolved_email_status' => 'Courriel de resolution au client',
         'resolved_email_sent' => 'Envoye',
         'resolved_email_not_sent' => 'Non envoye',
@@ -228,6 +246,26 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 // ============================================================================
 
 $status = getGetValue('status');
+$focusTarget = getGetValue('focus');
+
+$statusFallback = $_SESSION['edit_section_status'] ?? null;
+unset($_SESSION['edit_section_status']);
+if (empty($status) && is_array($statusFallback)) {
+    $status = (string)($statusFallback['status'] ?? '');
+    if (empty($focusTarget)) {
+        $focusTarget = (string)($statusFallback['focus'] ?? '');
+    }
+}
+
+if (empty($focusTarget)) {
+    if (in_array($status, ['uploadsuccess', 'uploadfailed'], true)) {
+        $focusTarget = 'upload';
+    } elseif (in_array($status, ['logsuccess', 'logfailed'], true)) {
+        $focusTarget = 'log';
+    } elseif (in_array($status, ['success', 'failed', 'resolvedemailsent', 'resolvedemailmissing', 'resolvedemailfailed'], true)) {
+        $focusTarget = 'update';
+    }
+}
 $result = mysqli_query($link, "SELECT requestid FROM tbltriage WHERE id = '$requestuid'");
 $row = mysqli_fetch_assoc($result);
 $requestid = $row['requestid'];
@@ -245,44 +283,56 @@ include 'includes/template/head.php';
         <?php
         $uploadErrorMessage = isset($_SESSION['upload_error_message']) ? (string) $_SESSION['upload_error_message'] : '';
         unset($_SESSION['upload_error_message']);
+
+        $requestUpdateFeedback = $_SESSION['request_update_feedback'] ?? null;
+        unset($_SESSION['request_update_feedback']);
+
+        $statusChangeFeedback = is_array($requestUpdateFeedback['status_change'] ?? null)
+            ? $requestUpdateFeedback['status_change']
+            : null;
+        $changedFieldLabelsFeedback = is_array($requestUpdateFeedback['changed_fields'] ?? null)
+            ? array_values(array_filter(array_map('strval', $requestUpdateFeedback['changed_fields'])))
+            : [];
         ?>
         
         <?php if ($status == 'success'): ?>
-        <section class="alert alert-success">
+        <section id="update-status-message" class="alert alert-success" role="status" aria-live="polite" tabindex="-1">
             <h2><?php echo $t['success_heading']; ?></h2>
-            <ul><li><?php echo $t['success_message']; ?></li></ul>
+            <ul>
+                <li><?php echo $t['success_message']; ?></li>
+                <?php if (!empty($statusChangeFeedback['from']) && !empty($statusChangeFeedback['to'])): ?>
+                <li>
+                    <?php echo htmlspecialchars($t['status_changed_label'], ENT_QUOTES, 'UTF-8'); ?>:
+                    <?php echo htmlspecialchars((string) $statusChangeFeedback['from'], ENT_QUOTES, 'UTF-8'); ?>
+                    &rarr;
+                    <?php echo htmlspecialchars((string) $statusChangeFeedback['to'], ENT_QUOTES, 'UTF-8'); ?>
+                </li>
+                <?php endif; ?>
+                <?php if (!empty($changedFieldLabelsFeedback)): ?>
+                <li>
+                    <?php echo htmlspecialchars($t['updated_fields_label'], ENT_QUOTES, 'UTF-8'); ?>:
+                    <?php echo htmlspecialchars(implode(', ', $changedFieldLabelsFeedback), ENT_QUOTES, 'UTF-8'); ?>
+                </li>
+                <?php endif; ?>
+            </ul>
         </section>
         <?php elseif ($status == 'resolvedemailsent'): ?>
-        <section class="alert alert-success">
+        <section id="update-status-message" class="alert alert-success" role="status" aria-live="polite" tabindex="-1">
             <h2><?php echo $t['success_heading']; ?></h2>
             <ul><li><?php echo $t['resolved_email_send_success']; ?></li></ul>
         </section>
         <?php elseif ($status == 'failed'): ?>
-        <section class="alert alert-danger">
+        <section id="update-status-message" class="alert alert-danger" role="alert" aria-live="assertive" tabindex="-1">
             <h2><?php echo $t['failed_heading']; ?></h2>
             <ul><li><?php echo $t['failed_message']; ?></li></ul>
         </section>
-        <?php elseif ($status == 'uploadfailed'): ?>
-        <section class="alert alert-danger">
-            <h2><?php echo $t['upload_failed_heading']; ?></h2>
-            <ul>
-                <li><?php echo $t['upload_failed_message']; ?></li>
-            </ul>
-        </section>
-        <?php elseif ($status == 'uploadsuccess'): ?>
-        <section class="alert alert-success">
-            <h2><?php echo $t['upload_success_heading']; ?></h2>
-            <ul>
-                <li><?php echo $t['upload_success_message']; ?></li>
-            </ul>
-        </section>
         <?php elseif ($status == 'resolvedemailmissing'): ?>
-        <section class="alert alert-danger">
+        <section id="update-status-message" class="alert alert-danger" role="alert" aria-live="assertive" tabindex="-1">
             <h2><?php echo $t['failed_heading']; ?></h2>
             <ul><li><?php echo $t['resolved_email_missing_client']; ?></li></ul>
         </section>
         <?php elseif ($status == 'resolvedemailfailed'): ?>
-        <section class="alert alert-danger">
+        <section id="update-status-message" class="alert alert-danger" role="alert" aria-live="assertive" tabindex="-1">
             <h2><?php echo $t['failed_heading']; ?></h2>
             <ul><li><?php echo $t['resolved_email_send_failed']; ?></li></ul>
         </section>
@@ -353,6 +403,8 @@ include 'includes/template/head.php';
             $isTeamLeadAccount = ((int)($_SESSION['atype'] ?? 0) === 4);
             $canEditStatusAndWorker = canEditRequests();
             $canEditTitle = $canFullFieldEdit || $isManagerAccount || $isTeamLeadAccount;
+            $canEditWorkerid = in_array((int)($_SESSION['atype'] ?? 0), [3, 4, 5], true) || $canFullFieldEdit;
+            $canEditSlaTimer = $canFullFieldEdit || $isManagerAccount;
             $readonly = !$canFullFieldEdit;
             $serviceid = $row['serviceid'];
             $catalogueid = $row['catalogueid'];
@@ -360,17 +412,61 @@ include 'includes/template/head.php';
             $dateRequiredLabel = ($catalogueid == 5 && $serviceid != 47) ? $t['coaching_session_date'] : $t['date_required'];
             ?>
 
-            <!-- Status (standalone row at top) -->
+            <!-- Status and assignment (standalone row at top) -->
             <div class="row">
                 <div class="col-md-6">
                     <?php
                     $statuses = getDropdownOptions($link, 'tblstatus', $lang);
                     $statusOptions = [];
-                    while ($status = mysqli_fetch_assoc($statuses)) {
-                        $statusOptions[] = $status;
+                    while ($statusOption = mysqli_fetch_assoc($statuses)) {
+                        $statusOptions[] = $statusOption;
                     }
                     echo renderSelect('statusid', $t['status'], $statusOptions, $row['statusid'], true, $t['select_status'], !$canEditStatusAndWorker);
                     ?>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="workerid"><span class="field-name"><?php echo $t['assigned_team_member']; ?>:</span></label>
+                        <select class="form-control" id="workerid" name="workerid" <?php echo $canEditWorkerid ? '' : 'disabled="disabled"'; ?>>
+                            <option value="0"><?php echo $t['select_team_member']; ?></option>
+                            <?php
+                            $contactid = 0;
+                            $hasCatalogueContact = function_exists('rmt_db_column_exists') && rmt_db_column_exists($link, 'tblcatalogue', 'contactid');
+                            if ($hasCatalogueContact && !empty($row['catalogueid'])) {
+                                $r = mysqli_query($link, "SELECT contactid FROM tblcatalogue WHERE id='" . (int)$row['catalogueid'] . "'");
+                                $cr = mysqli_fetch_assoc($r);
+                                $contactid = (int)($cr['contactid'] ?? 0);
+                            }
+                            if (!empty($row['subserviceid']) && !$contactid) {
+                                $r = mysqli_query($link, "SELECT contactid FROM tblsubservices WHERE id='" . (int)$row['subserviceid'] . "'");
+                                $cr = mysqli_fetch_assoc($r);
+                                $contactid = (int)($cr['contactid'] ?? 0);
+                            }
+                            if (!$contactid && !empty($row['serviceid'])) {
+                                $r = mysqli_query($link, "SELECT contactid FROM tblservices WHERE id='" . (int)$row['serviceid'] . "'");
+                                $cr = mysqli_fetch_assoc($r);
+                                $contactid = (int)($cr['contactid'] ?? 0);
+                            }
+                            if (!$contactid) {
+                                $contactid = 1;
+                            }
+
+                            $result2 = mysqli_query($link, "SELECT * FROM tblusers WHERE status='1' AND atype <= 5 ORDER BY firstname ASC, lastname ASC");
+                            while ($row2 = mysqli_fetch_array($result2)) {
+                                $tarray = array_filter(explode(",", $row2['team']));
+                                if ($contactid && !in_array($contactid, $tarray)) {
+                                    continue;
+                                }
+                            ?>
+                            <option value="<?php echo $row2['id']; ?>" <?php if ($row['workerid'] == $row2['id']) { ?>selected<?php } ?>>
+                                <?php echo $row2['firstname']; ?> <?php echo $row2['lastname']; ?>
+                            </option>
+                            <?php } ?>
+                        </select>
+                        <?php if (!$canEditWorkerid): ?>
+                        <input type="hidden" name="workerid" value="<?php echo (int)($row['workerid'] ?? 0); ?>" />
+                        <?php endif; ?>
+                    </div>
                 </div>
             </div>
 
@@ -574,7 +670,32 @@ include 'includes/template/head.php';
                     </div>
                 </div>
 
+                <div class="row">
+                    <div class="col-md-6">
+                        <?php
+                        $eslatimer = $row['slatimer'];
+                        $slatimerValue = (empty($eslatimer) || is_null($eslatimer)) ? $row['datereceived'] : $eslatimer;
+                        if ($canEditSlaTimer) {
+                        ?>
+                        <div class="form-group">
+                            <label for="slatimer"><span class="field-name"><?php echo $t['reset_sla_timer']; ?>:</span></label>
+                            <input type="date" class="form-control" id="slatimer" name="slatimer"
+                                   min="<?php echo date('Y-m-d', strtotime('-1 years')); ?>"
+                                   max="<?php echo date('Y-m-d'); ?>"
+                                   value="<?php echo htmlspecialchars($slatimerValue, ENT_QUOTES, 'UTF-8'); ?>" required />
+                        </div>
+                        <?php } else { ?>
+                        <input type="hidden" id="slatimer" name="slatimer" value="<?php echo htmlspecialchars($slatimerValue, ENT_QUOTES, 'UTF-8'); ?>" />
+                        <?php } ?>
+                    </div>
+                </div>
+
             </fieldset>
+
+            <div class="form-group form-buttons">
+                <button type="submit" name="form_action" value="update_request" class="btn btn-default"><?php echo $t['update_request']; ?></button>
+                <a class="btn btn-link" href="viewrequest.php?lang=<?php echo $lang; ?>&erid=<?php echo base64_encode((string)$row['id']); ?>&reqid=<?php echo urlencode('a11y-' . $row['requestid']); ?>"><?php echo htmlspecialchars($t['cancel'], ENT_QUOTES, 'UTF-8'); ?></a>
+            </div>
 
             <?php
             $resolvedEmailSentDate = rmt_get_resolved_email_sent_date($link, (int)$requestuid);
@@ -637,15 +758,11 @@ include 'includes/template/head.php';
             <?php include 'includes/editrequest-files-section.php'; ?>
 
             <?php include 'includes/editrequest-communications-section.php'; ?>
-            
-            <?php if (canEditRequests()): ?>
-                <?php include 'includes/editrequest-staff-section.php'; ?>
-            <?php endif; ?>
-            
-            <div class="form-group form-buttons">
-                <button type="submit" class="btn btn-default"><?php echo $t['update_request']; ?></button>
-            </div>
         </form>
+
+        <p>
+            <a href="viewrequest.php?lang=<?php echo $lang; ?>&erid=<?php echo base64_encode((string)$row['id']); ?>&reqid=<?php echo urlencode('a11y-' . $row['requestid']); ?>"><?php echo htmlspecialchars($t['back_to_request'], ENT_QUOTES, 'UTF-8'); ?></a>
+        </p>
         
         <?php
         }

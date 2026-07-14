@@ -9,6 +9,18 @@ $blobStorage = new AzureBlobStorageManager();
 
 <h2><?php echo $t['files_heading']; ?></h2>
 
+<?php if ($status === 'uploadsuccess'): ?>
+<section id="upload-status-message" class="alert alert-success" role="status" aria-live="polite" tabindex="-1">
+    <h3><?php echo htmlspecialchars($t['upload_success_heading'], ENT_QUOTES, 'UTF-8'); ?></h3>
+    <p><?php echo htmlspecialchars($t['upload_success_message'], ENT_QUOTES, 'UTF-8'); ?></p>
+</section>
+<?php elseif ($status === 'uploadfailed'): ?>
+<section id="upload-status-message" class="alert alert-danger" role="alert" aria-live="assertive" tabindex="-1">
+    <h3><?php echo htmlspecialchars($t['upload_failed_heading'], ENT_QUOTES, 'UTF-8'); ?></h3>
+    <p><?php echo !empty($uploadErrorMessage) ? htmlspecialchars($uploadErrorMessage, ENT_QUOTES, 'UTF-8') : htmlspecialchars($t['upload_failed_message'], ENT_QUOTES, 'UTF-8'); ?></p>
+</section>
+<?php endif; ?>
+
 <div class="form-group">
     <label for="fileToUpload"><span class="field-name"><?php echo $t['upload_file']; ?>:</span></label>
     <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
@@ -19,14 +31,13 @@ $blobStorage = new AzureBlobStorageManager();
             name="fileToUpload[]"
             multiple
             accept="<?php echo htmlspecialchars(rmt_file_upload_accept_attribute(), ENT_QUOTES, 'UTF-8'); ?>"
-            aria-describedby="fileToUploadHelp fileToUploadError"
+            aria-describedby="fileToUploadHelp"
             <?php echo !empty($uploadErrorMessage) ? 'aria-invalid="true"' : ''; ?>
             style="flex:1 1 320px;"
         >
-        <button type="submit" name="upload_only" value="1" class="btn btn-primary" formnovalidate><?php echo htmlspecialchars($t['upload_button'], ENT_QUOTES, 'UTF-8'); ?></button>
+        <button type="submit" name="form_action" value="upload_files" class="btn btn-primary" formnovalidate><?php echo htmlspecialchars($t['upload_button'], ENT_QUOTES, 'UTF-8'); ?></button>
     </div>
     <p id="fileToUploadHelp" class="small text-muted"><?php echo htmlspecialchars(rmt_file_upload_hint($lang), ENT_QUOTES, 'UTF-8'); ?></p>
-    <p id="fileToUploadError" class="text-danger" aria-live="polite"><?php echo !empty($uploadErrorMessage) ? htmlspecialchars($uploadErrorMessage, ENT_QUOTES, 'UTF-8') : ''; ?></p>
 </div>
 
 <br><br>
