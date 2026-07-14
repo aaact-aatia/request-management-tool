@@ -101,6 +101,7 @@ include 'includes/template/head.php';
 			$sql = "SELECT * FROM tbltriage WHERE status = '1' AND statusid IN ($statusFilterList) ORDER BY $sortSql LIMIT $limit";
 			
 			$result = mysqli_query($link,$sql);
+			$resolvedRowsCount = ($result instanceof mysqli_result) ? mysqli_num_rows($result) : 0;
 
 			$surveyAnsweredByRequest = [];
 			$surveyResult = mysqli_query($link, "SELECT DISTINCT requestid FROM tblcss WHERE status = 1");
@@ -112,18 +113,22 @@ include 'includes/template/head.php';
 
 			$statusOptions = [];
 			$statusOptResult = mysqli_query($link, "SELECT id, $nameColumn FROM tblstatus WHERE status = 1 AND id IN ($statusFilterList) ORDER BY id");
-			while ($sr = mysqli_fetch_assoc($statusOptResult)) {
-				$statusOptions[] = $sr;
+			if ($statusOptResult instanceof mysqli_result) {
+				while ($sr = mysqli_fetch_assoc($statusOptResult)) {
+					$statusOptions[] = $sr;
+				}
 			}
 
 			$catalogueOptions = [];
 			$catOptResult = mysqli_query($link, "SELECT id, $nameColumn FROM tblcatalogue WHERE status = 1 ORDER BY $nameColumn");
-			while ($cr = mysqli_fetch_assoc($catOptResult)) {
-				$catalogueOptions[] = $cr;
+			if ($catOptResult instanceof mysqli_result) {
+				while ($cr = mysqli_fetch_assoc($catOptResult)) {
+					$catalogueOptions[] = $cr;
+				}
 			}
 			
 			//List it
-			if(mysqli_num_rows($result)>0){
+			if($resolvedRowsCount > 0){
 			?>
 			<section class="provisional wb-tagfilter wb-filter" data-wb-filter='{"selector": "[data-wb-tags]", "section": ".wb-tagfilter-items", "uiTemplate": "#indexresolved-filter-ui"}'>
 				<h2 class="wb-inv"><?= ($_SESSION['lang'] === 'fr') ? 'Options de filtrage' : 'Filter options' ?></h2>
@@ -260,7 +265,7 @@ include 'includes/template/head.php';
 						// Sub-service is not empty so grab the name
 						$result2 = mysqli_query($link, "SELECT $nameColumn FROM tblcatalogue WHERE id = '$catalogueid'");
 						$row2 = mysqli_fetch_array($result2);
-						$cataloguename = $row2[0];
+						$cataloguename = $row2[0] ?? '';
 					}
 					
 					// Grab the date it was received
