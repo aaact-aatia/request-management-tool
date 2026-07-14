@@ -104,6 +104,10 @@ if ($sdate=="" || $edate=="") {
 // Determine which database column to use for name field
 $nameColumn = ($_SESSION['lang'] === 'fr') ? 'namefr' : 'nameen';
 
+$getRowCount = static function ($queryResult): int {
+	return ($queryResult instanceof mysqli_result) ? mysqli_num_rows($queryResult) : 0;
+};
+
 // Load config
 require_once 'includes/config.php';
 
@@ -129,7 +133,7 @@ include 'includes/template/header.php';
 				//echo $sql;
 				
 				$result = mysqli_query($link,$sql);
-				$num_rows = mysqli_num_rows($result);
+				$num_rows = $getRowCount($result);
 				?>
 				<dd><?php echo $num_rows; ?></dd>
 				<dt><?= htmlspecialchars($langFile['report_status_current_onhold']) ?></dt>
@@ -141,7 +145,7 @@ include 'includes/template/header.php';
 					$sql = "SELECT * FROM tbltriage WHERE status = '1' AND (statusid='5')" . $teamScopeClause;
 				}
 				$result = mysqli_query($link,$sql);
-				$num_rows = mysqli_num_rows($result);
+				$num_rows = $getRowCount($result);
 				?>
 				<dd><?php echo $num_rows; ?></dd>
 				<dt><?= htmlspecialchars($langFile['report_status_closed_total']) ?></dt>
@@ -153,7 +157,7 @@ include 'includes/template/header.php';
 					$sql = "SELECT * FROM tbltriage WHERE status = '1' AND (dateresolved BETWEEN '$sdate' AND '$edate')" . $teamScopeClause;
 				}
 				$result = mysqli_query($link,$sql);
-				$num_rows = mysqli_num_rows($result);
+				$num_rows = $getRowCount($result);
 				?>
 				<dd><?php echo $num_rows; ?></dd>
 				<dt><?= htmlspecialchars($langFile['report_status_new_opened']) ?></dt>
@@ -165,7 +169,7 @@ include 'includes/template/header.php';
 					$sql = "SELECT * FROM tbltriage WHERE status = '1' AND (datereceived BETWEEN '$sdate' AND '$edate')" . $teamScopeClause;
 				}
 				$result = mysqli_query($link,$sql);
-				$num_rows = mysqli_num_rows($result);
+				$num_rows = $getRowCount($result);
 				?>
 				<dd><?php echo $num_rows; ?></dd>
 				<dt><?= htmlspecialchars($langFile['report_status_avg_response']) ?></dt>
@@ -183,7 +187,7 @@ include 'includes/template/header.php';
 					$sql = "SELECT * FROM tbltriage WHERE status = '1' AND (dateresolved BETWEEN '$sdate' AND '$edate')" . $teamScopeClause;
 				}
 				$result = mysqli_query($link,$sql);
-				if(mysqli_num_rows($result)>0){
+				if($getRowCount($result) > 0){
 					while($row = mysqli_fetch_array($result)){
 						// Grab the start date
 						$slatimer = $row['slatimer'];
@@ -303,13 +307,13 @@ echo '</tbody></table>';
 						$sql = "SELECT catalogueid, COUNT(*) FROM tbltriage WHERE status = '1' AND (datereceived BETWEEN '$sdate' AND '$edate')" . $teamScopeClause . " GROUP BY catalogueid";
 					}
 					$result = mysqli_query($link,$sql);
-					if(mysqli_num_rows($result)>0){
+					if($getRowCount($result) > 0){
 						while($row = mysqli_fetch_array($result)){
 							// Get catalogueid name
 							$catalogueid = $row['catalogueid'];
 							$result2 = mysqli_query($link, "SELECT $nameColumn FROM tblcatalogue WHERE id = '$catalogueid'");
 							$row2 = mysqli_fetch_array($result2);
-							$cataloguename = $row2[0];
+							$cataloguename = $row2[0] ?? '';
 					?>
 					<th><?php echo $cataloguename; ?></th>
 					<?php
@@ -328,7 +332,7 @@ echo '</tbody></table>';
 						$sql = "SELECT catalogueid, COUNT(*) FROM tbltriage WHERE status = '1' AND (datereceived BETWEEN '$sdate' AND '$edate')" . $teamScopeClause . " GROUP BY catalogueid";
 					}
 					$result = mysqli_query($link,$sql);
-					if(mysqli_num_rows($result)>0){
+					if($getRowCount($result) > 0){
 						while($row = mysqli_fetch_array($result)){
 							// Get catalogueid name
 							$totalCount = $row[1];
