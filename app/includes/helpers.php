@@ -142,6 +142,188 @@ function hasValue($value) {
     return !empty($value) && $value != 0 && $value !== "" && !is_null($value);
 }
 
+function rmt_file_upload_policy(): array {
+    $maxFiles = (int) app_env('FILE_UPLOAD_MAX_FILES', '5');
+    if ($maxFiles <= 0) {
+        $maxFiles = 5;
+    }
+
+    $maxSizeMb = (int) app_env('FILE_UPLOAD_MAX_SIZE_MB', '10');
+    if ($maxSizeMb <= 0) {
+        $maxSizeMb = 10;
+    }
+
+    return [
+        'max_files' => $maxFiles,
+        'max_file_size_mb' => $maxSizeMb,
+        'max_file_size_bytes' => $maxSizeMb * 1024 * 1024,
+        'allowed_extensions' => [
+            'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt',
+            'png', 'jpg', 'jpeg', 'webp', 'gif'
+        ],
+    ];
+}
+
+function rmt_file_upload_accept_attribute(): string {
+    $policy = rmt_file_upload_policy();
+    $accepted = [];
+    foreach ($policy['allowed_extensions'] as $extension) {
+        $accepted[] = '.' . $extension;
+    }
+
+    return implode(',', $accepted);
+}
+
+function rmt_file_upload_hint(string $lang = 'en'): string {
+    $policy = rmt_file_upload_policy();
+    $extensions = strtoupper(implode(', ', $policy['allowed_extensions']));
+
+    if (app_normalize_language($lang) === 'fr') {
+        return sprintf(
+            'Jusqu\'a %d fichiers, %d Mo maximum par fichier. Types autorises : %s.',
+            (int) $policy['max_files'],
+            (int) $policy['max_file_size_mb'],
+            $extensions
+        );
+    }
+
+    return sprintf(
+        'Up to %d files, %d MB max per file. Allowed types: %s.',
+        (int) $policy['max_files'],
+        (int) $policy['max_file_size_mb'],
+        $extensions
+    );
+}
+
+function rmt_validate_uploaded_files(array $fileUpload, string $lang = 'en'): array {
+    $policy = rmt_file_upload_policy();
+    $language = app_normalize_language($lang);
+
+    $names = $fileUpload['name'] ?? [];
+    $tmpNames = $fileUpload['tmp_name'] ?? [];
+    $sizes = $fileUpload['size'] ?? [];
+    $errors = $fileUpload['error'] ?? [];
+
+    if (!is_array($names) || !is_array($tmpNames) || !is_array($sizes) || !is_array($errors)) {
+        return [
+            'files' => [],
+            'errors' => [
+                $language === 'fr'
+                    ? 'Le format des fichiers televerses est invalide.'
+                    : 'Uploaded file payload is invalid.'
+            ],
+        ];
+    }
+
+    $submittedCount = 0;
+    foreach ($names as $name) {
+        if (trim((string) $name) !== '') {
+            $submittedCount++;
+        }
+    }
+
+    if ($submittedCount > (int) $policy['max_files']) {
+        return [
+            'files' => [],
+            'errors' => [
+                $language === 'fr'
+                    ? sprintf('Vous pouvez televerser au maximum %d fichiers.', (int) $policy['max_files'])
+                    : sprintf('You can upload a maximum of %d files.', (int) $policy['max_files'])
+            ],
+        ];
+    }
+
+    $validFiles = [];
+    $errorMessages = [];
+
+    foreach ($names as $index => $originalName) {
+        $originalName = trim((string) $originalName);
+        if ($originalName === '') {
+            continue;
+        }
+
+        $tmpName = (string) ($tmpNames[$index] ?? '');
+        $size = (int) ($sizes[$index] ?? 0);
+        $errorCode = (int) ($errors[$index] ?? UPLOAD_ERR_NO_FILE);
+
+        if ($errorCode !== UPLOAD_ERR_OK) {
+            $errorMessages[] = $language === 'fr'
+                ? sprintf('Le televersement de "%s" a echoue.', $originalName)
+                : sprintf('Upload failed for "%s".', $originalName);
+            continue;
+        }
+
+        $extension = strtolower((string) pathinfo($originalName, PATHINFO_EXTENSION));
+        if ($extension === '' || !in_array($extension, $policy['allowed_extensions'], true)) {
+            $errorMessages[] = $language === 'fr'
+                ? sprintf('Type de fichier non autorise pour "%s".', $originalName)
+                : sprintf('File type is not allowed for "%s".', $originalName);
+            continue;
+        }
+
+        if ($size <= 0 || $size > (int) $policy['max_file_size_bytes']) {
+            $errorMessages[] = $language === 'fr'
+                ? sprintf('Le fichier "%s" depasse la limite de %d Mo.', $originalName, (int) $policy['max_file_size_mb'])
+                : sprintf('File "%s" exceeds the %d MB limit.', $originalName, (int) $policy['max_file_size_mb']);
+            continue;
+        }
+
+        $validFiles[] = [
+            'name' => $originalName,
+            'tmp_name' => $tmpName,
+            'size_bytes' => $size,
+            'size_kb' => round($size / 1024, 2),
+            'extension' => $extension,
+        ];
+    }
+
+    return [
+        'files' => $validFiles,
+        'errors' => $errorMessages,
+    ];
+}
+
+function rmt_allow_file_download_code(string $fileCode): void {
+    $fileCode = trim($fileCode);
+    if ($fileCode === '') {
+        return;
+    }
+
+    if (!isset($_SESSION['allowed_file_codes']) || !is_array($_SESSION['allowed_file_codes'])) {
+        $_SESSION['allowed_file_codes'] = [];
+    }
+
+    $now = time();
+    $ttl = 2 * 60 * 60;
+
+    foreach ($_SESSION['allowed_file_codes'] as $code => $timestamp) {
+        if (($now - (int) $timestamp) > $ttl) {
+            unset($_SESSION['allowed_file_codes'][$code]);
+        }
+    }
+
+    $_SESSION['allowed_file_codes'][$fileCode] = $now;
+}
+
+function rmt_is_file_download_code_allowed(string $fileCode): bool {
+    if (!isset($_SESSION['allowed_file_codes']) || !is_array($_SESSION['allowed_file_codes'])) {
+        return false;
+    }
+
+    $timestamp = (int) ($_SESSION['allowed_file_codes'][$fileCode] ?? 0);
+    if ($timestamp <= 0) {
+        return false;
+    }
+
+    $ttl = 2 * 60 * 60;
+    if ((time() - $timestamp) > $ttl) {
+        unset($_SESSION['allowed_file_codes'][$fileCode]);
+        return false;
+    }
+
+    return true;
+}
+
 function getPostValue($key, $default = "") {
     return !empty($_POST[$key]) ? mysqli_real_escape_string($GLOBALS['link'], $_POST[$key]) : $default;
 }
@@ -898,12 +1080,13 @@ function renderDateInput($id, $label, $value = '', $required = false, $min = nul
     $minAttr = $min ? "min=\"$min\"" : '';
     $maxAttr = $max ? "max=\"$max\"" : '';
     $readonlyAttr = $readonly ? 'readonly="readonly"' : '';
+    $escapedValue = htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8');
     
     return <<<HTML
     <div class="form-group">
         <label for="$id"><span class="field-name">$label$requiredLabel</span></label>
         <input type="date" class="form-control" id="$id" name="$id" 
-             value="$value" $requiredAttr $minAttr $maxAttr $readonlyAttr>
+             value="$escapedValue" $requiredAttr $minAttr $maxAttr $readonlyAttr>
     </div>
 HTML;
 }

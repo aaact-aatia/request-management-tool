@@ -12,8 +12,20 @@ require('includes/helpers.php');
 // Language detection
 $lang = detectLanguage();
 
+$draftData = [];
+if (isset($_SESSION['openrequest_draft']) && is_array($_SESSION['openrequest_draft'])) {
+    $draftData = $_SESSION['openrequest_draft'];
+    unset($_SESSION['openrequest_draft']);
+}
+
+$uploadErrorMessage = '';
+if (isset($_SESSION['openrequest_upload_error_message'])) {
+    $uploadErrorMessage = (string) $_SESSION['openrequest_upload_error_message'];
+    unset($_SESSION['openrequest_upload_error_message']);
+}
+
 // Redirect if accessed without POST
-if ($_SERVER['REQUEST_METHOD'] != 'POST') {
+if ($_SERVER['REQUEST_METHOD'] != 'POST' && empty($draftData)) {
     header("Location: /openrequest.php?lang=$lang");
     exit;
 }
@@ -41,6 +53,8 @@ $translations = [
         'department_agency' => 'Department/agency',
         'phone' => 'Business phone number',
         'additional_info' => 'Additional information',
+        'upload_files' => 'Upload files',
+        'upload_files_hint' => '',
         'attachment' => 'Attachment',
         'url_only' => 'URL only',
         'yes' => 'Yes',
@@ -69,6 +83,8 @@ $translations = [
         'department_agency' => 'Ministère/organisme',
         'phone' => 'Numéro de téléphone au bureau',
         'additional_info' => 'Informations supplémentaires',
+        'upload_files' => 'Téléverser des fichiers',
+        'upload_files_hint' => '',
         'attachment' => 'Pièce jointe',
         'url_only' => 'URL uniquement',
         'yes' => 'Oui',
@@ -84,12 +100,12 @@ $t = $translations[$lang];
 // COLLECT FORM DATA
 // ============================================================================
 
-$catalogueid = getPostValue('catalogueid', 0);
-$serviceid = getPostValue('serviceid', 0);
-$subserviceid = getPostValue('subserviceid', 0);
-$subserviceid2 = getPostValue('subserviceid2', 0);
-$clientnotes = getPostValue('clientnotes');
-$language = getPostValue('language');
+$catalogueid = $draftData['catalogueid'] ?? getPostValue('catalogueid', 0);
+$serviceid = $draftData['serviceid'] ?? getPostValue('serviceid', 0);
+$subserviceid = $draftData['subserviceid'] ?? getPostValue('subserviceid', 0);
+$subserviceid2 = $draftData['subserviceid2'] ?? getPostValue('subserviceid2', 0);
+$clientnotes = $draftData['clientnotes'] ?? getPostValue('clientnotes');
+$language = $draftData['language'] ?? getPostValue('language');
 
 // Flags
 $reauditFlag = 0;
@@ -385,7 +401,7 @@ include 'includes/template/head.php';
         }
         ?>
         
-        <form method="POST" action="openrequest3.php?lang=<?php echo $lang; ?>">
+        <form method="POST" enctype="multipart/form-data" action="openrequest3.php?lang=<?php echo $lang; ?>">
             <!-- Hidden fields to pass forward -->
             <input type="hidden" name="catalogueid" value="<?php echo $catalogueid; ?>">
             <input type="hidden" name="serviceid" value="<?php echo $serviceid; ?>">
@@ -396,29 +412,51 @@ include 'includes/template/head.php';
             
             <?php
             // Request title
-            echo renderTextInput('requesttitle', $t['request_title'], '', true);
+            echo renderTextInput('requesttitle', $t['request_title'], $draftData['requesttitle'] ?? '', true);
             
             // Date required (changes label for coaching)
             $dateLabel = ($catalogueid == 2) ? $t['date_coaching'] : $t['date_required'];
-            echo renderDateInput('daterequired', $dateLabel, '', false);
+            echo renderDateInput('daterequired', $dateLabel, $draftData['daterequired'] ?? '', false);
             
             // Sprint-specific fields
             if ($subserviceid == 95 || $subserviceid == 96) {
-                echo renderDateInput('firstsprintstartdate', $t['first_sprint_date'], '', true);
-                echo renderDateInput('firstsprintenddate', $t['last_sprint_date'], '', true);
-                echo renderTextInput('sprintschedule', $t['sprint_schedule'], '', true, false, 'url');
-                echo renderTextInput('sprintdefects', $t['sprint_defects'], '', true, false, 'url');
+                echo renderDateInput('firstsprintstartdate', $t['first_sprint_date'], $draftData['firstsprintstartdate'] ?? '', true);
+                echo renderDateInput('firstsprintenddate', $t['last_sprint_date'], $draftData['firstsprintenddate'] ?? '', true);
+                echo renderTextInput('sprintschedule', $t['sprint_schedule'], $draftData['sprintschedule'] ?? '', true, false, 'url');
+                echo renderTextInput('sprintdefects', $t['sprint_defects'], $draftData['sprintdefects'] ?? '', true, false, 'url');
             }
             
             // Client information
-            echo renderTextInput('clientfname', $t['first_name'], '', true);
-            echo renderTextInput('clientlname', $t['last_name'], '', true);
-            echo renderTextInput('clientemail', $t['email'], '', true, false, 'email');
-            echo renderTextInput('departmentagency', $t['department_agency'], '', false);
-            echo renderTextInput('clientphone', $t['phone'], '', false, false, 'tel');
+            echo renderTextInput('clientfname', $t['first_name'], $draftData['clientfname'] ?? '', true);
+            echo renderTextInput('clientlname', $t['last_name'], $draftData['clientlname'] ?? '', true);
+            echo renderTextInput('clientemail', $t['email'], $draftData['clientemail'] ?? '', true, false, 'email');
+            echo renderTextInput('departmentagency', $t['department_agency'], $draftData['departmentagency'] ?? '', false);
+            echo renderTextInput('clientphone', $t['phone'], $draftData['clientphone'] ?? '', false, false, 'tel');
             
             // Additional information
-            echo renderTextarea('additionalinfo', $t['additional_info'], '', false);
+            echo renderTextarea('additionalinfo', $t['additional_info'], $draftData['additionalinfo'] ?? '', false);
+
+            // File uploads
+            ?>
+
+            <div class="form-group">
+                <label for="fileToUpload"><span class="field-name"><?php echo $t['upload_files']; ?></span></label>
+                <input
+                    type="file"
+                    class="form-control"
+                    id="fileToUpload"
+                    name="fileToUpload[]"
+                    multiple
+                    accept="<?php echo htmlspecialchars(rmt_file_upload_accept_attribute(), ENT_QUOTES, 'UTF-8'); ?>"
+                    aria-describedby="fileToUploadHelp fileToUploadError"
+                    <?php echo !empty($uploadErrorMessage) ? 'aria-invalid="true"' : ''; ?>
+                    <?php echo !empty($uploadErrorMessage) ? 'autofocus' : ''; ?>
+                >
+                <p id="fileToUploadHelp" class="small text-muted"><?php echo htmlspecialchars(rmt_file_upload_hint($lang), ENT_QUOTES, 'UTF-8'); ?></p>
+                <p id="fileToUploadError" class="text-danger" aria-live="polite"><?php echo !empty($uploadErrorMessage) ? htmlspecialchars($uploadErrorMessage, ENT_QUOTES, 'UTF-8') : ''; ?></p>
+            </div>
+
+            <?php
             
             // BDM field removed from the intake flow.
             ?>

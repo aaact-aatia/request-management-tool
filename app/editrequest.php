@@ -48,6 +48,11 @@ $translations = [
         'success_message' => 'You have successfully updated the database, thank you!',
         'failed_heading' => 'Failed',
         'failed_message' => 'The database update you requested did not work, please try again, thank you!',
+        'upload_failed_heading' => 'File upload failed',
+        'upload_failed_message' => 'One or more files could not be uploaded. Please review file type and size requirements, then try again.',
+        'upload_success_heading' => 'Upload complete',
+        'upload_success_message' => 'Your file upload was successful.',
+        'upload_button' => 'Upload',
         'request_id' => 'Request ID #',
         'request_title' => 'Request title',
         'first_sprint_start' => 'First Sprint Start Date',
@@ -95,6 +100,7 @@ $translations = [
         'action' => 'Action',
         'download' => 'Download',
         'delete' => 'Delete',
+        'na' => 'N/A',
         'no_files_found' => 'No files found.',
         'select_all' => 'Select All',
         'download_all' => 'Download All',
@@ -127,6 +133,11 @@ $translations = [
         'success_message' => 'Vous avez mis à jour la base de données, merci!',
         'failed_heading' => 'Échec',
         'failed_message' => 'La mise à jour de la base de données que vous avez demandée n\'a pas fonctionné, veuillez réessayer, merci!',
+        'upload_failed_heading' => 'Échec du téléversement',
+        'upload_failed_message' => 'Un ou plusieurs fichiers n\'ont pas pu être téléversés. Veuillez vérifier les types et tailles permis, puis réessayer.',
+        'upload_success_heading' => 'Televersement termine',
+        'upload_success_message' => 'Le televersement du fichier a reussi.',
+        'upload_button' => 'Televerser',
         'request_id' => '# de la demande',
         'request_title' => 'Titre de la demande',
         'first_sprint_start' => 'Date de début du premier sprint',
@@ -174,6 +185,7 @@ $translations = [
         'action' => 'Action',
         'download' => 'Télécharger',
         'delete' => 'Supprimer',
+        'na' => 'N/D',
         'no_files_found' => 'Aucun fichier trouvé.',
         'select_all' => 'Tout sélectionner',
         'download_all' => 'Tout télécharger',
@@ -230,6 +242,10 @@ include 'includes/template/head.php';
     
     <main role="main" property="mainContentOfPage" class="container">
         <h1 property="name" id="wb-cont"><?php echo $t['page_title']; ?> - a11y-<?php echo $requestid; ?></h1>
+        <?php
+        $uploadErrorMessage = isset($_SESSION['upload_error_message']) ? (string) $_SESSION['upload_error_message'] : '';
+        unset($_SESSION['upload_error_message']);
+        ?>
         
         <?php if ($status == 'success'): ?>
         <section class="alert alert-success">
@@ -245,6 +261,20 @@ include 'includes/template/head.php';
         <section class="alert alert-danger">
             <h2><?php echo $t['failed_heading']; ?></h2>
             <ul><li><?php echo $t['failed_message']; ?></li></ul>
+        </section>
+        <?php elseif ($status == 'uploadfailed'): ?>
+        <section class="alert alert-danger">
+            <h2><?php echo $t['upload_failed_heading']; ?></h2>
+            <ul>
+                <li><?php echo $t['upload_failed_message']; ?></li>
+            </ul>
+        </section>
+        <?php elseif ($status == 'uploadsuccess'): ?>
+        <section class="alert alert-success">
+            <h2><?php echo $t['upload_success_heading']; ?></h2>
+            <ul>
+                <li><?php echo $t['upload_success_message']; ?></li>
+            </ul>
         </section>
         <?php elseif ($status == 'resolvedemailmissing'): ?>
         <section class="alert alert-danger">
@@ -499,10 +529,17 @@ include 'includes/template/head.php';
                         ?>
                         <?php elseif (in_array($catalogueid, [8, 9]) && hasValue($row['audienceid'] ?? null)): ?>
                         <?php
-                        $audiences = getDropdownOptions($link, 'tblaudience', $lang);
-                        $audienceOptions = [];
-                        while ($audience = mysqli_fetch_assoc($audiences)) {
-                            $audienceOptions[] = $audience;
+                            $audienceOptions = [];
+                            if (function_exists('rmt_db_table_exists') && rmt_db_table_exists($link, 'tblaudience')) {
+                                $audiences = getDropdownOptions($link, 'tblaudience', $lang);
+                                while ($audience = mysqli_fetch_assoc($audiences)) {
+                                    $audienceOptions[] = $audience;
+                                }
+                            } else {
+                                $audienceOptions[] = [
+                                    'id' => (string) ($row['audienceid'] ?? '0'),
+                                    'name' => $t['na'] . ' (' . (string) ($row['audienceid'] ?? '') . ')',
+                                ];
                         }
                         echo renderSelect('audience', $t['intended_audience'], $audienceOptions, $row['audienceid'], true, $t['select_audience'], $readonly);
                         ?>
@@ -596,6 +633,9 @@ include 'includes/template/head.php';
                 <?php endfor; ?>
             </div>
             <?php endif; ?>
+
+            <?php include 'includes/editrequest-files-section.php'; ?>
+
             <?php include 'includes/editrequest-communications-section.php'; ?>
             
             <?php if (canEditRequests()): ?>

@@ -45,6 +45,7 @@ return [
     'alert_failed_message' => 'The new request did not work, please try again, thank you!',
     'alert_access_denied_heading' => 'Access denied:',
     'alert_access_denied_message' => 'You don\'t have sufficient access level to view that page, sorry!',
+    'request_intake_source' => 'Request intake source',
     
     // Form labels and fields
     'catalogue_label' => 'What topic / product do you need help with?',

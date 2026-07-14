@@ -38,6 +38,7 @@ $translations = [
 		'department_agency' => 'Department/agency',
 		'client_phone' => 'Client phone number',
 		'source' => 'Source',
+		'request_intake_source' => 'Request intake source',
 		'sprint_start' => 'Sprint Start Date',
 		'sprint_end' => 'Sprint End Date',
 		'sprint_schedule' => 'Sprint Schedule',
@@ -120,6 +121,7 @@ $translations = [
 		'other_change_client_comms' => 'Client communication log update',
 		'other_change_staff_comms' => 'Staff communication log update',
 		'other_change_staff_note' => 'Staff note added',
+		'other_change_uploaded_file' => 'Uploaded file',
 		'other_change_request_title' => 'Request title update',
 		'unknown_user' => 'Unknown user',
 		'not_found_title' => 'Request not found!',
@@ -160,6 +162,7 @@ $translations = [
 		'department_agency' => 'Ministère/organisme',
 		'client_phone' => 'Numéro de téléphone client',
 		'source' => 'Source',
+		'request_intake_source' => 'Source de la demande',
 		'sprint_start' => 'Date de début du sprint',
 		'sprint_end' => 'Date de fin du sprint',
 		'sprint_schedule' => 'Calendrier du sprint',
@@ -242,6 +245,7 @@ $translations = [
 		'other_change_client_comms' => 'Mise a jour du journal des communications client',
 		'other_change_staff_comms' => 'Mise a jour du journal des communications du personnel',
 		'other_change_staff_note' => 'Note du personnel ajoutee',
+		'other_change_uploaded_file' => 'Fichier televerse',
 		'other_change_request_title' => 'Mise a jour du titre de la demande',
 		'unknown_user' => 'Utilisateur inconnu',
 		'not_found_title' => 'Demande introuvable!',
@@ -420,10 +424,14 @@ if(mysqli_num_rows($result)>0){
 		}
 
 		if ($audienceid!=0 && $audienceid != null) {
-			// Sub-service is not empty so grab the name
-			$result2 = mysqli_query($link, "SELECT $nameField FROM tblaudience WHERE id = '$audienceid'");
-			$row2 = mysqli_fetch_array($result2);
-			$audiencename = $row2 ? $row2[0] : '';
+			if (function_exists('rmt_db_table_exists') && rmt_db_table_exists($link, 'tblaudience')) {
+				// Sub-service is not empty so grab the name
+				$result2 = mysqli_query($link, "SELECT $nameField FROM tblaudience WHERE id = '$audienceid'");
+				$row2 = mysqli_fetch_array($result2);
+				$audiencename = $row2 ? $row2[0] : '';
+			} else {
+				$audiencename = (string) $audienceid;
+			}
 		}
 		
 		if ($statusid==10) { 
@@ -879,25 +887,27 @@ $blobStorage = new AzureBlobStorageManager();
                     <?php
                     while($file = mysqli_fetch_array($result_files)) {
                         $fileExtension = strtolower($file['type']);
+						rmt_allow_file_download_code((string) $file['code']);
                         echo "<tr>";
                         echo "<td><input type='checkbox' class='fileCheckbox' value='" . $file['name'] . "'></td>";
                         echo "<td>";
                         if (in_array($fileExtension, $validImageExtensions)){ 
-                            echo "<a href='#' class='image-link' data-src='" . $blobStorage->getFileUrl($file['code']) . "'>" . $file['name'] . "</a>";
+							echo "<a href='#' class='image-link' data-src='" . $blobStorage->getInlineFileUrl((string) $file['code']) . "'>" . $file['name'] . "</a>";
                         } else {
-                            echo "<a href='" . $blobStorage->getFileUrl($file['code']) . "' download>" . $file['name'] . "</a>";
+							echo "<a href='" . $blobStorage->getFileUrl((string) $file['code']) . "' download>" . $file['name'] . "</a>";
                         }
                         echo "</td>";
                         echo "<td>" . $file['type'] . "</td>";
                         echo "<td>" . $file['size'] .  " KB" ."</td>";
-                        echo "<td>" . $file['date'] . "</td>";
+						$fileDate = trim((string)($file['dateadded'] ?? $file['date'] ?? ''));
+						if ($fileDate === '') {
+							$fileDate = $blobStorage->getFileLastModified((string) $file['code']) ?? $t['na'];
+						}
+						echo "<td>" . htmlspecialchars((string) $fileDate, ENT_QUOTES, 'UTF-8') . "</td>";
                         echo "<td>
                         <a href='#' class='btn btn-primary download-btn' 
                            data-name='" . htmlspecialchars($file['name'], ENT_QUOTES, 'UTF-8') . "' 
-                           data-file='" . $file['code'] . "'>Download</a>
-                    
-                        <a class='btn btn-danger delete-btn' style='color:white;' 
-                           data-file='" . $file['code'] . "'>Delete</a>
+						   data-file='" . $file['code'] . "'>" . htmlspecialchars($t['download'], ENT_QUOTES, 'UTF-8') . "</a>
                     </td>";
                         echo "</tr>";
                     }
@@ -1257,7 +1267,7 @@ $blobStorage = new AzureBlobStorageManager();
 						'client_first_name' => $t['first_name'],
 						'client_email' => $t['client_email'],
 						'client_phone' => $t['client_phone'],
-						'request_source' => $t['source'],
+						'request_source' => $t['request_intake_source'],
 						'date_received' => $t['date_received'],
 						'date_updated' => $t['date_updated'],
 						'date_required' => $t['date_required'],
@@ -1278,6 +1288,7 @@ $blobStorage = new AzureBlobStorageManager();
 						'client_communication_log' => $t['other_change_client_comms'],
 						'staff_communication_log' => $t['other_change_staff_comms'],
 						'staff_note_added' => $t['other_change_staff_note'],
+						'uploaded_file' => $t['other_change_uploaded_file'],
 					];
 
 					$sourceValueMap = ['0' => $t['na']];
@@ -1305,9 +1316,11 @@ $blobStorage = new AzureBlobStorageManager();
 					}
 
 					$audienceValueMap = ['0' => $t['na']];
-					$audienceValueResult = mysqli_query($link, "SELECT id, $nameField AS label FROM tblaudience");
-					while ($audienceValueResult && $audienceValueRow = mysqli_fetch_assoc($audienceValueResult)) {
-						$audienceValueMap[(string) ((int) ($audienceValueRow['id'] ?? 0))] = trim((string) ($audienceValueRow['label'] ?? ''));
+					if (function_exists('rmt_db_table_exists') && rmt_db_table_exists($link, 'tblaudience')) {
+						$audienceValueResult = mysqli_query($link, "SELECT id, $nameField AS label FROM tblaudience");
+						while ($audienceValueResult && $audienceValueRow = mysqli_fetch_assoc($audienceValueResult)) {
+							$audienceValueMap[(string) ((int) ($audienceValueRow['id'] ?? 0))] = trim((string) ($audienceValueRow['label'] ?? ''));
+						}
 					}
 
 					$assignedMemberValueMap = ['0' => $t['na']];

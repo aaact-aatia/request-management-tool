@@ -7,28 +7,39 @@
 // FILE SELECTION
 // ============================================================================
 
-document.getElementById('selectAll').addEventListener('change', function () {
-	const checkboxes = document.querySelectorAll('.fileCheckbox');
-	checkboxes.forEach(function (checkbox) { checkbox.checked = this.checked; }, this);
-});
+const selectAllCheckbox = document.getElementById('selectAll');
+if (selectAllCheckbox) {
+	selectAllCheckbox.addEventListener('change', function () {
+		const checkboxes = document.querySelectorAll('.fileCheckbox');
+		checkboxes.forEach(function (checkbox) { checkbox.checked = this.checked; }, this);
+	});
+}
 
 // ============================================================================
 // DOWNLOAD
 // ============================================================================
 
-document.getElementById('downloadAll').addEventListener('click', function () {
-	const selectedCheckboxes = document.querySelectorAll('.fileCheckbox:checked');
-	if (selectedCheckboxes.length === 0) {
-		alert('Please select at least one file to download.');
-		return;
-	}
-	selectedCheckboxes.forEach(function (checkbox) {
-		const button = checkbox.closest('tr').querySelector('.download-btn');
-		if (button) {
-			downloadFile(button.getAttribute('data-file'), button.getAttribute('data-name'));
+const downloadAllButton = document.getElementById('downloadAll');
+if (downloadAllButton) {
+	downloadAllButton.addEventListener('click', function () {
+		const selectedCheckboxes = document.querySelectorAll('.fileCheckbox:checked');
+		if (selectedCheckboxes.length === 0) {
+			alert('Please select at least one file to download.');
+			return;
 		}
+		selectedCheckboxes.forEach(function (checkbox) {
+			const row = checkbox.closest('tr');
+			if (!row) {
+				return;
+			}
+
+			const button = row.querySelector('.download-btn');
+			if (button) {
+				downloadFile(button.getAttribute('data-file'), button.getAttribute('data-name'));
+			}
+		});
 	});
-});
+}
 
 document.querySelectorAll('.download-btn').forEach(function (button) {
 	button.addEventListener('click', function (e) {
@@ -73,11 +84,14 @@ document.querySelectorAll('.image-link').forEach(function (link) {
 		const imagePreview = document.getElementById('imagePreview');
 		const previewImage = document.getElementById('previewImage');
 		const imageAnnouncement = document.getElementById('imageAnnouncement');
+		if (!imagePreview || !previewImage || !imageAnnouncement) {
+			return;
+		}
 		previewImage.src = this.dataset.src;
 		imagePreview.style.display = 'flex';
 		imagePreview.setAttribute('aria-hidden', 'false');
 		imageAnnouncement.textContent = 'Image preview opened.';
-		document.getElementById('closePreview').focus();
+		document.getElementById('closePreview')?.focus();
 	});
 });
 
@@ -99,30 +113,4 @@ document.addEventListener('keydown', function (event) {
 	if (event.key === 'Escape') {
 		closePreview();
 	}
-});
-
-// ============================================================================
-// DELETE
-// ============================================================================
-
-function deleteFile(fileCode) {
-	if (confirm('Are you sure you want to delete this file?')) {
-		fetch('delete-file.php?code=' + fileCode, { method: 'GET' })
-			.then(function (response) { return response.text(); })
-			.then(function (data) {
-				console.log(data);
-				alert('File deleted successfully!');
-				location.reload();
-			})
-			.catch(function (error) {
-				console.error('Error deleting file:', error);
-				alert('Failed to delete file.');
-			});
-	}
-}
-
-document.querySelectorAll('.delete-btn').forEach(function (button) {
-	button.addEventListener('click', function () {
-		deleteFile(this.getAttribute('data-file'));
-	});
 });
