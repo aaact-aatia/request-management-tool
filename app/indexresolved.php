@@ -45,6 +45,15 @@ require('includes/calculate-bdays.php');
 // Determine database column for name fields
 $nameColumn = ($_SESSION['lang'] === 'fr') ? 'namefr' : 'nameen';
 
+$teamSessionRaw = $_SESSION['team'] ?? [];
+if (is_array($teamSessionRaw)) {
+	$teamSessionIds = $teamSessionRaw;
+} elseif (is_string($teamSessionRaw) && trim($teamSessionRaw) !== '') {
+	$teamSessionIds = preg_split('/\s*,\s*/', trim($teamSessionRaw));
+} else {
+	$teamSessionIds = [];
+}
+
 // =============================================================================
 // PAGE FRONTMATTER - Define page metadata
 // =============================================================================
@@ -227,7 +236,7 @@ include 'includes/template/head.php';
 					if (!empty($subserviceid)) {
 						// Sub-service is not empty so grab the name
 						$result2 = mysqli_query($link, "SELECT $nameColumn,sds,contactid FROM tblsubservices WHERE id = '$subserviceid'");
-						$row2 = mysqli_fetch_array($result2);
+						$row2 = ($result2 instanceof mysqli_result) ? mysqli_fetch_array($result2) : null;
 						if (!empty($row2)) 
 						{
 							$subservicename = $row2[0];
@@ -240,7 +249,7 @@ include 'includes/template/head.php';
 					if (!empty($serviceid)) {
 						// Sub-service is not empty so grab the name
 						$result2 = mysqli_query($link, "SELECT $nameColumn,sds,contactid FROM tblservices WHERE id = '$serviceid'");
-						$row2 = mysqli_fetch_array($result2);
+						$row2 = ($result2 instanceof mysqli_result) ? mysqli_fetch_array($result2) : null;
 						
 						if (empty($sla) and !empty($row2)) {
 							$servicename = $row2[0];
@@ -264,7 +273,7 @@ include 'includes/template/head.php';
 					if (!empty($catalogueid)) {
 						// Sub-service is not empty so grab the name
 						$result2 = mysqli_query($link, "SELECT $nameColumn FROM tblcatalogue WHERE id = '$catalogueid'");
-						$row2 = mysqli_fetch_array($result2);
+						$row2 = ($result2 instanceof mysqli_result) ? mysqli_fetch_array($result2) : null;
 						$cataloguename = $row2[0] ?? '';
 					}
 					
@@ -347,7 +356,7 @@ include 'includes/template/head.php';
 						$statusLabelClass = $statusLabelClasses[(int)$statusid] ?? 'label-default';
 
 						$result2 = mysqli_query($link, "SELECT $nameColumn FROM tblstatus WHERE id = '$statusid'");
-						$row2 = mysqli_fetch_array($result2);
+						$row2 = ($result2 instanceof mysqli_result) ? mysqli_fetch_array($result2) : null;
 						$statusname = $row2[0] ?? '';
 
 						$closedDate = '';
@@ -360,7 +369,7 @@ include 'includes/template/head.php';
 						$lastUpdatedByName = '';
 						if (!empty($row['updaterid'])) {
 							$result2 = mysqli_query($link, "SELECT firstname, lastname FROM tblusers WHERE id = '" . $row['updaterid'] . "'");
-							$row2 = mysqli_fetch_array($result2);
+							$row2 = ($result2 instanceof mysqli_result) ? mysqli_fetch_array($result2) : null;
 							if (!empty($row2)) {
 								$lastUpdatedByName = htmlspecialchars($row2[0] . ' ' . $row2[1]);
 							}
@@ -369,7 +378,7 @@ include 'includes/template/head.php';
 						$workerName = '';
 						if (!empty($row['workerid'])) {
 							$result2 = mysqli_query($link, "SELECT firstname, lastname FROM tblusers WHERE id = '" . $row['workerid'] . "'");
-							$row2 = mysqli_fetch_array($result2);
+							$row2 = ($result2 instanceof mysqli_result) ? mysqli_fetch_array($result2) : null;
 							if (!empty($row2)) {
 								$workerName = htmlspecialchars($row2[0] . ' ' . $row2[1]);
 							}
@@ -408,7 +417,7 @@ include 'includes/template/head.php';
 						<?php if (canDeleteRequests()) { ?>
 							<a class="wb-lbx btn btn-danger btn-block" href="includes/delete-request.php?id=<?= $row['id'] ?>"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span><span class="mrgn-lft-sm"><?= htmlspecialchars($langFile['indexresolved_delete']) ?></span><span class="wb-inv"> a11y-<?= htmlspecialchars($row['requestid']) ?> <?= htmlspecialchars($langFile['indexresolved_request']) ?></span></a>
 						<?php } ?>
-						<?php if(in_array('1', $_SESSION['team'])){?>
+						<?php if(in_array('1', $teamSessionIds, true)){?>
 							<a class="btn btn-primary btn-block" href="clonerequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?= base64_encode($row['id']) ?>&toClose=2"><?= htmlspecialchars($langFile['indexresolved_clone']) ?> <span class="wb-inv">a11y-<?= htmlspecialchars($row['requestid']) ?> <?= htmlspecialchars($langFile['indexresolved_request']) ?></span></a>
 						<?php } ?>
 						<?php
