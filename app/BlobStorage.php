@@ -8,6 +8,7 @@ require_once __DIR__ . '/env.php';
  * - local        : default for local development
  * - azure_secret : Azure Blob with SAS token
  * - azure_mi     : reserved for managed identity (not enabled yet)
+ * - disabled     : file uploads disabled (no storage backend configured)
  */
 class AzureBlobStorageManager
 {
@@ -23,7 +24,7 @@ class AzureBlobStorageManager
     {
         $defaultMode = app_is_production() ? 'azure_secret' : 'local';
         $mode = strtolower(trim((string) app_env('FILE_STORAGE_MODE', $defaultMode)));
-        if (!in_array($mode, ['local', 'azure_secret', 'azure_mi'], true)) {
+        if (!in_array($mode, ['local', 'azure_secret', 'azure_mi', 'disabled'], true)) {
             $mode = $defaultMode;
         }
 

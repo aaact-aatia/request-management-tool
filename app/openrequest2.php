@@ -439,6 +439,7 @@ include 'includes/template/head.php';
             // File uploads
             ?>
 
+            <?php if (rmt_file_upload_policy()['enabled']): ?>
             <div class="form-group">
                 <label for="fileToUpload"><span class="field-name"><?php echo $t['upload_files']; ?></span></label>
                 <input
@@ -455,6 +456,7 @@ include 'includes/template/head.php';
                 <p id="fileToUploadHelp" class="small text-muted"><?php echo htmlspecialchars(rmt_file_upload_hint($lang), ENT_QUOTES, 'UTF-8'); ?></p>
                 <p id="fileToUploadError" class="text-danger" aria-live="polite"><?php echo !empty($uploadErrorMessage) ? htmlspecialchars($uploadErrorMessage, ENT_QUOTES, 'UTF-8') : ''; ?></p>
             </div>
+            <?php endif; ?>
 
             <?php
             

@@ -21,6 +21,7 @@ $blobStorage = new AzureBlobStorageManager();
 </section>
 <?php endif; ?>
 
+<?php if (rmt_file_upload_policy()['enabled']): ?>
 <div class="form-group">
     <label for="fileToUpload"><span class="field-name"><?php echo $t['upload_file']; ?>:</span></label>
     <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
@@ -39,6 +40,7 @@ $blobStorage = new AzureBlobStorageManager();
     </div>
     <p id="fileToUploadHelp" class="small text-muted"><?php echo htmlspecialchars(rmt_file_upload_hint($lang), ENT_QUOTES, 'UTF-8'); ?></p>
 </div>
+<?php endif; ?>
 
 <br><br>
 
