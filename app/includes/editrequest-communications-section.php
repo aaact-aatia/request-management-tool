@@ -22,6 +22,13 @@
 <?php
 $x = 1;
 $canEditCommunicationLogs = in_array((int)($_SESSION['atype'] ?? 0), [3, 4, 5], true) || !empty($_SESSION['is_superuser']) || !empty($_SESSION['is_admin']);
+$canViewExistingComms = !empty($_SESSION['is_superuser']) || !empty($_SESSION['is_admin']) || in_array((int)($_SESSION['atype'] ?? 0), [3, 4, 6], true);
+$existingCommsCount = 0;
+if ($canViewExistingComms) {
+    $existingCommsCountResult = mysqli_query($link, "SELECT COUNT(*) AS total FROM tbladminlog WHERE triageid = '$requestuid' AND status = '1'");
+    $existingCommsCountRow = $existingCommsCountResult ? mysqli_fetch_assoc($existingCommsCountResult) : null;
+    $existingCommsCount = (int)($existingCommsCountRow['total'] ?? 0);
+}
 // Grab existing communication logs
 $result2 = mysqli_query($link, "SELECT ID, notes FROM tblcommlog WHERE triageid = '$requestuid'");
 while ($row2 = mysqli_fetch_assoc($result2)) {
@@ -53,6 +60,6 @@ while ($row2 = mysqli_fetch_assoc($result2)) {
     <button type="submit" name="form_action" value="add_log" class="btn btn-primary" formnovalidate><?php echo htmlspecialchars($t['add_log_button'], ENT_QUOTES, 'UTF-8'); ?></button>
     <?php endif; ?>
     <a class="wb-lbx btn btn-primary" href="includes/ecomms<?php echo $langSuffix; ?>.php?id=<?php echo $row['id']; ?>">
-        <?php echo $t['view_existing_comms']; ?>
+        <?php echo htmlspecialchars($t['view_existing_comms'] . ' (' . (int)$existingCommsCount . ')', ENT_QUOTES, 'UTF-8'); ?>
     </a>
 </div>
