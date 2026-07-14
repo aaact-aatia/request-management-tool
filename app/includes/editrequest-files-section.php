@@ -9,9 +9,35 @@ $blobStorage = new AzureBlobStorageManager();
 
 <h2><?php echo $t['files_heading']; ?></h2>
 
+<?php if ($status === 'uploadsuccess'): ?>
+<section id="upload-status-message" class="alert alert-success" role="status" aria-live="polite" tabindex="-1">
+    <h3><?php echo htmlspecialchars($t['upload_success_heading'], ENT_QUOTES, 'UTF-8'); ?></h3>
+    <p><?php echo htmlspecialchars($t['upload_success_message'], ENT_QUOTES, 'UTF-8'); ?></p>
+</section>
+<?php elseif ($status === 'uploadfailed'): ?>
+<section id="upload-status-message" class="alert alert-danger" role="alert" aria-live="assertive" tabindex="-1">
+    <h3><?php echo htmlspecialchars($t['upload_failed_heading'], ENT_QUOTES, 'UTF-8'); ?></h3>
+    <p><?php echo !empty($uploadErrorMessage) ? htmlspecialchars($uploadErrorMessage, ENT_QUOTES, 'UTF-8') : htmlspecialchars($t['upload_failed_message'], ENT_QUOTES, 'UTF-8'); ?></p>
+</section>
+<?php endif; ?>
+
 <div class="form-group">
     <label for="fileToUpload"><span class="field-name"><?php echo $t['upload_file']; ?>:</span></label>
-    <input type="file" class="form-control" id="fileToUpload" name="fileToUpload[]" multiple>
+    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+        <input
+            type="file"
+            class="form-control"
+            id="fileToUpload"
+            name="fileToUpload[]"
+            multiple
+            accept="<?php echo htmlspecialchars(rmt_file_upload_accept_attribute(), ENT_QUOTES, 'UTF-8'); ?>"
+            aria-describedby="fileToUploadHelp"
+            <?php echo !empty($uploadErrorMessage) ? 'aria-invalid="true"' : ''; ?>
+            style="flex:1 1 320px;"
+        >
+        <button type="submit" name="form_action" value="upload_files" class="btn btn-primary" formnovalidate><?php echo htmlspecialchars($t['upload_button'], ENT_QUOTES, 'UTF-8'); ?></button>
+    </div>
+    <p id="fileToUploadHelp" class="small text-muted"><?php echo htmlspecialchars(rmt_file_upload_hint($lang), ENT_QUOTES, 'UTF-8'); ?></p>
 </div>
 
 <br><br>
@@ -48,23 +74,27 @@ if (!empty($files)) {
         <?php
         foreach ($files as $file) {
             $fileExtension = strtolower($file['type']);
+            rmt_allow_file_download_code((string) $file['code']);
             echo "<tr>";
             echo "<td><input type='checkbox' class='fileCheckbox' value='" . $file['name'] . "'></td>";
             echo "<td>";
             
             if (in_array($fileExtension, $validImageExtensions)) {
-                echo "<a href='#' class='image-link' data-src='" . $blobStorage->getFileUrl($file['code']) . "' download>" . $file['name'] . "</a>";
+                echo "<a href='#' class='image-link' data-src='" . $blobStorage->getInlineFileUrl((string) $file['code']) . "'>" . $file['name'] . "</a>";
             } else {
-                echo "<a href='" . $blobStorage->getFileUrl($file['code']) . "' download>" . $file['name'] . "</a>";
+                echo "<a href='" . $blobStorage->getFileUrl((string) $file['code']) . "' download>" . $file['name'] . "</a>";
             }
             
             echo "</td>";
             echo "<td>" . $file['type'] . "</td>";
             echo "<td>" . $file['size'] . " KB</td>";
-            echo "<td>" . $file['date'] . "</td>";
+            $fileDate = trim((string)($file['dateadded'] ?? $file['date'] ?? ''));
+            if ($fileDate === '') {
+                $fileDate = $blobStorage->getFileLastModified((string) $file['code']) ?? ($t['na'] ?? 'N/A');
+            }
+            echo "<td>" . htmlspecialchars((string) $fileDate, ENT_QUOTES, 'UTF-8') . "</td>";
             echo "<td>";
             echo "<a href='#' class='btn btn-primary download-btn' data-name='" . htmlspecialchars($file['name'], ENT_QUOTES, 'UTF-8') . "' data-file='" . $file['code'] . "'>{$t['download']}</a> ";
-            echo "<a class='btn btn-danger delete-btn' style='color:white;' data-file='" . $file['code'] . "'>{$t['delete']}</a>";
             echo "</td>";
             echo "</tr>";
         }

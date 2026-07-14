@@ -33,7 +33,7 @@ $currentRequest = $currentRequestResult ? mysqli_fetch_assoc($currentRequestResu
 
 if (!$currentRequest) {
     $langCode = $_SESSION['lang'] ?? 'en';
-    header("location:/editrequest.php?lang=$langCode&id=$requestuid&status=failed");
+    header("location:/editrequest.php?lang=$langCode&id=$requestuid&status=failed&focus=update");
     exit();
 }
 
@@ -112,6 +112,10 @@ $lang = $_SESSION['lang'] ?? 'en';
 $requestlang = app_normalize_language($lang);
 $requestuidInt = (int) $requestuid;
 $postedRequestLang = app_normalize_language(getPostValue('requestlang', ''), '');
+$formAction = trim((string) getPostValue('form_action', 'update_request'));
+if (!in_array($formAction, ['update_request', 'upload_files', 'add_log'], true)) {
+    $formAction = 'update_request';
+}
 
 if (!$canEditStatusAndWorker) {
     $statusid = (string) ($currentRequest['statusid'] ?? '');
@@ -249,7 +253,7 @@ $statusChanged = ((string) $cstatusid !== (string) $statusid);
 $assignmentChanged = ($previousWorkerIdForHistory !== $newWorkerIdForHistory);
 $isCurrentResolved = rmt_is_resolved_status_id($link, $cstatusid);
 
-if ($statusChanged || $assignmentChanged) {
+if ($formAction === 'update_request' && ($statusChanged || $assignmentChanged)) {
     $exactTime = date('Y-m-d H:i:s');
     $statusHistoryColumns = ['requestID', 'statusID', 'changeTimeStamp'];
     $statusHistoryValues = ["'$requestid'", "'$statusid'", "'$exactTime'"];
@@ -347,10 +351,115 @@ if ($statusChanged || $assignmentChanged) {
 }
 
 // ============================================================================
-// FILE UPLOADS (disabled)
+// FILE UPLOADS
 // ============================================================================
 
-// File uploads are intentionally disabled in edit flow until storage is implemented.
+$uploadedFileNames = [];
+
+if (isset($_FILES['fileToUpload'])) {
+    $validatedUploads = rmt_validate_uploaded_files($_FILES['fileToUpload'], $lang);
+    if ($formAction === 'upload_files' && empty($validatedUploads['errors']) && empty($validatedUploads['files'])) {
+        $_SESSION['upload_error_message'] = ($lang === 'fr')
+            ? 'Veuillez choisir au moins un fichier a televerser.'
+            : 'Please choose at least one file to upload.';
+        $_SESSION['edit_section_status'] = ['status' => 'uploadfailed', 'focus' => 'upload'];
+        header("location: /editrequest.php?lang=$lang&id=$requestuid&status=uploadfailed&focus=upload");
+        exit();
+    }
+
+    if (!empty($validatedUploads['errors'])) {
+        $_SESSION['upload_error_message'] = implode(' ', $validatedUploads['errors']);
+        $_SESSION['edit_section_status'] = ['status' => 'uploadfailed', 'focus' => 'upload'];
+        header("location: /editrequest.php?lang=$lang&id=$requestuid&status=uploadfailed&focus=upload");
+        exit();
+    }
+
+    if (!empty($validatedUploads['files'])) {
+        $storageManager = new AzureBlobStorageManager();
+        foreach ($validatedUploads['files'] as $uploadFile) {
+            $fileType = strtolower((string) ($uploadFile['extension'] ?? ''));
+            $uploadedFileName = trim((string) ($uploadFile['name'] ?? ''));
+            $fileName = mysqli_real_escape_string($link, (string) ($uploadFile['name'] ?? ''));
+            $fileSize = (float) ($uploadFile['size_kb'] ?? 0.0);
+            $fileTmpPath = (string) ($uploadFile['tmp_name'] ?? '');
+            $randomCode = $requestid . "-" . bin2hex(random_bytes(16)) . "." . $fileType;
+            $safeRandomCode = mysqli_real_escape_string($link, $randomCode);
+            $safeFileType = mysqli_real_escape_string($link, $fileType);
+
+            if ($storageManager->uploadFile($fileTmpPath, $randomCode)) {
+                $uploadSql = "INSERT INTO tblfiles (`requestid`, `name`, `code`, `type`, `size`) VALUES ('$requestid', '$fileName', '$safeRandomCode', '$safeFileType', '$fileSize')";
+                mysqli_query($link, $uploadSql);
+                if ($uploadedFileName !== '') {
+                    $uploadedFileNames[] = $uploadedFileName;
+                }
+            }
+        }
+    }
+}
+
+if ($formAction === 'upload_files') {
+    if (empty($uploadedFileNames)) {
+        $_SESSION['upload_error_message'] = ($lang === 'fr')
+            ? 'Veuillez choisir au moins un fichier a televerser.'
+            : 'Please choose at least one file to upload.';
+        $_SESSION['edit_section_status'] = ['status' => 'uploadfailed', 'focus' => 'upload'];
+        header("location:/editrequest.php?lang=$lang&id=$requestuid&status=uploadfailed&focus=upload");
+        exit();
+    }
+
+    $touchDateUpdated = mysqli_real_escape_string($link, getTodayDate());
+    mysqli_query($link, "UPDATE tbltriage SET dateupdated='$touchDateUpdated', updaterid='" . (int) $updaterid . "' WHERE id='$requestuid'");
+
+    if (rmt_table_has_column($link, 'RequestFieldHistory', 'requestID')) {
+        $auditChangeTime = date('Y-m-d H:i:s');
+        $safeRequestId = mysqli_real_escape_string($link, (string) $requestid);
+        foreach ($uploadedFileNames as $uploadedFileName) {
+            $safeField = mysqli_real_escape_string($link, 'uploaded_file');
+            $newValueSql = "'" . mysqli_real_escape_string($link, (string) $uploadedFileName) . "'";
+            $sqlAudit = "INSERT INTO RequestFieldHistory(`requestID`, `fieldName`, `oldValue`, `newValue`, `actorUserID`, `changeTimeStamp`) VALUES ('$safeRequestId', '$safeField', NULL, $newValueSql, '" . (int) $updaterid . "', '$auditChangeTime')";
+            mysqli_query($link, $sqlAudit);
+        }
+    }
+
+    $_SESSION['edit_section_status'] = ['status' => 'uploadsuccess', 'focus' => 'upload'];
+    header("location:/editrequest.php?lang=$lang&id=$requestuid&status=uploadsuccess&focus=upload");
+    exit();
+}
+
+if ($formAction === 'add_log') {
+    if (!$canEditCommunicationLogs) {
+        $_SESSION['edit_section_status'] = ['status' => 'logfailed', 'focus' => 'log'];
+        header("location:/editrequest.php?lang=$lang&id=$requestuid&status=logfailed&focus=log");
+        exit();
+    }
+
+    $adminnotesTrimmed = trim((string) $adminnotes);
+    if ($adminnotesTrimmed === '') {
+        $_SESSION['edit_section_status'] = ['status' => 'logfailed', 'focus' => 'log'];
+        header("location:/editrequest.php?lang=$lang&id=$requestuid&status=logfailed&focus=log");
+        exit();
+    }
+
+    $safeAdminNotes = mysqli_real_escape_string($link, $adminnotesTrimmed);
+    $sql = "INSERT INTO tbladminlog(`triageid`, `dateadded`, `notes`, `creatorid`, `status`) VALUES ('$requestuid', '$todaydate', '$safeAdminNotes', '$updaterid', '1')";
+    mysqli_query($link, $sql);
+
+    $touchDateUpdated = mysqli_real_escape_string($link, getTodayDate());
+    mysqli_query($link, "UPDATE tbltriage SET dateupdated='$touchDateUpdated', updaterid='" . (int) $updaterid . "' WHERE id='$requestuid'");
+
+    if (rmt_table_has_column($link, 'RequestFieldHistory', 'requestID')) {
+        $auditChangeTime = date('Y-m-d H:i:s');
+        $safeRequestId = mysqli_real_escape_string($link, (string) $requestid);
+        $safeField = mysqli_real_escape_string($link, 'staff_note_added');
+        $newValueSql = "'" . mysqli_real_escape_string($link, $adminnotesTrimmed) . "'";
+        $sqlAudit = "INSERT INTO RequestFieldHistory(`requestID`, `fieldName`, `oldValue`, `newValue`, `actorUserID`, `changeTimeStamp`) VALUES ('$safeRequestId', '$safeField', NULL, $newValueSql, '" . (int) $updaterid . "', '$auditChangeTime')";
+        mysqli_query($link, $sqlAudit);
+    }
+
+    $_SESSION['edit_section_status'] = ['status' => 'logsuccess', 'focus' => 'log'];
+    header("location:/editrequest.php?lang=$lang&id=$requestuid&status=logsuccess&focus=log");
+    exit();
+}
 
 // ============================================================================
 // TEAM ASSIGNMENT & EMAIL NOTIFICATIONS
@@ -563,7 +672,7 @@ if ($workerIdInt > 0 && $workerIdInt !== $prevWorkerIdInt) {
 
 if (empty($requestid) || empty($requesttitle) || empty($datereceived) || 
     empty($statusid) || empty($catalogueid)) {
-    header("location: /editrequest.php?lang=$lang&id=$requestuid&status=failed");
+    header("location: /editrequest.php?lang=$lang&id=$requestuid&status=failed&focus=update");
     exit();
 }
 
@@ -607,8 +716,8 @@ if ($requestFieldHistoryEnabled) {
     rmt_append_request_change(
         $generalRequestChanges,
         'request_source',
-        (string) ($currentRequest['sourceid'] ?? '0'),
-        (string) ($sourceid ?? '0')
+        rmt_normalize_intish($currentRequest['sourceid'] ?? '0'),
+        rmt_normalize_intish($sourceid ?? '0')
     );
     rmt_append_request_change(
         $generalRequestChanges,
@@ -643,32 +752,32 @@ if ($requestFieldHistoryEnabled) {
     rmt_append_request_change(
         $generalRequestChanges,
         'intended_audience',
-        (string) ($currentRequest['audienceid'] ?? '0'),
-        (string) ($audienceid ?? '0')
+        rmt_normalize_intish($currentRequest['audienceid'] ?? '0'),
+        rmt_normalize_intish($audienceid ?? '0')
     );
     rmt_append_request_change(
         $generalRequestChanges,
         'catalogue_name',
-        (string) ($currentRequest['catalogueid'] ?? '0'),
-        (string) ($catalogueid ?? '0')
+        rmt_normalize_intish($currentRequest['catalogueid'] ?? '0'),
+        rmt_normalize_intish($catalogueid ?? '0')
     );
     rmt_append_request_change(
         $generalRequestChanges,
         'service_name',
-        (string) ($currentRequest['serviceid'] ?? '0'),
-        (string) ($serviceid ?? '0')
+        rmt_normalize_intish($currentRequest['serviceid'] ?? '0'),
+        rmt_normalize_intish($serviceid ?? '0')
     );
     rmt_append_request_change(
         $generalRequestChanges,
         'subservice_name',
-        (string) ($currentRequest['subserviceid'] ?? '0'),
-        (string) ($subserviceid ?? '0')
+        rmt_normalize_intish($currentRequest['subserviceid'] ?? '0'),
+        rmt_normalize_intish($subserviceid ?? '0')
     );
     rmt_append_request_change(
         $generalRequestChanges,
         'assigned_team_member',
-        (string) ($currentRequest['workerid'] ?? '0'),
-        (string) ($workerid ?? '0')
+        rmt_normalize_intish($currentRequest['workerid'] ?? '0'),
+        rmt_normalize_intish($workerid ?? '0')
     );
     rmt_append_request_change(
         $generalRequestChanges,
@@ -712,6 +821,15 @@ if ($requestFieldHistoryEnabled) {
         (string) ($currentRequest['attach3'] ?? ''),
         (string) $attach3
     );
+
+    foreach ($uploadedFileNames as $uploadedFileName) {
+        rmt_append_request_change(
+            $generalRequestChanges,
+            'uploaded_file',
+            null,
+            $uploadedFileName
+        );
+    }
 }
 
 $sql = "UPDATE `tbltriage` SET 
@@ -773,7 +891,12 @@ if ($canEditCommunicationLogs) {
         if ($requestFieldHistoryEnabled) {
             $existingCommlog1Result = mysqli_query($link, "SELECT notes FROM tblcommlog WHERE id='$commlogid1' LIMIT 1");
             $existingCommlog1Row = $existingCommlog1Result ? mysqli_fetch_assoc($existingCommlog1Result) : null;
-            rmt_append_request_change($generalRequestChanges, 'client_communication_log', (string) ($existingCommlog1Row['notes'] ?? ''), $commlog1);
+            rmt_append_request_change(
+                $generalRequestChanges,
+                'client_communication_log',
+                (string) ($existingCommlog1Row['notes'] ?? ''),
+                stripslashes((string) $commlog1)
+            );
         }
         $sql = "UPDATE `tblcommlog` SET `notes` = '$commlog1' WHERE id='$commlogid1'";
         mysqli_query($link, $sql);
@@ -782,7 +905,12 @@ if ($canEditCommunicationLogs) {
         if ($requestFieldHistoryEnabled) {
             $existingCommlog2Result = mysqli_query($link, "SELECT notes FROM tblcommlog WHERE id='$commlogid2' LIMIT 1");
             $existingCommlog2Row = $existingCommlog2Result ? mysqli_fetch_assoc($existingCommlog2Result) : null;
-            rmt_append_request_change($generalRequestChanges, 'staff_communication_log', (string) ($existingCommlog2Row['notes'] ?? ''), $commlog2);
+            rmt_append_request_change(
+                $generalRequestChanges,
+                'staff_communication_log',
+                (string) ($existingCommlog2Row['notes'] ?? ''),
+                stripslashes((string) $commlog2)
+            );
         }
         $sql = "UPDATE `tblcommlog` SET `notes` = '$commlog2' WHERE id='$commlogid2'";
         mysqli_query($link, $sql);
@@ -910,8 +1038,8 @@ $feedbackFieldLabels = [
         'fr' => 'Nom du sous-service',
     ],
     'request_source' => [
-        'en' => 'Source',
-        'fr' => 'Source',
+        'en' => 'Request intake source',
+        'fr' => 'Source de la demande',
     ],
     'sprint_schedule' => [
         'en' => 'Sprint schedule',
@@ -952,6 +1080,10 @@ $feedbackFieldLabels = [
     'staff_note_added' => [
         'en' => 'Staff note added',
         'fr' => 'Note du personnel ajoutee',
+    ],
+    'uploaded_file' => [
+        'en' => 'Uploaded file',
+        'fr' => 'Fichier televerse',
     ],
 ];
 
@@ -998,7 +1130,13 @@ rmt_append_changed_label($changedFieldLabels, $labelsForLang, 'date_updated', $c
 rmt_append_changed_label($changedFieldLabels, $labelsForLang, 'date_required', $currentRequest['daterequired'] ?? null, $daterequired);
 rmt_append_changed_label($changedFieldLabels, $labelsForLang, 'date_resolved', $currentRequest['dateresolved'] ?? null, $dateresolved);
 rmt_append_changed_label($changedFieldLabels, $labelsForLang, 'sla_timer', $currentRequest['slatimer'] ?? null, $slatimer);
-rmt_append_changed_label($changedFieldLabels, $labelsForLang, 'intended_audience', $currentRequest['audienceid'] ?? '0', $audienceid);
+rmt_append_changed_label(
+    $changedFieldLabels,
+    $labelsForLang,
+    'intended_audience',
+    rmt_normalize_intish($currentRequest['audienceid'] ?? '0'),
+    rmt_normalize_intish($audienceid ?? '0')
+);
 rmt_append_changed_label($changedFieldLabels, $labelsForLang, 'sprint_schedule', $currentRequest['sprintschedule'] ?? '', $sprintschedule);
 rmt_append_changed_label($changedFieldLabels, $labelsForLang, 'sprint_defects', $currentRequest['sprintdefects'] ?? '', $sprintdefects);
 rmt_append_changed_label($changedFieldLabels, $labelsForLang, 'first_sprint_start', $currentRequest['firstsprintstartdate'] ?? null, $firstsprintstartdate);
@@ -1076,6 +1214,6 @@ if (!$isCurrentResolved && $isTargetResolved) {
     exit();
 }
 
-header("location:/viewrequest.php?lang=$lang&erid=$redirectid&reqid=" . urlencode("a11y-" . $requestid) . "&status=success");
+header("location:/editrequest.php?lang=$lang&id=$requestuid&status=success&focus=update");
 exit();
 ?>

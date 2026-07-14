@@ -45,6 +45,7 @@ return [
     'alert_failed_message' => 'La nouvelle demande n\'a pas fonctionné, veuillez réessayer, merci!',
     'alert_access_denied_heading' => 'Accès refusé:',
     'alert_access_denied_message' => 'Vous ne disposez pas d\'un niveau d\'accès suffisant pour afficher cette page, désolé!',
+    'request_intake_source' => 'Source de la demande',
     
     // Form labels and fields
     'catalogue_label' => 'Sur quel sujet / produit avez-vous besoin d\'aide?',

@@ -7,6 +7,18 @@
 
 <h2><?php echo $t['communications_heading']; ?></h2>
 
+<?php if ($status === 'logsuccess'): ?>
+<section id="log-status-message" class="alert alert-success" role="status" aria-live="polite" tabindex="-1">
+    <h3><?php echo htmlspecialchars($t['log_success_heading'], ENT_QUOTES, 'UTF-8'); ?></h3>
+    <p><?php echo htmlspecialchars($t['log_success_message'], ENT_QUOTES, 'UTF-8'); ?></p>
+</section>
+<?php elseif ($status === 'logfailed'): ?>
+<section id="log-status-message" class="alert alert-danger" role="alert" aria-live="assertive" tabindex="-1">
+    <h3><?php echo htmlspecialchars($t['log_failed_heading'], ENT_QUOTES, 'UTF-8'); ?></h3>
+    <p><?php echo htmlspecialchars($t['log_failed_message'], ENT_QUOTES, 'UTF-8'); ?></p>
+</section>
+<?php endif; ?>
+
 <?php
 $x = 1;
 $canEditCommunicationLogs = in_array((int)($_SESSION['atype'] ?? 0), [3, 4, 5], true) || !empty($_SESSION['is_superuser']) || !empty($_SESSION['is_admin']);
@@ -32,12 +44,15 @@ while ($row2 = mysqli_fetch_assoc($result2)) {
 ?>
 
 <div class="form-group">
+    <label for="adminnotes"><span class="field-name"><?php echo $t['add_new_commlog']; ?>:</span></label>
+    <textarea class="form-control" id="adminnotes" name="adminnotes" cols="50" rows="10" <?php echo $canEditCommunicationLogs ? '' : 'readonly'; ?>></textarea>
+</div>
+
+<div class="form-group form-buttons">
+    <?php if ($canEditCommunicationLogs): ?>
+    <button type="submit" name="form_action" value="add_log" class="btn btn-primary" formnovalidate><?php echo htmlspecialchars($t['add_log_button'], ENT_QUOTES, 'UTF-8'); ?></button>
+    <?php endif; ?>
     <a class="wb-lbx btn btn-primary" href="includes/ecomms<?php echo $langSuffix; ?>.php?id=<?php echo $row['id']; ?>">
         <?php echo $t['view_existing_comms']; ?>
     </a>
-</div>
-
-<div class="form-group">
-    <label for="adminnotes"><span class="field-name"><?php echo $t['add_new_commlog']; ?>:</span></label>
-    <textarea class="form-control" id="adminnotes" name="adminnotes" cols="50" rows="10" <?php echo $canEditCommunicationLogs ? '' : 'readonly'; ?>></textarea>
 </div>

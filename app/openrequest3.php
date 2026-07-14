@@ -97,15 +97,55 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $dateopened = date('Y-m-d');
     $slatimer = date('Y-m-d');
     $userid = isset($_SESSION['pid']) && !empty($_SESSION['pid']) ? $_SESSION['pid'] : 'NULL';
+
+    // Validate uploads before writing request data.
+    $validatedUploads = ['files' => [], 'errors' => []];
+    if (isset($_FILES['fileToUpload'])) {
+        $validatedUploads = rmt_validate_uploaded_files($_FILES['fileToUpload'], $lang);
+        if (!empty($validatedUploads['errors'])) {
+            $_SESSION['openrequest_draft'] = [
+                'catalogueid' => $_POST['catalogueid'] ?? '',
+                'serviceid' => $_POST['serviceid'] ?? '',
+                'subserviceid' => $_POST['subserviceid'] ?? '',
+                'subserviceid2' => $_POST['subserviceid2'] ?? '',
+                'reauditFlag' => $_POST['reauditFlag'] ?? '',
+                'requesttitle' => $_POST['requesttitle'] ?? '',
+                'audience' => $_POST['audience'] ?? '',
+                'clientlname' => $_POST['clientlname'] ?? '',
+                'clientfname' => $_POST['clientfname'] ?? '',
+                'clientemail' => $_POST['clientemail'] ?? '',
+                'departmentagency' => $_POST['departmentagency'] ?? '',
+                'clientphone' => $_POST['clientphone'] ?? '',
+                'daterequired' => $_POST['daterequired'] ?? '',
+                'bdm' => $_POST['bdm'] ?? '',
+                'attach1' => $_POST['attach1'] ?? '',
+                'attach2' => $_POST['attach2'] ?? '',
+                'attach3' => $_POST['attach3'] ?? '',
+                'clientnotes' => $_POST['clientnotes'] ?? '',
+                'additionalinfo' => $_POST['additionalinfo'] ?? '',
+                'notification' => $_POST['notification'] ?? '',
+                'afterfact' => $_POST['afterfact'] ?? '',
+                'sprintdefects' => $_POST['sprintdefects'] ?? '',
+                'sprintschedule' => $_POST['sprintschedule'] ?? '',
+                'firstsprintstartdate' => $_POST['firstsprintstartdate'] ?? '',
+                'firstsprintenddate' => $_POST['firstsprintenddate'] ?? '',
+                'language' => $_POST['language'] ?? '',
+            ];
+            $_SESSION['openrequest_upload_error_message'] = implode(' ', $validatedUploads['errors']);
+            header("location:/openrequest2.php?lang=" . $lang);
+            exit();
+        }
+    }
     
-    // Handle file uploads to Azure Blob Storage
-    if (isset($_FILES['fileToUpload']) && !empty($_FILES['fileToUpload']['tmp_name'][0])) {
+    // Handle file uploads to configured storage backend.
+    if (!empty($validatedUploads['files'])) {
         $azureBlobManager = new AzureBlobStorageManager();
         
-        foreach ($_FILES['fileToUpload']['tmp_name'] as $key => $fileTmpPath) {
-            $fileNameWithExtension = $_FILES['fileToUpload']['name'][$key];
-            $fileType = pathinfo($fileNameWithExtension, PATHINFO_EXTENSION);
-            $fileSize = $_FILES['fileToUpload']['size'][$key] / 1024; // KB
+        foreach ($validatedUploads['files'] as $uploadFile) {
+            $fileNameWithExtension = $uploadFile['name'];
+            $fileType = $uploadFile['extension'];
+            $fileSize = $uploadFile['size_kb'];
+            $fileTmpPath = $uploadFile['tmp_name'];
             $randomCode = $nrequestid . "-" . bin2hex(random_bytes(16)) . "." . $fileType;
             
             // Escape for SQL
@@ -149,7 +189,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $nrequestemailid = base64_encode($latestid);
 
     // Preserve original request language even on older schemas that may not include tbltriage.requestlang.
-    rmt_save_request_language_metadata($link, (int) $latestid, $requestlang, (int) $creatorid);
+    rmt_save_request_language_metadata($link, (int) $latestid, $requestlang, (int) ($_SESSION['pid'] ?? 0));
     
     // Add client notes to communication log if provided
     $datereceived = date("Y-m-d");
@@ -369,6 +409,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         sendEmail($clientemail, $template_id, json_encode($clientPersonalisation), ['recipientType' => 'client']);
     }
     
+
+    unset($_SESSION['openrequest_draft'], $_SESSION['openrequest_upload_error_message']);
     // Redirect to view request page
     header("location:/viewrequest.php?lang=" . $lang . "&erid=" . $nrequestemailid . "&reqid=" . urlencode("a11y-" . $nrequestid) . "&status=newrequestcomplete");
     exit();

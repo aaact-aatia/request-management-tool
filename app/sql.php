@@ -73,6 +73,28 @@ if (!function_exists('rmt_db_column_exists')) {
 	}
 }
 
+if (!function_exists('rmt_db_table_exists')) {
+	/**
+	 * Check if a table exists in the current database.
+	 */
+	function rmt_db_table_exists($dbLink, string $tableName): bool {
+		if (!($dbLink instanceof mysqli)) {
+			return false;
+		}
+
+		$tableName = mysqli_real_escape_string($dbLink, $tableName);
+
+		$sql = "SELECT 1
+				FROM INFORMATION_SCHEMA.TABLES
+				WHERE TABLE_SCHEMA = DATABASE()
+				  AND TABLE_NAME = '$tableName'
+				LIMIT 1";
+		$result = mysqli_query($dbLink, $sql);
+
+		return ($result instanceof mysqli_result) && mysqli_num_rows($result) > 0;
+	}
+}
+
 if (!function_exists('rmt_is_schema_mismatch_error')) {
 	/**
 	 * Detect common MySQL schema drift errors (missing table/column/index).

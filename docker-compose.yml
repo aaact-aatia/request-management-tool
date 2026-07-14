@@ -10,6 +10,7 @@ services:
       - ./app:/var/www/html
       - ./docs:/var/www/docs:ro
       - vendor_data:/var/www/html/vendor
+      - rmt_uploads:/var/uploads/rmt
     environment:
       APP_ENV: ${APP_ENV:-development}
       APP_BASE_URL: ${APP_BASE_URL:-}
@@ -30,6 +31,15 @@ services:
       GCNOTIFY_TEST_EMAIL: ${GCNOTIFY_TEST_EMAIL:-}
       GCNOTIFY_CURL_CA_BUNDLE: ${GCNOTIFY_CURL_CA_BUNDLE:-}
       GCNOTIFY_CURL_INSECURE: ${GCNOTIFY_CURL_INSECURE:-}
+      FILE_STORAGE_MODE: ${FILE_STORAGE_MODE:-local}
+      FILE_STORAGE_LOCAL_PATH: ${FILE_STORAGE_LOCAL_PATH:-/var/uploads/rmt}
+      FILE_UPLOAD_MAX_FILES: ${FILE_UPLOAD_MAX_FILES:-5}
+      FILE_UPLOAD_MAX_SIZE_MB: ${FILE_UPLOAD_MAX_SIZE_MB:-10}
+      AZURE_STORAGE_ACCOUNT: ${AZURE_STORAGE_ACCOUNT:-}
+      AZURE_STORAGE_CONTAINER: ${AZURE_STORAGE_CONTAINER:-}
+      AZURE_STORAGE_PREFIX: ${AZURE_STORAGE_PREFIX:-}
+      AZURE_STORAGE_SAS_TOKEN: ${AZURE_STORAGE_SAS_TOKEN:-}
+      AZURE_STORAGE_ENDPOINT_SUFFIX: ${AZURE_STORAGE_ENDPOINT_SUFFIX:-core.windows.net}
 
   db:
     image: mysql:5.7
@@ -51,3 +61,4 @@ services:
 volumes:
   dbdata:
   vendor_data:
+  rmt_uploads:
