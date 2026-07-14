@@ -14,6 +14,9 @@ jobs:
       AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
       AZURE_WEBAPP_NAME_DEV: ${{ vars.AZURE_WEBAPP_NAME_DEV }}
       AZURE_WEBAPP_NAME_PROD: ${{ vars.AZURE_WEBAPP_NAME_PROD }}
+      AZURE_CLIENT_ID: ${{ secrets.AZUREAPPSERVICE_CLIENTID || secrets.AZUREAPPSERVICE_CLIENTID_8808B0DB8D7142538A762B63809F54F8 }}
+      AZURE_TENANT_ID: ${{ secrets.AZUREAPPSERVICE_TENANTID || secrets.AZUREAPPSERVICE_TENANTID_24543EE9DED84AE599E00F3855DFB8C3 }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID || secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_DB9A2EB06BD5474C85B1B0A02D18F408 }}
 
     permissions:
       contents: read
@@ -49,30 +52,38 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/request-management-tool:${{ steps.tag.outputs.tag }}
             ghcr.io/${{ github.repository_owner }}/request-management-tool:${{ steps.tag.outputs.tag }}-${{ github.sha }}
 
-      - name: Log in to Azure for App Service restart
+      - name: Resolve restart target and validate Azure config
+        id: restart
         if: github.ref_name == 'dev' || github.ref_name == 'main'
+        run: |
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            target_app="$AZURE_WEBAPP_NAME_PROD"
+          else
+            target_app="$AZURE_WEBAPP_NAME_DEV"
+          fi
+
+          if [ -n "$AZURE_RESOURCE_GROUP" ] && [ -n "$target_app" ] && [ -n "$AZURE_CLIENT_ID" ] && [ -n "$AZURE_TENANT_ID" ] && [ -n "$AZURE_SUBSCRIPTION_ID" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+            echo "target_app=$target_app" >> "$GITHUB_OUTPUT"
+            echo "Azure restart enabled for $target_app in resource group $AZURE_RESOURCE_GROUP"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Azure restart is skipped. Configure AZURE_RESOURCE_GROUP, AZURE_WEBAPP_NAME_DEV, AZURE_WEBAPP_NAME_PROD, and Azure login secrets to enable automatic App Service restart."
+          fi
+
+      - name: Log in to Azure for App Service restart
+        if: (github.ref_name == 'dev' || github.ref_name == 'main') && steps.restart.outputs.enabled == 'true'
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID || secrets.AZUREAPPSERVICE_CLIENTID_8808B0DB8D7142538A762B63809F54F8 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID || secrets.AZUREAPPSERVICE_TENANTID_24543EE9DED84AE599E00F3855DFB8C3 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID || secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_DB9A2EB06BD5474C85B1B0A02D18F408 }}
+          client-id: ${{ env.AZURE_CLIENT_ID }}
+          tenant-id: ${{ env.AZURE_TENANT_ID }}
+          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
 
       - name: Restart Azure App Service for branch environment
-        if: github.ref_name == 'dev' || github.ref_name == 'main'
+        if: (github.ref_name == 'dev' || github.ref_name == 'main') && steps.restart.outputs.enabled == 'true'
         uses: azure/cli@v2
         with:
           inlineScript: |
-            if [ "${{ github.ref_name }}" = "main" ]; then
-              target_app="$AZURE_WEBAPP_NAME_PROD"
-            else
-              target_app="$AZURE_WEBAPP_NAME_DEV"
-            fi
-
-            if [ -z "$AZURE_RESOURCE_GROUP" ] || [ -z "$target_app" ]; then
-              echo "Missing required Azure workflow variables. Set AZURE_RESOURCE_GROUP and the branch-specific web app name variables."
-              exit 1
-            fi
-
             az webapp restart \
               --resource-group "$AZURE_RESOURCE_GROUP" \
-              --name "$target_app"
+              --name "${{ steps.restart.outputs.target_app }}"

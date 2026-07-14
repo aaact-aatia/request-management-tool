@@ -348,6 +348,8 @@ The branch controls which web app is restarted:
 - `dev` branch → `AZURE_WEBAPP_NAME_DEV`
 - `main` branch → `AZURE_WEBAPP_NAME_PROD`
 
+If any required restart setting is missing, the publish workflow still builds and pushes the image and logs a warning that App Service restart was skipped.
+
 ### Database Import Order by Environment
 
 Production database bootstrap order:
