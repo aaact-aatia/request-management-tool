@@ -320,11 +320,35 @@ The CI/CD model is:
 - GitHub Actions publishes images to GitHub Container Registry (GHCR).
 - GitHub Actions does not deploy directly to Azure App Service.
 - Azure App Service pulls the selected image from GHCR.
+- The publish workflow logs into Azure and restarts the matching App Service after image publish:
+    - Push to `dev` restarts the configured dev App Service.
+    - Push to `main` restarts the configured prod App Service.
 
 Branch-to-image mapping:
 
 - Pushing to `main` → builds and pushes `ghcr.io/aaact-aatia/request-management-tool:prod`
 - Pushing to `dev` → builds and pushes `ghcr.io/aaact-aatia/request-management-tool:dev`
+
+#### GitHub Actions workflow settings required for restart automation
+
+Configure these repository **Secrets**:
+
+- `AZUREAPPSERVICE_CLIENTID`
+- `AZUREAPPSERVICE_TENANTID`
+- `AZUREAPPSERVICE_SUBSCRIPTIONID`
+
+Configure these repository **Variables**:
+
+- `AZURE_RESOURCE_GROUP`
+- `AZURE_WEBAPP_NAME_DEV`
+- `AZURE_WEBAPP_NAME_PROD`
+
+The branch controls which web app is restarted:
+
+- `dev` branch → `AZURE_WEBAPP_NAME_DEV`
+- `main` branch → `AZURE_WEBAPP_NAME_PROD`
+
+If any required restart setting is missing, the publish workflow still builds and pushes the image and logs a warning that App Service restart was skipped.
 
 ### Database Import Order by Environment
 

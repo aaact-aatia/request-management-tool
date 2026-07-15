@@ -92,11 +92,13 @@ include 'includes/template/head.php';
 			<h1 property="name" id="wb-cont"><?= htmlspecialchars($langFile['indexresolved_heading']) ?></h1>
 			<?php
 			$sort = isset($_GET['sort']) ? $_GET['sort'] : 'closed_desc';
+			// Cast DATE columns to CHAR so the '0000-00-00' comparison is treated as a string.
+			// MySQL strict mode (NO_ZERO_DATE) rejects the literal '0000-00-00' when parsed as a DATE.
 			$sortOptions = [
-				'closed_desc' => "COALESCE(NULLIF(dateresolved, '0000-00-00'), NULLIF(dateupdated, '0000-00-00'), datereceived) DESC, id DESC",
-				'closed_asc' => "COALESCE(NULLIF(dateresolved, '0000-00-00'), NULLIF(dateupdated, '0000-00-00'), datereceived) ASC, id ASC",
-				'updated_desc' => "COALESCE(NULLIF(dateupdated, '0000-00-00'), datereceived) DESC, id DESC",
-				'updated_asc' => "COALESCE(NULLIF(dateupdated, '0000-00-00'), datereceived) ASC, id ASC",
+				'closed_desc' => "COALESCE(NULLIF(CAST(dateresolved AS CHAR), '0000-00-00'), NULLIF(CAST(dateupdated AS CHAR), '0000-00-00'), datereceived) DESC, id DESC",
+				'closed_asc' => "COALESCE(NULLIF(CAST(dateresolved AS CHAR), '0000-00-00'), NULLIF(CAST(dateupdated AS CHAR), '0000-00-00'), datereceived) ASC, id ASC",
+				'updated_desc' => "COALESCE(NULLIF(CAST(dateupdated AS CHAR), '0000-00-00'), datereceived) DESC, id DESC",
+				'updated_asc' => "COALESCE(NULLIF(CAST(dateupdated AS CHAR), '0000-00-00'), datereceived) ASC, id ASC",
 			];
 			if (!isset($sortOptions[$sort])) {
 				$sort = 'closed_desc';
