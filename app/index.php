@@ -242,11 +242,13 @@ include 'includes/template/head.php';
 
 			<?php
 			$sort = isset($_GET['sort']) ? $_GET['sort'] : 'submitted_desc';
+			// Cast DATE columns to CHAR so the '0000-00-00' comparison is treated as a string.
+			// MySQL strict mode (NO_ZERO_DATE) rejects the literal '0000-00-00' when parsed as a DATE.
 			$sortOptions = [
 				'submitted_desc' => 'datereceived DESC, id DESC',
 				'submitted_asc' => 'datereceived ASC, id ASC',
-				'updated_desc' => "COALESCE(NULLIF(dateupdated, '0000-00-00'), datereceived) DESC, id DESC",
-				'updated_asc' => "COALESCE(NULLIF(dateupdated, '0000-00-00'), datereceived) ASC, id ASC",
+				'updated_desc' => "COALESCE(NULLIF(CAST(dateupdated AS CHAR), '0000-00-00'), datereceived) DESC, id DESC",
+				'updated_asc' => "COALESCE(NULLIF(CAST(dateupdated AS CHAR), '0000-00-00'), datereceived) ASC, id ASC",
 			];
 			if (!isset($sortOptions[$sort])) {
 				$sort = 'submitted_desc';
