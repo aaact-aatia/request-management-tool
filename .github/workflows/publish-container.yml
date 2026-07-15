@@ -14,9 +14,12 @@ jobs:
       AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
       AZURE_WEBAPP_NAME_DEV: ${{ vars.AZURE_WEBAPP_NAME_DEV }}
       AZURE_WEBAPP_NAME_PROD: ${{ vars.AZURE_WEBAPP_NAME_PROD }}
-      AZURE_CLIENT_ID: ${{ secrets.AZUREAPPSERVICE_CLIENTID || secrets.AZUREAPPSERVICE_CLIENTID_8808B0DB8D7142538A762B63809F54F8 }}
-      AZURE_TENANT_ID: ${{ secrets.AZUREAPPSERVICE_TENANTID || secrets.AZUREAPPSERVICE_TENANTID_24543EE9DED84AE599E00F3855DFB8C3 }}
-      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID || secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_DB9A2EB06BD5474C85B1B0A02D18F408 }}
+      AZURE_CLIENT_ID_DEV: ${{ secrets.AZUREAPPSERVICE_CLIENTID_8808B0DB8D7142538A762B63809F54F8 }}
+      AZURE_TENANT_ID_DEV: ${{ secrets.AZUREAPPSERVICE_TENANTID_24543EE9DED84AE599E00F3855DFB8C3 }}
+      AZURE_SUBSCRIPTION_ID_DEV: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_DB9A2EB06BD5474C85B1B0A02D18F408 }}
+      AZURE_CLIENT_ID_PROD: ${{ secrets.AZUREAPPSERVICE_CLIENTID_7795DDE3F4834188BA573CC481B50FF9 }}
+      AZURE_TENANT_ID_PROD: ${{ secrets.AZUREAPPSERVICE_TENANTID_082C4722064E4E12A22E0BC954F17EE3 }}
+      AZURE_SUBSCRIPTION_ID_PROD: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_F8B63E91687F46D5A43436A669F6656D }}
 
     permissions:
       contents: read
@@ -58,26 +61,35 @@ jobs:
         run: |
           if [ "${{ github.ref_name }}" = "main" ]; then
             target_app="$AZURE_WEBAPP_NAME_PROD"
+            client_id="$AZURE_CLIENT_ID_PROD"
+            tenant_id="$AZURE_TENANT_ID_PROD"
+            subscription_id="$AZURE_SUBSCRIPTION_ID_PROD"
           else
             target_app="$AZURE_WEBAPP_NAME_DEV"
+            client_id="$AZURE_CLIENT_ID_DEV"
+            tenant_id="$AZURE_TENANT_ID_DEV"
+            subscription_id="$AZURE_SUBSCRIPTION_ID_DEV"
           fi
 
-          if [ -n "$AZURE_RESOURCE_GROUP" ] && [ -n "$target_app" ] && [ -n "$AZURE_CLIENT_ID" ] && [ -n "$AZURE_TENANT_ID" ] && [ -n "$AZURE_SUBSCRIPTION_ID" ]; then
+          if [ -n "$AZURE_RESOURCE_GROUP" ] && [ -n "$target_app" ] && [ -n "$client_id" ] && [ -n "$tenant_id" ] && [ -n "$subscription_id" ]; then
             echo "enabled=true" >> "$GITHUB_OUTPUT"
             echo "target_app=$target_app" >> "$GITHUB_OUTPUT"
+            echo "client_id=$client_id" >> "$GITHUB_OUTPUT"
+            echo "tenant_id=$tenant_id" >> "$GITHUB_OUTPUT"
+            echo "subscription_id=$subscription_id" >> "$GITHUB_OUTPUT"
             echo "Azure restart enabled for $target_app in resource group $AZURE_RESOURCE_GROUP"
           else
             echo "enabled=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::Azure restart is skipped. Configure AZURE_RESOURCE_GROUP, AZURE_WEBAPP_NAME_DEV, AZURE_WEBAPP_NAME_PROD, and Azure login secrets to enable automatic App Service restart."
+            echo "::warning::Azure restart is skipped. Set repository variables AZURE_RESOURCE_GROUP, AZURE_WEBAPP_NAME_DEV, AZURE_WEBAPP_NAME_PROD and ensure Azure login secrets exist for branch ${{ github.ref_name }}."
           fi
 
       - name: Log in to Azure for App Service restart
         if: (github.ref_name == 'dev' || github.ref_name == 'main') && steps.restart.outputs.enabled == 'true'
         uses: azure/login@v2
         with:
-          client-id: ${{ env.AZURE_CLIENT_ID }}
-          tenant-id: ${{ env.AZURE_TENANT_ID }}
-          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+          client-id: ${{ steps.restart.outputs.client_id }}
+          tenant-id: ${{ steps.restart.outputs.tenant_id }}
+          subscription-id: ${{ steps.restart.outputs.subscription_id }}
 
       - name: Restart Azure App Service for branch environment
         if: (github.ref_name == 'dev' || github.ref_name == 'main') && steps.restart.outputs.enabled == 'true'
