@@ -119,7 +119,7 @@ if(rmt_result_num_rows($result2)>0){
 		<div class="form-group">
 			<label for="guidance_text_en"><span class="field-name"><?= $lang_code === 'en' ? 'Guidance text (English)' : 'Texte d\'orientation (anglais)' ?>:</span></label>
 			<textarea class="form-control" id="guidance_text_en" name="guidance_text_en" rows="6" style="font-family:monospace;"><?= htmlspecialchars($row2['guidance_text_en'] ?? '') ?></textarea>
-			<p class="small text-muted"><?= $lang_code === 'en' ? 'Shown when this catalogue is guidance-only or when the SSC gate is answered "No". Supports Markdown: **bold**, [link text](url), - lists.' : 'Affiché quand ce catalogue est « orientation seulement » ou quand la porte SPC reçoit « Non ». Prend en charge Markdown : **gras**, [texte](url), - listes.' ?></p>
+			<p class="small text-muted"><?= $lang_code === 'en' ? 'Shown when this catalogue is guidance-only. Supports Markdown: **bold**, [link text](url), - lists.' : 'Affiché quand ce catalogue est « orientation seulement ». Prend en charge Markdown : **gras**, [texte](url), - listes.' ?></p>
 		</div>
 		<div class="form-group">
 			<label for="guidance_text_fr"><span class="field-name"><?= $lang_code === 'en' ? 'Guidance text (French)' : 'Texte d\'orientation (français)' ?>:</span></label>
