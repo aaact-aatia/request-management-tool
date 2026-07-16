@@ -26,24 +26,43 @@ $catalogueid = $_GET['cid'];
 if ($_SERVER['REQUEST_METHOD']=='POST'){
 	
 	// Grab form elements
-	$nameen = mysqli_real_escape_string($link,$_POST['nameen']);
-	$namefr = mysqli_real_escape_string($link,$_POST['namefr']);
-	$sds = mysqli_real_escape_string($link,$_POST['sds']);
+	$nameen    = mysqli_real_escape_string($link, $_POST['nameen']);
+	$namefr    = mysqli_real_escape_string($link, $_POST['namefr']);
+	$sds       = mysqli_real_escape_string($link, $_POST['sds']);
+	$contactid = isset($_POST['contactid']) && $_POST['contactid'] !== '' ? (int)$_POST['contactid'] : 'NULL';
+	$is_guidance_only    = isset($_POST['is_guidance_only']) ? 1 : 0;
+	$alert_text_en       = mysqli_real_escape_string($link, $_POST['alert_text_en'] ?? '');
+	$alert_text_fr       = mysqli_real_escape_string($link, $_POST['alert_text_fr'] ?? '');
+	$needs_checklist     = isset($_POST['needs_checklist']) ? 1 : 0;
+	$checklist_name_en   = mysqli_real_escape_string($link, $_POST['checklist_name_en'] ?? '');
+	$checklist_name_fr   = mysqli_real_escape_string($link, $_POST['checklist_name_fr'] ?? '');
+	$checklist_url_en    = mysqli_real_escape_string($link, $_POST['checklist_url_en'] ?? '');
+	$checklist_url_fr    = mysqli_real_escape_string($link, $_POST['checklist_url_fr'] ?? '');
+	$needs_sprint_fields = isset($_POST['needs_sprint_fields']) ? 1 : 0;
 	$noerror = false;
 	
 	// Custom form validation
-	if ($nameen=="" OR $namefr=="" OR $sds=="" OR $subserviceid=="") {
+	if ($nameen=='' OR $namefr=='' OR $sds=='' OR $subserviceid=='') {
 		$noerror = true;
 	}
 	
 	// If error detected send user back to modal dialog
 	if ($noerror) {
-		header("location:/catalogue-sub-mgmt.php?lang=" . $lang . "?id=$serviceid&cid=$catalogueid&status=failed"); 
+		header('location:/catalogue-sub-mgmt.php?lang=' . $lang . '?id=$serviceid&cid=$catalogueid&status=failed'); 
 		exit();
 	}
 	
 	// Create SQL statement
-	$sql = "UPDATE `tblsubservices` SET `nameen` = '$nameen', `namefr` = '$namefr', `sds` = '$sds' WHERE id='$subserviceid'";
+	$contactVal = is_int($contactid) ? $contactid : 'NULL';
+	$sql = "UPDATE `tblsubservices` SET `nameen`='$nameen', `namefr`='$namefr', `sds`='$sds',
+		`contactid`=$contactVal,
+		`is_guidance_only`='$is_guidance_only',
+		`alert_text_en`='$alert_text_en', `alert_text_fr`='$alert_text_fr',
+		`needs_checklist`='$needs_checklist',
+		`checklist_name_en`='$checklist_name_en', `checklist_name_fr`='$checklist_name_fr',
+		`checklist_url_en`='$checklist_url_en', `checklist_url_fr`='$checklist_url_fr',
+		`needs_sprint_fields`='$needs_sprint_fields'
+		WHERE id='$subserviceid'";
 	//echo $sql;
 	rmt_admin_query($link,$sql);
 	
@@ -94,6 +113,69 @@ if(rmt_result_num_rows($result2)>0){
 				}
 				?>
 			</select>
+		</div>
+		<div class="form-group">
+			<label for="sub_contactid"><span class="field-name"><?= $is_french ? 'Équipe responsable (remplace le défaut du service)' : 'Responsible team (overrides service default)' ?>:</span></label>
+			<select class="form-control" id="sub_contactid" name="contactid">
+				<option value=""><?= $is_french ? '— Hériter du service —' : '— Inherit from service —' ?></option>
+				<?php
+				$sortF2 = $is_french ? 'namefr' : 'nameen';
+				$tr2 = rmt_admin_query($link, "SELECT id, nameen, namefr FROM tblteams WHERE status=1 ORDER BY $sortF2 ASC");
+				while ($tr2row = rmt_result_fetch_array($tr2)) {
+					$tn2 = $is_french ? $tr2row['namefr'] : $tr2row['nameen'];
+					$sel2 = ((int)$tr2row['id'] === (int)($row2['contactid'] ?? 0)) ? ' selected' : '';
+					echo '<option value="' . $tr2row['id'] . '"' . $sel2 . '>' . htmlspecialchars($tn2) . '</option>';
+				}
+				?>
+			</select>
+		</div>
+		<div class="form-group">
+			<div class="checkbox">
+				<label>
+					<input type="checkbox" name="is_guidance_only" value="1"<?= !empty($row2['is_guidance_only']) ? ' checked' : '' ?>>
+					<?= $is_french ? 'Orientation seulement' : 'Guidance only (no request form)' ?>
+				</label>
+			</div>
+		</div>
+		<div class="form-group">
+			<label for="sub_alert_en"><span class="field-name"><?= $is_french ? 'Texte d\'alerte (anglais)' : 'Alert text (English)' ?>:</span></label>
+			<textarea class="form-control" id="sub_alert_en" name="alert_text_en" rows="3"><?= htmlspecialchars($row2['alert_text_en'] ?? '') ?></textarea>
+		</div>
+		<div class="form-group">
+			<label for="sub_alert_fr"><span class="field-name"><?= $is_french ? 'Texte d\'alerte (français)' : 'Alert text (French)' ?>:</span></label>
+			<textarea class="form-control" id="sub_alert_fr" name="alert_text_fr" rows="3"><?= htmlspecialchars($row2['alert_text_fr'] ?? '') ?></textarea>
+		</div>
+		<div class="form-group">
+			<div class="checkbox">
+				<label>
+					<input type="checkbox" name="needs_checklist" value="1"<?= !empty($row2['needs_checklist']) ? ' checked' : '' ?>>
+					<?= $is_french ? 'Exige une liste de contrôle avant la soumission' : 'Requires checklist before submit' ?>
+				</label>
+			</div>
+		</div>
+		<div class="form-group">
+			<label for="ck_name_en"><span class="field-name"><?= $is_french ? 'Nom de la liste de contrôle (anglais)' : 'Checklist name (English)' ?>:</span></label>
+			<input type="text" class="form-control" id="ck_name_en" name="checklist_name_en" value="<?= htmlspecialchars($row2['checklist_name_en'] ?? '') ?>">
+		</div>
+		<div class="form-group">
+			<label for="ck_name_fr"><span class="field-name"><?= $is_french ? 'Nom de la liste de contrôle (français)' : 'Checklist name (French)' ?>:</span></label>
+			<input type="text" class="form-control" id="ck_name_fr" name="checklist_name_fr" value="<?= htmlspecialchars($row2['checklist_name_fr'] ?? '') ?>">
+		</div>
+		<div class="form-group">
+			<label for="ck_url_en"><span class="field-name"><?= $is_french ? 'URL de la liste de contrôle (anglais)' : 'Checklist URL (English)' ?>:</span></label>
+			<input type="url" class="form-control" id="ck_url_en" name="checklist_url_en" value="<?= htmlspecialchars($row2['checklist_url_en'] ?? '') ?>">
+		</div>
+		<div class="form-group">
+			<label for="ck_url_fr"><span class="field-name"><?= $is_french ? 'URL de la liste de contrôle (français)' : 'Checklist URL (French)' ?>:</span></label>
+			<input type="url" class="form-control" id="ck_url_fr" name="checklist_url_fr" value="<?= htmlspecialchars($row2['checklist_url_fr'] ?? '') ?>">
+		</div>
+		<div class="form-group">
+			<div class="checkbox">
+				<label>
+					<input type="checkbox" name="needs_sprint_fields" value="1"<?= !empty($row2['needs_sprint_fields']) ? ' checked' : '' ?>>
+					<?= $is_french ? 'Afficher les champs de dates de sprint dans le formulaire' : 'Show sprint date fields in request form' ?>
+				</label>
+			</div>
 		</div>
 		<div class="form-group form-buttons">
 			<button type="submit" class="btn btn-default"><?php echo $save_btn ?></button>

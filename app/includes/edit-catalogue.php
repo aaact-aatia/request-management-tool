@@ -23,15 +23,19 @@ $catalogueid = $_GET['id'];
 // Process the edit product form
 if ($_SERVER['REQUEST_METHOD']=='POST'){
 	
-	// Grab form elements
-	$nameen = mysqli_real_escape_string($link,$_POST['nameen']);
-	$namefr = mysqli_real_escape_string($link,$_POST['namefr']);
-	$contactid = mysqli_real_escape_string($link,$_POST['contactid']);
-	$survey = mysqli_real_escape_string($link,$_POST['survey']);
+	$nameen  = mysqli_real_escape_string($link, $_POST['nameen']);
+	$namefr  = mysqli_real_escape_string($link, $_POST['namefr']);
+	$contactid = mysqli_real_escape_string($link, $_POST['contactid']);
+	$survey  = mysqli_real_escape_string($link, $_POST['survey']);
+	$show_in_openrequest = isset($_POST['show_in_openrequest']) ? 1 : 0;
+	$openrequest_order   = (int) ($_POST['openrequest_order'] ?? 99);
+	$is_guidance_only    = isset($_POST['is_guidance_only']) ? 1 : 0;
+	$guidance_text_en    = mysqli_real_escape_string($link, $_POST['guidance_text_en'] ?? '');
+	$guidance_text_fr    = mysqli_real_escape_string($link, $_POST['guidance_text_fr'] ?? '');
 	$noerror = false;
 	
 	// Custom form validation
-	if ($nameen=="" OR $namefr=="" OR $contactid=="") {
+	if ($nameen=='' OR $namefr=='' OR $contactid=='') {
 		$noerror = true;
 	}
 	
@@ -42,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	}
 	
 	// Create SQL statement
-	$sql = "UPDATE `tblcatalogue` SET `nameen` = '$nameen', `namefr` = '$namefr', `contactid` = '$contactid', `survey` = '$survey' WHERE id='$catalogueid'";
+	$sql = "UPDATE `tblcatalogue` SET `nameen` = '$nameen', `namefr` = '$namefr', `contactid` = '$contactid', `survey` = '$survey', `show_in_openrequest` = '$show_in_openrequest', `openrequest_order` = '$openrequest_order', `is_guidance_only` = '$is_guidance_only', `guidance_text_en` = '$guidance_text_en', `guidance_text_fr` = '$guidance_text_fr' WHERE id='$catalogueid'";
 	//echo $sql;
 	rmt_admin_query($link,$sql);
 	
@@ -95,6 +99,31 @@ if(rmt_result_num_rows($result2)>0){
 				<option value="0"<?php if($row2['survey'] == 0) echo " selected"; ?>><?php echo $lang_code === 'en' ? 'No' : 'Non'; ?></option>
 				<option value="1"<?php if($row2['survey'] == 1) echo " selected"; ?>><?php echo $lang_code === 'en' ? 'Yes' : 'Oui'; ?></option>
 			</select>
+		</div>
+		<div class="form-group">
+			<div class="checkbox">
+				<label>
+					<input type="checkbox" name="show_in_openrequest" value="1"<?= !empty($row2['show_in_openrequest']) ? ' checked' : '' ?>>
+					<?= $lang_code === 'en' ? 'Show in open request dropdown' : 'Afficher dans la liste déroulante des nouvelles demandes' ?>
+				</label>
+			</div>
+		</div>
+		<div class="form-group">
+			<div class="checkbox">
+				<label>
+					<input type="checkbox" name="is_guidance_only" value="1"<?= !empty($row2['is_guidance_only']) ? ' checked' : '' ?>>
+					<?= $lang_code === 'en' ? 'Guidance only (no request form — shows info panel instead)' : 'Orientation seulement (pas de formulaire — affiche un panneau d\'information)' ?>
+				</label>
+			</div>
+		</div>
+		<div class="form-group">
+			<label for="guidance_text_en"><span class="field-name"><?= $lang_code === 'en' ? 'Guidance text (English)' : 'Texte d\'orientation (anglais)' ?>:</span></label>
+			<textarea class="form-control" id="guidance_text_en" name="guidance_text_en" rows="6" style="font-family:monospace;"><?= htmlspecialchars($row2['guidance_text_en'] ?? '') ?></textarea>
+			<p class="small text-muted"><?= $lang_code === 'en' ? 'Shown when this catalogue is guidance-only or when the SSC gate is answered "No". Supports Markdown: **bold**, [link text](url), - lists.' : 'Affiché quand ce catalogue est « orientation seulement » ou quand la porte SPC reçoit « Non ». Prend en charge Markdown : **gras**, [texte](url), - listes.' ?></p>
+		</div>
+		<div class="form-group">
+			<label for="guidance_text_fr"><span class="field-name"><?= $lang_code === 'en' ? 'Guidance text (French)' : 'Texte d\'orientation (français)' ?>:</span></label>
+			<textarea class="form-control" id="guidance_text_fr" name="guidance_text_fr" rows="6" style="font-family:monospace;"><?= htmlspecialchars($row2['guidance_text_fr'] ?? '') ?></textarea>
 		</div>
 		<div class="form-group form-buttons">
 			<button type="submit" class="btn btn-default"><?php echo $lang_code === 'en' ? 'Save' : 'Sauvegarder'; ?></button>

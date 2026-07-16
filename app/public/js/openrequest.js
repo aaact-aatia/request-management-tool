@@ -33,36 +33,21 @@ function showGuidanceOnly(html) {
 	document.getElementById('guidance-only').focus();
 }
 
+/**
+ * Called when the top-level service-type dropdown changes.
+ * stream format: 'catalogue_{id}'
+ */
 function onStreamChange(stream) {
-	showElement('informational-options', stream === 'informational');
-	showElement('software-options', stream === 'software');
-	showElement('documents-options', stream === 'documents');
-	document.getElementById('informational_kind').value = '';
-	document.getElementById('software_kind').value = '';
-	document.getElementById('documents_ssc').value = '';
-	document.getElementById('catalogueid').value = '';
 	clearLegacySelectors();
 	showElement('guidance-only', false);
-}
+	document.getElementById('catalogueid').value = '';
 
-function onInformationalChoice(kind) {
-	if (kind === 'workshops') {
-		showGuidanceOnly(window.guidanceWorkshop);
-		return;
-	}
-	setTrackableCatalogue(3);
-}
+	if (!stream || !stream.startsWith('catalogue_')) { return; }
 
-function onSoftwareChoice() {
-	setTrackableCatalogue(8);
-}
+	var catId = parseInt(stream.replace('catalogue_', ''), 10);
+	if (isNaN(catId)) { return; }
 
-function onDocumentsChoice(isSsc) {
-	if (isSsc === 'yes') {
-		setTrackableCatalogue(6);
-		return;
-	}
-	showGuidanceOnly(window.guidanceNonSscDocuments);
+	setTrackableCatalogue(catId);
 }
 
 // ============================================================================
@@ -108,43 +93,12 @@ function ajax4(val1) {
 
 // ============================================================================
 // EVENT LISTENERS
+// Use jQuery ready so the listener fires even if DOMContentLoaded already fired
+// (scripts load at bottom of page, after the DOM is parsed).
 // ============================================================================
 
-document.addEventListener('DOMContentLoaded', function () {
-	document.getElementById('service_stream').addEventListener('change', function (evt) {
-		const selected = evt.target.value;
-		if (!selected) {
-			onStreamChange('none');
-			return;
-		}
-		if (selected === 'guidance_workshops') {
-			onStreamChange('none');
-			showGuidanceOnly(window.guidanceWorkshop);
-			return;
-		}
-		if (selected === 'catalogue_3') {
-			onStreamChange('informational');
-			return;
-		}
-		if (selected === 'catalogue_8') {
-			onStreamChange('software');
-			return;
-		}
-		if (selected === 'catalogue_6') {
-			onStreamChange('documents');
-			return;
-		}
-	});
-
-	document.getElementById('informational_kind').addEventListener('change', function (evt) {
-		onInformationalChoice(evt.target.value);
-	});
-
-	document.getElementById('software_kind').addEventListener('change', function () {
-		onSoftwareChoice();
-	});
-
-	document.getElementById('documents_ssc').addEventListener('change', function (evt) {
-		onDocumentsChoice(evt.target.value);
+$(document).ready(function () {
+	$('#service_stream').on('change', function () {
+		onStreamChange($(this).val() || '');
 	});
 });

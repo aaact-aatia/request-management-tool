@@ -98,288 +98,58 @@ $t = $translations[$lang];
 
 // ============================================================================
 // COLLECT FORM DATA
+// IDs are numeric tblcatalogue/tblservices/tblsubservices primary keys.
+// subserviceid2 holds the checklist answer: 'checklist_yes', 'checklist_no', or empty.
 // ============================================================================
 
-$catalogueid = $draftData['catalogueid'] ?? getPostValue('catalogueid', 0);
-$serviceid = $draftData['serviceid'] ?? getPostValue('serviceid', 0);
-$subserviceid = $draftData['subserviceid'] ?? getPostValue('subserviceid', 0);
-$subserviceid2 = $draftData['subserviceid2'] ?? getPostValue('subserviceid2', 0);
-$clientnotes = $draftData['clientnotes'] ?? getPostValue('clientnotes');
-$language = $draftData['language'] ?? getPostValue('language');
+$catalogueid  = (int) ($draftData['catalogueid']  ?? getPostValue('catalogueid',  0));
+$serviceid    = (int) ($draftData['serviceid']    ?? getPostValue('serviceid',    0));
+$subserviceid = (int) ($draftData['subserviceid'] ?? getPostValue('subserviceid', 0));
+$subserviceid2 = $draftData['subserviceid2'] ?? getPostValue('subserviceid2', '');
+$clientnotes  = $draftData['clientnotes']  ?? getPostValue('clientnotes');
+$language     = $draftData['language']     ?? getPostValue('language');
 
 // Flags
 $reauditFlag = 0;
 $attach1 = $attach2 = $attach3 = "";
+$needsSprintFields = false;
+$subserviceName = '';
 
 // ============================================================================
-// PROCESS SUBSERVICE MAPPINGS
+// DB LOOKUP: fetch subservice flags (sprint fields, checklist, name)
+// IDs are numeric — no string mapping needed.
 // ============================================================================
+if ($subserviceid > 0) {
+    $subStmt = $link->prepare(
+        'SELECT nameen, namefr, needs_sprint_fields, needs_checklist
+         FROM tblsubservices WHERE id = ? AND status = 1 LIMIT 1'
+    );
+    $subStmt->bind_param('i', $subserviceid);
+    $subStmt->execute();
+    $subRow = $subStmt->get_result()->fetch_assoc();
+    $subStmt->close();
 
-// Check if re-audit
-if (in_array($subserviceid, ["6:2:1", "6:5:2", "8:1:2:2", "8:2:2"])) {
-    $reauditFlag = 1;
-}
-
-// Map advice subservices (3:1:x) to actual IDs
-$adviceMap = [
-    '3:1:1' => 104, // Forms
-    '3:1:2' => 105, // Courses
-    '3:1:3' => 106, // Documents
-    '3:1:4' => 110, // Emails
-    '3:1:5' => 107, // Web content
-    '3:1:6' => 108, // Services
-    '3:1:7' => 109  // Testing
-];
-
-if (isset($adviceMap[$subserviceid])) {
-    $subserviceid = $adviceMap[$subserviceid];
-}
-
-// ============================================================================
-// PROCESS DOCUMENT AUDIT PATHS (6:x:x)
-// ============================================================================
-
-if (in_array($subserviceid2, ['6:1:1:1', '6:2:1:1'])) {
-    // Document audit/re-audit - YES to correcting failures
-    $catalogueid = 6;
-    $subserviceid = 0;
-    $subserviceid2 = 0;
-    
-    $serviceMap = ['6:1' => 25, '6:2' => 61, '6:3' => 62, '6:4' => 63];
-    $serviceid = $serviceMap[$serviceid] ?? $serviceid;
-    
-} elseif (in_array($subserviceid2, ['6:1:1:2', '6:2:1:2', '6:5:1:1'])) {
-    // Document audit - NO to correcting failures OR PDF re-audit
-    $catalogueid = 6;
-    $subserviceid = 0;
-    $subserviceid2 = 0;
-    
-    $serviceMap = ['6:1' => 25, '6:2' => 61, '6:3' => 62, '6:4' => 63, '6:5' => 64];
-    $serviceid = $serviceMap[$serviceid] ?? $serviceid;
-    
-} elseif ($subserviceid == '6:5:1') {
-    // PDF audit
-    $catalogueid = 6;
-    $serviceid = 64;
-    $subserviceid = 0;
-}
-
-// ============================================================================
-// PROCESS ACCESSIBILITY AUDIT PATHS (8:x:x)
-// ============================================================================
-
-if ($subserviceid2 == '8:1:1:1' || $subserviceid2 == '8:1:2:1') {
-    // Software audit/re-audit
-    $catalogueid = 8;
-    $serviceid = 27;
-    $subserviceid = 0;
-    $subserviceid2 = 0;
-    
-} elseif ($subserviceid2 == '8:2:1:1' || $subserviceid2 == '8:2:2:1') {
-    // Web application - Sprint spot-check or Audit
-    $catalogueid = 8;
-    $serviceid = 28;
-    
-    if ($subserviceid2 == '8:2:1:1') {
-        $subserviceid = 95; // Sprint spot-check
-    } else {
-        $subserviceid = 96; // Audit of representative sample
-    }
-    $subserviceid2 = 0;
-    
-} elseif ($subserviceid2 == '8:2:1:2' || $subserviceid2 == '8:2:2:2') {
-    // Web application - Second tier (MVP vs non-MVP)
-    $catalogueid = 8;
-    $serviceid = 28;
-    
-    if ($subserviceid2 == '8:2:1:2') {
-        $subserviceid = 95; // Sprint (MVP)
-    } else {
-        $subserviceid = 96; // Audit (non-MVP)
-    }
-    $subserviceid2 = 0;
-    
-} elseif ($subserviceid == '8:4:1' || $subserviceid == '8:4:2') {
-    // Audit report questions
-    $catalogueid = 8;
-    $serviceid = 66;
-    $subserviceid = 0;
-}
-
-// ============================================================================
-// PROCESS ADAPTIVE TECHNOLOGY PATHS (4:x:x)
-// ============================================================================
-
-if (in_array($subserviceid, ['4:1:1', '4:2:1', '4:3:1', '99:4:1'])) {
-    $catalogueid = 4;
-    
-    // Determine which software based on serviceid
-    $softwareMap = [
-        '4:1' => 15,  // Dragon Medical
-        '4:2' => 55,  // Dragon NaturallySpeaking
-        '4:3' => 56,  // J-Say
-        '4:4' => 57,  // JAWS
-        '4:5' => 58,  // Kurzweil
-        '4:6' => 111, // OpenBook
-        '4:8' => 59,  // TextAloud
-        '4:10' => 60, // wordQ
-        '4:12' => 112, // ZoomText
-        '4:13' => 113, // Interact AS
-        '4:14' => 114, // Interact streamer
-        '4:15' => 115, // NVDA
-        '4:16' => 116, // SuperNova
-        '4:17' => 117, // Tint & Track
-        '4:18' => 118  // Pixie
-    ];
-    
-    $serviceid = $softwareMap[$serviceid] ?? $serviceid;
-    $subserviceid = 0;
-}
-
-// ============================================================================
-// OTHER CATALOGUE PROCESSING
-// ============================================================================
-
-// EPMO (7:x)
-if ($subserviceid == '7:1:1' || $subserviceid == '7:1:2') {
-    $catalogueid = 7;
-    $serviceid = 26;
-    $subserviceid = 0;
-}
-
-// Loan Bank (9:x)
-if ($serviceid == '9:1' || $subserviceid == '9:1') {
-    $catalogueid = 9;
-    $serviceid = 29;
-    $subserviceid = 0;
-}
-
-// Procurement (10:x)
-if ($serviceid == '10:1' || $serviceid == '10:2' || $subserviceid == '10:1' || $subserviceid == '10:2') {
-    $catalogueid = 10;
-    $serviceidMap = ['10:1' => 30, '10:2' => 31];
-    $actualServiceId = $serviceid != 0 ? $serviceid : $subserviceid;
-    $serviceid = $serviceidMap[$actualServiceId] ?? $serviceid;
-    $subserviceid = 0;
-}
-
-// Testing Tools (11:x)
-if ($serviceid == '11:1' || $subserviceid == '11:1') {
-    $catalogueid = 11;
-    $serviceid = 53;
-    $subserviceid = 0;
-}
-
-// ACP (1:x)
-if ($serviceid == '1:1' || $subserviceid == '1:1') {
-    $catalogueid = 1;
-    $serviceid = 32;
-    $subserviceid = 0;
-}
-
-// Coaching (2:x)
-if (in_array($subserviceid, ['2:1', '2:2', '2:3', '2:4', '2:5', '2:6', '99:2'])) {
-    $catalogueid = 2;
-    
-    $coachingMap = [
-        '2:1' => 45, // Curriculum
-        '2:2' => 33, // ICT developer
-        '2:4' => 47, // PDF
-        '2:5' => 48, // Microsoft
-        '2:6' => 46  // ACP development
-    ];
-    
-    $serviceid = $coachingMap[$subserviceid] ?? 33;
-    $subserviceid = 0;
-}
-
-// Needs Assessment (5:x)
-if (in_array($subserviceid, ['5:1', '5:2', '5:3', '5:4', '5:5', '99:5'])) {
-    $catalogueid = 5;
-    
-    $needsMap = [
-        '5:1' => 16, // Blindness
-        '5:2' => 17, // Cognitive
-        '5:3' => 18, // Deafness
-        '5:4' => 19, // Mobility
-        '5:5' => 50  // Multiple
-    ];
-    
-    $serviceid = $needsMap[$subserviceid] ?? 16;
-    $subserviceid = 0;
-}
-
-// Advice (3:x)
-if ($subserviceid == '3:2' || $subserviceid == '3:3' || $subserviceid == '99:3') {
-    $catalogueid = 3;
-    $serviceidMap = ['3:2' => 45, '3:3' => 34];
-    $serviceid = $serviceidMap[$subserviceid] ?? 45;
-    $subserviceid = 0;
-}
-
-// ============================================================================
-// FINAL SERVICEID CONVERSION (catch any unmapped string values)
-// ============================================================================
-
-// If serviceid is still a string format, map it to the correct numeric ID
-if (!is_numeric($serviceid)) {
-    // Document audit services (catalogue 6)
-    $documentServiceMap = [
-        '6:1' => 25,  // Word
-        '6:2' => 61,  // Excel
-        '6:3' => 62,  // PowerPoint
-        '6:4' => 63,  // Email
-        '6:5' => 64,  // PDF
-        '6:6' => 65   // Other document
-    ];
-    
-    if (isset($documentServiceMap[$serviceid])) {
-        $catalogueid = 6;
-        $serviceid = $documentServiceMap[$serviceid];
-    } else {
-        // For any other unmapped string format, set to 0
-        $serviceid = 0;
+    if ($subRow) {
+        $needsSprintFields = (bool) $subRow['needs_sprint_fields'];
+        $subserviceName    = $lang === 'fr' ? $subRow['namefr'] : $subRow['nameen'];
+        // Mark as re-audit if subservice name contains 're-audit' (case-insensitive)
+        if (stripos($subserviceName, 're-audit') !== false
+            || stripos($subserviceName, 'vérification de suivi') !== false) {
+            $reauditFlag = 1;
+        }
     }
 }
 
-// Ensure catalogueid matches serviceid (final validation)
-// Map serviceid back to correct catalogueid if needed
-$serviceToCatalogueMap = [
-    // Document audits (catalogue 6)
-    25 => 6, 61 => 6, 62 => 6, 63 => 6, 64 => 6, 65 => 6,
-    // Accessibility audits (catalogue 8)
-    27 => 8, 28 => 8, 54 => 8, 66 => 8,
-    // Loan bank (catalogue 9)
-    29 => 9,
-    // Procurement (catalogue 10)
-    30 => 10, 31 => 10,
-    // Testing tools (catalogue 11)
-    53 => 11,
-    // ACP (catalogue 1)
-    32 => 1,
-    // Coaching (catalogue 2)
-    33 => 2, 45 => 2, 46 => 2, 47 => 2, 48 => 2,
-    // Advice (catalogue 3)
-    34 => 3, 104 => 3, 105 => 3, 106 => 3, 107 => 3, 108 => 3, 109 => 3, 110 => 3,
-    // Adaptive technology (catalogue 4)
-    15 => 4, 55 => 4, 56 => 4, 57 => 4, 58 => 4, 59 => 4, 60 => 4, 111 => 4, 112 => 4, 113 => 4, 114 => 4, 115 => 4, 116 => 4, 117 => 4, 118 => 4,
-    // Needs assessment (catalogue 5)
-    16 => 5, 17 => 5, 18 => 5, 19 => 5, 50 => 5,
-    // EPMO (catalogue 7)
-    26 => 7
-];
-
-if (isset($serviceToCatalogueMap[$serviceid])) {
-    $catalogueid = $serviceToCatalogueMap[$serviceid];
+// Validate checklist gate: if subservice requires checklist, subserviceid2 must be 'checklist_yes'
+if ($subserviceid > 0 && isset($subRow['needs_checklist']) && $subRow['needs_checklist']) {
+    if ($subserviceid2 !== 'checklist_yes') {
+        // Redirect back; user bypassed the checklist gate
+        header('Location: /openrequest.php?lang=' . $lang . '&status=accessdenied');
+        exit;
+    }
 }
 
-// Ensure all IDs are numeric for the form
-$catalogueid = (int)$catalogueid;
-$serviceid = (int)$serviceid;
-$subserviceid = (int)$subserviceid;
-$reauditFlag = (int)$reauditFlag;
-
-$pageTitle = $t['page_title'];
+$pageTitle    = $t['page_title'];
 $pageDescription = '';
 
 include 'includes/template/head.php';
@@ -391,13 +161,15 @@ include 'includes/template/head.php';
         <h1 property="name" id="wb-cont"><?php echo $t['page_title']; ?></h1>
         
         <?php
-        // Determine which heading to show
-        if ($subserviceid == 95) {
-            echo "<h2>{$t['heading_sprint']}</h2>";
-        } elseif ($subserviceid == 96) {
-            echo "<h2>{$t['heading_audit_sample']}</h2>";
+        // Section heading: use subservice name when sprint fields are shown
+        if ($needsSprintFields) {
+            $headingText = htmlspecialchars($subserviceName)
+                . ' ' . ($lang === 'fr'
+                    ? 'informations requises pour votre demande'
+                    : 'information required for your request');
+            echo "<h2>$headingText</h2>";
         } else {
-            echo "<h2>{$t['heading_additional']}</h2>";
+            echo '<h2>' . $t['heading_additional'] . '</h2>';
         }
         ?>
         
@@ -418,8 +190,8 @@ include 'includes/template/head.php';
             $dateLabel = ($catalogueid == 2) ? $t['date_coaching'] : $t['date_required'];
             echo renderDateInput('daterequired', $dateLabel, $draftData['daterequired'] ?? '', false);
             
-            // Sprint-specific fields
-            if ($subserviceid == 95 || $subserviceid == 96) {
+            // Sprint-specific fields (driven by subservice needs_sprint_fields flag)
+            if ($needsSprintFields) {
                 echo renderDateInput('firstsprintstartdate', $t['first_sprint_date'], $draftData['firstsprintstartdate'] ?? '', true);
                 echo renderDateInput('firstsprintenddate', $t['last_sprint_date'], $draftData['firstsprintenddate'] ?? '', true);
                 echo renderTextInput('sprintschedule', $t['sprint_schedule'], $draftData['sprintschedule'] ?? '', true, false, 'url');

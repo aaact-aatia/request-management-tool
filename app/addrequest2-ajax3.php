@@ -1,248 +1,166 @@
 <?php
+/**
+ * Open Request Cascade — Tier 3
+ *
+ * Receives ?v1={value} where value is one of:
+ *   - A numeric tblsubservices.id  → show alert (if set), then checklist gate or Continue
+ *   - 'checklist_yes'              → service-level checklist passed → Continue
+ *   - 'checklist_no'               → service-level checklist failed → Warning
+ *   - '__other__'                  → "Other" option selected → freeform notes textarea
+ */
 require_once __DIR__ . '/includes/session_start.php';
-// Grab MySQL connection
 require('sql.php');
 /** @var mysqli $link */
 
-// Get language from session
-$lang = $_SESSION['lang'] ?? 'en';
+require_once __DIR__ . '/vendor/autoload.php';
+use League\CommonMark\CommonMarkConverter;
+$mdConverter = new CommonMarkConverter(['html_input' => 'strip', 'allow_unsafe_links' => false]);
 
-// Grab the catalogue id
-if(!empty($_GET['v1']))
-{
-	$subserviceid = mysqli_real_escape_string($link,$_GET['v1']);
+$lang    = $_SESSION['lang'] ?? 'en';
+$isFr    = $lang === 'fr';
+
+if (!isset($_GET['v1']) || $_GET['v1'] === '') {
+    exit;
 }
-else
-{
-	$subserviceid = "";
-}
+$val = trim($_GET['v1']);
 
-// Local translation arrays
-$translations = [
-	'request_details' => [
-		'en' => 'Request details: <strong>(required)</strong>',
-		'fr' => 'Détails de la demande: <strong>(requis)</strong>'
-	],
-	'continue' => [
-		'en' => 'Continue',
-		'fr' => 'Continuer'
-	],
-	'select_placeholder' => [
-		'en' => 'Make your selection',
-		'fr' => 'Faites votre choix'
-	],
-	'yes' => [
-		'en' => 'Yes',
-		'fr' => 'Oui'
-	],
-	'no' => [
-		'en' => 'No',
-		'fr' => 'Non'
-	],
-	'completed_checklist' => [
-		'en' => 'Have you completed the',
-		'fr' => 'Avez-vous complété la'
-	],
-	'corrected_failures' => [
-		'en' => 'Have you corrected all mentioned failures from the previous audit? <strong>(required)</strong>',
-		'fr' => 'Avez-vous corrigé tous les échecs mentionnés lors de la vérification précédente? <strong>(requis)</strong>'
-	],
-	'ms_doc_checklist' => [
-		'en' => '<a href="https://bati-itao.github.io/resources/ms-doc-compliance-checklist-en.html" target="blank">Microsoft document checklist</a>',
-		'fr' => '<a href="https://bati-itao.github.io/resources/ms-doc-compliance-checklist-fr.html" target="blank">liste de vérification des documents Microsoft</a>'
-	],
-	'pdf_checklist' => [
-		'en' => '<a href="https://bati-itao.github.io/resources/pdf-accessibility-checklist-en.html" target="blank">PDF document checklist</a>',
-		'fr' => '<a href="https://bati-itao.github.io/resources/pdf-accessibility-checklist-fr.html" target="blank">Liste de vérification de l\'accessibilité des documents PDF</a>'
-	],
-	'software_checklist' => [
-		'en' => '<a href="https://bati-itao.github.io/resources/accessible-software-en.html" target="blank">software accessibility checklist</a>',
-		'fr' => '<a href="https://bati-itao.github.io/resources/accessible-software-fr.html" target="blank">Liste de contrôle des évaluations de la conformité de l\'accessibilité (non Web / logiciel)</a>'
-	],
-	'easy_checks' => [
-		'en' => '<a href="https://bati-itao.github.io/resources/a11ycheck-en.html" target="blank">Easy Checks for Web Accessibility</a>',
-		'fr' => '<a href="https://bati-itao.github.io/resources/a11ycheck-fr.html" target="blank">Vérifications faciles pour l\'accessibilité web</a>'
-	],
-	'easy_checks_new' => [
-		'en' => 'New Easy Checks for Web Accessibility',
-		'fr' => 'Nouvelles Vérifications faciles pour l\'accessibilité du Web'
-	],
-	'easy_checks_desc' => [
-		'en' => 'These simple steps help developers & content creators find and fix basic accessibility issues, reducing audit rounds',
-		'fr' => 'Ces étapes simples aident les développeurs et les créateurs de contenu à identifier et corriger les problèmes d\'accessibilité de base, réduisant ainsi les cycles d\'audit.'
-	],
-	'march_2025_release' => [
-		'en' => 'March 2025 Release',
-		'fr' => 'Publication de mars 2025'
-	]
-];
+$continueLabel   = $isFr ? 'Continuer' : 'Continue';
+$placeholderText = $isFr ? 'Faites votre choix' : 'Make your selection';
+$checklistYes    = $isFr ? 'Oui' : 'Yes';
+$checklistNo     = $isFr ? 'Non' : 'No';
+$checklistLabel  = $isFr ? 'Avez-vous complété' : 'Have you completed the';
+$checklistRequired = $isFr ? 'obligatoire' : 'required';
+$warningText     = $isFr
+    ? 'Veuillez compléter la liste de contrôle ou corriger tous les échecs précédents avant de continuer.'
+    : 'Please complete the checklist or correct all previous failures before continuing.';
 
-// Alert messages
-$alerts = [
-	'3:1:1' => [
-		'en' => 'Please consult the <a href="https://a11y.canada.ca/en/create-forms/">Create forms - Digital Accessibility Toolkit</a> before opening a new request, the answer you are seeking is probably there! If this does not answer your question, select the continue button that follows to submit a new request.',
-		'fr' => 'Veuillez consulter le <a href="https://a11y.canada.ca/fr/creer-un-formulaire/index.html/">Créer un formulaire - Boîte à outils de l\'accessibilité numérique</a> avant d\'ouvrir une nouvelle demande. La réponse que vous cherchez s\'y trouve probablement! Sinon, sélectionnez le bouton continuer qui suit pour soumettre une nouvelle demande.'
-	],
-	'3:1:2' => [
-		'en' => 'Please consult the <a href="https://a11y.canada.ca/en/design-a-course/">Design a course - Digital Accessibility Toolkit</a> before opening a new request, the answer you are seeking is probably there! If this does not answer your question, select the continue button that follows to submit a new request.',
-		'fr' => 'Veuillez consulter le <a href="https://a11y.canada.ca/fr/concevoir-un-cours/index.html">Concevoir un cours - Boîte à outils de l\'accessibilité numérique</a> avant d\'ouvrir une nouvelle demande. La réponse que vous cherchez s\'y trouve probablement! Sinon, sélectionnez le bouton continuer qui suit pour soumettre une nouvelle demande.'
-	],
-	'3:1:3' => [
-		'en' => 'Please consult the <a href="https://a11y.canada.ca/en/create-document/">Create document - Digital Accessibility Toolkit</a> before opening a new request, the answer you are seeking is probably there! If this does not answer your question, select the continue button that follows to submit a new request.',
-		'fr' => 'Veuillez consulter le <a href="https://a11y.canada.ca/fr/creer-un-document/index.html">Créer un document - Boîte à outils de l\'accessibilité numérique</a> avant d\'ouvrir une nouvelle demande. La réponse que vous cherchez s\'y trouve probablement! Sinon, sélectionnez le bouton continuer qui suit pour soumettre une nouvelle demande.'
-	],
-	'3:1:4' => [
-		'en' => 'Please consult the <a href="https://a11y.canada.ca/en/making-accessible-emails/">Making Accessible Emails - Digital Accessibility Toolkit</a> before opening a new request, the answer you are seeking is probably there! If this does not answer your question, select the continue button that follows to submit a new request.',
-		'fr' => 'Veuillez consulter le <a href="https://a11y.canada.ca/fr/rendre-vos-courriels-accessibles/index.html">Rendre vos courriels accessibles - Boîte à outils de l\'accessibilité numérique</a> avant d\'ouvrir une nouvelle demande. La réponse que vous cherchez s\'y trouve probablement! Sinon, sélectionnez le bouton continuer qui suit pour soumettre une nouvelle demande.'
-	],
-	'3:1:5' => [
-		'en' => 'Please consult the <a href="https://bati-itao.github.io/learning/esdc-self-paced-web-accessibility-course/index.html">ESDC Self-paced Web Accessibility Course </a>and <a href="https://a11y.canada.ca/en/create-web-content/">Create web content - Digital Accessibility Toolkit</a> before opening a new request, the answer you are seeking is probably there! If this does not answer your question, select the continue button that follows to submit a new request.',
-		'fr' => 'Veuillez consulter le <a href="https://bati-itao.github.io/learning/esdc-self-paced-web-accessibility-course/index-fr.html">EDSC - Cours en accessibilité web</a> et <a href="https://a11y.canada.ca/fr/creer-du-contenu-web/index.html">Créer du contenu Web - Boîte à outils de l\'accessibilité numérique</a> avant d\'ouvrir une nouvelle demande. La réponse que vous cherchez s\'y trouve probablement! Sinon, sélectionnez le bouton continuer qui suit pour soumettre une nouvelle demande.'
-	],
-	'3:1:6' => [
-		'en' => 'Please consult the <a href="https://a11y.canada.ca/en/designing-accessible-services/">Designing accessible services - Digital Accessibility Toolkit</a> before opening a new request, the answer you are seeking is probably there! If this does not answer your question, select the continue button that follows to submit a new request.',
-		'fr' => 'Veuillez consulter le <a href="https://a11y.canada.ca/fr/principes-de-conception-pour-des-services-accessibles/index.html">Principes de conception pour des services accessibles - Boîte à outils de l\'accessibilité numérique</a> avant d\'ouvrir une nouvelle demande. La réponse que vous cherchez s\'y trouve probablement! Sinon, sélectionnez le bouton continuer qui suit pour soumettre une nouvelle demande.'
-	],
-	'3:1:7' => [
-		'en' => 'Please consult the <a href="https://a11y.canada.ca/en/test-your-products/">Test your products - Digital Accessibility Toolkit</a> before opening a new request, the answer you are seeking is probably there! If this does not answer your question, select the continue button that follows to submit a new request.',
-		'fr' => 'Veuillez consulter le <a href="https://a11y.canada.ca/fr/testez-vos-produits/index.html">Testez vos produits - Boîte à outils de l\'accessibilité numérique</a> avant d\'ouvrir une nouvelle demande. La réponse que vous cherchez s\'y trouve probablement! Sinon, sélectionnez le bouton continuer qui suit pour soumettre une nouvelle demande.'
-	],
-	'3:2:2' => [
-		'en' => 'Please consult the planning inclusive meetings information page before opening a new request, the answer you are seeking is probably there!',
-		'fr' => 'Veuillez consulter la page d\'information sur la planification des réunions inclusives avant d\'ouvrir une nouvelle demande, la réponse que vous cherchez est probablement là!'
-	],
-	'7:1:2' => [
-		'en' => 'Please complete the EPMO accessibility checklist prior to opening a new request.',
-		'fr' => 'Veuillez compléter la liste de contrôle d\'accessibilité du BGPE avant d\'ouvrir une nouvelle demande.'
-	]
-];
-
-
-if ($subserviceid=='99:4:1' || $subserviceid=='99:4:9') {
-?>
-<div class="form-group">
-    <label for="clientnotes"><span class="field-name"><?php echo $translations['request_details'][$lang]; ?></span></label>
-    <textarea class="form-control" id="clientnotes" name="clientnotes" cols="50" rows="10" required></textarea>
-</div>
-
-<div class="form-group form-buttons">
-    <button type="submit" class="btn btn-primary"><?php echo $translations['continue'][$lang]; ?></button>
-</div>
-<?php
-} elseif (in_array($subserviceid, ['3:1:1', '3:1:2', '3:1:3', '3:1:4', '3:1:5', '3:1:6', '3:1:7'])) {
-?>
-<div class="alert alert-warning">
-    <p><?php echo $alerts[$subserviceid][$lang]; ?></p>
-</div>
-<div class="form-group form-buttons">
-        <button type="submit" class="btn btn-primary"><?php echo $translations['continue'][$lang]; ?></button>
+// ------------------------------------------------------------------
+// Service-level checklist answer (from ajax2 checklist gate)
+// ------------------------------------------------------------------
+if ($val === 'checklist_yes') {
+    ?>
+    <div class="form-group form-buttons">
+        <button type="submit" class="btn btn-primary"><?= $continueLabel ?></button>
     </div>
-<?php
-} elseif ($subserviceid=='3:2:2') {
-?>
-<div class="alert alert-warning">
-    <p tabindex="0"><?php echo $alerts['3:2:2'][$lang]; ?></p>
-</div>
-
-<?php
-} elseif ($subserviceid=='7:1:2') {
-?>
-<div class="alert alert-warning">
-    <p tabindex="0"><?php echo $alerts['7:1:2'][$lang]; ?></p>
-</div>
-
-<?php
-} elseif ($subserviceid=='6:1:1') {
-?>
-<label for="subserviceid2"><span class="field-name"><?php echo $translations['completed_checklist'][$lang]; ?> <?php echo $translations['ms_doc_checklist'][$lang]; ?>? <strong>(<?php echo $lang === 'fr' ? 'obligatoire' : 'required'; ?>)</strong></span></label>
-<select class="form-control" id="subserviceid2" name="subserviceid2" onchange="ajax4(this.value)" required>
-    <option value=""><?php echo $translations['select_placeholder'][$lang]; ?></option>
-    <option value="6:1:1:1"><?php echo $translations['yes'][$lang]; ?></option>
-    <option value="6:1:1:2"><?php echo $translations['no'][$lang]; ?></option>
-</select>
-<?php	
-} elseif ($subserviceid=='6:2:1') {
-?>
-<label for="subserviceid2"><span class="field-name"><?php echo $translations['corrected_failures'][$lang]; ?></span></label>
-<select class="form-control" id="subserviceid2" name="subserviceid2" onchange="ajax4(this.value)" required>
-    <option value=""><?php echo $translations['select_placeholder'][$lang]; ?></option>
-    <option value="6:2:1:1"><?php echo $translations['yes'][$lang]; ?></option>
-    <option value="6:2:1:2"><?php echo $translations['no'][$lang]; ?></option>
-</select>
-<?php	
-} elseif ($subserviceid=='6:5:1') {
-?>
-<label for="subserviceid2"><span class="field-name"><?php echo $translations['completed_checklist'][$lang]; ?> <?php echo $translations['pdf_checklist'][$lang]; ?>? <strong>(<?php echo $lang === 'fr' ? 'requis' : 'required'; ?>)</strong></span></label>
-<select class="form-control" id="subserviceid2" name="subserviceid2" onchange="ajax4(this.value)" required>
-    <option value=""><?php echo $translations['select_placeholder'][$lang]; ?></option>
-    <option value="6:5:1:1"><?php echo $translations['yes'][$lang]; ?></option>
-    <option value="6:5:1:2"><?php echo $translations['no'][$lang]; ?></option>
-</select>
-<?php	
-} elseif ($subserviceid=='6:5:2') {
-?>
-<label for="subserviceid2"><span class="field-name"><?php echo $translations['corrected_failures'][$lang]; ?></span></label>
-<select class="form-control" id="subserviceid2" name="subserviceid2" onchange="ajax4(this.value)" required>
-    <option value=""><?php echo $translations['select_placeholder'][$lang]; ?></option>
-    <option value="6:5:2:1"><?php echo $translations['yes'][$lang]; ?></option>
-    <option value="6:5:2:2"><?php echo $translations['no'][$lang]; ?></option>
-</select>
-<?php
-} elseif ($subserviceid=='8:1:1') {
-?>
-<label for="subserviceid2"><span class="field-name"><?php echo $translations['completed_checklist'][$lang]; ?> <?php echo $translations['software_checklist'][$lang]; ?>? <strong>(<?php echo $lang === 'fr' ? 'requis' : 'required'; ?>)</strong></span></label>
-<select class="form-control" id="subserviceid2" name="subserviceid2" onchange="ajax4(this.value)" required>
-    <option value=""><?php echo $translations['select_placeholder'][$lang]; ?></option>
-    <option value="8:1:1:1"><?php echo $translations['yes'][$lang]; ?></option>
-    <option value="8:1:1:2"><?php echo $translations['no'][$lang]; ?></option>
-</select>
-<?php
-} elseif ($subserviceid=='8:1:2') {
-?>
-<label for="subserviceid2"><span class="field-name"><?php echo $translations['corrected_failures'][$lang]; ?></span></label>
-<select class="form-control" id="subserviceid2" name="subserviceid2" onchange="ajax4(this.value)" required>
-    <option value=""><?php echo $translations['select_placeholder'][$lang]; ?></option>
-    <option value="8:1:2:1"><?php echo $translations['yes'][$lang]; ?></option>
-    <option value="8:1:2:2"><?php echo $translations['no'][$lang]; ?></option>
-</select>
-<?php
-} elseif ($subserviceid=='8:2:2:1') {
-?>
-<label for="subserviceid2"><span class="field-name"><?php echo $translations['completed_checklist'][$lang]; ?> <?php echo $translations['easy_checks'][$lang]; ?>? <strong>(<?php echo $lang === 'fr' ? 'requis' : 'required'; ?>)</strong></span>					
-            <span class="label label-default"><?php echo $translations['march_2025_release'][$lang]; ?></span>
-            
-        </label>
-        
-    </span>
-    <div class="alert alert-info">
-    <h3><?php echo $translations['easy_checks_new'][$lang]; ?></h3>
-    <p><?php echo $translations['easy_checks_desc'][$lang]; ?></p>
-</div>
-<select class="form-control" id="subserviceid2" name="subserviceid2" onchange="ajax4(this.value)" required>
-    <option value=""><?php echo $translations['select_placeholder'][$lang]; ?></option>
-    <option value="8:2:2:1:1"><?php echo $translations['yes'][$lang]; ?></option>
-    <option value="8:2:2:1:2"><?php echo $translations['no'][$lang]; ?></option>
-</select>
-<br>
-<!-- Notice message -->
-
-<?php
-} elseif ($subserviceid=='8:2:2:2') {
-?>
-<label for="subserviceid2"><span class="field-name"><?php echo $translations['corrected_failures'][$lang]; ?></span></label>
-<select class="form-control" id="subserviceid2" name="subserviceid2" onchange="ajax4(this.value)" required>
-    <option value=""><?php echo $translations['select_placeholder'][$lang]; ?></option>
-    <option value="8:2:2:2:1"><?php echo $translations['yes'][$lang]; ?></option>
-    <option value="8:2:2:2:2"><?php echo $translations['no'][$lang]; ?></option>
-</select>
-<?php
-}elseif ($subserviceid=='4:1:1' OR $subserviceid=='4:2:1' OR $subserviceid=='4:3:1' OR $subserviceid=='3:2:1' OR $subserviceid=='7:1:1' OR $subserviceid=='8:4:1' OR $subserviceid=='8:4:2' OR $subserviceid = '8:2:1:1' OR $subserviceid = '8:2:1:2') {
-	?>
-<div class="form-group form-buttons">
-    <button type="submit" class="btn btn-primary"><?php echo $translations['continue'][$lang]; ?></button>
-</div>
-<?php	
+    <?php
+    mysqli_close($link);
+    exit;
 }
-// Close connection
+
+if ($val === 'checklist_no') {
+    ?>
+    <div class="alert alert-warning">
+        <p tabindex="0"><?= htmlspecialchars($warningText) ?></p>
+    </div>
+    <?php
+    mysqli_close($link);
+    exit;
+}
+
+// ------------------------------------------------------------------
+// "Other" option — show freeform notes textarea + Continue
+// ------------------------------------------------------------------
+if ($val === '__other__') {
+    $notesLabel = $isFr
+        ? 'Décrivez votre demande : <strong>(requis)</strong>'
+        : 'Describe your request: <strong>(required)</strong>';
+    ?>
+    <input type="hidden" name="subserviceid" value="0">
+    <div class="form-group">
+        <label for="clientnotes">
+            <span class="field-name"><?= $notesLabel ?></span>
+        </label>
+        <textarea class="form-control" id="clientnotes" name="clientnotes"
+                  rows="5" required></textarea>
+    </div>
+    <div class="form-group form-buttons">
+        <button type="submit" class="btn btn-primary"><?= $continueLabel ?></button>
+    </div>
+    <?php
+    mysqli_close($link);
+    exit;
+}
+
+// ------------------------------------------------------------------
+// Numeric subservice ID
+// ------------------------------------------------------------------
+$subserviceid = (int) $val;
+if ($subserviceid <= 0) {
+    mysqli_close($link);
+    exit;
+}
+
+$stmt = $link->prepare(
+    'SELECT id, nameen, namefr, is_guidance_only,
+            guidance_text_en, guidance_text_fr,
+            alert_text_en, alert_text_fr,
+            needs_checklist, checklist_name_en, checklist_name_fr,
+            checklist_url_en, checklist_url_fr,
+            needs_sprint_fields
+     FROM tblsubservices WHERE id = ? AND status = 1 LIMIT 1'
+);
+$stmt->bind_param('i', $subserviceid);
+$stmt->execute();
+$sub = $stmt->get_result()->fetch_assoc();
+$stmt->close();
 mysqli_close($link);
+
+if (!$sub) {
+    exit;
+}
+
+// Guidance-only subservice
+if ($sub['is_guidance_only']) {
+    $html = htmlspecialchars_decode(
+        $isFr ? $sub['guidance_text_fr'] : $sub['guidance_text_en'],
+        ENT_QUOTES
+    );
+    ?>
+    <section class="alert alert-info" role="status" aria-live="polite" tabindex="-1">
+        <?= $html ?>
+    </section>
+    <?php
+    exit;
+}
+
+// Alert text — rendered as Markdown, informational, does not block submission
+$alertHtml = $isFr ? $sub['alert_text_fr'] : $sub['alert_text_en'];
+if ($alertHtml) {
+    echo '<div class="alert alert-info">'
+        . $mdConverter->convert($alertHtml)->getContent()
+        . '</div>';
+}
+
+// Needs checklist gate → show yes/no dropdown, ajax4 handles the answer
+if ($sub['needs_checklist']) {
+    $nameEn = $sub['checklist_name_en'];
+    $nameFr = $sub['checklist_name_fr'];
+    $urlEn  = $sub['checklist_url_en'];
+    $urlFr  = $sub['checklist_url_fr'];
+    $checklistDisplay = $isFr
+        ? ($urlFr ? '<a href="' . htmlspecialchars($urlFr) . '" target="_blank" rel="noopener noreferrer">' . htmlspecialchars($nameFr) . '</a>' : htmlspecialchars($nameFr))
+        : ($urlEn ? '<a href="' . htmlspecialchars($urlEn) . '" target="_blank" rel="noopener noreferrer">' . htmlspecialchars($nameEn) . '</a>' : htmlspecialchars($nameEn));
+    ?>
+    <div class="form-group">
+        <label for="subserviceid2">
+            <span class="field-name">
+                <?= $checklistLabel ?> <?= $checklistDisplay ?>?
+                <strong>(<?= $checklistRequired ?>)</strong>
+            </span>
+        </label>
+        <select class="form-control" id="subserviceid2" name="subserviceid2"
+                onchange="ajax4(this.value)" required>
+            <option value=""><?= $placeholderText ?></option>
+            <option value="checklist_yes"><?= $checklistYes ?></option>
+            <option value="checklist_no"><?= $checklistNo ?></option>
+        </select>
+    </div>
+    <?php
+    exit;
+}
+
+// No checklist needed → Continue
 ?>
+<div class="form-group form-buttons">
+    <button type="submit" class="btn btn-primary"><?= $continueLabel ?></button>
+</div>
