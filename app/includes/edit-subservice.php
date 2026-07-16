@@ -38,7 +38,6 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	$checklist_name_fr   = mysqli_real_escape_string($link, $_POST['checklist_name_fr'] ?? '');
 	$checklist_url_en    = mysqli_real_escape_string($link, $_POST['checklist_url_en'] ?? '');
 	$checklist_url_fr    = mysqli_real_escape_string($link, $_POST['checklist_url_fr'] ?? '');
-	$needs_sprint_fields = isset($_POST['needs_sprint_fields']) ? 1 : 0;
 	$noerror = false;
 	
 	// Custom form validation
@@ -60,8 +59,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 		`alert_text_en`='$alert_text_en', `alert_text_fr`='$alert_text_fr',
 		`needs_checklist`='$needs_checklist',
 		`checklist_name_en`='$checklist_name_en', `checklist_name_fr`='$checklist_name_fr',
-		`checklist_url_en`='$checklist_url_en', `checklist_url_fr`='$checklist_url_fr',
-		`needs_sprint_fields`='$needs_sprint_fields'
+		`checklist_url_en`='$checklist_url_en', `checklist_url_fr`='$checklist_url_fr'
 		WHERE id='$subserviceid'";
 	//echo $sql;
 	rmt_admin_query($link,$sql);
@@ -168,14 +166,6 @@ if(rmt_result_num_rows($result2)>0){
 		<div class="form-group">
 			<label for="ck_url_fr"><span class="field-name"><?= $is_french ? 'URL de la liste de contrôle (français)' : 'Checklist URL (French)' ?>:</span></label>
 			<input type="url" class="form-control" id="ck_url_fr" name="checklist_url_fr" value="<?= htmlspecialchars($row2['checklist_url_fr'] ?? '') ?>">
-		</div>
-		<div class="form-group">
-			<div class="checkbox">
-				<label>
-					<input type="checkbox" name="needs_sprint_fields" value="1"<?= !empty($row2['needs_sprint_fields']) ? ' checked' : '' ?>>
-					<?= $is_french ? 'Afficher les champs de dates de sprint dans le formulaire' : 'Show sprint date fields in request form' ?>
-				</label>
-			</div>
 		</div>
 		<div class="form-group form-buttons">
 			<button type="submit" class="btn btn-default"><?php echo $save_btn ?></button>
