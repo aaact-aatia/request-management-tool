@@ -29,12 +29,15 @@ SET @sql := IF(@has_col = 0,
     ' ADD COLUMN `is_guidance_only` TINYINT(1) NOT NULL DEFAULT 0',
       ' COMMENT ''Show guidance panel instead of request form'',',
     ' ADD COLUMN `guidance_text_en` TEXT DEFAULT NULL',
-      ' COMMENT ''English guidance HTML (shown when is_guidance_only=1 or SSC gate = no)'',',
+
     ' ADD COLUMN `guidance_text_fr` TEXT DEFAULT NULL,',
     ' ADD COLUMN `guidance_url_en` VARCHAR(500) DEFAULT NULL,',
-    ' ADD COLUMN `guidance_url_fr` VARCHAR(500) DEFAULT NULL,',
-    ' ADD COLUMN `requires_ssc_check` TINYINT(1) NOT NULL DEFAULT 0',
-      ' COMMENT ''Show SSC membership yes/no gate before service dropdown'''
+    ' ADD COLUMN `guidance_url_fr` VARCHAR(500) DEFAULT NULL'
+    -- NOTE: an earlier version of this migration also added `requires_ssc_check`
+    -- here. That column is dormant and unused. Databases that applied the original
+    -- version retain it as an unused column; clean installations via schema.sql do
+    -- not include it. The column has been removed from this statement so that any
+    -- future partial re-run does not re-add it.
   ),
   'SELECT 1'
 );
@@ -111,18 +114,22 @@ UPDATE `tblcatalogue` SET `show_in_openrequest` = 1, `openrequest_order` = 1 WHE
 -- Accessibility audit
 UPDATE `tblcatalogue` SET `show_in_openrequest` = 1, `openrequest_order` = 2 WHERE `id` = 8;
 
--- Document accessibility audits (has SSC gate; non-SSC path is guidance-only)
+-- Document accessibility audits (store guidance text for non-SSC external users)
 UPDATE `tblcatalogue`
 SET
   `show_in_openrequest` = 1,
   `openrequest_order`   = 3,
-  `requires_ssc_check`  = 1,
   `guidance_text_en`    = '<p>This option is guidance-only for external (non-SSC) organizations. Please contact your communications branch for document accessibility support.</p><ul><li><a href="https://a11y.canada.ca/en/create-document/" target="_blank" rel="noopener noreferrer">Digital Accessibility Toolkit – Create document (opens in a new tab)</a></li><li><a href="https://www.csps-efpc.gc.ca/video/making-documents-accessible-eng.aspx" target="_blank" rel="noopener noreferrer">CSPS – Making Documents Accessible (opens in a new tab)</a></li><li><a href="mailto:AAACT-AATIA@ssc-spc.gc.ca">AAACT-AATIA@ssc-spc.gc.ca</a></li></ul>',
   `guidance_text_fr`    = '<p>Cette option est actuellement informative seulement pour les organisations externes (non SPC). Veuillez communiquer avec votre direction des communications pour le soutien en accessibilité documentaire.</p><ul><li><a href="https://a11y.canada.ca/fr/creer-un-document/index.html" target="_blank" rel="noopener noreferrer">Boîte à outils de l\'accessibilité numérique – Créer un document (s\'ouvre dans un nouvel onglet)</a></li><li><a href="https://www.csps-efpc.gc.ca/video/making-documents-accessible-fra.aspx" target="_blank" rel="noopener noreferrer">EFPC – Rendre les documents accessibles (s\'ouvre dans un nouvel onglet)</a></li><li><a href="mailto:AAACT-AATIA@ssc-spc.gc.ca">AAACT-AATIA@ssc-spc.gc.ca</a></li></ul>'
 WHERE `id` = 6;
 
 -- =============================================================================
--- Step 5: Add Workshops as a guidance-only catalogue (replaces hardcoded JS)
+-- Step 5: Add Workshops as a guidance-only catalogue
+-- PENDING PRODUCT DECISION: Whether Workshops should remain guidance-only or
+-- have sub-services has not been confirmed by the product owner. This step
+-- restores the approved state from the request-catalogue branch: guidance-only
+-- catalogue with EN/FR informational text. Hierarchy changes (services,
+-- subservices under Workshops) must not be made here without explicit approval.
 -- =============================================================================
 INSERT INTO `tblcatalogue`
   (`nameen`, `namefr`, `contactid`, `survey`, `status`,
@@ -161,7 +168,7 @@ UPDATE `tblservices` SET `status` = 1 WHERE `id` = 5;
 -- =============================================================================
 UPDATE `tblsubservices` SET
   `alert_text_en` = 'Please consult <a href="https://a11y.canada.ca/en/create-forms/">Create forms – Digital Accessibility Toolkit</a> before opening a new request. If this does not answer your question, continue to submit a request.',
-  `alert_text_fr` = 'Veuillez consulter <a href="https://a11y.canada.ca/fr/creer-un-formulaire/index.html/">Créer un formulaire – Boîte à outils de l''accessibilité numérique</a> avant d''ouvrir une nouvelle demande. Si cela ne répond pas à votre question, continuez pour soumettre une demande.'
+  `alert_text_fr` = 'Veuillez consulter <a href="https://a11y.canada.ca/fr/creer-un-formulaire/index.html">Créer un formulaire – Boîte à outils de l''accessibilité numérique</a> avant d''ouvrir une nouvelle demande. Si cela ne répond pas à votre question, continuez pour soumettre une demande.'
 WHERE `id` = 104;
 
 UPDATE `tblsubservices` SET

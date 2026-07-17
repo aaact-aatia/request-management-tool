@@ -68,6 +68,15 @@ $stmt->close();
 mysqli_close($link);
 
 if (empty($services)) {
+    // Resolution rule 5: no active services, no custom flow, not guidance-only.
+    // Continue directly to the request form with only the catalogue classification.
+    // serviceid and subserviceid are omitted; openrequest3.php stores them as NULL.
+    $continueLabel = $isFr ? 'Continuer' : 'Continue';
+    ?>
+    <div class="form-group form-buttons">
+        <button type="submit" class="btn btn-primary"><?= htmlspecialchars($continueLabel) ?></button>
+    </div>
+    <?php
     exit;
 }
 

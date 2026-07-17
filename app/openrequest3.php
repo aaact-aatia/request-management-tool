@@ -24,12 +24,17 @@ $isFrench = ($lang === 'fr');
 // Process the request submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     
-    // Get service/catalogue IDs passed as hidden fields from step 2
-    $catalogueid = (int)getPostValue('catalogueid', 0);
-    $serviceid = (int)getPostValue('serviceid', 0);
-    $subserviceid = (int)getPostValue('subserviceid', 0);
+    // Get service/catalogue IDs passed as hidden fields from step 2.
+    // rmt_optional_positive_int() returns PHP null for absent, empty, or zero
+    // values so that SQL NULL is stored rather than a fake foreign-key zero.
+    $catalogueid  = (int)getPostValue('catalogueid', 0);
+    $serviceid    = rmt_optional_positive_int($_POST['serviceid']    ?? null);
+    $subserviceid = rmt_optional_positive_int($_POST['subserviceid'] ?? null);
     $reauditFlag = (int)getPostValue('reauditFlag', 0);
     $statusid = 1; // Initial status
+
+    $serviceidSql    = $serviceid    !== null ? $serviceid    : 'NULL';
+    $subserviceidSql = $subserviceid !== null ? $subserviceid : 'NULL';
     
     // Grab all form fields using helper
     $requesttitle = getPostValue('requesttitle');
@@ -165,7 +170,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Insert the full triage record in one shot
     $daterequiredSql = $daterequiredu ? 'NULL' : "'$daterequired'";
     $columns = "requestid, creatorid, catalogueid, serviceid, subserviceid, statusid, datereceived, slatimer, isreaudit, title, clientlname, clientfname, clientemail, clientphone, daterequired, bdm, attach1, attach2, attach3, status";
-    $values  = "'$nrequestid', $userid, $catalogueid, $serviceid, $subserviceid, $statusid, '$dateopened', '$slatimer', $reauditFlag, '$requesttitle', '$clientlname', '$clientfname', '$clientemail', '$clientphone', $daterequiredSql, '$bdm', '$attach1', '$attach2', '$attach3', '$status'";
+    $values  = "'$nrequestid', $userid, $catalogueid, $serviceidSql, $subserviceidSql, $statusid, '$dateopened', '$slatimer', $reauditFlag, '$requesttitle', '$clientlname', '$clientfname', '$clientemail', '$clientphone', $daterequiredSql, '$bdm', '$attach1', '$attach2', '$attach3', '$status'";
 
     $hasRequestLangColumn = function_exists('rmt_db_column_exists')
         && rmt_db_column_exists($link, 'tbltriage', 'requestlang');

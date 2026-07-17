@@ -45,7 +45,7 @@ $isFr = $_SESSION['lang'] === 'fr';
 $routerCatalogues = [];
 $routerCatalogueQuery = mysqli_query(
 	$link,
-	"SELECT id, nameen, namefr, is_guidance_only, requires_ssc_check,
+	"SELECT id, nameen, namefr, is_guidance_only,
 	        guidance_text_en, guidance_text_fr
 	 FROM tblcatalogue
 	 WHERE status = 1 AND show_in_openrequest = 1

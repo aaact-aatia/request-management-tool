@@ -103,8 +103,8 @@ $t = $translations[$lang];
 // ============================================================================
 
 $catalogueid  = (int) ($draftData['catalogueid']  ?? getPostValue('catalogueid',  0));
-$serviceid    = (int) ($draftData['serviceid']    ?? getPostValue('serviceid',    0));
-$subserviceid = (int) ($draftData['subserviceid'] ?? getPostValue('subserviceid', 0));
+$serviceid    = rmt_optional_positive_int($draftData['serviceid']    ?? ($_POST['serviceid']    ?? null));
+$subserviceid = rmt_optional_positive_int($draftData['subserviceid'] ?? ($_POST['subserviceid'] ?? null));
 $subserviceid2 = $draftData['subserviceid2'] ?? getPostValue('subserviceid2', '');
 $clientnotes  = $draftData['clientnotes']  ?? getPostValue('clientnotes');
 $language     = $draftData['language']     ?? getPostValue('language');
@@ -119,7 +119,7 @@ $subserviceName = '';
 // DB LOOKUP: fetch subservice flags (sprint fields, checklist, name)
 // IDs are numeric — no string mapping needed.
 // ============================================================================
-if ($subserviceid > 0) {
+if ($subserviceid !== null) {
     $subStmt = $link->prepare(
         'SELECT nameen, namefr, needs_sprint_fields, needs_checklist
          FROM tblsubservices WHERE id = ? AND status = 1 LIMIT 1'
@@ -141,7 +141,7 @@ if ($subserviceid > 0) {
 }
 
 // Validate checklist gate: if subservice requires checklist, subserviceid2 must be 'checklist_yes'
-if ($subserviceid > 0 && isset($subRow['needs_checklist']) && $subRow['needs_checklist']) {
+if ($subserviceid !== null && isset($subRow['needs_checklist']) && $subRow['needs_checklist']) {
     if ($subserviceid2 !== 'checklist_yes') {
         // Redirect back; user bypassed the checklist gate
         header('Location: /openrequest.php?lang=' . $lang . '&status=accessdenied');
@@ -174,10 +174,16 @@ include 'includes/template/head.php';
         ?>
         
         <form method="POST" enctype="multipart/form-data" action="openrequest3.php?lang=<?php echo $lang; ?>">
-            <!-- Hidden fields to pass forward -->
+            <!-- Hidden fields to pass forward.
+                 serviceid and subserviceid are omitted when null
+                 so that openrequest3.php stores SQL NULL rather than a fake zero. -->
             <input type="hidden" name="catalogueid" value="<?php echo $catalogueid; ?>">
+            <?php if ($serviceid !== null): ?>
             <input type="hidden" name="serviceid" value="<?php echo $serviceid; ?>">
+            <?php endif; ?>
+            <?php if ($subserviceid !== null): ?>
             <input type="hidden" name="subserviceid" value="<?php echo $subserviceid; ?>">
+            <?php endif; ?>
             <input type="hidden" name="clientnotes" value="<?php echo htmlspecialchars($clientnotes, ENT_QUOTES); ?>">
             <input type="hidden" name="language" value="<?php echo htmlspecialchars($language, ENT_QUOTES); ?>">
             <input type="hidden" name="reauditFlag" value="<?php echo $reauditFlag; ?>">
