@@ -18,17 +18,21 @@ class MySQLSessionHandler implements SessionHandlerInterface
     private ?mysqli $link;
     private string $tableName = 'tblphp_sessions';
     private int $sessionLifetime = 86400; // 24 hours
+    private int $lockTimeoutSeconds = 30;
+    private ?string $lockName = null;
     
     /**
      * Constructor
      * 
      * @param mysqli $link MySQL database connection
      * @param int $lifetime Session lifetime in seconds (default: 24 hours)
+     * @param int $lockTimeoutSeconds Maximum time to wait for the session lock
      */
-    public function __construct(mysqli $link, int $lifetime = 86400)
+    public function __construct(mysqli $link, int $lifetime = 86400, int $lockTimeoutSeconds = 30)
     {
         $this->link = $link;
         $this->sessionLifetime = $lifetime;
+        $this->lockTimeoutSeconds = max(1, min(300, $lockTimeoutSeconds));
     }
     
     /**
@@ -69,7 +73,93 @@ class MySQLSessionHandler implements SessionHandlerInterface
      */
     public function close(): bool
     {
-        return true;
+        return $this->releaseSessionLock();
+    }
+
+    /**
+     * Acquire a connection-scoped advisory lock for one PHP session.
+     *
+     * The lock is held from read() until write()/close(), matching PHP's
+     * normal session lifecycle and preventing concurrent requests from
+     * loading and then overwriting the same session state.
+     */
+    private function acquireSessionLock(string $id): bool
+    {
+        if (!($this->link instanceof mysqli)) {
+            return false;
+        }
+
+        $lockName = 'rmt_session_' . substr(hash('sha256', $id), 0, 48);
+        if ($this->lockName === $lockName) {
+            return true;
+        }
+
+        if ($this->lockName !== null && !$this->releaseSessionLock()) {
+            return false;
+        }
+
+        try {
+            $stmt = mysqli_prepare($this->link, 'SELECT GET_LOCK(?, ?) AS acquired');
+            if (!$stmt) {
+                error_log('MySQLSessionHandler: Failed to prepare session lock query: ' . mysqli_error($this->link));
+                return false;
+            }
+
+            mysqli_stmt_bind_param($stmt, 'si', $lockName, $this->lockTimeoutSeconds);
+            $executed = mysqli_stmt_execute($stmt);
+            $result = $executed ? mysqli_stmt_get_result($stmt) : false;
+            $row = $result instanceof mysqli_result ? mysqli_fetch_assoc($result) : null;
+            mysqli_stmt_close($stmt);
+
+            if ((int) ($row['acquired'] ?? 0) !== 1) {
+                error_log("MySQLSessionHandler: Timed out waiting for session lock '{$lockName}'");
+                return false;
+            }
+
+            $this->lockName = $lockName;
+            return true;
+        } catch (Throwable $e) {
+            error_log('MySQLSessionHandler: Failed to acquire session lock: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /** Release the advisory lock held by this handler instance. */
+    private function releaseSessionLock(): bool
+    {
+        if ($this->lockName === null) {
+            return true;
+        }
+
+        if (!($this->link instanceof mysqli)) {
+            return false;
+        }
+
+        $lockName = $this->lockName;
+
+        try {
+            $stmt = mysqli_prepare($this->link, 'SELECT RELEASE_LOCK(?) AS released');
+            if (!$stmt) {
+                error_log('MySQLSessionHandler: Failed to prepare session unlock query: ' . mysqli_error($this->link));
+                return false;
+            }
+
+            mysqli_stmt_bind_param($stmt, 's', $lockName);
+            $executed = mysqli_stmt_execute($stmt);
+            $result = $executed ? mysqli_stmt_get_result($stmt) : false;
+            $row = $result instanceof mysqli_result ? mysqli_fetch_assoc($result) : null;
+            mysqli_stmt_close($stmt);
+
+            if ((int) ($row['released'] ?? 0) !== 1) {
+                return false;
+            }
+
+            $this->lockName = null;
+            return true;
+        } catch (Throwable $e) {
+            error_log('MySQLSessionHandler: Failed to release session lock: ' . $e->getMessage());
+            return false;
+        }
     }
     
     /**
@@ -82,7 +172,11 @@ class MySQLSessionHandler implements SessionHandlerInterface
     {
         if (!($this->link instanceof mysqli)) {
             error_log('MySQLSessionHandler: Database connection is not valid');
-            return '';
+            return false;
+        }
+
+        if (!$this->acquireSessionLock($id)) {
+            return false;
         }
         
         try {
@@ -92,7 +186,7 @@ class MySQLSessionHandler implements SessionHandlerInterface
             $result = mysqli_query($this->link, $query);
             if (!($result instanceof mysqli_result)) {
                 error_log('MySQLSessionHandler: Query failed: ' . mysqli_error($this->link));
-                return '';
+                return false;
             }
             
             if (mysqli_num_rows($result) > 0) {
@@ -103,7 +197,7 @@ class MySQLSessionHandler implements SessionHandlerInterface
             return '';
         } catch (Throwable $e) {
             error_log('MySQLSessionHandler: Read failed: ' . $e->getMessage());
-            return '';
+            return false;
         }
     }
     
@@ -120,33 +214,19 @@ class MySQLSessionHandler implements SessionHandlerInterface
             error_log('MySQLSessionHandler: Database connection is not valid');
             return false;
         }
+
+        if (!$this->acquireSessionLock($id)) {
+            return false;
+        }
         
         try {
-            // Check if session already exists
             $id = mysqli_real_escape_string($this->link, $id);
-            $checkQuery = "SELECT 1 FROM {$this->tableName} WHERE id = '$id' LIMIT 1";
-            
-            $result = mysqli_query($this->link, $checkQuery);
-            if (!($result instanceof mysqli_result)) {
-                error_log('MySQLSessionHandler: Check query failed: ' . mysqli_error($this->link));
-                return false;
-            }
-            
-            $sessionExists = mysqli_num_rows($result) > 0;
-            
-            // Escape data
             $escapedData = mysqli_real_escape_string($this->link, $data);
-            
-            if ($sessionExists) {
-                // Update existing session
-                $query = "UPDATE {$this->tableName} 
-                          SET data = '$escapedData', accessed_at = CURRENT_TIMESTAMP 
-                          WHERE id = '$id'";
-            } else {
-                // Insert new session
-                $query = "INSERT INTO {$this->tableName} (id, data, accessed_at) 
-                          VALUES ('$id', '$escapedData', CURRENT_TIMESTAMP)";
-            }
+            $query = "INSERT INTO {$this->tableName} (id, data, accessed_at)
+                      VALUES ('$id', '$escapedData', CURRENT_TIMESTAMP)
+                      ON DUPLICATE KEY UPDATE
+                        data = VALUES(data),
+                        accessed_at = CURRENT_TIMESTAMP";
             
             if (!mysqli_query($this->link, $query)) {
                 error_log('MySQLSessionHandler: Write query failed: ' . mysqli_error($this->link));
@@ -155,12 +235,8 @@ class MySQLSessionHandler implements SessionHandlerInterface
             
             return true;
         } catch (Throwable $e) {
-            $message = (string) $e->getMessage();
-            // Common during shutdown if page code already called mysqli_close($link).
-            if (stripos($message, 'already closed') === false) {
-                error_log('MySQLSessionHandler: Write failed (connection may be closed): ' . $message);
-            }
-            return true;  // Return true to suppress PHP's session write warning during shutdown
+            error_log('MySQLSessionHandler: Write failed: ' . $e->getMessage());
+            return false;
         }
     }
     

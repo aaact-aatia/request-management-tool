@@ -1,6 +1,6 @@
 # Future Plan 009: Configurable Intake Flows
 
-**Status:** Draft — Phase 1 under review
+**Status:** Phase 1.5 committed — Phase 2A **under review** (AJAX inline cascade + no-JS fallback; the 2026-07-21 correction pass passed its automated Google Chrome scenarios, including JavaScript-disabled validation, but broader manual and cross-browser acceptance remains outstanding)
 **Date Proposed:** 2026-07-17
 **Branch context:** `request-catalogue`
 **Estimated Effort:** Phased — see Implementation Phases below
@@ -408,14 +408,160 @@ summary.  Preview renders the flow server-side in the current language.
   catalogue is inserted as guidance-only (current tracked branch state; final hierarchy
   pending product confirmation — see Decisions Requiring Confirmation).
 
-### Phase 2 — Read-only flow resolver and renderer
+### Phase 2 — Read-only flow resolver and AJAX inline renderer ⚠️ Phase 2A under review
 
-- Session-backed step controller for custom flows.
-- `intake_flow_id` detection wired into `addrequest2-ajax1.php`.
-- Server-rendered steps with Continue and Back buttons.
-- No JavaScript required for custom flows.
-- `tblintakeresponses` rows written after request creation in `openrequest3.php`.
-- No admin editing yet; pilot data inserted manually.
+> **Note:** This phase was previously marked "implemented" before a correction
+> pass fixed several bugs (broken no-JS fallback, a non-functional language
+> switch, a missing Start Over control, non-transactional answer changes, a
+> raw `mysqli_close()` call, and duplicate/hardcoded strings). The
+> descriptions below reflect the *corrected* design. On 2026-07-21, automated
+> tests exercised the correction scenarios in the installed Google Chrome
+> browser against an isolated app/database clone, including a JavaScript-disabled
+> validation round trip and disposable required/optional freeform fixtures.
+> Broader manual testing and additional browser engines remain outstanding, so
+> the phase remains under review rather than implemented/complete.
+
+**Runtime behaviour (JavaScript enabled)**
+
+- Questions appear inline, immediately below the service selector that triggered
+  the flow, without any page reload.
+- Every previously answered question remains visible above the new question,
+  and remains a live, editable control (not disabled) so an earlier answer can
+  be changed at any time.
+- Changing an earlier answer waits for server confirmation before removing the
+  downstream questions from the page: the previous downstream content is left
+  in place until the change succeeds, and is only then replaced with the new
+  branch. On failure (validation error or network error) the control is
+  restored to its previously committed value and the downstream content is
+  left untouched.
+- Every question, guidance node, and destination node is rendered as one direct
+  child `.intake-path-item`. The same wrapper is used for AJAX fragments and
+  reconstructed paths, so a successful earlier-answer change removes the
+  complete old branch through one shared path-item removal function.
+- Selecting a question placeholder is not treated as an unrecorded clear:
+  the committed selection and its existing branch are restored immediately.
+- While a change is being submitted, every control in `#intake-workflow` is
+  disabled to prevent a second overlapping change from being started
+  elsewhere in the workflow.
+- Guidance nodes appear inline directly below the selection that reached them;
+  they never display a request-form button.
+- A "Continue to request form" button appears only when a valid destination node
+  is reached.
+- Race-condition protection: a generation counter + `AbortController` ensures a
+  stale *client-side* response cannot overwrite a newer one. Because aborting a
+  `fetch()` does not stop the corresponding PHP request from finishing on the
+  server, each run also carries a server-side monotonic `revision` counter;
+  every `action=step` submission must echo back the last revision it observed,
+  and the server rejects (without saving) any submission whose revision is
+  stale. This is an explicit optimistic-concurrency guard, not a database-level
+  mutex — it is considered adequate for a single-user run but is a documented
+  limitation, not a guarantee against every possible interleaving.
+- Changing the catalogue or service selector discards the active run and clears
+  the workflow area.
+
+**Language switching during a run**
+
+- The header's real language-toggle links (`<a lang=".." href="openrequest.php?lang=..">`,
+  rendered by `includes/template/header.php` via `get_language_toggle_url()`)
+  are used as-is — there is no separate `[data-intake-lang]` mechanism.
+- When a run is active, `openrequest.js` intercepts the click on that real
+  link and appends the current run token (`&run=TOKEN`) before performing a
+  genuine full-page navigation. It does not perform an AJAX fragment swap and
+  does not rely on anything the browser remembers (history/back-forward
+  state is never trusted).
+- On the new page load, `openrequest.php` reads `?run=TOKEN&lang=..` from the
+  query string, updates the run's stored language, and reconstructs the
+  validated decision path from the DB via `rmt_intake_render_full_path()`.
+  History and stored answers are preserved throughout.
+- `action=reconstruct` in `intake-flow.php` still exists and performs the same
+  reconstruction over AJAX, but is no longer invoked by `openrequest.js` for
+  language switching; it remains available for potential programmatic use.
+- No-JS language switching requires no special handling: `get_language_toggle_url()`
+  preserves the existing `?run=TOKEN` query parameter automatically when
+  building the toggle link, since it operates on the current request URI.
+
+**No-JavaScript fallback**
+
+- The flow-start `Continue` button is a real `type="submit"` button pointing at
+  `intake-flow.php`.  With JS it is hidden and the flow starts via `fetch()`.
+  Without JS it submits the cascade form normally.
+- After a no-JS start, `openrequest.php` detects `?run=TOKEN` in the GET query
+  and renders the full decision path using `rmt_intake_render_full_path()`.
+- When JavaScript hydrates that server-rendered fallback, it changes the real
+  fallback submit control into the conditional freeform Continue control,
+  hides irrelevant freeform fields, and synchronizes required attributes from
+  the selected option. With JavaScript disabled, the original forms, visible
+  freeform fields, and submit controls remain usable.
+- **Every** question in the no-JS path — including previously answered ones —
+  is wrapped in its own independent, non-nested `<form>` with a Continue
+  button, so any earlier answer can be changed and resubmitted, not just the
+  current/last question.
+- Freeform fields are always visible in no-JS mode (there is no JS available
+  to reveal them conditionally), and are labelled so the correct one can be
+  identified and validated server-side regardless of which option is chosen.
+- Every submitted form includes a hidden `client_revision` field (captured at
+  render time) so the same optimistic-concurrency guard used by the JS path
+  also applies to no-JS submissions.
+- Changing an earlier no-JS answer by resubmitting that form truncates the path
+  server-side and re-renders from the new branch after redirecting back to
+  `openrequest.php?run=TOKEN`.
+- A missing required freeform value retains the active run and exact submitted
+  option/text, redirects back to `openrequest.php?lang=LANG&run=TOKEN`, and
+  renders an accessible error summary linked to the invalid textarea. Native
+  conditional `required` is omitted in no-JS mode so choosing a different
+  option is not blocked by an irrelevant visible freeform field.
+
+**Start over**
+
+- A Start Over control is rendered next to `#intake-workflow` whenever a run
+  is active (both in the initial no-JS render and hydrated by JS on later
+  page loads via `data-intake-*` attributes on `#intake-workflow`).
+- No-JS: it is a real `<form>` posting `action=restart` to `intake-flow.php`,
+  which discards the run and redirects back to `openrequest.php`.
+- JS: the same form's submit is intercepted, but the workflow is not cleared
+  until `action=restart` succeeds. A failure retains the current path and shows
+  a localized error; success clears the path, resets the cascade, moves focus
+  back to Service type, and announces completion in a polite status region.
+
+**Implementation files**
+
+- `app/intake-flow.php`: POST-only AJAX controller returning JSON with HTML
+  fragments.  Actions: `start`, `step`, `reconstruct`, `restart`.
+  All exit paths call `rmt_intake_clean_exit($link)` (which ensures
+  `session_write_close()` before `mysqli_close()`) — including the GET
+  lang-switch malformed-token branch, which previously called `mysqli_close()`
+  directly.
+- `app/includes/intake-flow-helpers.php`: resolver, node loader, session
+  management, CSRF, navigation (answer + downstream pruning), reaudit mapping,
+  resource renderer, `rmt_intake_render_node_fragment()` (supports `select` and
+  `radio` presentations, option-level freeform fields, a `$noJs` mode for
+  always-visible freeform and never-disabled controls), `rmt_intake_render_full_path()`
+  (full conversation for no-JS rendering and post-language-switch reconstruction;
+  wraps every question node, not just the current one, in its own form when
+  `$noJs` is true).
+- `app/openrequest.php`: cascade form always visible; `#intake-workflow` container
+  placed outside the form (no nested-form violations), carrying `data-intake-run-token`,
+  `data-intake-csrf`, and `data-intake-revision` attributes for JS rehydration on
+  page load; no-JS run rendering via `$noJsFragment`; a Start Over control; and a
+  `window.RMT_INTAKE_STRINGS` blob sourced from the lang files for the strings
+  `openrequest.js` needs but cannot read directly.
+- `app/public/js/openrequest.js`: generation counter + `AbortController` for
+  client-side race-condition UX; a `client_revision` field on every `action=step`
+  submission for the actual server-side concurrency guard; event delegation on
+  `#intake-workflow` for answer selects, radios, freeform Continue, and retry;
+  a click handler on the real header language links (`#wb-lng a[lang]`,
+  `.lng-ofr a[lang]`) that performs a full-page navigation with the run token
+  appended; a submit-intercept handler for the Start Over form; all
+  client-facing strings sourced from `window.RMT_INTAKE_STRINGS` rather than
+  hardcoded English/French text.
+- `database/seeds/ssc/website-testing-v1.sql`: question nodes use `select`
+  presentation; idempotency path contains a self-healing `UPDATE` so existing
+  installs with `radio` presentation are corrected on the next seed run.
+- Destination classification IDs re-validated from DB on every render; never
+  trusted from browser input.
+- `intake_run_token` validated at `openrequest2.php` and `openrequest3.php`
+  boundaries; token-bypass prevention via `rmt_intake_validate_submission()`.
+- `tblintakeresponses` rows **not** written yet — this is Phase 2B.
 
 ### Phase 3 — Administrator editing, validation, preview, and publishing
 

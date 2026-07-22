@@ -11,6 +11,7 @@
 require_once __DIR__ . '/includes/session_start.php';
 require('sql.php');
 /** @var mysqli $link */
+require_once __DIR__ . '/includes/intake-flow-helpers.php';
 
 require_once __DIR__ . '/vendor/autoload.php';
 use League\CommonMark\CommonMarkConverter;
@@ -96,20 +97,47 @@ $stmt = $link->prepare(
             alert_text_en, alert_text_fr,
             needs_checklist, checklist_name_en, checklist_name_fr,
             checklist_url_en, checklist_url_fr,
-            needs_sprint_fields
+            needs_sprint_fields, intake_flow_id
      FROM tblsubservices WHERE id = ? AND status = 1 LIMIT 1'
 );
 $stmt->bind_param('i', $subserviceid);
 $stmt->execute();
 $sub = $stmt->get_result()->fetch_assoc();
 $stmt->close();
-mysqli_close($link);
 
 if (!$sub) {
+    mysqli_close($link);
     exit;
 }
 
-// Guidance-only subservice
+// ------------------------------------------------------------------
+// Rule 1: Published custom flow — checked FIRST, connection open here.
+// ------------------------------------------------------------------
+if (!empty($sub['intake_flow_id'])) {
+    $flow = rmt_intake_load_flow($link, (int) $sub['intake_flow_id']);
+    mysqli_close($link);
+    if ($flow) {
+        $cl = $isFr ? 'Continuer' : 'Continue';
+        ?>
+        <div class="form-group form-buttons" data-intake-autostart="1">
+            <input type="hidden" name="action" value="start">
+            <button type="submit" formaction="/intake-flow.php"
+                    class="btn btn-primary"><?= htmlspecialchars($cl) ?></button>
+        </div>
+        <?php
+    } else {
+        $errMsg = $isFr
+            ? "Ce service n'est pas disponible pour le moment. Veuillez r&eacute;essayer plus tard."
+            : 'This service is currently unavailable. Please try again later.';
+        ?>
+        <section class="alert alert-danger" role="alert"><p><?= $errMsg ?></p></section>
+        <?php
+    }
+    exit;
+}
+mysqli_close($link);
+
+// Rule 2: Guidance-only subservice
 if ($sub['is_guidance_only']) {
     $html = htmlspecialchars_decode(
         $isFr ? $sub['guidance_text_fr'] : $sub['guidance_text_en'],

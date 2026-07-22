@@ -40,6 +40,26 @@
 
 ## How to Run
 
+### Intake regressions
+
+The intake concurrency runner creates and removes its own MySQL 5.7 container:
+
+```bash
+scripts/run-intake-concurrency-test.sh
+```
+
+The no-JavaScript browser regression expects a seeded test application and
+installs `playwright-core` under `/tmp`, outside the repository:
+
+```bash
+RMT_BROWSER_BASE_URL=http://localhost:8081 scripts/run-intake-browser-tests.sh
+```
+
+It disables JavaScript before opening `openrequest.php`, selects the catalogue
+and service through server-rendered submissions, starts the flow without an
+AJAX-created run, completes the decision path, and continues to the request
+form.
+
 ### Option 1: Quick Smoke Test (No Docker required)
 ```bash
 # From project root

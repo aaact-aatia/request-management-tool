@@ -500,6 +500,17 @@ proc: BEGIN
         SET MESSAGE_TEXT = 'VALIDATION FAILED (published-v1): Service 28 is not attached to this exact flow.';
     END IF;
 
+    -- Self-heal: update presentation to 'select' if the seed was previously
+    -- installed with 'radio' presentation (rendering preference, not semantic
+    -- content; safe to change in-place since tblintakeresponses is empty in all
+    -- known installations of this v1 seed).
+    UPDATE tblintakenodes
+    SET    presentation = 'select'
+    WHERE  flow_id = v_flow_id
+      AND  node_type = 'question'
+      AND  status    = 1
+      AND  presentation != 'select';
+
     -- Compute counts for the success message
     SET v_node_count = (SELECT COUNT(*) FROM tblintakenodes WHERE flow_id=v_flow_id AND status=1);
     SET v_opt_count  = (SELECT COUNT(*) FROM tblintakeoptions o
@@ -539,7 +550,7 @@ proc: BEGIN
 
   -- Q1
   INSERT INTO tblintakenodes (flow_id, node_type, sort_order, presentation, prompt_en, prompt_fr)
-  VALUES (v_flow_id, 'question', 1, 'radio',
+  VALUES (v_flow_id, 'question', 1, 'select',
     'Is this a first-time assessment?',
     'S''agit-il d''une première évaluation?');
   SET v_node_q1 = LAST_INSERT_ID();
@@ -547,7 +558,7 @@ proc: BEGIN
   -- Q2
   INSERT INTO tblintakenodes (flow_id, node_type, sort_order, presentation,
     prompt_en, prompt_fr, intro_en, intro_fr)
-  VALUES (v_flow_id, 'question', 2, 'radio',
+  VALUES (v_flow_id, 'question', 2, 'select',
     'Have you completed the Easy Checks for Web Accessibility self-checklist?',
     'Avez-vous rempli la liste d''autoévaluation Vérifications faciles pour l''accessibilité Web?',
     'Please review the checklist before submitting your request.',
@@ -556,7 +567,7 @@ proc: BEGIN
 
   -- Q3
   INSERT INTO tblintakenodes (flow_id, node_type, sort_order, presentation, prompt_en, prompt_fr)
-  VALUES (v_flow_id, 'question', 3, 'radio',
+  VALUES (v_flow_id, 'question', 3, 'select',
     'Have you fixed all the issues found during the first assessment?',
     'Avez-vous corrigé tous les problèmes relevés lors de la première évaluation?');
   SET v_node_q3 = LAST_INSERT_ID();
@@ -564,7 +575,7 @@ proc: BEGIN
   -- Q4
   INSERT INTO tblintakenodes (flow_id, node_type, sort_order, presentation,
     prompt_en, prompt_fr, intro_en, intro_fr)
-  VALUES (v_flow_id, 'question', 4, 'radio',
+  VALUES (v_flow_id, 'question', 4, 'select',
     'Have you completed the Easy Checks for Web Accessibility self-checklist?',
     'Avez-vous rempli la liste d''autoévaluation Vérifications faciles pour l''accessibilité Web?',
     'Please review the checklist before submitting your reassessment request.',

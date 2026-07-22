@@ -8,13 +8,20 @@ require('sql.php');
 /** @var mysqli $link */
 require('includes/httpscheck.php');
 require('includes/helpers.php');
+require_once __DIR__ . '/includes/intake-flow-helpers.php';
 
 // Language detection
 $lang = detectLanguage();
 
 $draftData = [];
-if (isset($_SESSION['openrequest_draft']) && is_array($_SESSION['openrequest_draft'])) {
+if ($_SERVER['REQUEST_METHOD'] !== 'POST'
+    && isset($_SESSION['openrequest_draft'])
+    && is_array($_SESSION['openrequest_draft'])) {
     $draftData = $_SESSION['openrequest_draft'];
+    unset($_SESSION['openrequest_draft']);
+} elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // A direct form submission is authoritative. Never let a stale upload
+    // recovery draft replace its classification or validated intake token.
     unset($_SESSION['openrequest_draft']);
 }
 
@@ -109,11 +116,36 @@ $subserviceid2 = $draftData['subserviceid2'] ?? getPostValue('subserviceid2', ''
 $clientnotes  = $draftData['clientnotes']  ?? getPostValue('clientnotes');
 $language     = $draftData['language']     ?? getPostValue('language');
 
-// Flags
+// Intake flow run token — exact hex format validated by rmt_intake_validate_submission.
+$rawToken = (string) ($draftData['intake_run_token'] ?? ($_POST['intake_run_token'] ?? ''));
+
+// Flags — defaults, may be overridden by intake flow validation below.
 $reauditFlag = 0;
 $attach1 = $attach2 = $attach3 = "";
 $needsSprintFields = false;
 $subserviceName = '';
+
+// ============================================================================
+// Submission-boundary validation (shared helper).
+// Handles: malformed-token rejection, expired/tampered run rejection,
+// destination revalidation, AND token-bypass prevention (flow-required check).
+// Uses browser-posted IDs only for the no-token path. On success either
+// overrides classification from DB or confirms standard non-flow path.
+// ============================================================================
+$submissionResult = rmt_intake_validate_submission(
+    $link, $lang, $rawToken, $catalogueid, $serviceid, $subserviceid
+);
+
+$usingFlowDestination = false;
+$intakeRunToken = '';
+if ($submissionResult['flow']) {
+    $catalogueid  = $submissionResult['catalogueid'];
+    $serviceid    = $submissionResult['serviceid'];
+    $subserviceid = $submissionResult['subserviceid'];
+    $reauditFlag  = $submissionResult['reauditFlag'];
+    $intakeRunToken = $submissionResult['token'];
+    $usingFlowDestination = true;
+}
 
 // ============================================================================
 // DB LOOKUP: fetch subservice flags (sprint fields, checklist, name)
@@ -140,8 +172,14 @@ if ($subserviceid !== null) {
     }
 }
 
-// Validate checklist gate: if subservice requires checklist, subserviceid2 must be 'checklist_yes'
-if ($subserviceid !== null && isset($subRow['needs_checklist']) && $subRow['needs_checklist']) {
+// Standard submissions must pass the legacy checklist gate. A validated flow
+// destination already proves the visitor answered the flow's checklist branch;
+// requiring a second browser-controlled hidden value would reject that trusted
+// server-side outcome.
+if (!$usingFlowDestination
+    && $subserviceid !== null
+    && isset($subRow['needs_checklist'])
+    && $subRow['needs_checklist']) {
     if ($subserviceid2 !== 'checklist_yes') {
         // Redirect back; user bypassed the checklist gate
         header('Location: /openrequest.php?lang=' . $lang . '&status=accessdenied');
@@ -187,6 +225,9 @@ include 'includes/template/head.php';
             <input type="hidden" name="clientnotes" value="<?php echo htmlspecialchars($clientnotes, ENT_QUOTES); ?>">
             <input type="hidden" name="language" value="<?php echo htmlspecialchars($language, ENT_QUOTES); ?>">
             <input type="hidden" name="reauditFlag" value="<?php echo $reauditFlag; ?>">
+            <?php if ($intakeRunToken !== ''): ?>
+            <input type="hidden" name="intake_run_token" value="<?php echo htmlspecialchars($intakeRunToken, ENT_QUOTES); ?>">
+            <?php endif; ?>
             
             <?php
             // Request title

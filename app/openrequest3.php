@@ -14,6 +14,7 @@ if (!isset($link) || !($link instanceof mysqli)) {
     throw new RuntimeException('Database connection was not initialized in sql.php');
 }
 require_once('includes/helpers.php');
+require_once __DIR__ . '/includes/intake-flow-helpers.php';
 require_once('BlobStorage.php');
 require_once('emailController.php');
 
@@ -32,6 +33,27 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $subserviceid = rmt_optional_positive_int($_POST['subserviceid'] ?? null);
     $reauditFlag = (int)getPostValue('reauditFlag', 0);
     $statusid = 1; // Initial status
+
+    // Intake flow run token — exact hex format validated by rmt_intake_validate_submission.
+    $rawToken = (string) ($_POST['intake_run_token'] ?? '');
+
+    // ============================================================================
+    // Submission-boundary validation (shared helper — mirrors openrequest2.php).
+    // Re-validates even after openrequest2.php, because browser fields can change
+    // between the two boundaries. The run is NOT discarded here; Phase 2B needs it.
+    // ============================================================================
+    $submissionResult = rmt_intake_validate_submission(
+        $link, $lang, $rawToken, $catalogueid, $serviceid, $subserviceid
+    );
+
+    $intakeRunToken = '';
+    if ($submissionResult['flow']) {
+        $catalogueid    = $submissionResult['catalogueid'];
+        $serviceid      = $submissionResult['serviceid'];
+        $subserviceid   = $submissionResult['subserviceid'];
+        $reauditFlag    = $submissionResult['reauditFlag'];
+        $intakeRunToken = $submissionResult['token'];
+    }
 
     $serviceidSql    = $serviceid    !== null ? $serviceid    : 'NULL';
     $subserviceidSql = $subserviceid !== null ? $subserviceid : 'NULL';
@@ -109,11 +131,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $validatedUploads = rmt_validate_uploaded_files($_FILES['fileToUpload'], $lang);
         if (!empty($validatedUploads['errors'])) {
             $_SESSION['openrequest_draft'] = [
-                'catalogueid' => $_POST['catalogueid'] ?? '',
-                'serviceid' => $_POST['serviceid'] ?? '',
-                'subserviceid' => $_POST['subserviceid'] ?? '',
+                'catalogueid' => $catalogueid,
+                'serviceid'   => $serviceid !== null ? (string) $serviceid : '',
+                'subserviceid'=> $subserviceid !== null ? (string) $subserviceid : '',
                 'subserviceid2' => $_POST['subserviceid2'] ?? '',
-                'reauditFlag' => $_POST['reauditFlag'] ?? '',
+                'reauditFlag' => $reauditFlag,
+                'intake_run_token' => $intakeRunToken,
                 'requesttitle' => $_POST['requesttitle'] ?? '',
                 'audience' => $_POST['audience'] ?? '',
                 'clientlname' => $_POST['clientlname'] ?? '',

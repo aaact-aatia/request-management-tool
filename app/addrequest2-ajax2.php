@@ -14,6 +14,7 @@
 require_once __DIR__ . '/includes/session_start.php';
 require('sql.php');
 /** @var mysqli $link */
+require_once __DIR__ . '/includes/intake-flow-helpers.php';
 
 require_once __DIR__ . '/vendor/autoload.php';
 use League\CommonMark\CommonMarkConverter;
@@ -81,7 +82,7 @@ $svcStmt = $link->prepare(
             alert_text_en, alert_text_fr,
             needs_checklist, checklist_name_en, checklist_name_fr,
             checklist_url_en, checklist_url_fr,
-            has_other_option
+            has_other_option, intake_flow_id
      FROM tblservices WHERE id = ? AND status = 1 LIMIT 1'
 );
 $svcStmt->bind_param('i', $serviceid);
@@ -95,7 +96,37 @@ if (!$svc) {
 }
 
 // ------------------------------------------------------------------
-// Guidance-only service: show panel, no form
+// Rule 1: Published custom intake flow — checked FIRST, connection
+// still open here. Uses rmt_intake_load_flow() for consistent
+// validation; no separate raw query needed.
+// ------------------------------------------------------------------
+if (!empty($svc['intake_flow_id'])) {
+    $flow = rmt_intake_load_flow($link, (int) $svc['intake_flow_id']);
+    mysqli_close($link);
+    if ($flow) {
+        ?>
+        <div class="form-group form-buttons" data-intake-autostart="1">
+            <input type="hidden" name="action" value="start">
+            <button type="submit" formaction="/intake-flow.php"
+                    class="btn btn-primary"><?= htmlspecialchars($continueLabel) ?></button>
+        </div>
+        <?php
+    } else {
+        // Flow attached but draft/archived/invalid — fail closed, do not fall through.
+        $errMsg = $isFr
+            ? "Ce service n'est pas disponible pour le moment. Veuillez r&eacute;essayer plus tard ou contacter le Bureau de l'accessibilit&eacute; de la TI."
+            : "This service is currently unavailable. Please try again later or contact the IT Accessibility Office.";
+        ?>
+        <section class="alert alert-danger" role="alert">
+            <p><?= $errMsg ?></p>
+        </section>
+        <?php
+    }
+    exit;
+}
+
+// ------------------------------------------------------------------
+// Rule 2: Guidance-only service
 // ------------------------------------------------------------------
 if ($svc['is_guidance_only']) {
     $html = htmlspecialchars_decode(
