@@ -41,8 +41,8 @@ return [
     'main_heading' => 'Besoin d\'aide? Créer une nouvelle demande',
     
     // Alert messages
-    'alert_failed_heading' => 'Échec',
-    'alert_failed_message' => 'La nouvelle demande n\'a pas fonctionné, veuillez réessayer, merci!',
+    'alert_failed_heading' => 'Vérifiez votre sélection de service',
+    'alert_failed_message' => 'La sélection du catalogue, du service ou du sous-service n’est plus valide. Sélectionnez de nouveau les options connexes.',
     'alert_access_denied_heading' => 'Accès refusé:',
     'alert_access_denied_message' => 'Vous ne disposez pas d\'un niveau d\'accès suffisant pour afficher cette page, désolé!',
     'request_intake_source' => 'Source de la demande',
@@ -89,11 +89,15 @@ return [
     'admin_notes' => 'Notes de demande (AATIA):',
     'add_request' => 'Ajouter une demande',
     
-    // AJAX dropdown labels
+    // Intake dropdown labels
     'service_name' => 'Nom du service:',
     'select_service' => 'Sélectionnez un nom de service',
     'subservice_name' => 'Nom du sous-service:',
     'select_subservice' => 'Sélectionnez un nom de sous-service',
+    'intake_instruction' => 'Sélectionnez un catalogue, puis choisissez son service et son sous-service, le cas échéant.',
+    'intake_request_type' => 'Type de demande',
+    'intake_select_request_type' => 'Sélectionnez un catalogue, un service et un sous-service, le cas échéant',
+    'intake_continue' => 'Continuer',
     'active_label' => 'Actif',
     'inactive_label' => 'Inactif',
     'status_column' => 'État',

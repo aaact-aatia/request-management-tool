@@ -28,6 +28,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $catalogueid = (int)getPostValue('catalogueid', 0);
     $serviceid = (int)getPostValue('serviceid', 0);
     $subserviceid = (int)getPostValue('subserviceid', 0);
+
+    $selection = rmt_validate_intake_selection($link, $catalogueid, $serviceid, $subserviceid);
+    if ($selection === null) {
+        header("location:/openrequest.php?lang={$lang}&status=failed#intake-error");
+        exit();
+    }
+
+    $catalogueid = $selection['catalogueid'];
+    $serviceid = $selection['serviceid'];
+    $subserviceid = $selection['subserviceid'];
     $reauditFlag = (int)getPostValue('reauditFlag', 0);
     $statusid = 1; // Initial status
     
@@ -296,6 +306,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if ($result2 && mysqli_num_rows($result2) > 0) {
         $row = mysqli_fetch_assoc($result2);
         $servicename = $row[$nameField];
+    } elseif ($serviceid === 0) {
+        $servicename = $cataloguename;
     }
     
     $domain = app_base_url();

@@ -381,6 +381,93 @@ function getSubservicesByService($link, $serviceid, $lang = 'en') {
     );
 }
 
+function rmt_validate_intake_selection(mysqli $link, int $catalogueId, int $serviceId, int $subserviceId = 0): ?array {
+    if ($catalogueId <= 0 || $serviceId < 0 || $subserviceId < 0) {
+        return null;
+    }
+
+    if ($serviceId === 0) {
+        $catalogueStmt = mysqli_prepare(
+            $link,
+            'SELECT c.id FROM tblcatalogue c
+             WHERE c.id = ? AND c.status = 1
+               AND NOT EXISTS (
+                   SELECT 1 FROM tblservices s
+                   WHERE s.catalogueid = c.id AND s.status = 1
+               )'
+        );
+        mysqli_stmt_bind_param($catalogueStmt, 'i', $catalogueId);
+        mysqli_stmt_execute($catalogueStmt);
+        $validTerminalCatalogue = mysqli_stmt_get_result($catalogueStmt)->num_rows === 1;
+        mysqli_stmt_close($catalogueStmt);
+
+        if (!$validTerminalCatalogue || $subserviceId !== 0) {
+            return null;
+        }
+
+        return [
+            'catalogueid' => $catalogueId,
+            'serviceid' => 0,
+            'subserviceid' => 0
+        ];
+    }
+
+    $serviceStmt = mysqli_prepare(
+        $link,
+        'SELECT s.id FROM tblservices s
+         INNER JOIN tblcatalogue c ON c.id = s.catalogueid
+         WHERE s.id = ? AND s.catalogueid = ? AND s.status = 1 AND c.status = 1'
+    );
+    mysqli_stmt_bind_param($serviceStmt, 'ii', $serviceId, $catalogueId);
+    mysqli_stmt_execute($serviceStmt);
+    $validService = mysqli_stmt_get_result($serviceStmt)->num_rows === 1;
+    mysqli_stmt_close($serviceStmt);
+
+    if (!$validService) {
+        return null;
+    }
+
+    $countStmt = mysqli_prepare(
+        $link,
+        'SELECT COUNT(*) AS total FROM tblsubservices WHERE serviceid = ? AND status = 1'
+    );
+    mysqli_stmt_bind_param($countStmt, 'i', $serviceId);
+    mysqli_stmt_execute($countStmt);
+    $subserviceCount = (int) mysqli_fetch_assoc(mysqli_stmt_get_result($countStmt))['total'];
+    mysqli_stmt_close($countStmt);
+
+    if ($subserviceCount === 0) {
+        return [
+            'catalogueid' => $catalogueId,
+            'serviceid' => $serviceId,
+            'subserviceid' => 0
+        ];
+    }
+
+    if ($subserviceId <= 0) {
+        return null;
+    }
+
+    $subserviceStmt = mysqli_prepare(
+        $link,
+        'SELECT id FROM tblsubservices WHERE id = ? AND serviceid = ? AND status = 1'
+    );
+    mysqli_stmt_bind_param($subserviceStmt, 'ii', $subserviceId, $serviceId);
+    mysqli_stmt_execute($subserviceStmt);
+    $validSubservice = mysqli_stmt_get_result($subserviceStmt)->num_rows === 1;
+    mysqli_stmt_close($subserviceStmt);
+
+    if (!$validSubservice) {
+        return null;
+    }
+
+    return [
+        'catalogueid' => $catalogueId,
+        'serviceid' => $serviceId,
+        'subserviceid' => $subserviceId
+    ];
+}
+
 function rmt_get_sla_days_required_for_request($link, int $serviceId = 0, int $subserviceId = 0): int {
     $subserviceId = (int) $subserviceId;
     $serviceId = (int) $serviceId;
@@ -1077,7 +1164,8 @@ function getTeamMembersByContact($link, $contactid) {
 function renderTextInput($id, $label, $value = '', $required = false, $readonly = false, $type = 'text', $extraAttrs = '') {
     $requiredAttr = $required ? 'required' : '';
     $readonlyAttr = $readonly ? 'readonly="readonly"' : '';
-    $requiredLabel = $required ? ' <strong>(required)</strong>' : '';
+    $requiredText = (($_SESSION['lang'] ?? 'en') === 'fr') ? 'obligatoire' : 'required';
+    $requiredLabel = $required ? " <strong>($requiredText)</strong>" : '';
     $escapedValue = htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8');
     
     return <<<HTML
@@ -1091,7 +1179,8 @@ HTML;
 
 function renderDateInput($id, $label, $value = '', $required = false, $min = null, $max = null, $readonly = false) {
     $requiredAttr = $required ? 'required' : '';
-    $requiredLabel = $required ? ' <strong>(required)</strong>' : '';
+    $requiredText = (($_SESSION['lang'] ?? 'en') === 'fr') ? 'obligatoire' : 'required';
+    $requiredLabel = $required ? " <strong>($requiredText)</strong>" : '';
     $minAttr = $min ? "min=\"$min\"" : '';
     $maxAttr = $max ? "max=\"$max\"" : '';
     $readonlyAttr = $readonly ? 'readonly="readonly"' : '';
@@ -1109,7 +1198,8 @@ HTML;
 function renderTextarea($id, $label, $value = '', $required = false, $readonly = false, $rows = 10) {
     $requiredAttr = $required ? 'required' : '';
     $readonlyAttr = $readonly ? 'readonly' : '';
-    $requiredLabel = $required ? ' <strong>(required)</strong>' : '';
+    $requiredText = (($_SESSION['lang'] ?? 'en') === 'fr') ? 'obligatoire' : 'required';
+    $requiredLabel = $required ? " <strong>($requiredText)</strong>" : '';
     $escapedValue = htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8');
     
     return <<<HTML
@@ -1123,7 +1213,8 @@ HTML;
 
 function renderSelect($id, $label, $options, $selectedValue = '', $required = false, $emptyText = 'Make your selection', $disabled = false) {
     $requiredAttr = $required ? 'required' : '';
-    $requiredLabel = $required ? ' <strong>(required)</strong>' : '';
+    $requiredText = (($_SESSION['lang'] ?? 'en') === 'fr') ? 'obligatoire' : 'required';
+    $requiredLabel = $required ? " <strong>($requiredText)</strong>" : '';
     $disabledAttr = $disabled ? 'disabled="disabled"' : '';
     
     $html = <<<HTML

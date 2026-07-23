@@ -41,8 +41,8 @@ return [
     'main_heading' => 'Need help? Create a new request',
     
     // Alert messages
-    'alert_failed_heading' => 'Failed',
-    'alert_failed_message' => 'The new request did not work, please try again, thank you!',
+    'alert_failed_heading' => 'Check your service selection',
+    'alert_failed_message' => 'The catalogue, service, or sub-service selection is no longer valid. Select the related options again.',
     'alert_access_denied_heading' => 'Access denied:',
     'alert_access_denied_message' => 'You don\'t have sufficient access level to view that page, sorry!',
     'request_intake_source' => 'Request intake source',
@@ -89,11 +89,15 @@ return [
     'admin_notes' => 'Request notes (AAACT):',
     'add_request' => 'Add request',
     
-    // AJAX dropdown translations
+    // Intake dropdown translations
     'service_name' => 'Service name:',
     'select_service' => 'Select a service name',
     'subservice_name' => 'Sub-service name:',
     'select_subservice' => 'Select a sub-service name',
+    'intake_instruction' => 'Select a catalogue, then choose its service and sub-service when available.',
+    'intake_request_type' => 'Request type',
+    'intake_select_request_type' => 'Select a catalogue, service and sub-service when available',
+    'intake_continue' => 'Continue',
     'active_label' => 'Active',
     'inactive_label' => 'Inactive',
     'status_column' => 'Status',
