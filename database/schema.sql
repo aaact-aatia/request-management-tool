@@ -1,9 +1,5 @@
--- RMT Database Seed File
--- Creates schema and inserts dummy data for local development
---
--- NOTE: Catalogue/Services dropdowns are HARDCODED in the PHP files (addrequest2-ajax*.php)
--- not database-driven. Those tables exist but aren't used by the dropdown logic.
--- This seed file focuses on tables actually needed for the app to function.
+-- RMT database schema.
+-- Catalogue, service, and subservice relationships drive the public intake.
 
 SET NAMES utf8mb4;
 SET CHARACTER SET utf8mb4;
@@ -53,7 +49,10 @@ CREATE TABLE IF NOT EXISTS `tblservices` (
   `contactid` int(11) DEFAULT NULL,
   `status` tinyint(1) DEFAULT 1,
   PRIMARY KEY (`id`),
-  KEY `catalogueid` (`catalogueid`)
+  KEY `catalogueid` (`catalogueid`),
+  CONSTRAINT `fk_tblservices_catalogue`
+    FOREIGN KEY (`catalogueid`) REFERENCES `tblcatalogue` (`id`)
+    ON UPDATE RESTRICT ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `tblsubservices` (
@@ -65,7 +64,10 @@ CREATE TABLE IF NOT EXISTS `tblsubservices` (
   `contactid` int(11) DEFAULT NULL,
   `status` tinyint(1) DEFAULT 1,
   PRIMARY KEY (`id`),
-  KEY `serviceid` (`serviceid`)
+  KEY `serviceid` (`serviceid`),
+  CONSTRAINT `fk_tblsubservices_service`
+    FOREIGN KEY (`serviceid`) REFERENCES `tblservices` (`id`)
+    ON UPDATE RESTRICT ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `tblsources` (
