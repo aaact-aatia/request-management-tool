@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	rmt_admin_query($link,$sql);
 	
 	// Now redirect
-	header("location:/catalogue-sub-mgmt.php?lang=$lang?id=$serviceid&cid=$catalogueid&status=success"); 
+	header("location:/catalogue-sub-mgmt.php?lang=$lang&id=$serviceid&cid=$catalogueid&status=success");
 	exit();
 }
 

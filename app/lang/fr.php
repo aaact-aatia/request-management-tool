@@ -94,6 +94,9 @@ return [
     'select_service' => 'Sélectionnez un nom de service',
     'subservice_name' => 'Nom du sous-service:',
     'select_subservice' => 'Sélectionnez un nom de sous-service',
+    'active_label' => 'Actif',
+    'inactive_label' => 'Inactif',
+    'status_column' => 'État',
     
     // Contacts/Teams page (legacy keys)
     'contacts_page_title' => 'Gestion des équipes - Outil de gestion des demandes - Bureau de l\'accessibilité de la TI',

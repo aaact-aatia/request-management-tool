@@ -94,6 +94,9 @@ return [
     'select_service' => 'Select a service name',
     'subservice_name' => 'Sub-service name:',
     'select_subservice' => 'Select a sub-service name',
+    'active_label' => 'Active',
+    'inactive_label' => 'Inactive',
+    'status_column' => 'Status',
     
     // Contacts/Teams page (legacy keys)
     'contacts_page_title' => 'Teams management - Request Management Tool - IT Accessibility Office',

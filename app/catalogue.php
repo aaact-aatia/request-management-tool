@@ -146,10 +146,9 @@ include 'includes/template/head.php';
 				$sql = "SELECT c.*, t.nameen AS team_nameen, t.namefr AS team_namefr
 						FROM tblcatalogue c
 						LEFT JOIN tblteams t ON t.id = c.contactid
-						WHERE c.status = '1'
 						ORDER BY c.{$nameColumn} ASC";
 			} else {
-				$sql = "SELECT * FROM tblcatalogue WHERE status = '1' ORDER BY {$nameColumn} ASC";
+				$sql = "SELECT * FROM tblcatalogue ORDER BY {$nameColumn} ASC";
 			}
 			//echo $sql;
 			
@@ -160,10 +159,11 @@ include 'includes/template/head.php';
 			<table class="wb-tables wb-tables-filter table table-striped table-hover" data-wb-tables='{ "ordering" : true }'>
 				<thead>
 					<tr>
-						<th><?= htmlspecialchars($langFile['catalogue_name_column']) ?></th>
-						<th><?= htmlspecialchars($langFile['catalogue_contact_group_column'] ?? (($_SESSION['lang'] === 'fr') ? 'Groupe de contact' : 'Contact group')) ?></th>
-						<th><?= htmlspecialchars($langFile['catalogue_services_column']) ?></th>
-						<th><?= htmlspecialchars($langFile['actions_column']) ?></th>
+						<th scope="col"><?= htmlspecialchars($langFile['catalogue_name_column']) ?></th>
+						<th scope="col"><?= htmlspecialchars($langFile['status_column']) ?></th>
+						<th scope="col"><?= htmlspecialchars($langFile['catalogue_contact_group_column'] ?? (($_SESSION['lang'] === 'fr') ? 'Groupe de contact' : 'Contact group')) ?></th>
+						<th scope="col"><?= htmlspecialchars($langFile['catalogue_services_column']) ?></th>
+						<th scope="col"><?= htmlspecialchars($langFile['actions_column']) ?></th>
 					</tr>
 				</thead>
 				<tbody>
@@ -174,7 +174,8 @@ include 'includes/template/head.php';
 						$catalogueid = $row['id'];
 					?>
 						<tr>
-							<td><?php echo htmlspecialchars($row[$nameColumn]);?><br /><?php if ($row['survey']==0) { echo '<span class="glyphicon glyphicon-warning-sign"></span> ' . htmlspecialchars($langFile['catalogue_surveys_not_sent']); } else { echo '<span class="glyphicon glyphicon-ok"></span> ' . htmlspecialchars($langFile['catalogue_surveys_sent']); }?></td>
+							<th scope="row"><?php echo htmlspecialchars($row[$nameColumn]);?><br /><?php if ($row['survey']==0) { echo '<span class="glyphicon glyphicon-warning-sign"></span> ' . htmlspecialchars($langFile['catalogue_surveys_not_sent']); } else { echo '<span class="glyphicon glyphicon-ok"></span> ' . htmlspecialchars($langFile['catalogue_surveys_sent']); }?></th>
+							<td><?= htmlspecialchars((int)$row['status'] === 1 ? $langFile['active_label'] : $langFile['inactive_label']) ?></td>
 							<td>
 								<?php
 								$contactGroupName = '';

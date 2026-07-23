@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	$nameen = mysqli_real_escape_string($link,$_POST['nameen']);
 	$namefr = mysqli_real_escape_string($link,$_POST['namefr']);
 	$sds = mysqli_real_escape_string($link,$_POST['sds']);
-	$status = 1;
+	$status = isset($_POST['status']) ? 1 : 0;
 	$noerror = false;
 	
 	// Custom form validation
@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 
 	// If error detected send user back to modal dialog
 	if ($noerror) {
-		header("location:/catalogue-mgmt.php?lang={$lang_code}?id=$catalogueid&status=failed"); 
+		header("location:/catalogue-mgmt.php?lang={$lang_code}&id=$catalogueid&status=failed");
 		exit();
 	}
 	
@@ -48,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	rmt_admin_query($link,$sql);
 	
 	// Now redirect
-	header("location:/catalogue-mgmt.php?lang={$lang_code}?id=$catalogueid&status=success"); 
+	header("location:/catalogue-mgmt.php?lang={$lang_code}&id=$catalogueid&status=success");
 	exit();
 }
 
@@ -70,6 +70,7 @@ $translations = [
 		'sds' => 'Service delivery standard:',
 		'days' => 'days',
 		'required' => '(required)',
+		'active' => 'Active',
 		'add_button' => 'Add'
 	],
 	'fr' => [
@@ -79,6 +80,7 @@ $translations = [
 		'sds' => 'Norme de prestation de services:',
 		'days' => 'jours',
 		'required' => '(requis)',
+		'active' => 'Actif',
 		'add_button' => 'Ajouter'
 	]
 ];
@@ -110,6 +112,9 @@ $t = $translations[$lang_code];
 				}
 				?>
 			</select>
+		</div>
+		<div class="checkbox">
+			<label for="status"><input type="checkbox" id="status" name="status" value="1" checked> <?= htmlspecialchars($t['active']) ?></label>
 		</div>
 		<div class="form-group form-buttons">
 			<button type="submit" class="btn btn-default"><?= htmlspecialchars($t['add_button']) ?></button>

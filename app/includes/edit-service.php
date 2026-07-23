@@ -28,6 +28,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	$nameen = mysqli_real_escape_string($link,$_POST['nameen']);
 	$namefr = mysqli_real_escape_string($link,$_POST['namefr']);
 	$sds = mysqli_real_escape_string($link,$_POST['sds']);
+	$status = isset($_POST['status']) ? 1 : 0;
 	$noerror = false;
 	
 	// Custom form validation
@@ -42,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	}
 	
 	// Create SQL statement
-	$sql = "UPDATE `tblservices` SET `nameen` = '$nameen', `namefr` = '$namefr', `sds` = '$sds' WHERE id='$serviceid'";
+	$sql = "UPDATE `tblservices` SET `nameen` = '$nameen', `namefr` = '$namefr', `sds` = '$sds', `status` = '$status' WHERE id='$serviceid'";
 	//echo $sql;
 	rmt_admin_query($link,$sql);
 	
@@ -88,6 +89,9 @@ if(rmt_result_num_rows($result2)>0){
 				}
 				?>
 			</select>
+		</div>
+		<div class="checkbox">
+			<label for="status"><input type="checkbox" id="status" name="status" value="1"<?php if ((int)$row2['status'] === 1) echo ' checked'; ?>> <?= $lang_code === 'fr' ? 'Actif' : 'Active' ?></label>
 		</div>
 		<div class="form-group form-buttons">
 			<button type="submit" class="btn btn-default"><?php echo $lang_code === 'en' ? 'Save' : 'Sauvegarder'; ?></button>

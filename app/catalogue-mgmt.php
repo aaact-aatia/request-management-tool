@@ -40,7 +40,13 @@ else{
 }
 
 // Now first get the ID
-$catalogueid = $_GET['id'];
+$catalogueid = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT, [
+	'options' => ['min_range' => 1]
+]);
+if (!$catalogueid) {
+	header("location:/catalogue.php?lang={$_SESSION['lang']}");
+	exit();
+}
 
 // Determine which name column to use
 $nameColumn = ($_SESSION['lang'] === 'fr') ? 'namefr' : 'nameen';
@@ -48,11 +54,12 @@ $nameColumn = ($_SESSION['lang'] === 'fr') ? 'namefr' : 'nameen';
 // Grab the catalogue name
 $sql = "SELECT * FROM tblcatalogue WHERE id='$catalogueid'";
 $result = mysqli_query($link,$sql);
-if(mysqli_num_rows($result)>0) {
-	while($row = mysqli_fetch_array($result)) {
-		$cataloguename = $row[$nameColumn];
-	}
+if (!$result || mysqli_num_rows($result) === 0) {
+	header("location:/catalogue.php?lang={$_SESSION['lang']}");
+	exit();
 }
+$row = mysqli_fetch_array($result);
+$cataloguename = $row[$nameColumn];
 
 $pageTitle = $cataloguename . ' - ' . $lang['catalogue_mgmt_heading_suffix'];
 $pageDescription = '';
@@ -90,7 +97,7 @@ include 'includes/template/head.php';
 			
 			<?php
 			// Construct SQL statement
-			$sql = "SELECT * FROM tblservices WHERE catalogueid = '$catalogueid' AND status = '1' ORDER BY {$nameColumn} ASC";
+			$sql = "SELECT * FROM tblservices WHERE catalogueid = '$catalogueid' ORDER BY {$nameColumn} ASC";
 			//echo $sql;
 			
 			$result = mysqli_query($link,$sql);
@@ -100,9 +107,10 @@ include 'includes/template/head.php';
 			<table class="wb-tables wb-tables-filter table table-striped table-hover" data-wb-tables='{ "ordering" : true }'>
 				<thead>
 					<tr>
-						<th><?= htmlspecialchars($lang['catalogue_mgmt_service_name_column']) ?></th>
-						<th><?= htmlspecialchars($lang['catalogue_mgmt_subservices_column']) ?></th>
-						<th><?= htmlspecialchars($lang['actions_column']) ?></th>
+						<th scope="col"><?= htmlspecialchars($lang['catalogue_mgmt_service_name_column']) ?></th>
+						<th scope="col"><?= htmlspecialchars($lang['status_column']) ?></th>
+						<th scope="col"><?= htmlspecialchars($lang['catalogue_mgmt_subservices_column']) ?></th>
+						<th scope="col"><?= htmlspecialchars($lang['actions_column']) ?></th>
 					</tr>
 				</thead>
 				<tbody>
@@ -113,11 +121,12 @@ include 'includes/template/head.php';
 					$serviceid = $row['id'];
 				?>
 					<tr>
-						<td><?php echo htmlspecialchars($row[$nameColumn]); if (!empty($row['sds'])) { echo ' <small class="label label-success">' . (int)$row['sds'] . ' ' . ($_SESSION['lang'] === 'fr' ? 'jour(s)' : 'day(s)') . '</small>'; } ?></td>
+						<th scope="row"><?php echo htmlspecialchars($row[$nameColumn]); if (!empty($row['sds'])) { echo ' <small class="label label-success">' . (int)$row['sds'] . ' ' . ($_SESSION['lang'] === 'fr' ? 'jour(s)' : 'day(s)') . '</small>'; } ?></th>
+						<td><?= htmlspecialchars((int)$row['status'] === 1 ? $lang['active_label'] : $lang['inactive_label']) ?></td>
 						<td>
 						<?php 
 						// Grab the services related to this catalogue item
-						$sql2 = "SELECT * FROM tblsubservices WHERE serviceid = '$serviceid' AND status = '1' ORDER BY {$nameColumn} ASC";
+						$sql2 = "SELECT * FROM tblsubservices WHERE serviceid = '$serviceid' ORDER BY {$nameColumn} ASC";
 						$result2 = mysqli_query($link,$sql2);	
 						if(mysqli_num_rows($result2)>0){
 						?>
