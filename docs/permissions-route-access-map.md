@@ -65,10 +65,6 @@ Access classes:
 |---|---|---|---|
 | `app/addrequest-ajax1.php` | `PUBLIC_GUEST` (if intake dependency) | Public intake dependency only | Validate no internal data leakage. |
 | `app/addrequest-ajax2.php` | `PUBLIC_GUEST` (if intake dependency) | Public intake dependency only | Validate no internal data leakage. |
-| `app/addrequest2-ajax1.php` | `PUBLIC_GUEST` (if intake dependency) | Public intake dependency only | Validate only public dropdown metadata. |
-| `app/addrequest2-ajax2.php` | `PUBLIC_GUEST` (if intake dependency) | Public intake dependency only | Validate only public dropdown metadata. |
-| `app/addrequest2-ajax3.php` | `PUBLIC_GUEST` (if intake dependency) | Public intake dependency only | Validate only public dropdown metadata. |
-| `app/addrequest2-ajax4.php` | `PUBLIC_GUEST` (if intake dependency) | Public intake dependency only | Validate only public dropdown metadata. |
 
 ## Include endpoints (write actions)
 
