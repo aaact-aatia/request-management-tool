@@ -104,7 +104,7 @@ include 'includes/template/header.php';
 			}
 			?>
 			
-			<div class="pull-right"><a class="wb-lbx btn btn-primary mrgn-bttm-md" href="includes/add-subservice.php?id=<?php echo $serviceid ?>&cid=<?php echo $catalogueid ?>"><?= htmlspecialchars($langFile['catalogue_sub_mgmt_add_button']) ?></a></div>
+			<div class="pull-right"><a class="wb-lbx lbx-modal btn btn-primary mrgn-bttm-md" href="includes/add-subservice.php?id=<?php echo $serviceid ?>&cid=<?php echo $catalogueid ?>"><?= htmlspecialchars($langFile['catalogue_sub_mgmt_add_button']) ?></a></div>
 			<div class="clearfix"></div>
 			
 			<?php
@@ -133,7 +133,7 @@ include 'includes/template/header.php';
 					<tr>
 						<td><?php echo htmlspecialchars($row[$nameColumn]); if (!empty($row['sds'])) { echo ' <small class="label label-success">' . (int)$row['sds'] . ' ' . ($_SESSION['lang'] === 'fr' ? 'jour(s)' : 'day(s)') . '</small>'; } ?></td>
 						<td>
-							<a class="wb-lbx btn btn-primary btn-block" href="includes/edit-subservice.php?id=<?php echo $row['id'];?>&sid=<?php echo $serviceid ?>&cid=<?php echo $catalogueid ?>"><?= htmlspecialchars($langFile['edit_button']) ?><span class="wb-inv"> <?php echo htmlspecialchars($row[$nameColumn]) ?></span> <?= htmlspecialchars($langFile['catalogue_sub_mgmt_subservice_label']) ?></a> <a class="wb-lbx btn btn-primary btn-block" href="includes/delete-subservice.php?id=<?php echo $row['id'];?>&sid=<?php echo $serviceid ?>&cid=<?php echo $catalogueid ?>"><?= htmlspecialchars($langFile['delete_button']) ?><span class="wb-inv"> <?php echo htmlspecialchars($row[$nameColumn]) ?></span> <?= htmlspecialchars($langFile['catalogue_sub_mgmt_subservice_label']) ?></a>
+							<a class="wb-lbx lbx-modal btn btn-primary btn-block" href="includes/edit-subservice.php?id=<?php echo $row['id'];?>&sid=<?php echo $serviceid ?>&cid=<?php echo $catalogueid ?>"><?= htmlspecialchars($langFile['edit_button']) ?><span class="wb-inv"> <?php echo htmlspecialchars($row[$nameColumn]) ?></span> <?= htmlspecialchars($langFile['catalogue_sub_mgmt_subservice_label']) ?></a> <a class="wb-lbx lbx-modal btn btn-primary btn-block" href="includes/delete-subservice.php?id=<?php echo $row['id'];?>&sid=<?php echo $serviceid ?>&cid=<?php echo $catalogueid ?>"><?= htmlspecialchars($langFile['delete_button']) ?><span class="wb-inv"> <?php echo htmlspecialchars($row[$nameColumn]) ?></span> <?= htmlspecialchars($langFile['catalogue_sub_mgmt_subservice_label']) ?></a>
 						</td>
 					</tr>
 				<?php } ?>

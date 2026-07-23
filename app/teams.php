@@ -144,7 +144,7 @@ include 'includes/template/head.php';
 			}
 			?>
 			
-			<div class="pull-right"><a class="wb-lbx btn btn-primary mrgn-bttm-md" href="includes/add-teams.php"><?= htmlspecialchars($langFile['teams_add_button']) ?></a></div>
+			<div class="pull-right"><a class="wb-lbx lbx-modal btn btn-primary mrgn-bttm-md" href="includes/add-teams.php"><?= htmlspecialchars($langFile['teams_add_button']) ?></a></div>
 			<div class="clearfix"></div>
 			<?php $tableName = 'tblteams'; ?>
 			
@@ -195,7 +195,7 @@ include 'includes/template/head.php';
 						</td>
 						<?php if ($canEditTeams) { ?>
 						<td>
-									<a class="wb-lbx btn btn-primary btn-block" href="includes/edit-teams.php?id=<?php echo $row['id'];?>&lang=<?php echo $lang;?>"><?= htmlspecialchars($langFile['teams_edit']) ?><span class="wb-inv"> <?php echo $row[$teamNameField] ?></span> <?= htmlspecialchars($langFile['teams_team_label']) ?></a><?php if ($_SESSION['is_superuser'] || $_SESSION['is_admin']) {?> <a class="wb-lbx btn btn-primary btn-block" href="includes/delete-teams.php?id=<?php echo $row['id'];?>&lang=<?php echo $lang;?>"><?= htmlspecialchars($langFile['teams_delete']) ?><span class="wb-inv"> <?php echo $row[$teamNameField] ?></span> <?= htmlspecialchars($langFile['teams_team_label']) ?></a><?php } ?>
+									<a class="wb-lbx lbx-modal btn btn-primary btn-block" href="includes/edit-teams.php?id=<?php echo $row['id'];?>&lang=<?php echo $lang;?>"><?= htmlspecialchars($langFile['teams_edit']) ?><span class="wb-inv"> <?php echo $row[$teamNameField] ?></span> <?= htmlspecialchars($langFile['teams_team_label']) ?></a><?php if ($_SESSION['is_superuser'] || $_SESSION['is_admin']) {?> <a class="wb-lbx lbx-modal btn btn-primary btn-block" href="includes/delete-teams.php?id=<?php echo $row['id'];?>&lang=<?php echo $lang;?>"><?= htmlspecialchars($langFile['teams_delete']) ?><span class="wb-inv"> <?php echo $row[$teamNameField] ?></span> <?= htmlspecialchars($langFile['teams_team_label']) ?></a><?php } ?>
 						</td>
 						<?php } ?>
 					</tr>
