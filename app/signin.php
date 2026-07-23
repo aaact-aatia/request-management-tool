@@ -87,8 +87,8 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 			$_SESSION['atype'] = $isSuperuser ? 1 : $primaryAtype;
 			$_SESSION['firstname']=$row['firstname'];
 			$_SESSION['email']=$row['email'];
-			$team = $row['team'];
-			$_SESSION['team'] = explode(',', $team);
+			$team = trim((string)($row['team'] ?? ''));
+			$_SESSION['team'] = $team === '' ? [] : explode(',', $team);
 			
 			// Dev account switcher is now based on is_superuser flag, not real_atype
 			// Check if user has any assigned requests
