@@ -2,21 +2,15 @@
 
 Automated tests for the Request Management Tool refactoring project.
 
-## Setup
-
-### Install PHPUnit
-
-```bash
-composer require --dev phpunit/phpunit
-```
-
 ## Running Tests
 
-### Quick Test (All Tests)
+### Intake Integration Tests
 
 ```bash
 ./run-tests.sh
 ```
+
+The runner starts a dedicated tmpfs MySQL database, waits for health, and executes the integration test inside a PHP 8.2 container. PHP is not required on the host. The test project is removed afterward and does not read from, write to, reset, or stop the development database.
 
 ### Unit Tests Only
 
@@ -30,14 +24,6 @@ Or specific test file:
 
 ```bash
 vendor/bin/phpunit tests/Unit/HelpersTest.php
-```
-
-### Integration Tests
-
-Tests complete workflows (catalogue/service mappings):
-
-```bash
-php tests/Integration/RequestWorkflowTest.php
 ```
 
 ### Smoke Tests
@@ -65,14 +51,13 @@ Tests all functions in `app/includes/helpers.php`:
 
 ### Integration Tests (`tests/Integration/RequestWorkflowTest.php`)
 
-Tests business logic for request creation:
+Tests the database-driven intake contract:
 
-- Catalogue → Service mappings
-- Subservice ID transformations
-- Document audit workflow paths
-- Accessibility audit paths
-- Adaptive technology mappings
-- Re-audit flag detection
+- Services and subservices have valid parents
+- Valid catalogue, service, and subservice combinations are accepted
+- Services without subservices normalize the child ID to `0`
+- Terminal catalogues are accepted without a service
+- Cross-catalogue, inactive, missing, and unknown IDs are rejected
 
 ### Smoke Tests (`tests/smoke-test.php`)
 
@@ -140,11 +125,10 @@ Add to your deployment pipeline:
 
 ## Benefits of Automated Testing
 
-✅ **Catch regressions** - Ensure refactoring doesn't break existing functionality  
-✅ **Document behavior** - Tests serve as living documentation  
-✅ **Faster development** - Validate changes instantly without manual clicking  
-✅ **Confidence** - Deploy knowing your code works  
-✅ **Easier refactoring** - Change code fearlessly with test safety net  
+- **Catch regressions** - Ensure refactoring does not break existing functionality
+- **Document behavior** - Tests serve as living documentation
+- **Faster development** - Validate changes without local PHP
+- **Isolation** - Preserve developer and production-like data during tests
 
 ## Current Test Coverage
 
@@ -154,7 +138,6 @@ Add to your deployment pipeline:
 
 ## Future Improvements
 
-- [ ] Add database mocking for isolated tests
 - [ ] Browser automation tests (Selenium/Playwright)
 - [ ] API endpoint tests
 - [ ] Performance benchmarks
