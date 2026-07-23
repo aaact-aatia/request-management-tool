@@ -1,26 +1,27 @@
 # Plan 007: Local File Storage
 
-**Status**: Partially implemented — local mode works; persistent volume for production not yet provisioned  
-**Date Planned**: 2026-05-01  
-**Last Updated**: 2026-07-14  
-**Estimated Remaining Effort**: < 1 day (volume provisioning + entrypoint wiring)  
-**Blocked by**: Persistent storage volume provisioned for the production hosting environment
+- **Status**: Implemented — deployment environments must provision persistent storage
+- **Date Planned**: 2026-05-01
+- **Last Updated**: 2026-07-23
+- **Estimated Remaining Effort**: Deployment-specific volume provisioning only
+- **Blocked by**: Persistent storage volume provisioned for the production hosting environment
 
 ## Overview
 
-Azure Blob Storage was removed when the Azure VM deployment was retired. `app/BlobStorage.php` was updated to support local filesystem storage as a replacement. File uploads work in local development; production deployment requires a persistent volume to be mounted at the configured path.
+Azure Blob Storage was removed when the Azure VM deployment was retired. `app/BlobStorage.php` supports local filesystem storage as a replacement. Docker mounts the named `rmt_uploads` volume at `/var/uploads/rmt`, and `entrypoint.sh` prepares directory permissions. Production deployment requires equivalent persistent storage at the configured path.
 
 ## Current State
 
-`AzureBlobStorageManager` supports three modes controlled by the `FILE_STORAGE_MODE` environment variable:
+`AzureBlobStorageManager` supports four modes controlled by the `FILE_STORAGE_MODE` environment variable:
 
 | Mode | Behaviour |
-|---|---|
+| --- | --- |
 | `local` | Reads/writes files to `FILE_STORAGE_LOCAL_PATH` on the container filesystem |
 | `azure_secret` | Azure Blob Storage via SAS token (legacy — not in use) |
+| `azure_mi` | Reserved for Azure managed identity; uploads and reads currently fail closed |
 | `disabled` | File uploads are fully disabled — upload UI is hidden, validator rejects any submission |
 
-The default mode when `APP_ENV=production` and `FILE_STORAGE_MODE` is unset is `azure_secret`, so **`FILE_STORAGE_MODE` must be set explicitly in all environments**.
+The default is `local` outside production and `disabled` in production. Production deployments must explicitly choose and configure a persistent backend before uploads are enabled.
 
 ### Files that reference `AzureBlobStorageManager`
 
@@ -37,18 +38,21 @@ Database table `tblfiles` stores file metadata: `code` (unique filename), `name`
 All file storage behaviour is controlled by these environment variables:
 
 ### `FILE_STORAGE_MODE`
+
 **Required.** Controls the active storage backend.
 
 | Value | Description |
-|---|---|
+| --- | --- |
 | `local` | Store files on the local filesystem at `FILE_STORAGE_LOCAL_PATH` |
 | `disabled` | Disable file uploads entirely — upload UI is hidden, no files are written |
 | `azure_secret` | Azure Blob via SAS token (not in active use) |
+| `azure_mi` | Reserved; currently fails closed because managed identity is not implemented |
 
 - **Local dev default**: `local`
-- **Production default if unset**: `azure_secret` — always set this explicitly in production
+- **Production default if unset**: `disabled`
 
 ### `FILE_STORAGE_LOCAL_PATH`
+
 **Required when `FILE_STORAGE_MODE=local`.** Absolute path to the upload directory inside the container.
 
 - Must be outside the webroot (`/var/www/html`) — files are never served directly
@@ -57,30 +61,35 @@ All file storage behaviour is controlled by these environment variables:
 - Default: `/var/uploads/rmt`
 
 ### `FILE_UPLOAD_MAX_FILES`
-Maximum number of files allowed per upload submission.  
+
+Maximum number of files allowed per upload submission.
 Default: `5`
 
 ### `FILE_UPLOAD_MAX_SIZE_MB`
-Maximum size in MB per individual file.  
+
+Maximum size in MB per individual file.
 Default: `10`
 
-## Production Setup (when volume is available)
+## Production Setup
 
 Once a persistent volume is provisioned and mounted (e.g. at `/mnt/uploads/rmt`):
 
 1. **Set env vars** in the hosting platform:
-   ```
+
+   ```env
    FILE_STORAGE_MODE=local
    FILE_STORAGE_LOCAL_PATH=/mnt/uploads/rmt
    ```
 
-2. **Ensure the directory exists and is writable** — add to `entrypoint.sh`:
+2. **Ensure the directory exists and is writable.** The included `entrypoint.sh` handles the configured path:
+
    ```bash
    mkdir -p /mnt/uploads/rmt
    chown www-data:www-data /mnt/uploads/rmt
    ```
 
 3. **For local Docker dev**, mount the volume in `docker-compose.yml`:
+
    ```yaml
    volumes:
      - rmt_uploads:/var/uploads/rmt

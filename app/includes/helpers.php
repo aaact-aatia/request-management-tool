@@ -1,4 +1,6 @@
 <?php
+require_once dirname(__DIR__) . '/env.php';
+
 if (isset($_SERVER['SCRIPT_FILENAME']) && realpath(__FILE__) === realpath((string) $_SERVER['SCRIPT_FILENAME'])) {
     http_response_code(404);
     exit();
@@ -143,7 +145,7 @@ function hasValue($value) {
 }
 
 function rmt_file_upload_policy(): array {
-    $storageMode = strtolower(trim((string) app_env('FILE_STORAGE_MODE', '')));
+    $storageMode = app_file_storage_mode();
     $enabled = ($storageMode !== 'disabled');
 
     $maxFiles = (int) app_env('FILE_UPLOAD_MAX_FILES', '5');

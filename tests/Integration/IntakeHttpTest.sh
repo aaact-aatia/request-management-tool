@@ -27,6 +27,13 @@ assert_contains() {
     printf 'PASS: %s\n' "$message"
 }
 
+download_status=$(request -o /dev/null -w '%{http_code}' "${base_url}/download.php?code=not-authorized")
+if [[ "$download_status" != "403" ]]; then
+    printf 'FAIL: unauthorized file download returned HTTP %s instead of 403\n' "$download_status" >&2
+    exit 1
+fi
+printf 'PASS: file downloads require a session grant\n'
+
 terminal_catalogue_id=$(db_query '
     SELECT c.id
     FROM tblcatalogue c

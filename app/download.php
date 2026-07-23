@@ -12,7 +12,13 @@ if (!isset($_GET['code']) || trim((string) $_GET['code']) === '') {
     exit;
 }
 
-$fileCode = mysqli_real_escape_string($link, trim((string) $_GET['code']));
+$fileCode = trim((string) $_GET['code']);
+if (!rmt_is_file_download_code_allowed($fileCode)) {
+    http_response_code(403);
+    exit;
+}
+
+$fileCode = mysqli_real_escape_string($link, $fileCode);
 $inlineRequested = isset($_GET['inline']) && $_GET['inline'] === '1';
 
 $resultFiles = mysqli_query($link, "SELECT * FROM tblfiles WHERE code = '$fileCode' LIMIT 1");
