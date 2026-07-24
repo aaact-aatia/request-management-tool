@@ -21,6 +21,10 @@ function check(bool $condition, string $message): void
 
 echo "RMT intake hierarchy integration tests\n";
 
+$boundValue = "O'Reilly ? --";
+$boundRow = rmt_db_fetch_one($link, 'SELECT ? AS bound_value', 's', [$boundValue]);
+check(($boundRow['bound_value'] ?? null) === $boundValue, 'prepared helper binds text as data');
+
 $orphanServices = mysqli_fetch_assoc(mysqli_query(
     $link,
     'SELECT COUNT(*) AS total FROM tblservices s LEFT JOIN tblcatalogue c ON c.id = s.catalogueid WHERE c.id IS NULL'

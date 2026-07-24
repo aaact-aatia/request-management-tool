@@ -1,8 +1,9 @@
 # Future Plan 005: Code Quality Refactoring
 
-**Status**: Planned — Future Work  
-**Date Planned**: 2026-05-01  
-**Estimated Effort**: 3–5 days  
+- **Status**: In progress — public intake migration completed
+- **Date Planned**: 2026-05-01
+- **Last Updated**: 2026-07-24
+- **Estimated Effort**: 3–5 days
 
 ## Overview
 
@@ -18,6 +19,7 @@ Two related code quality improvements to the data layer:
 ### Current Problem
 
 `app/sql.php` handles five unrelated concerns in one file:
+
 - CORS headers (via `cors.php`)
 - Session configuration and lifetime
 - Timezone setup
@@ -28,7 +30,7 @@ This makes it harder to test, debug, and reason about each concern independently
 
 ### Proposed Structure
 
-```
+```text
 app/
   config/
     database.php   — mysqli connection only
@@ -70,7 +72,18 @@ All existing `require('sql.php')` calls across the app would change to `require(
 
 ## Part B: Use Prepared Statements Consistently
 
-### Current Problem
+### Completed Migration Slice
+
+The unauthenticated public submission boundary now uses shared prepared-statement helpers:
+
+- `app/openrequest3.php` binds request, communication, file metadata, routing, and display-name values.
+- `app/download.php` binds the authorized file code for metadata lookup.
+- `rmt_save_request_language_metadata()` binds metadata reads and writes.
+- Integration coverage verifies quote-bearing text is stored exactly and test records are removed afterward.
+
+Search, internal add/edit request flows, administration, reports, and session storage still use legacy manual escaping in places and remain scheduled for incremental migration.
+
+### Query Safety Problem
 
 Most queries use manual escaping, which is error-prone:
 
@@ -93,37 +106,24 @@ $result = $stmt->get_result();
 
 ### Migration Strategy
 
-Add query helper functions to `app/includes/helpers.php` (or a new `app/includes/db-helpers.php`):
+Use the query helper functions in `app/includes/helpers.php`:
 
 ```php
-function fetchOne($link, $sql, $types = '', $params = []) {
-    $stmt = $link->prepare($sql);
-    if ($params) $stmt->bind_param($types, ...$params);
-    $stmt->execute();
-    return $stmt->get_result()->fetch_assoc();
-}
-
-function fetchAll($link, $sql, $types = '', $params = []) {
-    $stmt = $link->prepare($sql);
-    if ($params) $stmt->bind_param($types, ...$params);
-    $stmt->execute();
-    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-}
-
-// Usage
-$user     = fetchOne($link, "SELECT * FROM tblusers WHERE id = ?", 'i', [$_SESSION['pid']]);
-$services = fetchAll($link, "SELECT * FROM tblservices WHERE catalogueid = ?", 'i', [$catalogueid]);
+$user = rmt_db_fetch_one(
+  $link,
+  'SELECT * FROM tblusers WHERE id = ?',
+  'i',
+  [(int) $_SESSION['pid']]
+);
 ```
 
 Migrate one file at a time, prioritising pages that accept user input via GET/POST parameters.
 
 ---
 
----
-
 ## Part C: Complete `PriorityUpdates.php`
 
-### Current State
+### Priority Calculator State
 
 `app/PriorityUpdates.php` is an unfinished batch priority-score calculator. It reads all active triage requests, scores them across six dimensions, and writes the result back to `tbltriage.priority_score`. It was intentionally kept (not removed) because the scoring model is real and partially correct.
 
@@ -131,9 +131,11 @@ Migrate one file at a time, prioritising pages that accept user input via GET/PO
 
 1. **Incomplete SLA scoring block** — lines ~197–202 contain `$row[""]` (empty key); the logic for comparing `date_recieved + slatimer` against `date_required` was never written
 2. **SQL injection** — the `UPDATE` query builds the string directly from PHP variables with no escaping or prepared statements:
+
    ```php
    $sql2 = "UPDATE `tbltriage` SET `priority_score` = '$prioScore' WHERE `id` = '$request_id'";
    ```
+
    Note: the query is also never executed (missing `mysqli_query` call)
 3. **No authentication check** — any unauthenticated user can trigger a mass priority recalculation by visiting the URL; add `require('includes/loggedincheck.php')` and an admin-only guard (`$_SESSION['atype'] == 1`)
 4. **Stale redirect** — footer redirects to `index-en.php` which no longer exists; update to `index.php`

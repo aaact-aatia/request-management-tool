@@ -18,22 +18,14 @@ if (!rmt_is_file_download_code_allowed($fileCode)) {
     exit;
 }
 
-$fileCode = mysqli_real_escape_string($link, $fileCode);
 $inlineRequested = isset($_GET['inline']) && $_GET['inline'] === '1';
 
-$resultFiles = mysqli_query($link, "SELECT * FROM tblfiles WHERE code = '$fileCode' LIMIT 1");
-if (!$resultFiles) {
-    error_log('Error fetching file metadata: ' . mysqli_error($link));
-    http_response_code(500);
-    exit;
-}
-
-if (mysqli_num_rows($resultFiles) === 0) {
+$file = rmt_db_fetch_one($link, 'SELECT * FROM tblfiles WHERE code = ? LIMIT 1', 's', [$fileCode]);
+if ($file === null) {
     http_response_code(404);
     exit;
 }
 
-$file = mysqli_fetch_assoc($resultFiles);
 $originalFileName = (string) ($file['name'] ?? 'download.bin');
 $fileExtension = strtolower((string) ($file['type'] ?? ''));
 $sanitizedFileName = sanitizeFileName($originalFileName);

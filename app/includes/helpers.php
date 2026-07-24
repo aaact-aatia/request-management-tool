@@ -353,6 +353,28 @@ function getGetValue($key, $default = "") {
 // DATABASE HELPERS
 // ============================================================================
 
+function rmt_db_execute(mysqli $link, string $sql, string $types = '', array $params = []): mysqli_stmt {
+    if (strlen($types) !== count($params)) {
+        throw new InvalidArgumentException('Prepared statement parameter types must match parameter count.');
+    }
+
+    $statement = mysqli_prepare($link, $sql);
+    if ($types !== '') {
+        mysqli_stmt_bind_param($statement, $types, ...$params);
+    }
+    mysqli_stmt_execute($statement);
+
+    return $statement;
+}
+
+function rmt_db_fetch_one(mysqli $link, string $sql, string $types = '', array $params = []): ?array {
+    $statement = rmt_db_execute($link, $sql, $types, $params);
+    $row = mysqli_fetch_assoc(mysqli_stmt_get_result($statement));
+    mysqli_stmt_close($statement);
+
+    return $row ?: null;
+}
+
 function getDropdownOptions($link, $table, $lang = 'en', $where = "status='1'", $orderBy = null) {
     $nameField = $lang === 'fr' ? 'namefr' : 'nameen';
     $orderField = $orderBy ?? $nameField;
@@ -542,20 +564,26 @@ function rmt_save_request_language_metadata($link, int $triageId, string $langua
     }
 
     $language = app_normalize_language($language);
-    $note = mysqli_real_escape_string($link, rmt_request_language_meta_note($language));
-    $today = mysqli_real_escape_string($link, date('Y-m-d'));
-    $triageIdEscaped = (int) $triageId;
-    $creatorIdEscaped = (int) $creatorId;
-
-    $checkSql = "SELECT id FROM tbladminlog WHERE triageid = '$triageIdEscaped' AND notes = '$note' LIMIT 1";
-    $checkResult = mysqli_query($link, $checkSql);
-    if ($checkResult && mysqli_num_rows($checkResult) > 0) {
+    $note = rmt_request_language_meta_note($language);
+    $existingRow = rmt_db_fetch_one(
+        $link,
+        'SELECT id FROM tbladminlog WHERE triageid = ? AND notes = ? LIMIT 1',
+        'is',
+        [$triageId, $note]
+    );
+    if ($existingRow !== null) {
         return;
     }
 
     // Store with status=0 to keep this internal metadata hidden from normal admin log views.
-    $insertSql = "INSERT INTO tbladminlog(`triageid`, `dateadded`, `notes`, `creatorid`, `status`) VALUES ('$triageIdEscaped', '$today', '$note', '$creatorIdEscaped', '0')";
-    mysqli_query($link, $insertSql);
+    $statement = rmt_db_execute(
+        $link,
+        'INSERT INTO tbladminlog (`triageid`, `dateadded`, `notes`, `creatorid`, `status`)
+         VALUES (?, ?, ?, ?, 0)',
+        'issi',
+        [$triageId, date('Y-m-d'), $note, $creatorId]
+    );
+    mysqli_stmt_close($statement);
 }
 
 function rmt_get_request_language($link, int $triageId, ?string $fallbackLanguage = 'en'): string {
