@@ -133,7 +133,6 @@ CREATE TABLE IF NOT EXISTS `tbltriage` (
   `tech_id` int(11) DEFAULT NULL,
   `priority_score` int(11) DEFAULT NULL,
   `status` tinyint(1) DEFAULT 1,
-  `isreaudit` tinyint(1) DEFAULT 0,
   `ipaddress` varchar(50) DEFAULT NULL,
   `exactTime` varchar(50) DEFAULT NULL,
   `firstsprintenddate` date DEFAULT NULL,

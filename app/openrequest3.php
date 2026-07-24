@@ -38,7 +38,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $catalogueid = $selection['catalogueid'];
     $serviceid = $selection['serviceid'];
     $subserviceid = $selection['subserviceid'];
-    $reauditFlag = (int) ($_POST['reauditFlag'] ?? 0);
     $statusid = 1; // Initial status
     
     // Grab all form fields using helper
@@ -123,7 +122,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 'serviceid' => $_POST['serviceid'] ?? '',
                 'subserviceid' => $_POST['subserviceid'] ?? '',
                 'subserviceid2' => $_POST['subserviceid2'] ?? '',
-                'reauditFlag' => $_POST['reauditFlag'] ?? '',
                 'requesttitle' => $_POST['requesttitle'] ?? '',
                 'audience' => $_POST['audience'] ?? '',
                 'clientlname' => $_POST['clientlname'] ?? '',
@@ -180,13 +178,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Insert the full triage record in one shot
     $triageColumns = [
         'requestid', 'creatorid', 'catalogueid', 'serviceid', 'subserviceid', 'statusid',
-        'datereceived', 'slatimer', 'isreaudit', 'title', 'clientlname', 'clientfname',
+        'datereceived', 'slatimer', 'title', 'clientlname', 'clientfname',
         'clientemail', 'clientphone', 'daterequired', 'bdm', 'attach1', 'attach2', 'attach3', 'status'
     ];
-    $triageTypes = 'siiiiississssssssssi';
+    $triageTypes = 'siiiiissssssssssssi';
     $triageParams = [
         $nrequestid, $userid, $catalogueid, $serviceid, $subserviceid, $statusid,
-        $dateopened, $slatimer, $reauditFlag, $requesttitle, $clientlname, $clientfname,
+        $dateopened, $slatimer, $requesttitle, $clientlname, $clientfname,
         $clientemail, $clientphone, $daterequiredu ? null : $daterequired,
         $bdm, $attach1, $attach2, $attach3, $status
     ];

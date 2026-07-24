@@ -475,7 +475,7 @@ include 'includes/template/head.php';
 						2  => 'label-info',      // In Progress
 						3  => 'label-warning',   // Pending
 						7  => 'label-warning',   // On Hold (or similar)
-						10 => 'label-default',   // Re-Audit / Review
+						10 => 'label-default',
 						11 => 'label-default',
 						12 => 'label-default',
 					];

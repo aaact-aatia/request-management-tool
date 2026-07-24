@@ -31,20 +31,7 @@ INSERT INTO `tblsubservices` (`id`, `serviceid`, `nameen`, `namefr`, `status`) V
 (107, 34, 'Web content', 'Contenu Web', 1),
 (108, 34, 'Services', 'Services', 1),
 (109, 34, 'Testing', 'Tests', 1),
-(110, 34, 'Emails', 'Courriels', 1),
-(200, 25, 'Audit', 'Vérification', 1),
-(201, 25, 'Re-audit', 'Vérification de suivi', 1),
-(202, 61, 'Audit', 'Vérification', 1),
-(203, 61, 'Re-audit', 'Vérification de suivi', 1),
-(204, 62, 'Audit', 'Vérification', 1),
-(205, 62, 'Re-audit', 'Vérification de suivi', 1),
-(206, 63, 'Audit', 'Vérification', 1),
-(207, 63, 'Re-audit', 'Vérification de suivi', 1),
-(208, 64, 'Audit', 'Vérification', 1),
-(209, 64, 'Re-audit', 'Vérification de suivi', 1),
-(210, 27, 'Audit', 'Vérification', 1),
-(211, 27, 'Re-audit', 'Vérification de suivi', 1),
-(212, 28, 'Re-audit', 'Vérification de suivi', 1);
+(110, 34, 'Emails', 'Courriels', 1);
 
 INSERT INTO `tblteams` (`id`, `nameen`, `namefr`, `email`, `team_lead_user_id`, `status`) VALUES
 (1, 'IT Accessibility Office', 'Bureau de l''accessibilité des TI', 'accessibility@example.com', NULL, 1),

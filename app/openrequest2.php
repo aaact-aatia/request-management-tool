@@ -100,7 +100,6 @@ $catalogueid = $selection['catalogueid'];
 $serviceid = $selection['serviceid'];
 $subserviceid = $selection['subserviceid'];
 
-$reauditFlag = 0;
 $pageTitle = $t['page_title'];
 $pageDescription = '';
 include 'includes/template/head.php';
@@ -121,7 +120,6 @@ include 'includes/template/head.php';
         <input type="hidden" name="catalogueid" value="<?= $catalogueid ?>">
         <input type="hidden" name="serviceid" value="<?= $serviceid ?>">
         <input type="hidden" name="subserviceid" value="<?= $subserviceid ?>">
-        <input type="hidden" name="reauditFlag" value="<?= $reauditFlag ?>">
 
         <?php
         echo renderTextInput('requesttitle', $t['request_title'], $draftData['requesttitle'] ?? '', true);
