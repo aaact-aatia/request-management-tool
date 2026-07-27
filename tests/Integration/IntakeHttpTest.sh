@@ -72,6 +72,8 @@ assert_contains "$work_dir/terminal.html" "name=\"catalogueid\" value=\"${termin
     'terminal catalogue reaches step two'
 assert_contains "$work_dir/terminal.html" 'name="serviceid" value="0"' \
     'terminal catalogue normalizes service ID to zero'
+assert_contains "$work_dir/terminal.html" 'value="Treasury Board of Canada Secretariat (TBS)"' \
+    'public intake loads organization titles and acronyms from the database'
 
 IFS=$'\t' read -r leaf_catalogue_id leaf_service_id <<< "$(db_query '
     SELECT c.id, s.id

@@ -78,6 +78,23 @@ CREATE TABLE IF NOT EXISTS `tblsources` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE IF NOT EXISTS `tblorganizations` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `nameen` varchar(255) NOT NULL,
+  `namefr` varchar(255) NOT NULL,
+  `abbreviationen` varchar(50) DEFAULT NULL,
+  `abbreviationfr` varchar(50) DEFAULT NULL,
+  `source_part` tinyint(1) NOT NULL DEFAULT 0,
+  `status` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_tblorganizations_nameen` (`nameen`),
+  UNIQUE KEY `uq_tblorganizations_namefr` (`namefr`),
+  KEY `idx_tblorganizations_status_nameen` (`status`, `nameen`),
+  KEY `idx_tblorganizations_status_namefr` (`status`, `namefr`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS `tblstatus` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `nameen` varchar(100) NOT NULL,

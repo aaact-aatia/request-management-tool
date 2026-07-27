@@ -3,6 +3,7 @@ require('sql.php');
 /** @var mysqli $link */
 require('includes/httpscheck.php');
 require('includes/helpers.php');
+require_once('includes/department-directory.php');
 
 $lang = detectLanguage();
 $draftData = [];
@@ -31,6 +32,8 @@ $translations = [
         'last_name' => 'Last name',
         'email' => 'Email',
         'department_agency' => 'Department/agency',
+        'select_department_agency' => 'Select a department or agency',
+        'department_agency_hint' => 'Optional. Start typing a department, agency, or acronym, or enter another organization.',
         'additional_info' => 'Additional information',
         'submit' => 'Submit'
     ],
@@ -48,6 +51,8 @@ $translations = [
         'last_name' => 'Nom',
         'email' => 'Courriel',
         'department_agency' => 'Ministère/organisme',
+        'select_department_agency' => 'Sélectionnez un ministère ou organisme',
+        'department_agency_hint' => 'Facultatif. Commencez à saisir un ministère, un organisme ou un acronyme, ou entrez une autre organisation.',
         'additional_info' => 'Informations supplémentaires',
         'submit' => 'Soumettre'
     ]
@@ -87,6 +92,10 @@ if ($selection === null) {
 $catalogueid = $selection['catalogueid'];
 $serviceid = $selection['serviceid'];
 $subserviceid = $selection['subserviceid'];
+$departments = rmt_get_department_directory($link, $lang);
+$selectedDepartment = (string) ($draftData['departmentagency'] ?? '');
+$departmentOptions = rmt_department_directory_options($departments, $selectedDepartment);
+$departmentInputValue = rmt_department_directory_input_value($departmentOptions, $selectedDepartment);
 
 $pageTitle = $t['page_title'];
 $pageDescription = '';
@@ -122,7 +131,33 @@ include 'includes/template/head.php';
         echo renderTextInput('clientfname', $t['first_name'], $draftData['clientfname'] ?? '', true, false, 'text', 'autocomplete="given-name"');
         echo renderTextInput('clientlname', $t['last_name'], $draftData['clientlname'] ?? '', true, false, 'text', 'autocomplete="family-name"');
         echo renderTextInput('clientemail', $t['email'], $draftData['clientemail'] ?? '', true, false, 'email', 'autocomplete="email"');
-        echo renderTextInput('departmentagency', $t['department_agency'], $draftData['departmentagency'] ?? '', false, false, 'text', 'autocomplete="organization"');
+        if ($departments === []) {
+            echo renderTextInput('departmentagency', $t['department_agency'], $selectedDepartment, false, false, 'text', 'autocomplete="organization" aria-describedby="departmentagency-hint"');
+            echo '<p id="departmentagency-hint" class="small text-muted">' . htmlspecialchars($t['department_agency_hint']) . '</p>';
+        } else {
+            ?>
+            <div class="form-group">
+                <label for="departmentagency"><span class="field-name"><?= htmlspecialchars($t['department_agency']) ?></span></label>
+                <input
+                    type="text"
+                    class="form-control"
+                    id="departmentagency"
+                    name="departmentagency"
+                    list="departmentagency-options"
+                    value="<?= htmlspecialchars($departmentInputValue, ENT_QUOTES, 'UTF-8') ?>"
+                    autocomplete="organization"
+                    aria-describedby="departmentagency-hint"
+                    placeholder="<?= htmlspecialchars($t['select_department_agency'], ENT_QUOTES, 'UTF-8') ?>"
+                >
+                <datalist id="departmentagency-options">
+                    <?php foreach ($departmentOptions as $department): ?>
+                        <option value="<?= htmlspecialchars($department['label'], ENT_QUOTES, 'UTF-8') ?>"></option>
+                    <?php endforeach; ?>
+                </datalist>
+                <p id="departmentagency-hint" class="small text-muted"><?= htmlspecialchars($t['department_agency_hint']) ?></p>
+            </div>
+            <?php
+        }
         echo renderTextarea('additionalinfo', $t['additional_info'], $draftData['additionalinfo'] ?? '', false);
         ?>
 

@@ -46,26 +46,27 @@ $tableColumns = isset($csvTables[$tableName]) ? $csvTables[$tableName]['columns'
 		</button>
 	</form>
 
-	<form method="post" action="/includes/admin-csv-import.php" enctype="multipart/form-data" style="display:inline;">
+	<div class="mrgn-tp-lg alert alert-info" id="<?= $uniqueId ?>_instructions">
+		<p><strong><?= htmlspecialchars($langFile['admin_csv_import_info'] ?? 'Import Tips:') ?></strong></p>
+		<ul class="mrgn-bttm-0">
+			<li><?= htmlspecialchars($langFile['admin_csv_import_tip_columns'] ?? 'All required columns must be present in the file') ?></li>
+			<li><?= htmlspecialchars($langFile['admin_csv_import_tip_order'] ?? 'Keep the exported column names and order unchanged') ?></li>
+			<li><?= htmlspecialchars($langFile['admin_csv_import_tip_comments'] ?? 'Comment rows (lines starting with #) are automatically skipped') ?></li>
+		</ul>
+	</div>
+
+	<form method="post" action="/includes/admin-csv-import.php" enctype="multipart/form-data">
 		<input type="hidden" name="table" value="<?= htmlspecialchars($tableName) ?>">
 		<input type="hidden" name="lang" value="<?= htmlspecialchars($lang) ?>">
 		<input type="hidden" name="referrer" value="<?= htmlspecialchars($_SERVER['REQUEST_URI']) ?>">
-		<input type="file" id="<?= $uniqueId ?>" name="csv_file" accept=".csv" style="display:none;" onchange="this.form.submit();">
-		<button type="button" class="btn btn-primary" onclick="document.getElementById('<?= $uniqueId ?>').click();">
+		<div class="form-group">
+			<label for="<?= $uniqueId ?>"><?= htmlspecialchars($langFile['admin_csv_choose_file'] ?? 'CSV file') ?></label>
+			<input type="file" class="form-control" id="<?= $uniqueId ?>" name="csv_file" accept=".csv,text/csv" aria-describedby="<?= $uniqueId ?>_instructions" required>
+		</div>
+		<button type="submit" class="btn btn-primary">
 			<span class="glyphicon glyphicon-upload" aria-hidden="true"></span>
 			<?= htmlspecialchars($langFile['admin_csv_import_heading'] ?? 'Import CSV') ?>
 		</button>
 	</form>
-
-	<?php if (!empty($tableColumns)): ?>
-		<div class="mrgn-tp-lg alert alert-info">
-			<p><strong><?= htmlspecialchars($langFile['admin_csv_import_info'] ?? 'Import Tips:') ?></strong></p>
-			<ul style="margin-bottom: 0;">
-				<li><?= htmlspecialchars($langFile['admin_csv_import_tip_columns'] ?? 'All required columns must be present in the file') ?></li>
-				<li><?= htmlspecialchars($langFile['admin_csv_import_tip_order'] ?? 'Column order and extra columns do not matter') ?></li>
-				<li><?= htmlspecialchars($langFile['admin_csv_import_tip_comments'] ?? 'Comment rows (lines starting with #) are automatically skipped') ?></li>
-			</ul>
-		</div>
-	<?php endif; ?>
 </div>
 <?php

@@ -31,6 +31,12 @@ if (!function_exists('rmt_get_admin_csv_tables')) {
 				'columns' => ['id', 'nameen', 'namefr', 'status'],
 				'order_by' => 'id ASC',
 			],
+			'tblorganizations' => [
+				'label_key' => 'admin_csv_table_organizations',
+				'columns' => ['id', 'nameen', 'namefr', 'abbreviationen', 'abbreviationfr', 'status'],
+				'forbidden_columns' => ['source_part'],
+				'order_by' => 'nameen ASC, id ASC',
+			],
 			'tblstatus' => [
 				'label_key' => 'admin_csv_table_status',
 				'columns' => ['id', 'nameen', 'namefr', 'is_resolved', 'status'],

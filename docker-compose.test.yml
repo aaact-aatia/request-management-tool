@@ -42,6 +42,7 @@ services:
       - ./database/reference.sql:/docker-entrypoint-initdb.d/02-reference.sql:ro
       - ./database/session_handler.sql:/docker-entrypoint-initdb.d/03-session-handler.sql:ro
       - ./tests/fixtures/intake-hierarchy.sql:/docker-entrypoint-initdb.d/04-intake-hierarchy.sql:ro
+      - ./database:/opt/rmt-seeds:ro
 
   test-runner:
     build: .

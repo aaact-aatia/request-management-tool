@@ -14,6 +14,7 @@ if (!isset($link) || !($link instanceof mysqli)) {
     throw new RuntimeException('Database connection was not initialized in sql.php');
 }
 require_once('includes/helpers.php');
+require_once('includes/department-directory.php');
 require_once('BlobStorage.php');
 require_once('emailController.php');
 
@@ -46,7 +47,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $clientlname = trim((string) ($_POST['clientlname'] ?? ''));
     $clientfname = trim((string) ($_POST['clientfname'] ?? ''));
     $clientemail = trim((string) ($_POST['clientemail'] ?? ''));
-    $departmentagency = trim((string) ($_POST['departmentagency'] ?? ''));
+    $submittedDepartment = trim((string) ($_POST['departmentagency'] ?? ''));
+    $departmentagency = rmt_department_directory_official_title(
+        rmt_get_department_directory($link, $lang),
+        $submittedDepartment
+    );
     $clientphone = '';
     $requestlang = app_normalize_language($lang);
     $bdm = trim((string) ($_POST['bdm'] ?? '0'));

@@ -4,6 +4,9 @@
 SET NAMES utf8mb4;
 SET CHARACTER SET utf8mb4;
 
+-- Organization applied titles (Part 1 and Part 2 official snapshot)
+SOURCE /opt/rmt-seeds/migrations/016-create-organizations.sql;
+
 -- Account types
 INSERT INTO `tblaccounttype` (`id`, `nameen`, `namefr`, `status`) VALUES
 (1, 'Super Administrator', 'Super administrateur', 1),
