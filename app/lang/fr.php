@@ -419,6 +419,20 @@ return [
     'gcnotify_settings_templates_intro' => 'Les gabarits GC Notify doivent d abord etre crees et geres dans GC Notify. Entrez ici les UUID de gabarit pour que cette application puisse les referencer et les utiliser.',
     'gcnotify_settings_save' => 'Enregistrer les parametres GC Notify',
     'gcnotify_settings_back' => 'Retour aux parametres du compte',
+
+    // Page de recalcul des cotes de priorite (PriorityUpdates.php)
+    'priority_update_heading' => 'Recalculer les cotes de priorité',
+    'priority_update_intro' => 'Recalculez les cotes de priorité pour toutes les demandes actives qui ne sont pas résolues.',
+    'priority_update_warning_heading' => 'Avant de continuer',
+    'priority_update_warning' => 'Cette action remplace immédiatement la cote de priorité actuelle de chaque demande correspondante.',
+    'priority_update_submit' => 'Recalculer les cotes de priorité',
+    'priority_update_cancel' => 'Annuler',
+    'priority_update_success_heading' => 'Cotes de priorité mises à jour',
+    'priority_update_success_singular' => 'Les cotes de priorité ont été recalculées pour %d demande.',
+    'priority_update_success_plural' => 'Les cotes de priorité ont été recalculées pour %d demandes.',
+    'priority_update_error_heading' => 'Les cotes de priorité n’ont pas été mises à jour',
+    'priority_update_invalid_request' => 'La confirmation a expiré ou était invalide. Examinez l’avertissement et réessayez.',
+    'priority_update_failed' => 'Le recalcul n’a pas pu être effectué. Aucune cote de priorité n’a été modifiée.',
     
     // Users management page (users.php)
     'users_page_title' => 'Gestion des utilisateurs - Outil de gestion des demandes - Bureau de l\'accessibilité de la TI',

@@ -420,6 +420,20 @@ return [
     'gcnotify_settings_templates_intro' => 'GC Notify templates must be created and managed in GC Notify first. Enter the template UUIDs here so this application can reference and use them.',
     'gcnotify_settings_save' => 'Save GC Notify settings',
     'gcnotify_settings_back' => 'Back to account settings',
+
+    // Priority score recalculation page (PriorityUpdates.php)
+    'priority_update_heading' => 'Recalculate priority scores',
+    'priority_update_intro' => 'Recalculate priority scores for all active requests that are not resolved.',
+    'priority_update_warning_heading' => 'Before you continue',
+    'priority_update_warning' => 'This action immediately replaces the current priority score for every matching request.',
+    'priority_update_submit' => 'Recalculate priority scores',
+    'priority_update_cancel' => 'Cancel',
+    'priority_update_success_heading' => 'Priority scores updated',
+    'priority_update_success_singular' => 'Priority scores were recalculated for %d request.',
+    'priority_update_success_plural' => 'Priority scores were recalculated for %d requests.',
+    'priority_update_error_heading' => 'Priority scores were not updated',
+    'priority_update_invalid_request' => 'The confirmation expired or was invalid. Review the warning and try again.',
+    'priority_update_failed' => 'The recalculation could not be completed. No priority scores were changed.',
     
     // Users management page (users.php)
     'users_page_title' => 'User management - Request Management Tool - IT Accessibility Office',
