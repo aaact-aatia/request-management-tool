@@ -11,12 +11,6 @@ if (isset($_SESSION['openrequest_draft']) && is_array($_SESSION['openrequest_dra
     unset($_SESSION['openrequest_draft']);
 }
 
-$uploadErrorMessage = '';
-if (isset($_SESSION['openrequest_upload_error_message'])) {
-    $uploadErrorMessage = (string) $_SESSION['openrequest_upload_error_message'];
-    unset($_SESSION['openrequest_upload_error_message']);
-}
-
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' && !$draftData) {
     header("Location: /openrequest.php?lang={$lang}");
     exit;
@@ -40,7 +34,6 @@ $translations = [
         'department_agency' => 'Department/agency',
         'phone' => 'Business phone number',
         'additional_info' => 'Additional information',
-        'upload_files' => 'Upload files',
         'submit' => 'Submit'
     ],
     'fr' => [
@@ -60,7 +53,6 @@ $translations = [
         'department_agency' => 'Ministère/organisme',
         'phone' => 'Numéro de téléphone au bureau',
         'additional_info' => 'Informations supplémentaires',
-        'upload_files' => 'Téléverser des fichiers',
         'submit' => 'Soumettre'
     ]
 ];
@@ -116,7 +108,7 @@ include 'includes/template/head.php';
     <h2><?= htmlspecialchars($t['heading_additional']) ?></h2>
     <?php endif; ?>
 
-    <form method="post" enctype="multipart/form-data" action="openrequest3.php?lang=<?= htmlspecialchars($lang) ?>">
+    <form method="post" action="openrequest3.php?lang=<?= htmlspecialchars($lang) ?>">
         <input type="hidden" name="catalogueid" value="<?= $catalogueid ?>">
         <input type="hidden" name="serviceid" value="<?= $serviceid ?>">
         <input type="hidden" name="subserviceid" value="<?= $subserviceid ?>">
@@ -139,24 +131,6 @@ include 'includes/template/head.php';
         echo renderTextInput('clientphone', $t['phone'], $draftData['clientphone'] ?? '', false, false, 'tel');
         echo renderTextarea('additionalinfo', $t['additional_info'], $draftData['additionalinfo'] ?? '', false);
         ?>
-
-        <?php if (rmt_file_upload_policy()['enabled']): ?>
-        <div class="form-group">
-            <label for="fileToUpload"><span class="field-name"><?= htmlspecialchars($t['upload_files']) ?></span></label>
-            <input
-                type="file"
-                class="form-control"
-                id="fileToUpload"
-                name="fileToUpload[]"
-                multiple
-                accept="<?= htmlspecialchars(rmt_file_upload_accept_attribute(), ENT_QUOTES, 'UTF-8') ?>"
-                aria-describedby="fileToUploadHelp fileToUploadError"
-                <?= $uploadErrorMessage !== '' ? 'aria-invalid="true" autofocus' : '' ?>
-            >
-            <p id="fileToUploadHelp" class="small text-muted"><?= htmlspecialchars(rmt_file_upload_hint($lang), ENT_QUOTES, 'UTF-8') ?></p>
-            <p id="fileToUploadError" class="text-danger" aria-live="polite"><?= htmlspecialchars($uploadErrorMessage, ENT_QUOTES, 'UTF-8') ?></p>
-        </div>
-        <?php endif; ?>
 
         <div class="form-group form-buttons">
             <button type="submit" class="btn btn-primary"><?= htmlspecialchars($t['submit']) ?></button>
