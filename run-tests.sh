@@ -12,3 +12,5 @@ docker compose -p "$project_name" -f docker-compose.test.yml up -d --wait test-d
 docker compose -p "$project_name" -f docker-compose.test.yml run --rm --no-deps --build test-runner
 docker compose -p "$project_name" -f docker-compose.test.yml run --rm --no-deps \
 	--entrypoint php test-runner /var/www/tests/Integration/FileStorageTest.php
+docker compose -p "$project_name" -f docker-compose.test.yml run --rm --no-deps \
+	--entrypoint php test-runner /var/www/tests/Unit/PriorityCalculatorTest.php
