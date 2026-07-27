@@ -1,6 +1,6 @@
 # Future Plan 005: Code Quality Refactoring
 
-- **Status**: In progress — public intake migration completed
+- **Status**: In progress — public intake and priority calculator work completed
 - **Date Planned**: 2026-05-01
 - **Last Updated**: 2026-07-24
 - **Estimated Effort**: 3–5 days
@@ -125,29 +125,17 @@ Migrate one file at a time, prioritising pages that accept user input via GET/PO
 
 ### Priority Calculator State
 
-`app/PriorityUpdates.php` is an unfinished batch priority-score calculator. It reads all active triage requests, scores them across six dimensions, and writes the result back to `tbltriage.priority_score`. It was intentionally kept (not removed) because the scoring model is real and partially correct.
+The batch priority-score calculator is complete. The implementation now:
 
-**Known issues to fix before this can be used:**
+- Separates the scoring rules into the pure `rmt_calculate_priority_score()` function.
+- Uses the current service and subservice SLA configuration and shared business-day calculator.
+- Requires a signed-in super-admin and never changes data on `GET`.
+- Requires a per-session CSRF token before recalculation on `POST`.
+- Updates active unresolved requests with one prepared statement inside a transaction.
+- Uses a bilingual WET confirmation page with explicit success and failure states.
+- Has unit coverage for all scoring dimensions, population thresholds, timeline approval, and placeholder dates.
 
-1. **Incomplete SLA scoring block** — lines ~197–202 contain `$row[""]` (empty key); the logic for comparing `date_recieved + slatimer` against `date_required` was never written
-2. **SQL injection** — the `UPDATE` query builds the string directly from PHP variables with no escaping or prepared statements:
-
-   ```php
-   $sql2 = "UPDATE `tbltriage` SET `priority_score` = '$prioScore' WHERE `id` = '$request_id'";
-   ```
-
-   Note: the query is also never executed (missing `mysqli_query` call)
-3. **No authentication check** — any unauthenticated user can trigger a mass priority recalculation by visiting the URL; add `require('includes/loggedincheck.php')` and an admin-only guard (`$_SESSION['atype'] == 1`)
-4. **Stale redirect** — footer redirects to `index-en.php` which no longer exists; update to `index.php`
-5. **First query result unused** — the initial `SELECT` on line 14 is run but `$result` is never iterated; only the second query (line 51) is used
-
-### Proposed Fix
-
-- Add auth guard at top
-- Finish the SLA comparison: calculate `business_days_between($datereceived, today)` vs `$slatimer`, apply `$withinSLA`, `$underSLA`, or `$underWithSLA` score accordingly
-- Execute the `UPDATE` using a prepared statement
-- Update redirect to `index.php`
-- Remove the dead first query
+Operationally, completion is determined by `tblstatus.is_resolved`. Status reference data must therefore mark every terminal status that should be excluded from recalculation.
 
 ---
 
