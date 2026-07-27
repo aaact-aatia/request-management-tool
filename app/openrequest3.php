@@ -41,13 +41,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $statusid = 1; // Initial status
     
     // Grab all form fields using helper
-    $requesttitle = trim((string) ($_POST['requesttitle'] ?? ''));
+    $requesttitle = '';
     $audienceid = (int) ($_POST['audience'] ?? 0);
     $clientlname = trim((string) ($_POST['clientlname'] ?? ''));
     $clientfname = trim((string) ($_POST['clientfname'] ?? ''));
     $clientemail = trim((string) ($_POST['clientemail'] ?? ''));
     $departmentagency = trim((string) ($_POST['departmentagency'] ?? ''));
-    $clientphone = trim((string) ($_POST['clientphone'] ?? ''));
+    $clientphone = '';
     $requestlang = app_normalize_language($lang);
     $bdm = trim((string) ($_POST['bdm'] ?? '0'));
     $attach1 = trim((string) ($_POST['attach1'] ?? ''));
@@ -90,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $contactemail = "";
     
     // Validate required fields
-    if (!hasValue($requesttitle) || !hasValue($clientlname) || !hasValue($clientfname) || !hasValue($clientemail)) {
+    if (!hasValue($clientlname) || !hasValue($clientfname) || !hasValue($clientemail)) {
         header("location:/openrequest.php?lang=" . $lang . "&status=failed");
         exit();
     }
@@ -122,13 +122,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 'serviceid' => $_POST['serviceid'] ?? '',
                 'subserviceid' => $_POST['subserviceid'] ?? '',
                 'subserviceid2' => $_POST['subserviceid2'] ?? '',
-                'requesttitle' => $_POST['requesttitle'] ?? '',
                 'audience' => $_POST['audience'] ?? '',
                 'clientlname' => $_POST['clientlname'] ?? '',
                 'clientfname' => $_POST['clientfname'] ?? '',
                 'clientemail' => $_POST['clientemail'] ?? '',
                 'departmentagency' => $_POST['departmentagency'] ?? '',
-                'clientphone' => $_POST['clientphone'] ?? '',
                 'daterequired' => $_POST['daterequired'] ?? '',
                 'bdm' => $_POST['bdm'] ?? '',
                 'attach1' => $_POST['attach1'] ?? '',
@@ -248,7 +246,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         );
         mysqli_stmt_close($statement);
     }
-    
+
     if (hasValue($additionalinfo)) {
         $statement = rmt_db_execute(
             $link,

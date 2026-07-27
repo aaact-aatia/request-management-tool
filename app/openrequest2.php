@@ -22,7 +22,6 @@ $translations = [
         'heading_sprint' => 'Sprint Spot-Check information required for your request',
         'heading_audit_sample' => 'Audit of representative sample information required for your request',
         'heading_additional' => 'Additional information required for your request',
-        'request_title' => 'Brief request title',
         'date_required' => 'Date required',
         'first_sprint_date' => 'First Sprint Date',
         'last_sprint_date' => 'Last Sprint Date',
@@ -32,7 +31,6 @@ $translations = [
         'last_name' => 'Last name',
         'email' => 'Email',
         'department_agency' => 'Department/agency',
-        'phone' => 'Business phone number',
         'additional_info' => 'Additional information',
         'submit' => 'Submit'
     ],
@@ -41,7 +39,6 @@ $translations = [
         'heading_sprint' => 'Informations de la vérification ponctuelle du sprint requises pour votre demande',
         'heading_audit_sample' => 'Informations sur l’audit d’un échantillon représentatif requises pour votre demande',
         'heading_additional' => 'Informations complémentaires requises pour votre demande',
-        'request_title' => 'Bref titre pour la demande',
         'date_required' => 'Date requise',
         'first_sprint_date' => 'Date de début du premier sprint',
         'last_sprint_date' => 'Date de fin du premier sprint',
@@ -51,7 +48,6 @@ $translations = [
         'last_name' => 'Nom',
         'email' => 'Courriel',
         'department_agency' => 'Ministère/organisme',
-        'phone' => 'Numéro de téléphone au bureau',
         'additional_info' => 'Informations supplémentaires',
         'submit' => 'Soumettre'
     ]
@@ -114,7 +110,6 @@ include 'includes/template/head.php';
         <input type="hidden" name="subserviceid" value="<?= $subserviceid ?>">
 
         <?php
-        echo renderTextInput('requesttitle', $t['request_title'], $draftData['requesttitle'] ?? '', true);
         echo renderDateInput('daterequired', $t['date_required'], $draftData['daterequired'] ?? '', false);
 
         if ($subserviceid === 95 || $subserviceid === 96) {
@@ -124,11 +119,10 @@ include 'includes/template/head.php';
             echo renderTextInput('sprintdefects', $t['sprint_defects'], $draftData['sprintdefects'] ?? '', true, false, 'url');
         }
 
-        echo renderTextInput('clientfname', $t['first_name'], $draftData['clientfname'] ?? '', true);
-        echo renderTextInput('clientlname', $t['last_name'], $draftData['clientlname'] ?? '', true);
-        echo renderTextInput('clientemail', $t['email'], $draftData['clientemail'] ?? '', true, false, 'email');
-        echo renderTextInput('departmentagency', $t['department_agency'], $draftData['departmentagency'] ?? '', false);
-        echo renderTextInput('clientphone', $t['phone'], $draftData['clientphone'] ?? '', false, false, 'tel');
+        echo renderTextInput('clientfname', $t['first_name'], $draftData['clientfname'] ?? '', true, false, 'text', 'autocomplete="given-name"');
+        echo renderTextInput('clientlname', $t['last_name'], $draftData['clientlname'] ?? '', true, false, 'text', 'autocomplete="family-name"');
+        echo renderTextInput('clientemail', $t['email'], $draftData['clientemail'] ?? '', true, false, 'email', 'autocomplete="email"');
+        echo renderTextInput('departmentagency', $t['department_agency'], $draftData['departmentagency'] ?? '', false, false, 'text', 'autocomplete="organization"');
         echo renderTextarea('additionalinfo', $t['additional_info'], $draftData['additionalinfo'] ?? '', false);
         ?>
 

@@ -132,7 +132,6 @@ fi
 printf 'PASS: tampered final submission creates no request\n'
 
 test_email="prepared-intake-$$@example.com"
-test_title="O'Reilly's accessibility review ? --"
 test_note="Client's note: keep 'quotes' exactly."
 success_headers="$work_dir/success-headers.txt"
 
@@ -140,22 +139,37 @@ request -D "$success_headers" -o /dev/null -X POST \
     --data-urlencode "catalogueid=${terminal_catalogue_id}" \
     --data 'serviceid=0' \
     --data 'subserviceid=0' \
-    --data-urlencode "requesttitle=${test_title}" \
+    --data-urlencode 'requesttitle=Client supplied title' \
     --data 'clientfname=Prepared' \
     --data "clientlname=O'Reilly" \
     --data-urlencode "clientemail=${test_email}" \
+    --data-urlencode 'departmentagency=Client supplied department' \
+    --data-urlencode 'clientphone=613-555-0100' \
     --data-urlencode "clientnotes=${test_note}" \
     --data 'notification=N' \
     "${base_url}/openrequest3.php?lang=en"
 
-created_row=$(db_query "SELECT id, title FROM tbltriage WHERE clientemail = '${test_email}' ORDER BY id DESC LIMIT 1")
-IFS=$'\t' read -r created_id stored_title <<< "$created_row"
+created_id=$(db_query "SELECT id FROM tbltriage WHERE clientemail = '${test_email}' ORDER BY id DESC LIMIT 1")
 
-if [[ -z "${created_id:-}" || "$stored_title" != "$test_title" ]]; then
-    printf 'FAIL: prepared intake insert did not preserve quote-bearing title\n' >&2
+if [[ -z "${created_id:-}" ]]; then
+    printf 'FAIL: prepared intake insert did not create a request\n' >&2
     exit 1
 fi
-printf 'PASS: prepared intake insert preserves quote-bearing title\n'
+printf 'PASS: prepared intake insert creates a request\n'
+
+client_managed_values=$(db_query "SELECT CONCAT(COALESCE(title, ''), '|', COALESCE(clientphone, '')) FROM tbltriage WHERE id = ${created_id}")
+if [[ "$client_managed_values" != '|' ]]; then
+    printf 'FAIL: public intake accepted employee-managed title or phone values\n' >&2
+    exit 1
+fi
+printf 'PASS: public intake ignores employee-managed title and phone values\n'
+
+department_note=$(db_query "SELECT notes FROM tblcommlog WHERE triageid = ${created_id} AND notes LIKE 'Department/agency:%' ORDER BY id DESC LIMIT 1")
+if [[ "$department_note" != 'Department/agency: Client supplied department' ]]; then
+    printf 'FAIL: public intake did not preserve the department value\n' >&2
+    exit 1
+fi
+printf 'PASS: public intake preserves the department value\n'
 
 stored_note=$(db_query "SELECT notes FROM tblcommlog WHERE triageid = ${created_id} AND notes LIKE 'Client%' ORDER BY id DESC LIMIT 1")
 if [[ "$stored_note" != "$test_note" ]]; then
