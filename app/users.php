@@ -139,7 +139,7 @@ include 'includes/template/head.php';
 			}
 			?>
 			
-<div class="pull-right"><a class="wb-lbx btn btn-primary mrgn-bttm-md" href="includes/add-users.php"><?= htmlspecialchars($langFile['users_add_button']) ?></a></div>
+<div class="pull-right"><a class="wb-lbx lbx-modal btn btn-primary mrgn-bttm-md" href="includes/add-users.php"><?= htmlspecialchars($langFile['users_add_button']) ?></a></div>
 			<div class="clearfix"></div>
 			
 			<?php
@@ -276,7 +276,7 @@ include 'includes/template/head.php';
 					<td><?php echo $accounttypename ?></td>
 					<td><?php echo !empty($teamNames) ? htmlspecialchars(implode(', ', $teamNames)) : '—'; ?><?php if ($showRelationship) { ?><br><small><?php echo htmlspecialchars($relationshipLabel); ?>: <?php echo htmlspecialchars($relationshipName); ?></small><?php } ?></td>
 					<td>
-						<a class="wb-lbx btn btn-primary btn-block" href="includes/edit-users.php?id=<?php echo $row['id'];?>&lang=<?php echo $lang;?>"><?= htmlspecialchars($langFile['users_edit_button']) ?><span class="wb-inv"> <?php echo htmlspecialchars($row['firstname'] . ' ' . $row['lastname']); ?></span></a> <a class="wb-lbx btn btn-primary btn-block" href="includes/delete-users.php?id=<?php echo $row['id'];?>&lang=<?php echo $lang;?>"><?= htmlspecialchars($langFile['users_delete_button']) ?><span class="wb-inv"> <?php echo htmlspecialchars($row['firstname'] . ' ' . $row['lastname']); ?></span></a>
+						<a class="wb-lbx lbx-modal btn btn-primary btn-block" href="includes/edit-users.php?id=<?php echo $row['id'];?>&lang=<?php echo $lang;?>"><?= htmlspecialchars($langFile['users_edit_button']) ?><span class="wb-inv"> <?php echo htmlspecialchars($row['firstname'] . ' ' . $row['lastname']); ?></span></a> <a class="wb-lbx lbx-modal btn btn-primary btn-block" href="includes/delete-users.php?id=<?php echo $row['id'];?>&lang=<?php echo $lang;?>"><?= htmlspecialchars($langFile['users_delete_button']) ?><span class="wb-inv"> <?php echo htmlspecialchars($row['firstname'] . ' ' . $row['lastname']); ?></span></a>
 					</td>
 				</tr>
 			<?php } ?>

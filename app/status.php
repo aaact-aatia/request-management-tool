@@ -133,7 +133,7 @@ include 'includes/template/head.php';
 			}
 			?>
 			
-<div class="pull-right"><a class="wb-lbx btn btn-primary mrgn-bttm-md" href="includes/add-status.php"><?= htmlspecialchars($langFile['status_add_button']) ?></a></div>
+<div class="pull-right"><a class="wb-lbx lbx-modal btn btn-primary mrgn-bttm-md" href="includes/add-status.php"><?= htmlspecialchars($langFile['status_add_button']) ?></a></div>
 			<div class="clearfix"></div>
 			<?php $tableName = 'tblstatus'; ?>
 			
@@ -163,7 +163,7 @@ include 'includes/template/head.php';
 						<td><?php echo htmlspecialchars($row[$nameColumn]);?></td>		
 					<?php if ($_SESSION['is_superuser'] OR $_SESSION['is_admin']) { ?>		
 						<td>
-							<a class="wb-lbx btn btn-primary btn-block" href="includes/edit-status.php?id=<?php echo $row['id'];?>"><?= htmlspecialchars($langFile['edit_button']) ?><span class="wb-inv"> <?php echo htmlspecialchars($row[$nameColumn]) ?></span> <?= htmlspecialchars($langFile['status_status_label']) ?></a> <a class="wb-lbx btn btn-primary btn-block" href="includes/delete-status.php?id=<?php echo $row['id'];?>"><?= htmlspecialchars($langFile['delete_button']) ?><span class="wb-inv"> <?php echo htmlspecialchars($row[$nameColumn]) ?></span> <?= htmlspecialchars($langFile['status_status_label']) ?></a>
+							<a class="wb-lbx lbx-modal btn btn-primary btn-block" href="includes/edit-status.php?id=<?php echo $row['id'];?>"><?= htmlspecialchars($langFile['edit_button']) ?><span class="wb-inv"> <?php echo htmlspecialchars($row[$nameColumn]) ?></span> <?= htmlspecialchars($langFile['status_status_label']) ?></a> <a class="wb-lbx lbx-modal btn btn-primary btn-block" href="includes/delete-status.php?id=<?php echo $row['id'];?>"><?= htmlspecialchars($langFile['delete_button']) ?><span class="wb-inv"> <?php echo htmlspecialchars($row[$nameColumn]) ?></span> <?= htmlspecialchars($langFile['status_status_label']) ?></a>
 						</td>
 						<?php } ?>
 					</tr>

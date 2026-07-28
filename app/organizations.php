@@ -176,7 +176,7 @@ include 'includes/template/header.php';
     <?php endif; ?>
 
     <p>
-        <a class="wb-lbx btn btn-primary" href="/includes/add-organization.php?lang=<?= htmlspecialchars($lang) ?>"><?= htmlspecialchars($langFile['organizations_add_heading']) ?></a>
+        <a class="wb-lbx lbx-modal btn btn-primary" href="/includes/add-organization.php?lang=<?= htmlspecialchars($lang) ?>"><?= htmlspecialchars($langFile['organizations_add_heading']) ?></a>
     </p>
 
     <section class="mrgn-tp-lg">
@@ -204,7 +204,7 @@ include 'includes/template/header.php';
                         <td lang="<?= htmlspecialchars($lang) ?>"><?= htmlspecialchars($abbreviation) ?></td>
                         <td><?= htmlspecialchars($isActive ? $langFile['organizations_active'] : $langFile['organizations_inactive']) ?></td>
                         <td>
-                            <a class="wb-lbx btn btn-primary btn-block" href="/includes/edit-organization.php?id=<?= (int) $organization['id'] ?>&amp;lang=<?= htmlspecialchars($lang) ?>"><?= htmlspecialchars($langFile['edit_button']) ?><span class="wb-inv"> <?= htmlspecialchars($organization[$lang === 'fr' ? 'namefr' : 'nameen']) ?></span></a> <a class="wb-lbx btn btn-primary btn-block" href="/includes/set-organization-status.php?id=<?= (int) $organization['id'] ?>&amp;lang=<?= htmlspecialchars($lang) ?>"><?= htmlspecialchars($isActive ? $langFile['organizations_deactivate'] : $langFile['organizations_activate']) ?><span class="wb-inv"> <?= htmlspecialchars($organization[$lang === 'fr' ? 'namefr' : 'nameen']) ?></span></a><?php if ((int) $organization['source_part'] === 0): ?> <a class="wb-lbx btn btn-primary btn-block" href="/includes/delete-organization.php?id=<?= (int) $organization['id'] ?>&amp;lang=<?= htmlspecialchars($lang) ?>"><?= htmlspecialchars($langFile['delete_button']) ?><span class="wb-inv"> <?= htmlspecialchars($organization[$lang === 'fr' ? 'namefr' : 'nameen']) ?></span></a><?php endif; ?>
+                            <a class="wb-lbx lbx-modal btn btn-primary btn-block" href="/includes/edit-organization.php?id=<?= (int) $organization['id'] ?>&amp;lang=<?= htmlspecialchars($lang) ?>"><?= htmlspecialchars($langFile['edit_button']) ?><span class="wb-inv"> <?= htmlspecialchars($organization[$lang === 'fr' ? 'namefr' : 'nameen']) ?></span></a> <a class="wb-lbx lbx-modal btn btn-primary btn-block" href="/includes/set-organization-status.php?id=<?= (int) $organization['id'] ?>&amp;lang=<?= htmlspecialchars($lang) ?>"><?= htmlspecialchars($isActive ? $langFile['organizations_deactivate'] : $langFile['organizations_activate']) ?><span class="wb-inv"> <?= htmlspecialchars($organization[$lang === 'fr' ? 'namefr' : 'nameen']) ?></span></a><?php if ((int) $organization['source_part'] === 0): ?> <a class="wb-lbx lbx-modal btn btn-primary btn-block" href="/includes/delete-organization.php?id=<?= (int) $organization['id'] ?>&amp;lang=<?= htmlspecialchars($lang) ?>"><?= htmlspecialchars($langFile['delete_button']) ?><span class="wb-inv"> <?= htmlspecialchars($organization[$lang === 'fr' ? 'namefr' : 'nameen']) ?></span></a><?php endif; ?>
                         </td>
                     </tr>
                 <?php endforeach; ?>

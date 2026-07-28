@@ -162,7 +162,7 @@ include 'includes/template/head.php';
         
         <div class="row">
             <div class="col-md-6">
-                <p><a href="#addHolidayModal" class="wb-lbx btn btn-primary"><?= $t['add_holiday'] ?></a></p>
+                <p><a href="#addHolidayModal" class="wb-lbx lbx-modal btn btn-primary"><?= $t['add_holiday'] ?></a></p>
             </div>
             <div class="col-md-6">
                 <form method="get" action="" class="form-inline pull-right">
@@ -202,7 +202,7 @@ include 'includes/template/head.php';
                             <td><?= $row['recurring'] ? $t['yes'] : $t['no'] ?></td>
                             <td><?= $row['status'] ? $t['active'] : $t['inactive'] ?></td>
                             <td>
-                                <a href="includes/edit-holiday.php?id=<?= $row['id'] ?>&lang=<?= $lang ?>" class="wb-lbx btn btn-primary btn-block"><?= $t['edit'] ?><span class="wb-inv"> <?= htmlspecialchars($row[$lang == 'fr' ? 'name_fr' : 'name_en']) ?></span></a> <a href="includes/delete-holiday.php?id=<?= $row['id'] ?>&lang=<?= $lang ?>" class="wb-lbx btn btn-primary btn-block"><?= $t['delete'] ?><span class="wb-inv"> <?= htmlspecialchars($row[$lang == 'fr' ? 'name_fr' : 'name_en']) ?></span></a>
+                                <a href="includes/edit-holiday.php?id=<?= $row['id'] ?>&lang=<?= $lang ?>" class="wb-lbx lbx-modal btn btn-primary btn-block"><?= $t['edit'] ?><span class="wb-inv"> <?= htmlspecialchars($row[$lang == 'fr' ? 'name_fr' : 'name_en']) ?></span></a> <a href="includes/delete-holiday.php?id=<?= $row['id'] ?>&lang=<?= $lang ?>" class="wb-lbx lbx-modal btn btn-primary btn-block"><?= $t['delete'] ?><span class="wb-inv"> <?= htmlspecialchars($row[$lang == 'fr' ? 'name_fr' : 'name_en']) ?></span></a>
                             </td>
                         </tr>
                     <?php endwhile; ?>

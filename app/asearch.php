@@ -661,7 +661,7 @@ include 'includes/template/head.php';
 						<?php } ?>
 						<?php if ($canDeleteThisRequest) { ?>
 						<div class="<?= $canEditThisRequest ? 'col-xs-6' : 'col-xs-12' ?>">
-							<a class="wb-lbx btn btn-danger btn-block" href="includes/delete-request.php?id=<?php echo $row['id'];?>"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span><span class="mrgn-lft-sm"><?= htmlspecialchars($langFile['asearch_delete']) ?></span></a>
+							<a class="wb-lbx lbx-modal btn btn-danger btn-block" href="includes/delete-request.php?id=<?php echo $row['id'];?>"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span><span class="mrgn-lft-sm"><?= htmlspecialchars($langFile['asearch_delete']) ?></span></a>
 						</div>
 						<?php } ?>
 					</div>

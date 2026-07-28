@@ -542,7 +542,7 @@ include 'includes/template/head.php';
 							<?php endif; ?>
 							<?php if ($canDeleteThisRequest): ?>
 								<div class="<?= $canEditThisRequest ? 'col-xs-6' : 'col-xs-12' ?>">
-									<a href="includes/delete-request.php?id=<?= $row['id'] ?>" class="wb-lbx btn btn-danger btn-block"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span><span class="mrgn-lft-sm"><?= $t['delete_label'] ?></span></a>
+									<a href="includes/delete-request.php?id=<?= $row['id'] ?>" class="wb-lbx lbx-modal btn btn-danger btn-block"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span><span class="mrgn-lft-sm"><?= $t['delete_label'] ?></span></a>
 								</div>
 							<?php endif; ?>
 						</div>
