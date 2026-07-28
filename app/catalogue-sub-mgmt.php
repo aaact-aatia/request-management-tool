@@ -104,12 +104,12 @@ include 'includes/template/header.php';
 			}
 			?>
 			
-			<div class="pull-right"><a class="wb-lbx btn btn-primary mrgn-bttm-md" href="includes/add-subservice.php?id=<?php echo $serviceid ?>&cid=<?php echo $catalogueid ?>"><?= htmlspecialchars($langFile['catalogue_sub_mgmt_add_button']) ?></a></div>
+			<div class="pull-right"><a class="wb-lbx lbx-modal btn btn-primary mrgn-bttm-md" href="includes/add-subservice.php?id=<?php echo $serviceid ?>&cid=<?php echo $catalogueid ?>"><?= htmlspecialchars($langFile['catalogue_sub_mgmt_add_button']) ?></a></div>
 			<div class="clearfix"></div>
 			
 			<?php
 			// Construct SQL statement
-			$sql = "SELECT * FROM tblsubservices WHERE serviceid = '$serviceid' AND status = '1' ORDER BY {$nameColumn} ASC";
+			$sql = "SELECT * FROM tblsubservices WHERE serviceid = '$serviceid' ORDER BY {$nameColumn} ASC";
 			//echo $sql;
 			
 			$result = mysqli_query($link,$sql);
@@ -119,8 +119,9 @@ include 'includes/template/header.php';
 			<table class="wb-tables wb-tables-filter table table-striped table-hover" data-wb-tables='{ "ordering" : true }'>
 				<thead>
 				<tr>
-					<th><?= htmlspecialchars($langFile['catalogue_sub_mgmt_subservice_name_column']) ?></th>
-					<th><?= htmlspecialchars($langFile['actions_column']) ?></th>
+					<th scope="col"><?= htmlspecialchars($langFile['catalogue_sub_mgmt_subservice_name_column']) ?></th>
+					<th scope="col"><?= htmlspecialchars($langFile['status_column']) ?></th>
+					<th scope="col"><?= htmlspecialchars($langFile['actions_column']) ?></th>
 				</tr>
 				</thead>
 				<tbody>
@@ -131,9 +132,10 @@ include 'includes/template/header.php';
 					$subserviceid = $row['id'];
 				?>
 					<tr>
-						<td><?php echo htmlspecialchars($row[$nameColumn]); if (!empty($row['sds'])) { echo ' <small class="label label-success">' . (int)$row['sds'] . ' ' . ($_SESSION['lang'] === 'fr' ? 'jour(s)' : 'day(s)') . '</small>'; } ?></td>
+						<th scope="row"><?php echo htmlspecialchars($row[$nameColumn]); if (!empty($row['sds'])) { echo ' <small class="label label-success">' . (int)$row['sds'] . ' ' . ($_SESSION['lang'] === 'fr' ? 'jour(s)' : 'day(s)') . '</small>'; } ?></th>
+						<td><?= htmlspecialchars((int)$row['status'] === 1 ? $langFile['active_label'] : $langFile['inactive_label']) ?></td>
 						<td>
-							<a class="wb-lbx btn btn-primary btn-block" href="includes/edit-subservice.php?id=<?php echo $row['id'];?>&sid=<?php echo $serviceid ?>&cid=<?php echo $catalogueid ?>"><?= htmlspecialchars($langFile['edit_button']) ?><span class="wb-inv"> <?php echo htmlspecialchars($row[$nameColumn]) ?></span> <?= htmlspecialchars($langFile['catalogue_sub_mgmt_subservice_label']) ?></a> <a class="wb-lbx btn btn-primary btn-block" href="includes/delete-subservice.php?id=<?php echo $row['id'];?>&sid=<?php echo $serviceid ?>&cid=<?php echo $catalogueid ?>"><?= htmlspecialchars($langFile['delete_button']) ?><span class="wb-inv"> <?php echo htmlspecialchars($row[$nameColumn]) ?></span> <?= htmlspecialchars($langFile['catalogue_sub_mgmt_subservice_label']) ?></a>
+							<a class="wb-lbx lbx-modal btn btn-primary btn-block" href="includes/edit-subservice.php?id=<?php echo $row['id'];?>&sid=<?php echo $serviceid ?>&cid=<?php echo $catalogueid ?>"><?= htmlspecialchars($langFile['edit_button']) ?><span class="wb-inv"> <?php echo htmlspecialchars($row[$nameColumn]) ?></span> <?= htmlspecialchars($langFile['catalogue_sub_mgmt_subservice_label']) ?></a> <a class="wb-lbx lbx-modal btn btn-primary btn-block" href="includes/delete-subservice.php?id=<?php echo $row['id'];?>&sid=<?php echo $serviceid ?>&cid=<?php echo $catalogueid ?>"><?= htmlspecialchars($langFile['delete_button']) ?><span class="wb-inv"> <?php echo htmlspecialchars($row[$nameColumn]) ?></span> <?= htmlspecialchars($langFile['catalogue_sub_mgmt_subservice_label']) ?></a>
 						</td>
 					</tr>
 				<?php } ?>

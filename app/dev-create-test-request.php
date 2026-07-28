@@ -46,7 +46,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'catalogueid' => '3',
         'serviceid' => '34',
         'subserviceid' => '104',
-        'reauditFlag' => '0',
         'requesttitle' => $requestLanguage === 'fr' ? 'Demande de test rapide' : 'Quick test request',
         'clientlname' => $requestLanguage === 'fr' ? 'Test' : 'Test',
         'clientfname' => $requestLanguage === 'fr' ? 'Rapide' : 'Quick',

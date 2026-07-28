@@ -160,6 +160,18 @@ function app_is_production(): bool
     return !in_array($environment, ['dev', 'development', 'local', 'test', 'testing'], true);
 }
 
+function app_file_storage_mode(): string
+{
+    $defaultMode = app_is_production() ? 'disabled' : 'local';
+    $mode = strtolower(trim((string) app_env('FILE_STORAGE_MODE', $defaultMode)));
+
+    if (!in_array($mode, ['local', 'azure_secret', 'azure_mi', 'disabled'], true)) {
+        return $defaultMode;
+    }
+
+    return $mode;
+}
+
 function app_notify_mode(): string
 {
     $defaultMode = app_is_production() ? 'live' : 'redirect';

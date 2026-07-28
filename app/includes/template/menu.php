@@ -50,6 +50,7 @@ $menu_text = [
 		'catalogue' => 'Service catalogue',
 		'holidays' => 'Holidays',
 		'gcnotify_settings' => 'GC Notify settings',
+		'organizations' => 'Organizations',
 		'sources' => 'Sources',
 		'status' => 'Status',
 		'users' => 'Users',
@@ -73,6 +74,7 @@ $menu_text = [
 		'catalogue' => 'Catalogue de services',
 		'holidays' => 'Jours fériés',
 		'gcnotify_settings' => 'Parametres GC Notify',
+		'organizations' => 'Organisations',
 		'sources' => 'Sources',
 		'status' => 'Statuts',
 		'users' => 'Utilisateurs',
@@ -130,8 +132,8 @@ $menuLangStrings = $menu_text[$lang_code];
 				// Administration menu is restricted to admin/superadmin.
 				if ($isAdminAccount || $isSuperAdmin) {
 				?>
-					<li><a href="#s2" class="item"><?= htmlspecialchars($menuLangStrings['admin']) ?></a>
-						<ul class="sm list-unstyled" id="s2" role="menu">
+					<li><a href="#admin-menu" class="item"><?= htmlspecialchars($menuLangStrings['admin']) ?></a>
+						<ul class="sm list-unstyled" id="admin-menu" role="menu">
 							<li><a href="/teams.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['contacts']) ?></a></li>
 							<?php
 							// Only Super admins can access this option
@@ -141,6 +143,7 @@ $menuLangStrings = $menu_text[$lang_code];
 							<li><a href="/holidays-mgmt.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['holidays']) ?></a></li>
 							<li><a href="/gcnotify-settings.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['gcnotify_settings']) ?></a></li>
 							<?php } ?>
+							<li><a href="/organizations.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['organizations']) ?></a></li>
 							<li><a href="/sources.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['sources']) ?></a></li>
 							<li><a href="/status.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['status']) ?></a></li>
 							<?php

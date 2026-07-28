@@ -47,17 +47,8 @@ $_SESSION['lang']       // 'en' or 'fr'
 
 Check authentication with: `require('includes/loggedincheck.php')`
 
-### Multi-Tier AJAX Request Flow
-The "New Request" workflow uses cascading AJAX calls to populate dependent dropdowns:
-
-**4-Tier System** (see [openrequest.php](../app/openrequest.php)):
-1. User selects **Catalogue** (topic/product) → triggers `ajax1(catalogueid)`
-2. `ajax1()` calls [addrequest2-ajax1.php](../app/addrequest2-ajax1.php) → populates Service dropdown
-3. User selects **Service** → triggers `ajax2(serviceid)`
-4. `ajax2()` calls [addrequest2-ajax2.php](../app/addrequest2-ajax2.php) → populates Subservice dropdown
-5. Pattern continues with `ajax3()` and `ajax4()` for additional tiers
-
-**Critical**: AJAX endpoints use hardcoded logic per catalogue ID (e.g., `if ($catalogueid==1)`) rather than database-driven lookups. See [docs/future/004-database-driven-ajax-dropdowns.md](../docs/future/004-database-driven-ajax-dropdowns.md) for the planned fix.
+### Public Intake Field Flow
+The "New Request" workflow in [openrequest.php](../app/openrequest.php) loads the active catalogue, service, and subservice hierarchy from the database and renders it with WET Field Flow. Field Flow appends dependent dropdowns and submits numeric IDs; [openrequest2.php](../app/openrequest2.php) validates the full relationship server-side.
 
 ### File Storage
 File upload and download use `AzureBlobStorageManager` (defined in [app/BlobStorage.php](../app/BlobStorage.php)). Azure Blob Storage has been removed — the current class is a **stub** that silently no-ops uploads and returns empty URLs. File functionality is pending replacement with local filesystem storage. See [docs/future/007-local-file-storage.md](../docs/future/007-local-file-storage.md).
@@ -118,7 +109,7 @@ docker compose up -d
 # Access: http://localhost:${PORT} (from .env)
 ```
 
-The database is initialized automatically on first start using the split bootstrap files: [database/schema.sql](../database/schema.sql), [database/reference.sql](../database/reference.sql), and [database/sample-dev.sql](../database/sample-dev.sql).
+The database is initialized automatically on first start using [database/schema.sql](../database/schema.sql), [database/reference.sql](../database/reference.sql), and the profile selected by `RMT_SEED_PROFILE`. The default `example` profile loads [database/sample-dev.sql](../database/sample-dev.sql); developers can export private UI-managed data to the ignored `database/local-seed.sql` with `database/export-local-seed.sh` and select the `local` profile.
 
 ### Docker-First PHP Validation (Required)
 Agents must use Docker for PHP validation and must not assume PHP is installed on the host machine.
@@ -196,20 +187,18 @@ if ($_SESSION['atype'] != 1) { header("location:/index.php"); exit(); }
 
 Detailed plans for all items are in [docs/future/](../docs/future/):
 
-1. **Hardcoded AJAX logic** (`future/004`) — [addrequest2-ajax1.php](../app/addrequest2-ajax1.php) uses cascading if/else blocks instead of database-driven dropdowns
-2. **File storage stub** (`future/007`) — `BlobStorage.php` is a no-op stub; file upload/download needs local filesystem replacement
-3. **No prepared statements** (`future/005`) — queries use `mysqli_real_escape_string()` instead of parameterised statements
-4. **PriorityUpdates.php incomplete** (`future/005`) — batch priority scorer has unfinished SLA logic, missing auth guard, and SQL injection vulnerability
-5. **GC Notify not configured** (`future/006`) — email integration requires API key and template setup
-6. **WET4 → GC Design System** (`future/002`) — long-term UI framework migration
+1. **File storage stub** (`future/007`) — `BlobStorage.php` is a no-op stub; file upload/download needs local filesystem replacement
+2. **No prepared statements** (`future/005`) — queries use `mysqli_real_escape_string()` instead of parameterised statements
+3. **PriorityUpdates.php incomplete** (`future/005`) — batch priority scorer has unfinished SLA logic, missing auth guard, and SQL injection vulnerability
+4. **GC Notify not configured** (`future/006`) — email integration requires API key and template setup
+5. **WET4 → GC Design System** (`future/002`) — long-term UI framework migration
 
 ## Common Tasks
 
 ### Adding a New Request Type (Catalogue)
 1. Update `tblcatalogue` in database
-2. Add hardcoded logic in [addrequest2-ajax1.php](../app/addrequest2-ajax1.php)
-3. Add corresponding option in [openrequest.php](../app/openrequest.php) dropdown
-4. Add translation strings to both lang files
+2. Add its services and optional subservices through catalogue management
+3. Confirm the active hierarchy appears in [openrequest.php](../app/openrequest.php)
 
 ### Creating Admin Pages
 Follow pattern in `includes/`:

@@ -1,9 +1,5 @@
--- RMT Database Seed File
--- Creates schema and inserts dummy data for local development
---
--- NOTE: Catalogue/Services dropdowns are HARDCODED in the PHP files (addrequest2-ajax*.php)
--- not database-driven. Those tables exist but aren't used by the dropdown logic.
--- This seed file focuses on tables actually needed for the app to function.
+-- RMT database schema.
+-- Catalogue, service, and subservice relationships drive the public intake.
 
 SET NAMES utf8mb4;
 SET CHARACTER SET utf8mb4;
@@ -53,7 +49,10 @@ CREATE TABLE IF NOT EXISTS `tblservices` (
   `contactid` int(11) DEFAULT NULL,
   `status` tinyint(1) DEFAULT 1,
   PRIMARY KEY (`id`),
-  KEY `catalogueid` (`catalogueid`)
+  KEY `catalogueid` (`catalogueid`),
+  CONSTRAINT `fk_tblservices_catalogue`
+    FOREIGN KEY (`catalogueid`) REFERENCES `tblcatalogue` (`id`)
+    ON UPDATE RESTRICT ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `tblsubservices` (
@@ -65,7 +64,10 @@ CREATE TABLE IF NOT EXISTS `tblsubservices` (
   `contactid` int(11) DEFAULT NULL,
   `status` tinyint(1) DEFAULT 1,
   PRIMARY KEY (`id`),
-  KEY `serviceid` (`serviceid`)
+  KEY `serviceid` (`serviceid`),
+  CONSTRAINT `fk_tblsubservices_service`
+    FOREIGN KEY (`serviceid`) REFERENCES `tblservices` (`id`)
+    ON UPDATE RESTRICT ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `tblsources` (
@@ -74,6 +76,23 @@ CREATE TABLE IF NOT EXISTS `tblsources` (
   `namefr` varchar(255) NOT NULL,
   `status` tinyint(1) DEFAULT 1,
   PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `tblorganizations` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `nameen` varchar(255) NOT NULL,
+  `namefr` varchar(255) NOT NULL,
+  `abbreviationen` varchar(50) DEFAULT NULL,
+  `abbreviationfr` varchar(50) DEFAULT NULL,
+  `source_part` tinyint(1) NOT NULL DEFAULT 0,
+  `status` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_tblorganizations_nameen` (`nameen`),
+  UNIQUE KEY `uq_tblorganizations_namefr` (`namefr`),
+  KEY `idx_tblorganizations_status_nameen` (`status`, `nameen`),
+  KEY `idx_tblorganizations_status_namefr` (`status`, `namefr`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `tblstatus` (
@@ -131,7 +150,6 @@ CREATE TABLE IF NOT EXISTS `tbltriage` (
   `tech_id` int(11) DEFAULT NULL,
   `priority_score` int(11) DEFAULT NULL,
   `status` tinyint(1) DEFAULT 1,
-  `isreaudit` tinyint(1) DEFAULT 0,
   `ipaddress` varchar(50) DEFAULT NULL,
   `exactTime` varchar(50) DEFAULT NULL,
   `firstsprintenddate` date DEFAULT NULL,

@@ -1,6 +1,6 @@
 # Request Management Tool
 Version: 2.0.0  
-Last updated: 2026-05-25  
+Last updated: 2026-07-28  
 Author: Muna Adan
 Editor: Shawn Thompson
 
@@ -59,6 +59,7 @@ The application uses environment variables for configuration. Before running the
    DB_PASS=your_database_password # Your database password
    DB_NAME=aaact                  # Database name
    MYSQL_ROOT_PASSWORD=your_mysql_root_password
+   RMT_SEED_PROFILE=example       # clean, example, or local
 
    # Application Configuration
    PORT=8080                      # Local development port
@@ -75,18 +76,15 @@ The application is containerized using Docker for consistent development environ
 
 1. **Start the application:**
    ```bash
-docker compose up -d
+   docker compose up -d
    ```
 
    This command will:
    - Build the PHP 8.2 Apache container
    - Start a MySQL 5.7 database container
-    - Run the app on the `PORT` value from `.env` (default `8080`)
+   - Run the app on the `PORT` value from `.env` (default `8080`)
    - Mount your local `app/` directory for live code updates
-    - Initialize MySQL from split SQL files (first run only):
-      - `database/schema.sql`
-      - `database/reference.sql`
-      - `database/sample-dev.sql`
+   - Initialize MySQL from schema, reference data, session storage, and the selected seed profile (first run only)
 
 2. **Access the application:**
     - Open your browser to `http://localhost:${PORT}`.
@@ -94,17 +92,17 @@ docker compose up -d
 
 3. **View logs:**
    ```bash
-docker compose logs -f
+   docker compose logs -f
    ```
 
 4. **Stop the application:**
    ```bash
-docker compose down
+   docker compose down
    ```
 
 5. **Rebuild containers (after Dockerfile changes):**
    ```bash
-docker compose up -d --build
+   docker compose up -d --build
    ```
 
 ### Database Bootstrap Files
@@ -113,7 +111,41 @@ The repository contains database bootstrap files with distinct responsibilities:
 
 - `database/schema.sql`: database structure only (`CREATE TABLE`, indexes, and constraints)
 - `database/reference.sql`: production-safe lookup and configuration data required by the app
-- `database/sample-dev.sql`: local/development sample data only (non-production)
+- `database/sample-dev.sql`: generic example hierarchy, users, and requests
+- `database/local-seed.sql`: ignored developer export of local users, teams, and catalogue hierarchy
+- `database/export-local-seed.sh`: creates the ignored local seed from the running database
+- `database/seed-profile.sh`: selects optional data from `RMT_SEED_PROFILE`
+
+Available profiles:
+
+- `clean`: schema, session storage, and universal reference lookups only
+- `example`: clean data plus generic catalogue, team, user, and request examples
+- `local`: clean data plus the private data exported to `database/local-seed.sql`
+
+The default is `example`. The example profile contains accounts with a known development password and must not be used in production. Local seed files can contain names, email addresses, and password hashes and must never be committed.
+
+### Private Local Seeds
+
+Start with the `example` profile and update users, teams, catalogue entries, services, and subservices through the application. From the repository root, export those tables from the running local database:
+
+```bash
+./database/export-local-seed.sh
+```
+
+The command writes `database/local-seed.sql`, which is excluded by `.gitignore`. Confirm that Git ignores it:
+
+```bash
+git check-ignore database/local-seed.sql
+```
+
+To restore that data into a fresh local database, set `RMT_SEED_PROFILE=local` in `.env`, then recreate the disposable database volume:
+
+```bash
+docker compose down -v
+docker compose up -d --build
+```
+
+Always run the export before removing the volume. Each developer keeps their own `database/local-seed.sql`; sharing private seed data requires an approved secure channel outside Git.
 
 ### Local Initialization Behavior
 
@@ -121,17 +153,20 @@ On first MySQL container initialization in local Docker, the split files are imp
 
 1. `database/schema.sql`
 2. `database/reference.sql`
-3. `database/sample-dev.sql`
+3. `database/session_handler.sql`
+4. The profile selected by `RMT_SEED_PROFILE`
 
 Important: MySQL init files run only when the `dbdata` volume is created. If the volume already exists, `docker compose up` will not re-run imports.
 
-To force re-initialization and re-import bootstrap SQL files:
+Existing databases must apply numbered files in `database/migrations/` instead of reimporting bootstrap data. Migration `014-clean-catalogue-hierarchy.sql` validates hierarchy relationships and adds foreign keys without deleting lookup or request data; review [the migration guide](docs/migrations/014-clean-catalogue-hierarchy.md) before applying it.
+
+To initialize a different profile for disposable local data, update `RMT_SEED_PROFILE` in `.env`, then recreate the volume:
 
 ```bash
 docker compose down -v && docker compose up -d --build
 ```
 
-The `-v` flag removes the `dbdata` volume.
+The `-v` flag permanently removes the `dbdata` volume. Back up any data that must be retained before running it.
 
 ### Sample Local Users
 
@@ -210,70 +245,11 @@ Quick notes:
 - Status changes can log SLA snapshots (clock start, due date, elapsed days) when StatusHistory columns are present.
 - Existing databases should run migration `database/migrations/011-add-statushistory-audit-sla-columns.sql`.
 
-## AJAX actions
+## Intake field flow
 
-The RMT takes actions via AJAX to fill in extra information required to search or add a new request.
+The public intake renders the active catalogue, service, and subservice hierarchy from the database as a WET Field Flow component. Selecting a catalogue appends its service dropdown; selecting a service appends a subservice dropdown when active subservices exist.
 
-For example, this is the flow of selecting a sub-service ID for a given catalogue with added comments.
-
-*note*: Comments like the ones below would help developers onboard onto the project faster.
-
-```php
-<?php
-/**
- * Sub-Service Dropdown Generator
- *
- * This script is responsible for generating an HTML dropdown menu populated
- * with active sub-services based on a provided service ID. It is used as part of
- * the "add request" feature or form in the application.
- *
- * Dependencies:
- * - sql.php (included for database connection and utility functions)
- *
- * Flow:
- * 1. Retrieve the service ID from the GET request parameter 'v1'
- * 2. Construct an SQL query to fetch active sub-services for the given service ID
- * 3. Execute the query and generate the HTML dropdown menu
- * 4. Populate the dropdown options with sub-service names from the query results
- * 5. Render the results on the page
- */
-
-require('sql.php');
-
-// Grab the catalogue id
-if (!empty($_GET['v1'])) {
-    $serviceid = mysqli_real_escape_string($link, $_GET['v1']);
-} else {
-    $serviceid = "";
-}
-
-// Check if results, otherwise return empty result
-$sql = "SELECT * FROM tblsubservices WHERE serviceid='$serviceid' AND status='1' ORDER BY nameen ASC";
-$result = mysqli_query($link, $sql);
-
-// List it
-if (mysqli_num_rows($result) > 0) {
-?>
-    <label for="subserviceid"><span class="field-name">Sub-service name:</span></label>
-    <select class="form-control" id="subserviceid" name="subserviceid">
-        <option value="">Select a sub-service name</option>
-        <?php
-        $sql2 = "SELECT * FROM tblsubservices WHERE serviceid='$serviceid' AND status='1' ORDER BY nameen ASC";
-        $result2 = mysqli_query($link, $sql2);
-        while ($row = mysqli_fetch_array($result2)) {
-        ?>
-            <option value="<?php echo $row['id']; ?>"><?php echo $row['nameen']; ?></option>
-        <?php
-        }
-        ?>
-    </select>
-<?php
-}
-
-// Close connection
-mysqli_close($link);
-?>
-```
+Field Flow submits numeric database IDs. `openrequest2.php` validates the complete catalogue, service, and optional subservice relationship before rendering the second intake step. The advanced search and internal add-request pages continue to use the separate `addrequest-ajax1.php` and `addrequest-ajax2.php` endpoints.
 
 ## Recommendations
 
@@ -415,14 +391,13 @@ For development environments, prefer `NOTIFY_MODE=redirect` so request notificat
                 These APIs work together on the advanced search page (triage) called “Search Requests.”
                 After selecting a specific catalogue, users can choose services related to that catalogue.
                 If no services exist for the selected catalogue, the second API (“ajax2”) won’t be called.
-            addrequest2:
-                Composed of four APIs.
-                Used for creating a new request (in openrequest.php).
+            openrequest:
+               Uses WET Field Flow with a server-rendered database hierarchy.
+               Used for creating a new request (in openrequest.php).
                     Here are the steps:
-                        Choose a product/topic. If the product contains services, proceed to step 2.
-                        Select services related to the chosen topic. If a service requires additional information, move to step 3.
-                        Make a choice related to the presented service. If more information is needed, proceed to step 4.
-                        Choose the answer that best fits the situation.
+                        Choose an active catalogue.
+                        Select an active service belonging to that catalogue.
+                        Select a subservice when the service has active subservices.
                         After completing these steps, users are directed to openrequest2 and then openrequest3.
         Additional Notes:
             The project structure may be complex, so detailed explanations are helpful for developers.

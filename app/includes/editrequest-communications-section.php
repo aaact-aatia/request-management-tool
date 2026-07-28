@@ -59,7 +59,7 @@ while ($row2 = mysqli_fetch_assoc($result2)) {
     <?php if ($canEditCommunicationLogs): ?>
     <button type="submit" name="form_action" value="add_log" class="btn btn-primary" formnovalidate><?php echo htmlspecialchars($t['add_log_button'], ENT_QUOTES, 'UTF-8'); ?></button>
     <?php endif; ?>
-    <a class="wb-lbx btn btn-primary" href="includes/ecomms<?php echo $langSuffix; ?>.php?id=<?php echo $row['id']; ?>">
+    <a class="wb-lbx lbx-modal btn btn-primary" href="includes/ecomms<?php echo $langSuffix; ?>.php?id=<?php echo $row['id']; ?>">
         <?php echo htmlspecialchars($t['view_existing_comms'] . ' (' . (int)$existingCommsCount . ')', ENT_QUOTES, 'UTF-8'); ?>
     </a>
 </div>

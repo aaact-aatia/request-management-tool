@@ -127,6 +127,14 @@ if ($header === false) {
 
 $header = array_map('trim', $header);
 
+$forbiddenColumns = $csvTables[$table]['forbidden_columns'] ?? [];
+if (!empty(array_intersect($forbiddenColumns, $header))) {
+	fclose($handle);
+	$sep = (strpos($referrer, '?') === false) ? '?' : '&';
+	header("location:$referrer{$sep}lang=" . urlencode($lang) . "&status=header_mismatch");
+	exit();
+}
+
 // Check that all required columns are present (allow extra descriptive columns)
 $missingColumns = array_diff($columns, $header);
 if (!empty($missingColumns)) {

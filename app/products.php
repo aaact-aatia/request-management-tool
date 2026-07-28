@@ -90,7 +90,7 @@ include 'includes/template/head.php';
 			}
 			?>
 			
-			<div class="pull-right"><a class="wb-lbx btn btn-primary mrgn-bttm-md" href="includes/add-product.php?lang=<?= $_SESSION['lang'] ?>"><?= htmlspecialchars($langFile['products_add_button']) ?></a></div>
+			<div class="pull-right"><a class="wb-lbx lbx-modal btn btn-primary mrgn-bttm-md" href="includes/add-product.php?lang=<?= $_SESSION['lang'] ?>"><?= htmlspecialchars($langFile['products_add_button']) ?></a></div>
 			<div class="clearfix"></div>
 			
 			<?php
@@ -120,7 +120,7 @@ include 'includes/template/head.php';
 					<tr>
 						<td><?php echo $row[$nameColumn];?></td>				
 						<td>
-							<a class="wb-lbx btn btn-primary btn-block" href="includes/edit-product.php?id=<?php echo $row['id'];?>&lang=<?= $_SESSION['lang'] ?>"><?= htmlspecialchars($langFile['products_edit_button']) ?><span class="wb-inv"> <?php echo $row[$nameColumn]; ?></span> <?= htmlspecialchars($langFile['products_product_label']) ?></a> <a class="wb-lbx btn btn-primary btn-block" href="includes/delete-product.php?id=<?php echo $row['id'];?>&lang=<?= $_SESSION['lang'] ?>"><?= htmlspecialchars($langFile['products_delete_button']) ?><span class="wb-inv"> <?php echo $row[$nameColumn]; ?></span> <?= htmlspecialchars($langFile['products_product_label']) ?></a>
+							<a class="wb-lbx lbx-modal btn btn-primary btn-block" href="includes/edit-product.php?id=<?php echo $row['id'];?>&lang=<?= $_SESSION['lang'] ?>"><?= htmlspecialchars($langFile['products_edit_button']) ?><span class="wb-inv"> <?php echo $row[$nameColumn]; ?></span> <?= htmlspecialchars($langFile['products_product_label']) ?></a> <a class="wb-lbx lbx-modal btn btn-primary btn-block" href="includes/delete-product.php?id=<?php echo $row['id'];?>&lang=<?= $_SESSION['lang'] ?>"><?= htmlspecialchars($langFile['products_delete_button']) ?><span class="wb-inv"> <?php echo $row[$nameColumn]; ?></span> <?= htmlspecialchars($langFile['products_product_label']) ?></a>
 						</td>
 					</tr>
 				<?php } ?>
