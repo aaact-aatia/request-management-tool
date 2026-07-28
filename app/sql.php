@@ -25,11 +25,7 @@ require('cors.php');
 
 // Configure and start session only when a session is not already active.
 if (session_status() !== PHP_SESSION_ACTIVE) {
-	if (session_start() !== true) {
-		error_log('Session startup failed.');
-		http_response_code(503);
-		exit('Session temporarily unavailable.');
-	}
+	session_start();
 }
 
 
