@@ -343,6 +343,35 @@ function getPostValue($key, $default = "") {
     return !empty($_POST[$key]) ? mysqli_real_escape_string($GLOBALS['link'], $_POST[$key]) : $default;
 }
 
+/**
+ * Parse an optional positive integer from a POST value, session draft value,
+ * or any raw input. Returns the integer when the complete input is a valid
+ * positive integer string.  Returns null for every other input, including:
+ * null, empty string, zero, negative values, decimals, booleans, arrays,
+ * objects, and strings such as "12abc", "1.5", "1e2", and "--2".
+ *
+ * Uses FILTER_VALIDATE_INT so that only strings that represent a complete
+ * integer are accepted. A simple (int) cast is intentionally avoided because
+ * it converts "12abc" to 12.
+ *
+ * Use this for optional classification IDs (serviceid, subserviceid) so that
+ * absent, empty, and zero all produce PHP null — and therefore SQL NULL.
+ *
+ * @param mixed $raw  Raw string, int, or any other value.
+ * @return int|null   Positive integer, or null.
+ */
+function rmt_optional_positive_int($raw): ?int {
+    if ($raw === null || is_bool($raw) || is_array($raw) || is_object($raw)) {
+        return null;
+    }
+    $filtered = filter_var(
+        trim((string) $raw),
+        FILTER_VALIDATE_INT,
+        ['options' => ['min_range' => 1]]
+    );
+    return $filtered !== false ? (int) $filtered : null;
+}
+
 function getGetValue($key, $default = "") {
     return !empty($_GET[$key]) ? mysqli_real_escape_string($GLOBALS['link'], $_GET[$key]) : $default;
 }

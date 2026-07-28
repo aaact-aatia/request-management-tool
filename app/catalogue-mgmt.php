@@ -85,7 +85,7 @@ include 'includes/template/head.php';
 			}
 			?>
 			
-			<div class="pull-right"><a class="wb-lbx btn btn-primary mrgn-bttm-md" href="includes/add-service.php?id=<?php echo $catalogueid ?>"><?= htmlspecialchars($lang['catalogue_mgmt_add_button']) ?></a></div>
+			<div class="pull-right"><a class="wb-lbx lbx-modal btn btn-primary mrgn-bttm-md" href="includes/add-service.php?id=<?php echo $catalogueid ?>"><?= htmlspecialchars($lang['catalogue_mgmt_add_button']) ?></a></div>
 			<div class="clearfix"></div>
 			
 			<?php
@@ -133,7 +133,7 @@ include 'includes/template/head.php';
 						} ?>
 						</td>					
 						<td>
-							<a class="wb-lbx btn btn-primary btn-block" href="includes/edit-service.php?id=<?php echo $row['id'];?>&cid=<?php echo $catalogueid ?>"><?= htmlspecialchars($lang['edit_button']) ?><span class="wb-inv"> <?php echo htmlspecialchars($row[$nameColumn]) ?></span> <?= htmlspecialchars($lang['catalogue_mgmt_service_label']) ?></a> <a class="wb-lbx btn btn-primary btn-block" href="includes/delete-service.php?id=<?php echo $row['id'];?>&cid=<?php echo $catalogueid ?>"><?= htmlspecialchars($lang['delete_button']) ?><span class="wb-inv"> <?php echo htmlspecialchars($row[$nameColumn]) ?></span> <?= htmlspecialchars($lang['catalogue_mgmt_service_label']) ?></a> <a class="btn btn-primary btn-block" href="/catalogue-sub-mgmt.php?id=<?php echo $serviceid ?>&cid=<?php echo $catalogueid ?>&lang=<?= $_SESSION['lang'] ?>"><?= htmlspecialchars($lang['catalogue_mgmt_view_subservices']) ?></a>
+							<a class="wb-lbx lbx-modal btn btn-primary btn-block" href="includes/edit-service.php?id=<?php echo $row['id'];?>&cid=<?php echo $catalogueid ?>"><?= htmlspecialchars($lang['edit_button']) ?><span class="wb-inv"> <?php echo htmlspecialchars($row[$nameColumn]) ?></span> <?= htmlspecialchars($lang['catalogue_mgmt_service_label']) ?></a> <a class="wb-lbx lbx-modal btn btn-primary btn-block" href="includes/delete-service.php?id=<?php echo $row['id'];?>&cid=<?php echo $catalogueid ?>"><?= htmlspecialchars($lang['delete_button']) ?><span class="wb-inv"> <?php echo htmlspecialchars($row[$nameColumn]) ?></span> <?= htmlspecialchars($lang['catalogue_mgmt_service_label']) ?></a> <a class="btn btn-primary btn-block" href="/catalogue-sub-mgmt.php?id=<?php echo $serviceid ?>&cid=<?php echo $catalogueid ?>&lang=<?= $_SESSION['lang'] ?>"><?= htmlspecialchars($lang['catalogue_mgmt_view_subservices']) ?></a>
 						</td>
 					</tr>
 				<?php } ?>

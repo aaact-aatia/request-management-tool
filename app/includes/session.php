@@ -54,6 +54,49 @@ if (!isset($GLOBALS['link']) || !($GLOBALS['link'] instanceof mysqli)) {
 
 $link = $GLOBALS['link'];
 
+if (!function_exists('rmt_session_database_connection')) {
+    /**
+     * Open the dedicated connection used for session locks and persistence.
+     *
+     * Application pages frequently close their shared $link before PHP's
+     * session shutdown. A separate connection keeps the advisory lock and
+     * pending session write alive until session_write_close().
+     */
+    function rmt_session_database_connection(): mysqli
+    {
+        $sessionLink = mysqli_init();
+        if ($sessionLink === false) {
+            throw new RuntimeException('Failed to initialize the session database connection.');
+        }
+
+        mysqli_options($sessionLink, MYSQLI_OPT_CONNECT_TIMEOUT, 10);
+
+        $sslCa = app_env('DB_SSL_CA');
+        $sslMode = strtoupper((string) app_env('DB_SSL_MODE', $sslCa ? 'REQUIRED' : 'DISABLED'));
+        $clientFlags = 0;
+        if ($sslMode !== 'DISABLED') {
+            if (!empty($sslCa)) {
+                mysqli_ssl_set($sessionLink, null, null, $sslCa, null, null);
+            }
+            $clientFlags = MYSQLI_CLIENT_SSL;
+        }
+
+        mysqli_real_connect(
+            $sessionLink,
+            app_env_required('DB_HOST'),
+            app_env_required('DB_USER'),
+            app_env_required('DB_PASS'),
+            app_env_required('DB_NAME'),
+            (int) app_env('DB_PORT', '3306'),
+            null,
+            $clientFlags
+        );
+        mysqli_set_charset($sessionLink, 'utf8mb4');
+
+        return $sessionLink;
+    }
+}
+
 $tableCheckQuery = "SELECT 1 FROM INFORMATION_SCHEMA.TABLES
                    WHERE TABLE_SCHEMA = DATABASE()
                      AND TABLE_NAME = 'tblphp_sessions'
@@ -74,6 +117,7 @@ if (!$tableExists) {
 
 if (session_status() === PHP_SESSION_NONE) {
     $sessionLifetime = (int) app_env('SESSION_LIFETIME', '86400');
+    $sessionLockTimeout = (int) app_env('SESSION_LOCK_TIMEOUT', '30');
 
     ini_set('session.gc_maxlifetime', (string) $sessionLifetime);
     session_set_cookie_params([
@@ -88,7 +132,8 @@ if (session_status() === PHP_SESSION_NONE) {
     require_once __DIR__ . '/MySQLSessionHandler.php';
 
     try {
-        $sessionHandler = new MySQLSessionHandler($link, $sessionLifetime);
+        $sessionLink = rmt_session_database_connection();
+        $sessionHandler = new MySQLSessionHandler($sessionLink, $sessionLifetime, $sessionLockTimeout);
         $handlerRegistered = session_set_save_handler($sessionHandler, true);
         if ($handlerRegistered !== true) {
             rmt_session_bootstrap_fail('Session bootstrap error: session_set_save_handler returned false for MySQLSessionHandler.');

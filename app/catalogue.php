@@ -136,7 +136,7 @@ include 'includes/template/head.php';
 			}
 			?>
 			
-<div class="pull-right"><a class="wb-lbx btn btn-primary mrgn-bttm-md" href="includes/add-catalogue.php"><?= htmlspecialchars($langFile['catalogue_add_button']) ?></a></div>
+<div class="pull-right"><a class="wb-lbx lbx-modal btn btn-primary mrgn-bttm-md" href="includes/add-catalogue.php"><?= htmlspecialchars($langFile['catalogue_add_button']) ?></a></div>
 			<div class="clearfix"></div>
 			<?php $tableName = 'tblcatalogue'; ?>
 			
@@ -208,7 +208,7 @@ include 'includes/template/head.php';
 							} ?>
 							</td>					
 							<td>
-								<a class="wb-lbx btn btn-primary btn-block" href="includes/edit-catalogue.php?id=<?php echo $row['id'];?>"><?= htmlspecialchars($langFile['edit_button']) ?><span class="wb-inv"> <?php echo htmlspecialchars($row[$nameColumn]) ?></span> <?= htmlspecialchars($langFile['catalogue_item_label']) ?></a> <a class="wb-lbx btn btn-primary btn-block" href="includes/delete-catalogue.php?id=<?php echo $row['id'];?>"><?= htmlspecialchars($langFile['delete_button']) ?><span class="wb-inv"> <?php echo htmlspecialchars($row[$nameColumn]) ?></span> <?= htmlspecialchars($langFile['catalogue_item_label']) ?></a> <a class="btn btn-primary btn-block" href="/catalogue-mgmt.php?id=<?php echo $catalogueid ?>&lang=<?= $_SESSION['lang'] ?>"><?= htmlspecialchars($langFile['catalogue_view_services']) ?></a>
+								<a class="wb-lbx lbx-modal btn btn-primary btn-block" href="includes/edit-catalogue.php?id=<?php echo $row['id'];?>"><?= htmlspecialchars($langFile['edit_button']) ?><span class="wb-inv"> <?php echo htmlspecialchars($row[$nameColumn]) ?></span> <?= htmlspecialchars($langFile['catalogue_item_label']) ?></a> <a class="wb-lbx lbx-modal btn btn-primary btn-block" href="includes/delete-catalogue.php?id=<?php echo $row['id'];?>"><?= htmlspecialchars($langFile['delete_button']) ?><span class="wb-inv"> <?php echo htmlspecialchars($row[$nameColumn]) ?></span> <?= htmlspecialchars($langFile['catalogue_item_label']) ?></a> <a class="btn btn-primary btn-block" href="/catalogue-mgmt.php?id=<?php echo $catalogueid ?>&lang=<?= $_SESSION['lang'] ?>"><?= htmlspecialchars($langFile['catalogue_view_services']) ?></a>
 							</td>
 						</tr>
 					<?php } ?>

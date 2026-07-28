@@ -1,48 +1,35 @@
 <?php
+/**
+ * Open Request Cascade — Tier 4: Subservice checklist yes/no result
+ *
+ * Receives ?v1=checklist_yes or ?v1=checklist_no.
+ * Shows Continue button on yes; warning on no.
+ */
 require_once __DIR__ . '/includes/session_start.php';
-// Grab MySQL connection
 require('sql.php');
 /** @var mysqli $link */
 
-// Get language from session
 $lang = $_SESSION['lang'] ?? 'en';
-
-// Grab the catalogue id
-if(!empty($_GET['v1']))
-{
-	$subserviceid2 = mysqli_real_escape_string($link,$_GET['v1']);
-}
-else
-{
-	$subserviceid2 = "";
-}
-
-// Translation arrays
-$translations = [
-	'continue' => [
-		'en' => 'Continue',
-		'fr' => 'Continuer'
-	],
-	'complete_checklist_warning' => [
-		'en' => 'Please complete the checklist or correct all previous failures before continuing.',
-		'fr' => 'Veuillez compléter la liste de contrôle ou corriger tous les échecs précédents avant de continuer.'
-	]
-];
-
-if ($subserviceid2=='6:1:1:1' OR $subserviceid2=='6:2:1:1' OR $subserviceid2=='6:5:1:1' OR $subserviceid2=='6:5:2:1' OR $subserviceid2=='8:1:1:1' OR $subserviceid2=='8:1:2:1' OR $subserviceid2=='8:2:2:1:1' OR $subserviceid2=='8:2:2:2:1') {
-?>
-				<div class="form-group form-buttons">
-					<button type="submit" class="btn btn-primary"><?php echo $translations['continue'][$lang]; ?></button>
-				</div>
-<?php	
-} elseif ($subserviceid2=='6:1:1:2' OR $subserviceid2=='6:2:1:2' OR $subserviceid2=='6:5:1:2' OR $subserviceid2=='6:5:2:2' OR $subserviceid2=='8:1:1:2' OR $subserviceid2=='8:1:2:2' OR $subserviceid2=='8:2:2:1:2' OR $subserviceid2=='8:2:2:2:2') {
-?>
-				<div class="alert alert-warning">
-					<p tabindex="0"><?php echo $translations['complete_checklist_warning'][$lang]; ?></p>
-				</div>
-				
-<?php
-}
-// Close connection
+$isFr = $lang === 'fr';
 mysqli_close($link);
-?>
+
+$val = trim($_GET['v1'] ?? '');
+
+$continueLabel = $isFr ? 'Continuer' : 'Continue';
+$warningText   = $isFr
+    ? 'Veuillez compléter la liste de contrôle ou corriger tous les échecs précédents avant de continuer.'
+    : 'Please complete the checklist or correct all previous failures before continuing.';
+
+if ($val === 'checklist_yes') {
+    ?>
+    <div class="form-group form-buttons">
+        <button type="submit" class="btn btn-primary"><?= $continueLabel ?></button>
+    </div>
+    <?php
+} elseif ($val === 'checklist_no') {
+    ?>
+    <div class="alert alert-warning">
+        <p tabindex="0"><?= htmlspecialchars($warningText) ?></p>
+    </div>
+    <?php
+}

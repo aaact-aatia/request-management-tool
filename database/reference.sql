@@ -174,11 +174,11 @@ UPDATE `tblservices` SET `contactid` = 1 WHERE `id` IN (13, 66);     -- AAACT: a
 
 -- Request-first routing: keep only current catalogue/services visible
 UPDATE `tblcatalogue`
-SET `status` = CASE WHEN `id` IN (3, 6, 8) THEN 1 ELSE 0 END;
+SET `status` = CASE WHEN `id` IN (3, 6, 8, 13) THEN 1 ELSE 0 END;
 
 UPDATE `tblservices`
 SET `status` = CASE
-	WHEN `id` IN (34, 25, 61, 62, 63, 64, 65, 27, 28, 66) THEN 1
+    WHEN `id` IN (5, 7, 34, 25, 61, 62, 63, 64, 65, 27, 28, 66) THEN 1
 	ELSE 0
 END;
 
@@ -357,3 +357,199 @@ INSERT INTO `tblholidays` (`holiday_date`, `name_en`, `name_fr`, `recurring`, `s
 ('2030-11-11', 'Remembrance Day', 'Jour du Souvenir', 1, 1),
 ('2030-12-25', 'Christmas Day', 'Noël', 1, 1),
 ('2030-12-26', 'Boxing Day', 'Lendemain de Noël', 1, 1);
+
+-- =============================================================================
+-- Open Request Routing Flags (applied by migration 014 on existing databases)
+-- =============================================================================
+
+-- Catalogue visibility and routing order
+UPDATE `tblcatalogue` SET `show_in_openrequest` = 1, `openrequest_order` = 1 WHERE `id` = 3;
+UPDATE `tblcatalogue` SET `show_in_openrequest` = 1, `openrequest_order` = 2 WHERE `id` = 8;
+UPDATE `tblcatalogue`
+SET
+  `show_in_openrequest` = 1,
+  `openrequest_order`   = 3,
+  `guidance_text_en`    = '<p>This option is guidance-only for external (non-SSC) organizations. Please contact your communications branch for document accessibility support.</p><ul><li><a href="https://a11y.canada.ca/en/create-document/" target="_blank" rel="noopener noreferrer">Digital Accessibility Toolkit – Create document (opens in a new tab)</a></li><li><a href="https://www.csps-efpc.gc.ca/video/making-documents-accessible-eng.aspx" target="_blank" rel="noopener noreferrer">CSPS – Making Documents Accessible (opens in a new tab)</a></li><li><a href="mailto:AAACT-AATIA@ssc-spc.gc.ca">AAACT-AATIA@ssc-spc.gc.ca</a></li></ul>',
+  `guidance_text_fr`    = '<p>Cette option est actuellement informative seulement pour les organisations externes (non SPC). Veuillez communiquer avec votre direction des communications pour le soutien en accessibilité documentaire.</p><ul><li><a href="https://a11y.canada.ca/fr/creer-un-document/index.html" target="_blank" rel="noopener noreferrer">Boîte à outils de l''accessibilité numérique – Créer un document (s''ouvre dans un nouvel onglet)</a></li><li><a href="https://www.csps-efpc.gc.ca/video/making-documents-accessible-fra.aspx" target="_blank" rel="noopener noreferrer">EFPC – Rendre les documents accessibles (s''ouvre dans un nouvel onglet)</a></li><li><a href="mailto:AAACT-AATIA@ssc-spc.gc.ca">AAACT-AATIA@ssc-spc.gc.ca</a></li></ul>'
+WHERE `id` = 6;
+
+-- Workshops catalogue — guidance-only pending product decision on hierarchy
+-- PENDING PRODUCT DECISION: Whether Workshops should remain guidance-only or
+-- have sub-services has not been confirmed by the product owner. The data below
+-- matches the approved request-catalogue branch state (guidance-only).
+-- Do not add services or subservices under Workshops here without explicit approval.
+INSERT INTO `tblcatalogue`
+  (`id`, `nameen`, `namefr`, `contactid`, `survey`, `status`,
+   `show_in_openrequest`, `openrequest_order`, `is_guidance_only`,
+   `guidance_text_en`, `guidance_text_fr`)
+VALUES
+  (13, 'Workshops and learning sessions', 'Ateliers et sessions d''apprentissage',
+   1, 0, 1,
+   1, 0, 1,
+   '<p>This path is guidance-only. Review our learning resources and contact us if you still need assistance.</p><ul><li><a href="https://www.gcpedia.gc.ca/wiki/GC_Accessibility_Training_and_Events_/_Formation_et_%C3%A9v%C3%A9nements_du_GC_sur_l%27accessibilit%C3%A9" target="_blank" rel="noopener noreferrer">GC Accessibility Training and Events (opens in a new tab)</a></li><li><a href="mailto:AAACT-AATIA@ssc-spc.gc.ca">AAACT-AATIA@ssc-spc.gc.ca</a></li></ul>',
+   '<p>Ce parcours est informatif seulement. Consultez nos ressources de formation et communiquez avec nous si vous avez encore besoin d''aide.</p><ul><li><a href="https://www.gcpedia.gc.ca/wiki/GC_Accessibility_Training_and_Events_/_Formation_et_%C3%A9v%C3%A9nements_du_GC_sur_l%27accessibilit%C3%A9" target="_blank" rel="noopener noreferrer">Formation et événements du GC sur l''accessibilité (s''ouvre dans un nouvel onglet)</a></li><li><a href="mailto:AAACT-AATIA@ssc-spc.gc.ca">AAACT-AATIA@ssc-spc.gc.ca</a></li></ul>'
+  )
+ON DUPLICATE KEY UPDATE
+  `show_in_openrequest` = 1, `openrequest_order` = 0, `is_guidance_only` = 1;
+
+-- Reactivate service 5 (Adaptive technologies advice) and service 7 (Planning inclusive events)
+UPDATE `tblservices` SET `status` = 1 WHERE `id` IN (5, 7);
+UPDATE `tblservices`
+SET
+  `alert_text_en` = 'Please consult <a href="https://a11y.canada.ca/en/best-practices-for-accessible-virtual-events/">Best practices for accessible virtual events – Digital Accessibility Toolkit</a> before opening a new request – the answer you are seeking is probably there! If not, continue to submit a request.',
+  `alert_text_fr` = 'Veuillez consulter les <a href="https://a11y.canada.ca/fr/bonnes-pratiques-pour-les-evenements-virtuels-accessibles/index.html">Bonnes pratiques pour les événements virtuels accessibles – Boîte à outils de l''accessibilité numérique</a> avant d''ouvrir une nouvelle demande. La réponse que vous cherchez s''y trouve probablement! Sinon, continuez pour soumettre une demande.'
+WHERE `id` = 7;
+
+-- Alert texts for Advice and recommendations subservices (service 34)
+UPDATE `tblsubservices` SET
+  `alert_text_en` = 'Please consult <a href="https://a11y.canada.ca/en/create-forms/">Create forms – Digital Accessibility Toolkit</a> before opening a new request. If this does not answer your question, continue to submit a request.',
+  `alert_text_fr` = 'Veuillez consulter <a href="https://a11y.canada.ca/fr/creer-un-formulaire/index.html">Créer un formulaire – Boîte à outils de l''accessibilité numérique</a> avant d''ouvrir une nouvelle demande. Si cela ne répond pas à votre question, continuez pour soumettre une demande.'
+WHERE `id` = 104;
+UPDATE `tblsubservices` SET
+  `alert_text_en` = 'Please consult <a href="https://a11y.canada.ca/en/design-a-course/">Design a course – Digital Accessibility Toolkit</a> before opening a new request. If this does not answer your question, continue to submit a request.',
+  `alert_text_fr` = 'Veuillez consulter <a href="https://a11y.canada.ca/fr/concevoir-un-cours/index.html">Concevoir un cours – Boîte à outils de l''accessibilité numérique</a> avant d''ouvrir une nouvelle demande. Si cela ne répond pas à votre question, continuez pour soumettre une demande.'
+WHERE `id` = 105;
+UPDATE `tblsubservices` SET
+  `alert_text_en` = 'Please consult <a href="https://a11y.canada.ca/en/create-document/">Create document – Digital Accessibility Toolkit</a> before opening a new request. If this does not answer your question, continue to submit a request.',
+  `alert_text_fr` = 'Veuillez consulter <a href="https://a11y.canada.ca/fr/creer-un-document/index.html">Créer un document – Boîte à outils de l''accessibilité numérique</a> avant d''ouvrir une nouvelle demande. Si cela ne répond pas à votre question, continuez pour soumettre une demande.'
+WHERE `id` = 106;
+UPDATE `tblsubservices` SET
+  `alert_text_en` = 'Please consult the <a href="https://bati-itao.github.io/learning/esdc-self-paced-web-accessibility-course/index.html">ESDC Self-paced Web Accessibility Course</a> and <a href="https://a11y.canada.ca/en/create-web-content/">Create web content – Digital Accessibility Toolkit</a> before opening a new request. If this does not answer your question, continue to submit a request.',
+  `alert_text_fr` = 'Veuillez consulter le <a href="https://bati-itao.github.io/learning/esdc-self-paced-web-accessibility-course/index-fr.html">EDSC – Cours en accessibilité web</a> et <a href="https://a11y.canada.ca/fr/creer-du-contenu-web/index.html">Créer du contenu Web – Boîte à outils de l''accessibilité numérique</a> avant d''ouvrir une nouvelle demande. Si cela ne répond pas à votre question, continuez pour soumettre une demande.'
+WHERE `id` = 107;
+UPDATE `tblsubservices` SET
+  `alert_text_en` = 'Please consult <a href="https://a11y.canada.ca/en/designing-accessible-services/">Designing accessible services – Digital Accessibility Toolkit</a> before opening a new request. If this does not answer your question, continue to submit a request.',
+  `alert_text_fr` = 'Veuillez consulter <a href="https://a11y.canada.ca/fr/principes-de-conception-pour-des-services-accessibles/index.html">Principes de conception pour des services accessibles – Boîte à outils de l''accessibilité numérique</a> avant d''ouvrir une nouvelle demande. Si cela ne répond pas à votre question, continuez pour soumettre une demande.'
+WHERE `id` = 108;
+UPDATE `tblsubservices` SET
+  `alert_text_en` = 'Please consult <a href="https://a11y.canada.ca/en/test-your-products/">Test your products – Digital Accessibility Toolkit</a> before opening a new request. If this does not answer your question, continue to submit a request.',
+  `alert_text_fr` = 'Veuillez consulter <a href="https://a11y.canada.ca/fr/testez-vos-produits/index.html">Testez vos produits – Boîte à outils de l''accessibilité numérique</a> avant d''ouvrir une nouvelle demande. Si cela ne répond pas à votre question, continuez pour soumettre une demande.'
+WHERE `id` = 109;
+UPDATE `tblsubservices` SET
+  `alert_text_en` = 'Please consult <a href="https://a11y.canada.ca/en/making-accessible-emails/">Making Accessible Emails – Digital Accessibility Toolkit</a> before opening a new request. If this does not answer your question, continue to submit a request.',
+  `alert_text_fr` = 'Veuillez consulter <a href="https://a11y.canada.ca/fr/rendre-vos-courriels-accessibles/index.html">Rendre vos courriels accessibles – Boîte à outils de l''accessibilité numérique</a> avant d''ouvrir une nouvelle demande. Si cela ne répond pas à votre question, continuez pour soumettre une demande.'
+WHERE `id` = 110;
+
+-- Checklist gate for website audit subservice 96
+UPDATE `tblsubservices`
+SET
+  `needs_checklist`   = 1,
+  `checklist_name_en` = 'Easy Checks for Web Accessibility',
+  `checklist_name_fr` = 'Vérifications faciles pour l''accessibilité web',
+  `checklist_url_en`  = 'https://bati-itao.github.io/resources/a11ycheck-en.html',
+  `checklist_url_fr`  = 'https://bati-itao.github.io/resources/a11ycheck-fr.html'
+WHERE `id` = 96;
+
+-- Audit / Re-audit subservices for document audit paths (service 25 = Word)
+INSERT INTO `tblsubservices`
+  (`id`, `serviceid`, `nameen`, `namefr`, `sds`, `status`,
+   `needs_checklist`, `checklist_name_en`, `checklist_name_fr`,
+   `checklist_url_en`, `checklist_url_fr`)
+SELECT 200, 25, 'Audit', 'Vérification', 5, 1,
+  1, 'Microsoft document checklist', 'liste de vérification des documents Microsoft',
+  'https://bati-itao.github.io/resources/ms-doc-compliance-checklist-en.html',
+  'https://bati-itao.github.io/resources/ms-doc-compliance-checklist-fr.html'
+FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM `tblsubservices` WHERE `id` = 200);
+INSERT INTO `tblsubservices`
+  (`id`, `serviceid`, `nameen`, `namefr`, `sds`, `status`,
+   `needs_checklist`, `checklist_name_en`, `checklist_name_fr`)
+SELECT 201, 25, 'Re-audit', 'Vérification de suivi', 5, 1,
+  1, 'corrected all mentioned failures from the previous audit',
+  'corrigé tous les échecs mentionnés lors de la vérification précédente'
+FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM `tblsubservices` WHERE `id` = 201);
+
+-- Audit / Re-audit for Excel (service 61), PowerPoint (service 62), Emails (service 63)
+INSERT INTO `tblsubservices`
+  (`id`, `serviceid`, `nameen`, `namefr`, `sds`, `status`,
+   `needs_checklist`, `checklist_name_en`, `checklist_name_fr`,
+   `checklist_url_en`, `checklist_url_fr`)
+SELECT 202, 61, 'Audit', 'Vérification', 5, 1,
+  1, 'Microsoft document checklist', 'liste de vérification des documents Microsoft',
+  'https://bati-itao.github.io/resources/ms-doc-compliance-checklist-en.html',
+  'https://bati-itao.github.io/resources/ms-doc-compliance-checklist-fr.html'
+FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM `tblsubservices` WHERE `id` = 202);
+INSERT INTO `tblsubservices`
+  (`id`, `serviceid`, `nameen`, `namefr`, `sds`, `status`,
+   `needs_checklist`, `checklist_name_en`, `checklist_name_fr`)
+SELECT 203, 61, 'Re-audit', 'Vérification de suivi', 5, 1,
+  1, 'corrected all mentioned failures from the previous audit',
+  'corrigé tous les échecs mentionnés lors de la vérification précédente'
+FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM `tblsubservices` WHERE `id` = 203);
+INSERT INTO `tblsubservices`
+  (`id`, `serviceid`, `nameen`, `namefr`, `sds`, `status`,
+   `needs_checklist`, `checklist_name_en`, `checklist_name_fr`,
+   `checklist_url_en`, `checklist_url_fr`)
+SELECT 204, 62, 'Audit', 'Vérification', 5, 1,
+  1, 'Microsoft document checklist', 'liste de vérification des documents Microsoft',
+  'https://bati-itao.github.io/resources/ms-doc-compliance-checklist-en.html',
+  'https://bati-itao.github.io/resources/ms-doc-compliance-checklist-fr.html'
+FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM `tblsubservices` WHERE `id` = 204);
+INSERT INTO `tblsubservices`
+  (`id`, `serviceid`, `nameen`, `namefr`, `sds`, `status`,
+   `needs_checklist`, `checklist_name_en`, `checklist_name_fr`)
+SELECT 205, 62, 'Re-audit', 'Vérification de suivi', 5, 1,
+  1, 'corrected all mentioned failures from the previous audit',
+  'corrigé tous les échecs mentionnés lors de la vérification précédente'
+FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM `tblsubservices` WHERE `id` = 205);
+INSERT INTO `tblsubservices`
+  (`id`, `serviceid`, `nameen`, `namefr`, `sds`, `status`,
+   `needs_checklist`, `checklist_name_en`, `checklist_name_fr`,
+   `checklist_url_en`, `checklist_url_fr`)
+SELECT 206, 63, 'Audit', 'Vérification', 5, 1,
+  1, 'Microsoft document checklist', 'liste de vérification des documents Microsoft',
+  'https://bati-itao.github.io/resources/ms-doc-compliance-checklist-en.html',
+  'https://bati-itao.github.io/resources/ms-doc-compliance-checklist-fr.html'
+FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM `tblsubservices` WHERE `id` = 206);
+INSERT INTO `tblsubservices`
+  (`id`, `serviceid`, `nameen`, `namefr`, `sds`, `status`,
+   `needs_checklist`, `checklist_name_en`, `checklist_name_fr`)
+SELECT 207, 63, 'Re-audit', 'Vérification de suivi', 5, 1,
+  1, 'corrected all mentioned failures from the previous audit',
+  'corrigé tous les échecs mentionnés lors de la vérification précédente'
+FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM `tblsubservices` WHERE `id` = 207);
+
+-- Audit / Re-audit for PDF (service 64)
+INSERT INTO `tblsubservices`
+  (`id`, `serviceid`, `nameen`, `namefr`, `sds`, `status`,
+   `needs_checklist`, `checklist_name_en`, `checklist_name_fr`,
+   `checklist_url_en`, `checklist_url_fr`)
+SELECT 208, 64, 'Audit', 'Vérification', 5, 1,
+  1, 'PDF document checklist', 'Liste de vérification de l''accessibilité des documents PDF',
+  'https://bati-itao.github.io/resources/pdf-accessibility-checklist-en.html',
+  'https://bati-itao.github.io/resources/pdf-accessibility-checklist-fr.html'
+FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM `tblsubservices` WHERE `id` = 208);
+INSERT INTO `tblsubservices`
+  (`id`, `serviceid`, `nameen`, `namefr`, `sds`, `status`,
+   `needs_checklist`, `checklist_name_en`, `checklist_name_fr`)
+SELECT 209, 64, 'Re-audit', 'Vérification de suivi', 5, 1,
+  1, 'corrected all mentioned failures from the previous audit',
+  'corrigé tous les échecs mentionnés lors de la vérification précédente'
+FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM `tblsubservices` WHERE `id` = 209);
+
+-- Audit / Re-audit for Software (service 27)
+INSERT INTO `tblsubservices`
+  (`id`, `serviceid`, `nameen`, `namefr`, `sds`, `status`,
+   `needs_checklist`, `checklist_name_en`, `checklist_name_fr`,
+   `checklist_url_en`, `checklist_url_fr`)
+SELECT 210, 27, 'Audit', 'Vérification', 10, 1,
+  1, 'software accessibility checklist',
+  'Liste de contrôle des évaluations de la conformité de l''accessibilité (non Web / logiciel)',
+  'https://bati-itao.github.io/resources/accessible-software-en.html',
+  'https://bati-itao.github.io/resources/accessible-software-fr.html'
+FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM `tblsubservices` WHERE `id` = 210);
+INSERT INTO `tblsubservices`
+  (`id`, `serviceid`, `nameen`, `namefr`, `sds`, `status`,
+   `needs_checklist`, `checklist_name_en`, `checklist_name_fr`)
+SELECT 211, 27, 'Re-audit', 'Vérification de suivi', 10, 1,
+  1, 'corrected all mentioned failures from the previous audit',
+  'corrigé tous les échecs mentionnés lors de la vérification précédente'
+FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM `tblsubservices` WHERE `id` = 211);
+
+-- Re-audit for Websites (service 28)
+INSERT INTO `tblsubservices`
+  (`id`, `serviceid`, `nameen`, `namefr`, `sds`, `status`,
+   `needs_checklist`, `checklist_name_en`, `checklist_name_fr`)
+SELECT 212, 28, 'Re-audit', 'Vérification de suivi', 10, 1,
+  1, 'corrected all mentioned failures from the previous audit',
+  'corrigé tous les échecs mentionnés lors de la vérification précédente'
+FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM `tblsubservices` WHERE `id` = 212);

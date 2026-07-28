@@ -56,7 +56,8 @@ services:
       - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
       - ./database/reference.sql:/docker-entrypoint-initdb.d/02-reference.sql
       - ./database/session_handler.sql:/docker-entrypoint-initdb.d/03-session_handler.sql
-      - ./database/ssc-sample-dev.sql:/docker-entrypoint-initdb.d/04-sample-dev.sql
+      - ./database/ssc-users-dev.sql:/docker-entrypoint-initdb.d/04-ssc-users-dev.sql
+      - ./database/ssc-sample-dev.sql:/docker-entrypoint-initdb.d/05-ssc-sample-dev.sql
 
 volumes:
   dbdata:
