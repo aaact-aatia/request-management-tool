@@ -109,7 +109,7 @@ docker compose up -d
 # Access: http://localhost:${PORT} (from .env)
 ```
 
-The database is initialized automatically on first start using the split bootstrap files: [database/schema.sql](../database/schema.sql), [database/reference.sql](../database/reference.sql), and [database/sample-dev.sql](../database/sample-dev.sql).
+The database is initialized automatically on first start using [database/schema.sql](../database/schema.sql), [database/reference.sql](../database/reference.sql), and the profile selected by `RMT_SEED_PROFILE`. The default `example` profile loads [database/sample-dev.sql](../database/sample-dev.sql); developers can export private UI-managed data to the ignored `database/local-seed.sql` with `database/export-local-seed.sh` and select the `local` profile.
 
 ### Docker-First PHP Validation (Required)
 Agents must use Docker for PHP validation and must not assume PHP is installed on the host machine.

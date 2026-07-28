@@ -1,6 +1,6 @@
 # Request Management Tool
 Version: 2.0.0  
-Last updated: 2026-05-25  
+Last updated: 2026-07-28  
 Author: Muna Adan
 Editor: Shawn Thompson
 
@@ -59,7 +59,7 @@ The application uses environment variables for configuration. Before running the
    DB_PASS=your_database_password # Your database password
    DB_NAME=aaact                  # Database name
    MYSQL_ROOT_PASSWORD=your_mysql_root_password
-   RMT_SEED_PROFILE=example       # clean, example, or ssc
+   RMT_SEED_PROFILE=example       # clean, example, or local
 
    # Application Configuration
    PORT=8080                      # Local development port
@@ -112,16 +112,40 @@ The repository contains database bootstrap files with distinct responsibilities:
 - `database/schema.sql`: database structure only (`CREATE TABLE`, indexes, and constraints)
 - `database/reference.sql`: production-safe lookup and configuration data required by the app
 - `database/sample-dev.sql`: generic example hierarchy, users, and requests
-- `database/ssc-sample-dev.sql`: SSC hierarchy and development administrator accounts
+- `database/local-seed.sql`: ignored developer export of local users, teams, and catalogue hierarchy
+- `database/export-local-seed.sh`: creates the ignored local seed from the running database
 - `database/seed-profile.sh`: selects optional data from `RMT_SEED_PROFILE`
 
 Available profiles:
 
 - `clean`: schema, session storage, and universal reference lookups only
 - `example`: clean data plus generic catalogue, team, user, and request examples
-- `ssc`: clean data plus the SSC catalogue, teams, and development administrators
+- `local`: clean data plus the private data exported to `database/local-seed.sql`
 
-The default is `example`. The example and SSC profiles contain accounts with a known development password and must not be used in production.
+The default is `example`. The example profile contains accounts with a known development password and must not be used in production. Local seed files can contain names, email addresses, and password hashes and must never be committed.
+
+### Private Local Seeds
+
+Start with the `example` profile and update users, teams, catalogue entries, services, and subservices through the application. From the repository root, export those tables from the running local database:
+
+```bash
+./database/export-local-seed.sh
+```
+
+The command writes `database/local-seed.sql`, which is excluded by `.gitignore`. Confirm that Git ignores it:
+
+```bash
+git check-ignore database/local-seed.sql
+```
+
+To restore that data into a fresh local database, set `RMT_SEED_PROFILE=local` in `.env`, then recreate the disposable database volume:
+
+```bash
+docker compose down -v
+docker compose up -d --build
+```
+
+Always run the export before removing the volume. Each developer keeps their own `database/local-seed.sql`; sharing private seed data requires an approved secure channel outside Git.
 
 ### Local Initialization Behavior
 

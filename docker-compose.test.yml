@@ -7,7 +7,8 @@ services:
       MYSQL_DATABASE: rmt_seed_test
       MYSQL_USER: rmt_test
       MYSQL_PASSWORD: rmt_test
-      RMT_SEED_PROFILE: ${RMT_SEED_PROFILE:-clean}
+      RMT_SEED_PROFILE: ${RMT_SEED_PROFILE:-example}
+      RMT_LOCAL_SEED_FILE: ${RMT_LOCAL_SEED_FILE:-/opt/rmt-local-seed.sql}
     healthcheck:
       test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
       interval: 2s
@@ -21,6 +22,7 @@ services:
       - ./database/session_handler.sql:/docker-entrypoint-initdb.d/03-session-handler.sql:ro
       - ./database/seed-profile.sh:/docker-entrypoint-initdb.d/04-seed-profile.sh:ro
       - ./database:/opt/rmt-seeds:ro
+      - ./tests/fixtures/local-seed.sql:/opt/rmt-local-seed.sql:ro
 
   test-db:
     image: mysql:5.7

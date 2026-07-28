@@ -10,14 +10,21 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-for profile in clean example ssc; do
+for profile in default clean example local; do
     current_project="rmt-seed-${profile}-test"
     cleanup
 
-    RMT_SEED_PROFILE="$profile" docker compose \
-        -p "$current_project" \
-        -f docker-compose.test.yml \
-        up -d --wait seed-db
+    if [ "$profile" = "default" ]; then
+        RMT_SEED_PROFILE= docker compose \
+            -p "$current_project" \
+            -f docker-compose.test.yml \
+            up -d --wait seed-db
+    else
+        RMT_SEED_PROFILE="$profile" docker compose \
+            -p "$current_project" \
+            -f docker-compose.test.yml \
+            up -d --wait seed-db
+    fi
 
     counts=$(docker compose \
         -p "$current_project" \
@@ -34,9 +41,10 @@ for profile in clean example ssc; do
         ' 2>/dev/null)
 
     case "$profile" in
+        default) expected=$(printf '6\t3\t10\t2\t12\t12') ;;
         clean) expected=$(printf '6\t0\t0\t0\t0\t0') ;;
         example) expected=$(printf '6\t3\t10\t2\t12\t12') ;;
-        ssc) expected=$(printf '6\t4\t13\t3\t2\t0') ;;
+        local) expected=$(printf '6\t1\t1\t1\t1\t0') ;;
     esac
 
     if [ "$counts" != "$expected" ]; then

@@ -86,6 +86,7 @@ app/includes/error_log
 
 # SQL dumps and local DB
 app/VMF/*.sql
+database/local-seed.sql
 
 # Docker environment/config
 .env

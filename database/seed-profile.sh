@@ -2,6 +2,7 @@
 set -eu
 
 seed_profile="${RMT_SEED_PROFILE:-example}"
+local_seed_file="${RMT_LOCAL_SEED_FILE:-/opt/rmt-seeds/local-seed.sql}"
 
 case "$seed_profile" in
     clean)
@@ -12,10 +13,14 @@ case "$seed_profile" in
         mysql --protocol=socket -uroot -p"$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE" \
             < /opt/rmt-seeds/sample-dev.sql
         ;;
-    ssc)
-        echo "RMT seed profile: ssc"
+    local)
+        if [ ! -f "$local_seed_file" ]; then
+            echo "RMT local seed not found. Run ./database/export-local-seed.sh first." >&2
+            exit 1
+        fi
+        echo "RMT seed profile: local"
         mysql --protocol=socket -uroot -p"$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE" \
-            < /opt/rmt-seeds/ssc-sample-dev.sql
+            < "$local_seed_file"
         ;;
     *)
         echo "Unsupported RMT_SEED_PROFILE: $seed_profile" >&2
