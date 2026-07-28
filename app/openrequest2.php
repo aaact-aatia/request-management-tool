@@ -1,47 +1,28 @@
 <?php
-/**
- * Open Request Step 2 - Rebuilt with Clean Logic
- * Collects detailed information based on selected catalogue/service
- */
-
 require('sql.php');
 /** @var mysqli $link */
 require('includes/httpscheck.php');
 require('includes/helpers.php');
+require_once('includes/department-directory.php');
 
-// Language detection
 $lang = detectLanguage();
-
 $draftData = [];
 if (isset($_SESSION['openrequest_draft']) && is_array($_SESSION['openrequest_draft'])) {
     $draftData = $_SESSION['openrequest_draft'];
     unset($_SESSION['openrequest_draft']);
 }
 
-$uploadErrorMessage = '';
-if (isset($_SESSION['openrequest_upload_error_message'])) {
-    $uploadErrorMessage = (string) $_SESSION['openrequest_upload_error_message'];
-    unset($_SESSION['openrequest_upload_error_message']);
-}
-
-// Redirect if accessed without POST
-if ($_SERVER['REQUEST_METHOD'] != 'POST' && empty($draftData)) {
-    header("Location: /openrequest.php?lang=$lang");
+if ($_SERVER['REQUEST_METHOD'] !== 'POST' && !$draftData) {
+    header("Location: /openrequest.php?lang={$lang}");
     exit;
 }
 
-// Translations
 $translations = [
     'en' => [
         'page_title' => 'New request',
-        'tool_name' => 'Request Management Tool - IT Accessibility Office',
         'heading_sprint' => 'Sprint Spot-Check information required for your request',
-        'heading_audit_sample' => 'Audit of representative sample informations required for your request',
+        'heading_audit_sample' => 'Audit of representative sample information required for your request',
         'heading_additional' => 'Additional information required for your request',
-        'failed_title' => 'Failed',
-        'failed_message' => 'The new request did not work, please try again, thank you!',
-        'request_title' => 'Brief request title',
-        'date_coaching' => 'Requested coaching session date',
         'date_required' => 'Date required',
         'first_sprint_date' => 'First Sprint Date',
         'last_sprint_date' => 'Last Sprint Date',
@@ -51,427 +32,143 @@ $translations = [
         'last_name' => 'Last name',
         'email' => 'Email',
         'department_agency' => 'Department/agency',
-        'phone' => 'Business phone number',
+        'select_department_agency' => 'Select a department or agency',
+        'department_agency_hint' => 'Optional. Start typing a department, agency, or acronym, or enter another organization.',
         'additional_info' => 'Additional information',
-        'upload_files' => 'Upload files',
-        'upload_files_hint' => '',
-        'attachment' => 'Attachment',
-        'url_only' => 'URL only',
-        'yes' => 'Yes',
-        'no' => 'No',
-        'submit' => 'Submit',
-        'required' => 'required'
+        'submit' => 'Submit'
     ],
     'fr' => [
         'page_title' => 'Nouvelle demande',
-        'tool_name' => 'Outil de gestion des demandes - Bureau de l\'accessibilité de la TI',
         'heading_sprint' => 'Informations de la vérification ponctuelle du sprint requises pour votre demande',
-        'heading_audit_sample' => 'Audit des informations de l\'échantillon représentatif requises pour votre demande',
+        'heading_audit_sample' => 'Informations sur l’audit d’un échantillon représentatif requises pour votre demande',
         'heading_additional' => 'Informations complémentaires requises pour votre demande',
-        'failed_title' => 'Échec',
-        'failed_message' => 'La nouvelle demande n\'a pas fonctionné, veuillez réessayer, merci!',
-        'request_title' => 'Bref titre pour la demande',
-        'date_coaching' => 'Date de la séance de coaching demandée',
         'date_required' => 'Date requise',
         'first_sprint_date' => 'Date de début du premier sprint',
         'last_sprint_date' => 'Date de fin du premier sprint',
         'sprint_schedule' => 'Calendrier du sprint (URL uniquement)',
-        'sprint_defects' => 'Échec du sprint (URL uniquement)',
+        'sprint_defects' => 'Échecs du sprint (URL uniquement)',
         'first_name' => 'Prénom',
         'last_name' => 'Nom',
         'email' => 'Courriel',
         'department_agency' => 'Ministère/organisme',
-        'phone' => 'Numéro de téléphone au bureau',
+        'select_department_agency' => 'Sélectionnez un ministère ou organisme',
+        'department_agency_hint' => 'Facultatif. Commencez à saisir un ministère, un organisme ou un acronyme, ou entrez une autre organisation.',
         'additional_info' => 'Informations supplémentaires',
-        'upload_files' => 'Téléverser des fichiers',
-        'upload_files_hint' => '',
-        'attachment' => 'Pièce jointe',
-        'url_only' => 'URL uniquement',
-        'yes' => 'Oui',
-        'no' => 'Non',
-        'submit' => 'Soumettre',
-        'required' => 'requis'
+        'submit' => 'Soumettre'
     ]
 ];
-
 $t = $translations[$lang];
 
-// ============================================================================
-// COLLECT FORM DATA
-// ============================================================================
-
-$catalogueid = $draftData['catalogueid'] ?? getPostValue('catalogueid', 0);
-$serviceid = $draftData['serviceid'] ?? getPostValue('serviceid', 0);
-$subserviceid = $draftData['subserviceid'] ?? getPostValue('subserviceid', 0);
-$subserviceid2 = $draftData['subserviceid2'] ?? getPostValue('subserviceid2', 0);
-$clientnotes = $draftData['clientnotes'] ?? getPostValue('clientnotes');
-$language = $draftData['language'] ?? getPostValue('language');
-
-// Flags
-$reauditFlag = 0;
-$attach1 = $attach2 = $attach3 = "";
-
-// ============================================================================
-// PROCESS SUBSERVICE MAPPINGS
-// ============================================================================
-
-// Check if re-audit
-if (in_array($subserviceid, ["6:2:1", "6:5:2", "8:1:2:2", "8:2:2"])) {
-    $reauditFlag = 1;
+function intakeId(array $draftData, string $key, bool $allowZero = false): int
+{
+    $value = $draftData[$key] ?? ($_POST[$key] ?? 0);
+    return filter_var($value, FILTER_VALIDATE_INT, [
+        'options' => ['min_range' => $allowZero ? 0 : 1, 'default' => 0]
+    ]);
 }
 
-// Map advice subservices (3:1:x) to actual IDs
-$adviceMap = [
-    '3:1:1' => 104, // Forms
-    '3:1:2' => 105, // Courses
-    '3:1:3' => 106, // Documents
-    '3:1:4' => 110, // Emails
-    '3:1:5' => 107, // Web content
-    '3:1:6' => 108, // Services
-    '3:1:7' => 109  // Testing
-];
-
-if (isset($adviceMap[$subserviceid])) {
-    $subserviceid = $adviceMap[$subserviceid];
+if (!$draftData && isset($_POST['intake_selection'])) {
+    $selectionParts = explode(':', (string) $_POST['intake_selection'], 3);
+    $catalogueid = filter_var($selectionParts[0] ?? null, FILTER_VALIDATE_INT, [
+        'options' => ['min_range' => 1, 'default' => 0]
+    ]);
+    $serviceid = filter_var($selectionParts[1] ?? null, FILTER_VALIDATE_INT, [
+        'options' => ['min_range' => 0, 'default' => -1]
+    ]);
+    $subserviceid = filter_var($selectionParts[2] ?? null, FILTER_VALIDATE_INT, [
+        'options' => ['min_range' => 0, 'default' => -1]
+    ]);
+} else {
+    $catalogueid = intakeId($draftData, 'catalogueid');
+    $serviceid = intakeId($draftData, 'serviceid', true);
+    $subserviceid = intakeId($draftData, 'subserviceid');
+}
+$selection = rmt_validate_intake_selection($link, $catalogueid, $serviceid, $subserviceid);
+if ($selection === null) {
+    header("Location: /openrequest.php?lang={$lang}&status=failed#intake-error");
+    exit;
 }
 
-// ============================================================================
-// PROCESS DOCUMENT AUDIT PATHS (6:x:x)
-// ============================================================================
-
-if (in_array($subserviceid2, ['6:1:1:1', '6:2:1:1'])) {
-    // Document audit/re-audit - YES to correcting failures
-    $catalogueid = 6;
-    $subserviceid = 0;
-    $subserviceid2 = 0;
-    
-    $serviceMap = ['6:1' => 25, '6:2' => 61, '6:3' => 62, '6:4' => 63];
-    $serviceid = $serviceMap[$serviceid] ?? $serviceid;
-    
-} elseif (in_array($subserviceid2, ['6:1:1:2', '6:2:1:2', '6:5:1:1'])) {
-    // Document audit - NO to correcting failures OR PDF re-audit
-    $catalogueid = 6;
-    $subserviceid = 0;
-    $subserviceid2 = 0;
-    
-    $serviceMap = ['6:1' => 25, '6:2' => 61, '6:3' => 62, '6:4' => 63, '6:5' => 64];
-    $serviceid = $serviceMap[$serviceid] ?? $serviceid;
-    
-} elseif ($subserviceid == '6:5:1') {
-    // PDF audit
-    $catalogueid = 6;
-    $serviceid = 64;
-    $subserviceid = 0;
-}
-
-// ============================================================================
-// PROCESS ACCESSIBILITY AUDIT PATHS (8:x:x)
-// ============================================================================
-
-if ($subserviceid2 == '8:1:1:1' || $subserviceid2 == '8:1:2:1') {
-    // Software audit/re-audit
-    $catalogueid = 8;
-    $serviceid = 27;
-    $subserviceid = 0;
-    $subserviceid2 = 0;
-    
-} elseif ($subserviceid2 == '8:2:1:1' || $subserviceid2 == '8:2:2:1') {
-    // Web application - Sprint spot-check or Audit
-    $catalogueid = 8;
-    $serviceid = 28;
-    
-    if ($subserviceid2 == '8:2:1:1') {
-        $subserviceid = 95; // Sprint spot-check
-    } else {
-        $subserviceid = 96; // Audit of representative sample
-    }
-    $subserviceid2 = 0;
-    
-} elseif ($subserviceid2 == '8:2:1:2' || $subserviceid2 == '8:2:2:2') {
-    // Web application - Second tier (MVP vs non-MVP)
-    $catalogueid = 8;
-    $serviceid = 28;
-    
-    if ($subserviceid2 == '8:2:1:2') {
-        $subserviceid = 95; // Sprint (MVP)
-    } else {
-        $subserviceid = 96; // Audit (non-MVP)
-    }
-    $subserviceid2 = 0;
-    
-} elseif ($subserviceid == '8:4:1' || $subserviceid == '8:4:2') {
-    // Audit report questions
-    $catalogueid = 8;
-    $serviceid = 66;
-    $subserviceid = 0;
-}
-
-// ============================================================================
-// PROCESS ADAPTIVE TECHNOLOGY PATHS (4:x:x)
-// ============================================================================
-
-if (in_array($subserviceid, ['4:1:1', '4:2:1', '4:3:1', '99:4:1'])) {
-    $catalogueid = 4;
-    
-    // Determine which software based on serviceid
-    $softwareMap = [
-        '4:1' => 15,  // Dragon Medical
-        '4:2' => 55,  // Dragon NaturallySpeaking
-        '4:3' => 56,  // J-Say
-        '4:4' => 57,  // JAWS
-        '4:5' => 58,  // Kurzweil
-        '4:6' => 111, // OpenBook
-        '4:8' => 59,  // TextAloud
-        '4:10' => 60, // wordQ
-        '4:12' => 112, // ZoomText
-        '4:13' => 113, // Interact AS
-        '4:14' => 114, // Interact streamer
-        '4:15' => 115, // NVDA
-        '4:16' => 116, // SuperNova
-        '4:17' => 117, // Tint & Track
-        '4:18' => 118  // Pixie
-    ];
-    
-    $serviceid = $softwareMap[$serviceid] ?? $serviceid;
-    $subserviceid = 0;
-}
-
-// ============================================================================
-// OTHER CATALOGUE PROCESSING
-// ============================================================================
-
-// EPMO (7:x)
-if ($subserviceid == '7:1:1' || $subserviceid == '7:1:2') {
-    $catalogueid = 7;
-    $serviceid = 26;
-    $subserviceid = 0;
-}
-
-// Loan Bank (9:x)
-if ($serviceid == '9:1' || $subserviceid == '9:1') {
-    $catalogueid = 9;
-    $serviceid = 29;
-    $subserviceid = 0;
-}
-
-// Procurement (10:x)
-if ($serviceid == '10:1' || $serviceid == '10:2' || $subserviceid == '10:1' || $subserviceid == '10:2') {
-    $catalogueid = 10;
-    $serviceidMap = ['10:1' => 30, '10:2' => 31];
-    $actualServiceId = $serviceid != 0 ? $serviceid : $subserviceid;
-    $serviceid = $serviceidMap[$actualServiceId] ?? $serviceid;
-    $subserviceid = 0;
-}
-
-// Testing Tools (11:x)
-if ($serviceid == '11:1' || $subserviceid == '11:1') {
-    $catalogueid = 11;
-    $serviceid = 53;
-    $subserviceid = 0;
-}
-
-// ACP (1:x)
-if ($serviceid == '1:1' || $subserviceid == '1:1') {
-    $catalogueid = 1;
-    $serviceid = 32;
-    $subserviceid = 0;
-}
-
-// Coaching (2:x)
-if (in_array($subserviceid, ['2:1', '2:2', '2:3', '2:4', '2:5', '2:6', '99:2'])) {
-    $catalogueid = 2;
-    
-    $coachingMap = [
-        '2:1' => 45, // Curriculum
-        '2:2' => 33, // ICT developer
-        '2:4' => 47, // PDF
-        '2:5' => 48, // Microsoft
-        '2:6' => 46  // ACP development
-    ];
-    
-    $serviceid = $coachingMap[$subserviceid] ?? 33;
-    $subserviceid = 0;
-}
-
-// Needs Assessment (5:x)
-if (in_array($subserviceid, ['5:1', '5:2', '5:3', '5:4', '5:5', '99:5'])) {
-    $catalogueid = 5;
-    
-    $needsMap = [
-        '5:1' => 16, // Blindness
-        '5:2' => 17, // Cognitive
-        '5:3' => 18, // Deafness
-        '5:4' => 19, // Mobility
-        '5:5' => 50  // Multiple
-    ];
-    
-    $serviceid = $needsMap[$subserviceid] ?? 16;
-    $subserviceid = 0;
-}
-
-// Advice (3:x)
-if ($subserviceid == '3:2' || $subserviceid == '3:3' || $subserviceid == '99:3') {
-    $catalogueid = 3;
-    $serviceidMap = ['3:2' => 45, '3:3' => 34];
-    $serviceid = $serviceidMap[$subserviceid] ?? 45;
-    $subserviceid = 0;
-}
-
-// ============================================================================
-// FINAL SERVICEID CONVERSION (catch any unmapped string values)
-// ============================================================================
-
-// If serviceid is still a string format, map it to the correct numeric ID
-if (!is_numeric($serviceid)) {
-    // Document audit services (catalogue 6)
-    $documentServiceMap = [
-        '6:1' => 25,  // Word
-        '6:2' => 61,  // Excel
-        '6:3' => 62,  // PowerPoint
-        '6:4' => 63,  // Email
-        '6:5' => 64,  // PDF
-        '6:6' => 65   // Other document
-    ];
-    
-    if (isset($documentServiceMap[$serviceid])) {
-        $catalogueid = 6;
-        $serviceid = $documentServiceMap[$serviceid];
-    } else {
-        // For any other unmapped string format, set to 0
-        $serviceid = 0;
-    }
-}
-
-// Ensure catalogueid matches serviceid (final validation)
-// Map serviceid back to correct catalogueid if needed
-$serviceToCatalogueMap = [
-    // Document audits (catalogue 6)
-    25 => 6, 61 => 6, 62 => 6, 63 => 6, 64 => 6, 65 => 6,
-    // Accessibility audits (catalogue 8)
-    27 => 8, 28 => 8, 54 => 8, 66 => 8,
-    // Loan bank (catalogue 9)
-    29 => 9,
-    // Procurement (catalogue 10)
-    30 => 10, 31 => 10,
-    // Testing tools (catalogue 11)
-    53 => 11,
-    // ACP (catalogue 1)
-    32 => 1,
-    // Coaching (catalogue 2)
-    33 => 2, 45 => 2, 46 => 2, 47 => 2, 48 => 2,
-    // Advice (catalogue 3)
-    34 => 3, 104 => 3, 105 => 3, 106 => 3, 107 => 3, 108 => 3, 109 => 3, 110 => 3,
-    // Adaptive technology (catalogue 4)
-    15 => 4, 55 => 4, 56 => 4, 57 => 4, 58 => 4, 59 => 4, 60 => 4, 111 => 4, 112 => 4, 113 => 4, 114 => 4, 115 => 4, 116 => 4, 117 => 4, 118 => 4,
-    // Needs assessment (catalogue 5)
-    16 => 5, 17 => 5, 18 => 5, 19 => 5, 50 => 5,
-    // EPMO (catalogue 7)
-    26 => 7
-];
-
-if (isset($serviceToCatalogueMap[$serviceid])) {
-    $catalogueid = $serviceToCatalogueMap[$serviceid];
-}
-
-// Ensure all IDs are numeric for the form
-$catalogueid = (int)$catalogueid;
-$serviceid = (int)$serviceid;
-$subserviceid = (int)$subserviceid;
-$reauditFlag = (int)$reauditFlag;
+$catalogueid = $selection['catalogueid'];
+$serviceid = $selection['serviceid'];
+$subserviceid = $selection['subserviceid'];
+$departments = rmt_get_department_directory($link, $lang);
+$selectedDepartment = (string) ($draftData['departmentagency'] ?? '');
+$departmentOptions = rmt_department_directory_options($departments, $selectedDepartment);
+$departmentInputValue = rmt_department_directory_input_value($departmentOptions, $selectedDepartment);
 
 $pageTitle = $t['page_title'];
 $pageDescription = '';
-
 include 'includes/template/head.php';
-
 ?>
 <?php include 'includes/template/header.php'; ?>
-    
-    <main role="main" property="mainContentOfPage" class="container">
-        <h1 property="name" id="wb-cont"><?php echo $t['page_title']; ?></h1>
-        
+<main role="main" property="mainContentOfPage" class="container">
+    <h1 property="name" id="wb-cont"><?= htmlspecialchars($t['page_title']) ?></h1>
+
+    <?php if ($subserviceid === 95): ?>
+    <h2><?= htmlspecialchars($t['heading_sprint']) ?></h2>
+    <?php elseif ($subserviceid === 96): ?>
+    <h2><?= htmlspecialchars($t['heading_audit_sample']) ?></h2>
+    <?php else: ?>
+    <h2><?= htmlspecialchars($t['heading_additional']) ?></h2>
+    <?php endif; ?>
+
+    <form method="post" action="openrequest3.php?lang=<?= htmlspecialchars($lang) ?>">
+        <input type="hidden" name="catalogueid" value="<?= $catalogueid ?>">
+        <input type="hidden" name="serviceid" value="<?= $serviceid ?>">
+        <input type="hidden" name="subserviceid" value="<?= $subserviceid ?>">
+
         <?php
-        // Determine which heading to show
-        if ($subserviceid == 95) {
-            echo "<h2>{$t['heading_sprint']}</h2>";
-        } elseif ($subserviceid == 96) {
-            echo "<h2>{$t['heading_audit_sample']}</h2>";
-        } else {
-            echo "<h2>{$t['heading_additional']}</h2>";
+        echo renderDateInput('daterequired', $t['date_required'], $draftData['daterequired'] ?? '', false);
+
+        if ($subserviceid === 95 || $subserviceid === 96) {
+            echo renderDateInput('firstsprintstartdate', $t['first_sprint_date'], $draftData['firstsprintstartdate'] ?? '', true);
+            echo renderDateInput('firstsprintenddate', $t['last_sprint_date'], $draftData['firstsprintenddate'] ?? '', true);
+            echo renderTextInput('sprintschedule', $t['sprint_schedule'], $draftData['sprintschedule'] ?? '', true, false, 'url');
+            echo renderTextInput('sprintdefects', $t['sprint_defects'], $draftData['sprintdefects'] ?? '', true, false, 'url');
         }
-        ?>
-        
-        <form method="POST" enctype="multipart/form-data" action="openrequest3.php?lang=<?php echo $lang; ?>">
-            <!-- Hidden fields to pass forward -->
-            <input type="hidden" name="catalogueid" value="<?php echo $catalogueid; ?>">
-            <input type="hidden" name="serviceid" value="<?php echo $serviceid; ?>">
-            <input type="hidden" name="subserviceid" value="<?php echo $subserviceid; ?>">
-            <input type="hidden" name="clientnotes" value="<?php echo htmlspecialchars($clientnotes, ENT_QUOTES); ?>">
-            <input type="hidden" name="language" value="<?php echo htmlspecialchars($language, ENT_QUOTES); ?>">
-            <input type="hidden" name="reauditFlag" value="<?php echo $reauditFlag; ?>">
-            
-            <?php
-            // Request title
-            echo renderTextInput('requesttitle', $t['request_title'], $draftData['requesttitle'] ?? '', true);
-            
-            // Date required (changes label for coaching)
-            $dateLabel = ($catalogueid == 2) ? $t['date_coaching'] : $t['date_required'];
-            echo renderDateInput('daterequired', $dateLabel, $draftData['daterequired'] ?? '', false);
-            
-            // Sprint-specific fields
-            if ($subserviceid == 95 || $subserviceid == 96) {
-                echo renderDateInput('firstsprintstartdate', $t['first_sprint_date'], $draftData['firstsprintstartdate'] ?? '', true);
-                echo renderDateInput('firstsprintenddate', $t['last_sprint_date'], $draftData['firstsprintenddate'] ?? '', true);
-                echo renderTextInput('sprintschedule', $t['sprint_schedule'], $draftData['sprintschedule'] ?? '', true, false, 'url');
-                echo renderTextInput('sprintdefects', $t['sprint_defects'], $draftData['sprintdefects'] ?? '', true, false, 'url');
-            }
-            
-            // Client information
-            echo renderTextInput('clientfname', $t['first_name'], $draftData['clientfname'] ?? '', true);
-            echo renderTextInput('clientlname', $t['last_name'], $draftData['clientlname'] ?? '', true);
-            echo renderTextInput('clientemail', $t['email'], $draftData['clientemail'] ?? '', true, false, 'email');
-            echo renderTextInput('departmentagency', $t['department_agency'], $draftData['departmentagency'] ?? '', false);
-            echo renderTextInput('clientphone', $t['phone'], $draftData['clientphone'] ?? '', false, false, 'tel');
-            
-            // Additional information
-            echo renderTextarea('additionalinfo', $t['additional_info'], $draftData['additionalinfo'] ?? '', false);
 
-            // File uploads
+        echo renderTextInput('clientfname', $t['first_name'], $draftData['clientfname'] ?? '', true, false, 'text', 'autocomplete="given-name"');
+        echo renderTextInput('clientlname', $t['last_name'], $draftData['clientlname'] ?? '', true, false, 'text', 'autocomplete="family-name"');
+        echo renderTextInput('clientemail', $t['email'], $draftData['clientemail'] ?? '', true, false, 'email', 'autocomplete="email"');
+        if ($departments === []) {
+            echo renderTextInput('departmentagency', $t['department_agency'], $selectedDepartment, false, false, 'text', 'autocomplete="organization" aria-describedby="departmentagency-hint"');
+            echo '<p id="departmentagency-hint">' . htmlspecialchars($t['department_agency_hint']) . '</p>';
+        } else {
             ?>
-
-            <?php if (rmt_file_upload_policy()['enabled']): ?>
             <div class="form-group">
-                <label for="fileToUpload"><span class="field-name"><?php echo $t['upload_files']; ?></span></label>
+                <label for="departmentagency"><span class="field-name"><?= htmlspecialchars($t['department_agency']) ?></span></label>
                 <input
-                    type="file"
+                    type="text"
                     class="form-control"
-                    id="fileToUpload"
-                    name="fileToUpload[]"
-                    multiple
-                    accept="<?php echo htmlspecialchars(rmt_file_upload_accept_attribute(), ENT_QUOTES, 'UTF-8'); ?>"
-                    aria-describedby="fileToUploadHelp fileToUploadError"
-                    <?php echo !empty($uploadErrorMessage) ? 'aria-invalid="true"' : ''; ?>
-                    <?php echo !empty($uploadErrorMessage) ? 'autofocus' : ''; ?>
+                    id="departmentagency"
+                    name="departmentagency"
+                    list="departmentagency-options"
+                    value="<?= htmlspecialchars($departmentInputValue, ENT_QUOTES, 'UTF-8') ?>"
+                    autocomplete="organization"
+                    aria-describedby="departmentagency-hint"
+                    placeholder="<?= htmlspecialchars($t['select_department_agency'], ENT_QUOTES, 'UTF-8') ?>"
                 >
-                <p id="fileToUploadHelp" class="small text-muted"><?php echo htmlspecialchars(rmt_file_upload_hint($lang), ENT_QUOTES, 'UTF-8'); ?></p>
-                <p id="fileToUploadError" class="text-danger" aria-live="polite"><?php echo !empty($uploadErrorMessage) ? htmlspecialchars($uploadErrorMessage, ENT_QUOTES, 'UTF-8') : ''; ?></p>
+                <datalist id="departmentagency-options">
+                    <?php foreach ($departmentOptions as $department): ?>
+                        <option value="<?= htmlspecialchars($department['label'], ENT_QUOTES, 'UTF-8') ?>"></option>
+                    <?php endforeach; ?>
+                </datalist>
+                <p id="departmentagency-hint"><?= htmlspecialchars($t['department_agency_hint']) ?></p>
             </div>
-            <?php endif; ?>
-
             <?php
-            
-            // BDM field removed from the intake flow.
-            ?>
-            
-            <div class="form-group form-buttons">
-                <button type="submit" class="btn btn-primary"><?php echo $t['submit']; ?></button>
-            </div>
-        </form>
-        <?php include 'includes/template/page-details.php'; ?>
-    </main>
+        }
+        echo renderTextarea('additionalinfo', $t['additional_info'], $draftData['additionalinfo'] ?? '', false);
+        ?>
 
-    <?php include 'includes/template/footer.php'; ?>
-    <?php include 'includes/template/scripts.php'; ?>
+        <div class="form-group form-buttons">
+            <button type="submit" class="btn btn-primary"><?= htmlspecialchars($t['submit']) ?></button>
+        </div>
+    </form>
+    <?php include 'includes/template/page-details.php'; ?>
+</main>
+<?php include 'includes/template/footer.php'; ?>
+<?php include 'includes/template/scripts.php'; ?>
 </body>
 </html>
 <?php mysqli_close($link); ?>

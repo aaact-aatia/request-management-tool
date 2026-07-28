@@ -22,14 +22,9 @@ class AzureBlobStorageManager
 
     public function __construct()
     {
-        $defaultMode = app_is_production() ? 'azure_secret' : 'local';
-        $mode = strtolower(trim((string) app_env('FILE_STORAGE_MODE', $defaultMode)));
-        if (!in_array($mode, ['local', 'azure_secret', 'azure_mi', 'disabled'], true)) {
-            $mode = $defaultMode;
-        }
-
-        $this->mode = $mode;
-        $this->localPath = rtrim((string) app_env('FILE_STORAGE_LOCAL_PATH', '/var/uploads/rmt'), '/');
+        $this->mode = app_file_storage_mode();
+        $localPath = rtrim(trim((string) app_env('FILE_STORAGE_LOCAL_PATH', '/var/uploads/rmt')), '/');
+        $this->localPath = $localPath !== '' ? $localPath : '/var/uploads/rmt';
         $this->azureAccount = trim((string) app_env('AZURE_STORAGE_ACCOUNT', ''));
         $this->azureContainer = trim((string) app_env('AZURE_STORAGE_CONTAINER', ''));
         $this->azurePrefix = trim((string) app_env('AZURE_STORAGE_PREFIX', ''));
@@ -49,6 +44,10 @@ class AzureBlobStorageManager
 
     public function uploadFile(string $filePath, string $blobName): bool
     {
+        if ($this->mode === 'disabled') {
+            return false;
+        }
+
         if ($this->mode === 'azure_mi') {
             error_log('Azure managed identity upload mode is not implemented yet.');
             return false;
@@ -79,7 +78,7 @@ class AzureBlobStorageManager
         }
 
         $path = $this->buildLocalPath($blobName);
-        if (!is_file($path)) {
+        if ($path === null || !is_file($path)) {
             return null;
         }
 
@@ -122,7 +121,7 @@ class AzureBlobStorageManager
         }
 
         $path = $this->buildLocalPath($blobName);
-        if (!is_file($path)) {
+        if ($path === null || !is_file($path)) {
             return null;
         }
 
@@ -143,7 +142,7 @@ class AzureBlobStorageManager
 
         if ($this->mode === 'local') {
             $path = $this->buildLocalPath($blobName);
-            if (is_file($path)) {
+            if ($path !== null && is_file($path)) {
                 @unlink($path);
             }
         }
@@ -157,6 +156,9 @@ class AzureBlobStorageManager
         }
 
         $destinationPath = $this->buildLocalPath($blobName);
+        if ($destinationPath === null || !is_file($filePath)) {
+            return false;
+        }
 
         if (@move_uploaded_file($filePath, $destinationPath)) {
             return true;
@@ -209,10 +211,13 @@ class AzureBlobStorageManager
         return true;
     }
 
-    private function buildLocalPath(string $blobName): string
+    private function buildLocalPath(string $blobName): ?string
     {
-        $safeName = preg_replace('/[^A-Za-z0-9._-]/', '_', $blobName);
-        return $this->localPath . '/' . $safeName;
+        if (!preg_match('/\A[A-Za-z0-9][A-Za-z0-9._-]{0,254}\z/', $blobName)) {
+            return null;
+        }
+
+        return $this->localPath . '/' . $blobName;
     }
 
     private function buildAzureBlobUrl(string $blobName, bool $withSas): ?string

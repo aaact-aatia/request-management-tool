@@ -559,7 +559,7 @@ if(mysqli_num_rows($result)>0){
 				$canEditThisRequest = true;
 			?>
 			<div class="pull-right">
-			<p><a class="btn btn-primary" href="editrequest.php?lang=<?php echo $lang; ?>&erid=<?php echo base64_encode($row['id']);?>&reqid=<?php echo urlencode('a11y-' . $row['requestid']); ?>">Edit <span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span></a><?php if ($canDeleteThisRequest) { ?> <a class="wb-lbx btn btn-primary" href="includes/delete-request.php?id=<?php echo $row['id'];?>">Delete<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span> </a><?php } ?></p>
+			<p><a class="btn btn-primary" href="editrequest.php?lang=<?php echo $lang; ?>&erid=<?php echo base64_encode($row['id']);?>&reqid=<?php echo urlencode('a11y-' . $row['requestid']); ?>">Edit <span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span></a><?php if ($canDeleteThisRequest) { ?> <a class="wb-lbx lbx-modal btn btn-primary" href="includes/delete-request.php?id=<?php echo $row['id'];?>">Delete<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span> </a><?php } ?></p>
 			</div>
 			<div class="clearfix"></div>
 			<?php
@@ -578,7 +578,7 @@ if(mysqli_num_rows($result)>0){
 				if ($canEditThisRequest) {
 			?>
 			<div class="pull-right">
-				<p><a class="btn btn-primary" href="editrequest.php?lang=<?php echo $lang; ?>&erid=<?php echo base64_encode($row['id']);?>&reqid=<?php echo urlencode('a11y-' . $row['requestid']); ?>">Edit <span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span></a><?php if ($canDeleteThisRequest) { ?> <a class="wb-lbx btn btn-primary" href="includes/delete-request.php?id=<?php echo $row['id'];?>">Delete<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span> </a><?php } ?></p>
+				<p><a class="btn btn-primary" href="editrequest.php?lang=<?php echo $lang; ?>&erid=<?php echo base64_encode($row['id']);?>&reqid=<?php echo urlencode('a11y-' . $row['requestid']); ?>">Edit <span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span></a><?php if ($canDeleteThisRequest) { ?> <a class="wb-lbx lbx-modal btn btn-primary" href="includes/delete-request.php?id=<?php echo $row['id'];?>">Delete<span class="wb-inv"> a11y-<?php echo $row['requestid'];?> request</span> </a><?php } ?></p>
 			</div>
 			<div class="clearfix"></div>
 			<?php 
@@ -1114,7 +1114,7 @@ $blobStorage = new AzureBlobStorageManager();
 					$nnotes = nl2br(htmlspecialchars($notes));
 				?>
 				
-			<dt><?php echo $dateadded ?><?php if ($canDeleteThisRequest) {?> <a class="wb-lbx" href="includes/delete-comms.php?t=c&id=<?php echo $row2['id'];?>&rid=<?php echo $triageid ?>"><span class="glyphicon glyphicon-trash"></span><span class="wb-inv"> <?= htmlspecialchars($t['delete_comment']) ?></span></a><?php } ?></dt>
+			<dt><?php echo $dateadded ?><?php if ($canDeleteThisRequest) {?> <a class="wb-lbx lbx-modal" href="includes/delete-comms.php?t=c&id=<?php echo $row2['id'];?>&rid=<?php echo $triageid ?>"><span class="glyphicon glyphicon-trash"></span><span class="wb-inv"> <?= htmlspecialchars($t['delete_comment']) ?></span></a><?php } ?></dt>
 				<dd><?php echo $nnotes ?></dd>
 				<?php } ?>
 			</dl>
@@ -1444,7 +1444,7 @@ $blobStorage = new AzureBlobStorageManager();
 					$cfname = $row3['firstname'] ?? '';
 					$clname = $row3['lastname'] ?? '';
 				?>
-				<dt><?php echo $dateadded ?><?php if($creatorid!=0 && ($cfname !== '' || $clname !== '')) {?> - <?php echo htmlspecialchars(trim($cfname . ' ' . $clname), ENT_QUOTES, 'UTF-8') ?><?php } ?><?php if ($canDeleteThisRequest) {?> <a class="wb-lbx" href="includes/delete-comms.php?t=a&id=<?php echo $row2['id'];?>&rid=<?php echo $triageid ?>"><span class="glyphicon glyphicon-trash"></span><span class="wb-inv"> <?= htmlspecialchars($t['delete_comment']) ?></span></a><?php } ?></dt>
+				<dt><?php echo $dateadded ?><?php if($creatorid!=0 && ($cfname !== '' || $clname !== '')) {?> - <?php echo htmlspecialchars(trim($cfname . ' ' . $clname), ENT_QUOTES, 'UTF-8') ?><?php } ?><?php if ($canDeleteThisRequest) {?> <a class="wb-lbx lbx-modal" href="includes/delete-comms.php?t=a&id=<?php echo $row2['id'];?>&rid=<?php echo $triageid ?>"><span class="glyphicon glyphicon-trash"></span><span class="wb-inv"> <?= htmlspecialchars($t['delete_comment']) ?></span></a><?php } ?></dt>
 				<dd><?php echo $annotes ?></dd>
 				<?php } ?>
 			</dl>

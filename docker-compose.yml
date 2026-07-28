@@ -5,10 +5,12 @@ services:
     ports:
       - "${PORT}:80"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     volumes:
       - ./app:/var/www/html
       - ./docs:/var/www/docs:ro
+      - ./tests:/var/www/tests:ro
       - vendor_data:/var/www/html/vendor
       - rmt_uploads:/var/uploads/rmt
     environment:
@@ -45,18 +47,25 @@ services:
     image: mysql:5.7
     container_name: aaact-rmt-db
     platform: linux/amd64
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_HOST: ${DB_HOST}
       MYSQL_DATABASE: ${DB_NAME}
       MYSQL_USER: ${DB_USER}
       MYSQL_PASSWORD: ${DB_PASS}
+      RMT_SEED_PROFILE: ${RMT_SEED_PROFILE:-example}
     volumes:
       - dbdata:/var/lib/mysql
       - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
       - ./database/reference.sql:/docker-entrypoint-initdb.d/02-reference.sql
       - ./database/session_handler.sql:/docker-entrypoint-initdb.d/03-session_handler.sql
-      - ./database/ssc-sample-dev.sql:/docker-entrypoint-initdb.d/04-sample-dev.sql
+      - ./database/seed-profile.sh:/docker-entrypoint-initdb.d/04-seed-profile.sh:ro
+      - ./database:/opt/rmt-seeds:ro
 
 volumes:
   dbdata:

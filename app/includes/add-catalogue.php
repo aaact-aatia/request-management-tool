@@ -6,7 +6,7 @@ require_once __DIR__ . '/session_start.php';
 
 // Set language from session
 $lang_code = $_SESSION['lang'] ?? 'en';
-require("../lang/{$lang_code}.php");
+$lang = require("../lang/{$lang_code}.php");
 
 // Check if the user has the right priv's
 if (!($_SESSION['is_superuser'] OR $_SESSION['is_admin'])) {
@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	$nameen = mysqli_real_escape_string($link,$_POST['nameen']);
 	$namefr = mysqli_real_escape_string($link,$_POST['namefr']);
 	$contactid = mysqli_real_escape_string($link,$_POST['contactid']);
-	$status = 1;
+	$status = isset($_POST['status']) ? 1 : 0;
 	$noerror = false;
 	
 	// Custom form validation
@@ -77,6 +77,9 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 					<option value="<?= htmlspecialchars($teamRow['id']) ?>"><?= htmlspecialchars($teamName) ?></option>
 				<?php } ?>
 			</select>
+		</div>
+		<div class="checkbox">
+			<label for="status"><input type="checkbox" id="status" name="status" value="1" checked> <?= htmlspecialchars($lang['active_label']) ?></label>
 		</div>
 		<div class="form-group form-buttons">
 			<button type="submit" class="btn btn-default"><?= htmlspecialchars($lang['add_button'] ?? 'Add') ?></button>

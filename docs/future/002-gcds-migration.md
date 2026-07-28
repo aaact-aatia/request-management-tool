@@ -15,7 +15,7 @@ Replace the Web Experience Toolkit 4 (WET4) framework with the GC Design System 
 - **Delivery**: CDN from `canada.ca/etc/designs/canada/cdts/gcweb/`
 - **Layout builders**: `wet.builder.appTop()`, `wet.builder.appFooter()`, etc.
 - **Critical dependencies**:
-  - Lightbox modals (`wb-lbx`): 46 instances across admin functions
+  - Lightbox modals (`wb-lbx lbx-modal`): 46 instances across admin functions
   - Glyphicons: 30+ instances for visual indicators
   - Utility classes: `mrgn-*`, `pull-*`, `form-control`, `btn`, `alert`
 - **Bilingual**: Separate `appTop.php` / `appTop-fr.php` with identical structure
@@ -64,7 +64,7 @@ Replace WET4 utility classes with GCDS equivalents across all pages:
 | `class="pull-right"` | `class="text-align-right"` |
 
 ### Phase 4 — Modal Migration (2–3 days)
-- Replace all 46 `class="wb-lbx"` triggers with `onclick="openModal(this.href); return false;"`
+- Replace all 46 `class="wb-lbx lbx-modal"` triggers with `onclick="openModal(this.href); return false;"`
 - Add close button + cancel button to all `includes/delete-*.php`, `includes/edit-*.php`, `includes/add-*.php`
 
 ### Phase 5 — Icon Replacement (1–2 days)

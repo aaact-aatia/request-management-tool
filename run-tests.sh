@@ -1,26 +1,20 @@
-#!/bin/bash
-# Quick test runner for RMT project
+#!/bin/sh
+set -eu
 
-set -e
+project_name="rmt-integration-tests"
 
-echo "🧪 RMT Testing Suite"
-echo "===================="
-echo ""
+cleanup() {
+	docker compose -p "$project_name" -f docker-compose.test.yml down --volumes --remove-orphans
+}
+trap cleanup EXIT INT TERM
 
-# Check if PHPUnit is installed
-if [ ! -f "vendor/bin/phpunit" ]; then
-    echo "⚠️  PHPUnit not installed. Installing dependencies..."
-    composer require --dev phpunit/phpunit
-fi
-
-echo "📝 Running Unit Tests..."
-echo "------------------------"
-vendor/bin/phpunit tests/Unit --colors=always
-
-echo ""
-echo "🔗 Running Integration Tests..."
-echo "--------------------------------"
-php tests/Integration/RequestWorkflowTest.php
-
-echo ""
-echo "✅ All tests completed!"
+docker compose -p "$project_name" -f docker-compose.test.yml up -d --wait test-db
+docker compose -p "$project_name" -f docker-compose.test.yml run --rm --no-deps --build test-runner
+docker compose -p "$project_name" -f docker-compose.test.yml run --rm --no-deps \
+	--entrypoint php test-runner /var/www/tests/Integration/FileStorageTest.php
+docker compose -p "$project_name" -f docker-compose.test.yml run --rm --no-deps \
+	--entrypoint php test-runner /var/www/tests/Unit/PriorityCalculatorTest.php
+docker compose -p "$project_name" -f docker-compose.test.yml run --rm --no-deps \
+	--entrypoint php test-runner /var/www/tests/Unit/DepartmentDirectoryTest.php
+docker compose -p "$project_name" -f docker-compose.test.yml run --rm --no-deps \
+	--entrypoint php test-runner /var/www/tests/Integration/OrganizationDirectoryTest.php

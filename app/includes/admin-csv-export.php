@@ -122,6 +122,10 @@ $legends = [
 	'tblsources' => [
 		'# status: 0=Inactive, 1=Active',
 	],
+	'tblorganizations' => [
+		'# Existing IDs update records during import; blank IDs add records',
+		'# status: 0=Inactive, 1=Active',
+	],
 	'tblstatus' => [
 		'# is_resolved: 0=Not a resolved status, 1=Marks request as resolved',
 		'# status: 0=Inactive, 1=Active',

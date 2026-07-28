@@ -14,6 +14,7 @@ if (!isset($link) || !($link instanceof mysqli)) {
     throw new RuntimeException('Database connection was not initialized in sql.php');
 }
 require_once('includes/helpers.php');
+require_once('includes/department-directory.php');
 require_once('BlobStorage.php');
 require_once('emailController.php');
 
@@ -25,42 +26,55 @@ $isFrench = ($lang === 'fr');
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     
     // Get service/catalogue IDs passed as hidden fields from step 2
-    $catalogueid = (int)getPostValue('catalogueid', 0);
-    $serviceid = (int)getPostValue('serviceid', 0);
-    $subserviceid = (int)getPostValue('subserviceid', 0);
-    $reauditFlag = (int)getPostValue('reauditFlag', 0);
+    $catalogueid = (int) ($_POST['catalogueid'] ?? 0);
+    $serviceid = (int) ($_POST['serviceid'] ?? 0);
+    $subserviceid = (int) ($_POST['subserviceid'] ?? 0);
+
+    $selection = rmt_validate_intake_selection($link, $catalogueid, $serviceid, $subserviceid);
+    if ($selection === null) {
+        header("location:/openrequest.php?lang={$lang}&status=failed#intake-error");
+        exit();
+    }
+
+    $catalogueid = $selection['catalogueid'];
+    $serviceid = $selection['serviceid'];
+    $subserviceid = $selection['subserviceid'];
     $statusid = 1; // Initial status
     
     // Grab all form fields using helper
-    $requesttitle = getPostValue('requesttitle');
-    $audienceid = getPostValue('audience', 0);
-    $clientlname = getPostValue('clientlname');
-    $clientfname = getPostValue('clientfname');
-    $clientemail = getPostValue('clientemail');
-    $departmentagency = getPostValue('departmentagency');
-    $clientphone = getPostValue('clientphone');
+    $requesttitle = '';
+    $audienceid = (int) ($_POST['audience'] ?? 0);
+    $clientlname = trim((string) ($_POST['clientlname'] ?? ''));
+    $clientfname = trim((string) ($_POST['clientfname'] ?? ''));
+    $clientemail = trim((string) ($_POST['clientemail'] ?? ''));
+    $submittedDepartment = trim((string) ($_POST['departmentagency'] ?? ''));
+    $departmentagency = rmt_department_directory_official_title(
+        rmt_get_department_directory($link, $lang),
+        $submittedDepartment
+    );
+    $clientphone = '';
     $requestlang = app_normalize_language($lang);
-    $bdm = getPostValue('bdm', 0);
-    $attach1 = getPostValue('attach1');
-    $attach2 = getPostValue('attach2');
-    $attach3 = getPostValue('attach3');
-    $clientnotes = getPostValue('clientnotes');
-    $additionalinfo = getPostValue('additionalinfo');
-    $notification = getPostValue('notification', 1);
-    $afterfact = getPostValue('afterfact');
-    $sprintdefects = getPostValue('sprintdefects');
-    $sprintschedule = getPostValue('sprintschedule');
+    $bdm = trim((string) ($_POST['bdm'] ?? '0'));
+    $attach1 = trim((string) ($_POST['attach1'] ?? ''));
+    $attach2 = trim((string) ($_POST['attach2'] ?? ''));
+    $attach3 = trim((string) ($_POST['attach3'] ?? ''));
+    $clientnotes = trim((string) ($_POST['clientnotes'] ?? ''));
+    $additionalinfo = trim((string) ($_POST['additionalinfo'] ?? ''));
+    $notification = trim((string) ($_POST['notification'] ?? '1'));
+    $afterfact = trim((string) ($_POST['afterfact'] ?? ''));
+    $sprintdefects = trim((string) ($_POST['sprintdefects'] ?? ''));
+    $sprintschedule = trim((string) ($_POST['sprintschedule'] ?? ''));
     
     // Handle date fields
-    $daterequired = getPostValue('daterequired');
+    $daterequired = trim((string) ($_POST['daterequired'] ?? ''));
     $daterequiredu = false;
     if (empty($daterequired)) {
         $daterequiredu = true;
         $daterequired = "1900-01-01";
     }
     
-    $firstsprintstartdate = getPostValue('firstsprintstartdate');
-    $firstsprintenddate = getPostValue('firstsprintenddate');
+    $firstsprintstartdate = trim((string) ($_POST['firstsprintstartdate'] ?? ''));
+    $firstsprintenddate = trim((string) ($_POST['firstsprintenddate'] ?? ''));
     
     // Auto-generated values
     if ($afterfact == "Y") {
@@ -81,22 +95,27 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $contactemail = "";
     
     // Validate required fields
-    if (!hasValue($requesttitle) || !hasValue($clientlname) || !hasValue($clientfname) || !hasValue($clientemail)) {
+    if (!hasValue($clientlname) || !hasValue($clientfname) || !hasValue($clientemail)) {
         header("location:/openrequest.php?lang=" . $lang . "&status=failed");
         exit();
     }
     
     // Generate request ID now that validation has passed
     $year = date('y');
-    $result = mysqli_query($link, "SELECT MAX(CAST(SUBSTRING(requestid, 8) AS UNSIGNED)) AS max_seq 
-                                    FROM tbltriage 
-                                    WHERE requestid LIKE 'REQ-$year-%'");
-    $seqRow = mysqli_fetch_array($result);
+    $requestPattern = "REQ-{$year}-%";
+    $seqRow = rmt_db_fetch_one(
+        $link,
+        'SELECT MAX(CAST(SUBSTRING(requestid, 8) AS UNSIGNED)) AS max_seq
+         FROM tbltriage
+         WHERE requestid LIKE ?',
+        's',
+        [$requestPattern]
+    );
     $sequence = ($seqRow['max_seq'] ?? 0) + 1;
     $nrequestid = sprintf('REQ-%s-%03d', $year, $sequence);
     $dateopened = date('Y-m-d');
     $slatimer = date('Y-m-d');
-    $userid = isset($_SESSION['pid']) && !empty($_SESSION['pid']) ? $_SESSION['pid'] : 'NULL';
+    $userid = isset($_SESSION['pid']) && !empty($_SESSION['pid']) ? (int) $_SESSION['pid'] : null;
 
     // Validate uploads before writing request data.
     $validatedUploads = ['files' => [], 'errors' => []];
@@ -108,14 +127,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 'serviceid' => $_POST['serviceid'] ?? '',
                 'subserviceid' => $_POST['subserviceid'] ?? '',
                 'subserviceid2' => $_POST['subserviceid2'] ?? '',
-                'reauditFlag' => $_POST['reauditFlag'] ?? '',
-                'requesttitle' => $_POST['requesttitle'] ?? '',
                 'audience' => $_POST['audience'] ?? '',
                 'clientlname' => $_POST['clientlname'] ?? '',
                 'clientfname' => $_POST['clientfname'] ?? '',
                 'clientemail' => $_POST['clientemail'] ?? '',
                 'departmentagency' => $_POST['departmentagency'] ?? '',
-                'clientphone' => $_POST['clientphone'] ?? '',
                 'daterequired' => $_POST['daterequired'] ?? '',
                 'bdm' => $_POST['bdm'] ?? '',
                 'attach1' => $_POST['attach1'] ?? '',
@@ -148,44 +164,63 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $fileTmpPath = $uploadFile['tmp_name'];
             $randomCode = $nrequestid . "-" . bin2hex(random_bytes(16)) . "." . $fileType;
             
-            // Escape for SQL
-            $fileName = mysqli_real_escape_string($link, $fileNameWithExtension);
-            $fileType = mysqli_real_escape_string($link, $fileType);
-            $randomCode = mysqli_real_escape_string($link, $randomCode);
-            
-            // Upload to Azure
+            // Upload to the configured storage backend.
             if ($azureBlobManager->uploadFile($fileTmpPath, $randomCode)) {
-                $sql = "INSERT INTO tblfiles (`requestid`, `name`, `code`, `type`, `size`) 
-                        VALUES ('$nrequestid', '$fileName', '$randomCode', '$fileType', '$fileSize')";
-                mysqli_query($link, $sql);
+                $fileStatement = rmt_db_execute(
+                    $link,
+                    'INSERT INTO tblfiles (`requestid`, `name`, `code`, `type`, `size`)
+                     VALUES (?, ?, ?, ?, ?)',
+                    'ssssd',
+                    [$nrequestid, $fileNameWithExtension, $randomCode, $fileType, $fileSize]
+                );
+                mysqli_stmt_close($fileStatement);
             }
         }
     }
     
     // Insert the full triage record in one shot
-    $daterequiredSql = $daterequiredu ? 'NULL' : "'$daterequired'";
-    $columns = "requestid, creatorid, catalogueid, serviceid, subserviceid, statusid, datereceived, slatimer, isreaudit, title, clientlname, clientfname, clientemail, clientphone, daterequired, bdm, attach1, attach2, attach3, status";
-    $values  = "'$nrequestid', $userid, $catalogueid, $serviceid, $subserviceid, $statusid, '$dateopened', '$slatimer', $reauditFlag, '$requesttitle', '$clientlname', '$clientfname', '$clientemail', '$clientphone', $daterequiredSql, '$bdm', '$attach1', '$attach2', '$attach3', '$status'";
+    $triageColumns = [
+        'requestid', 'creatorid', 'catalogueid', 'serviceid', 'subserviceid', 'statusid',
+        'datereceived', 'slatimer', 'title', 'clientlname', 'clientfname',
+        'clientemail', 'clientphone', 'daterequired', 'bdm', 'attach1', 'attach2', 'attach3', 'status'
+    ];
+    $triageTypes = 'siiiiissssssssssssi';
+    $triageParams = [
+        $nrequestid, $userid, $catalogueid, $serviceid, $subserviceid, $statusid,
+        $dateopened, $slatimer, $requesttitle, $clientlname, $clientfname,
+        $clientemail, $clientphone, $daterequiredu ? null : $daterequired,
+        $bdm, $attach1, $attach2, $attach3, $status
+    ];
 
     $hasRequestLangColumn = function_exists('rmt_db_column_exists')
         && rmt_db_column_exists($link, 'tbltriage', 'requestlang');
     if ($hasRequestLangColumn) {
-        $columns .= ", requestlang";
-        $values  .= ", '$requestlang'";
+        $triageColumns[] = 'requestlang';
+        $triageTypes .= 's';
+        $triageParams[] = $requestlang;
     }
     
     if ($firstsprintenddate) {
-        $columns .= ", firstsprintenddate";
-        $values  .= ", '$firstsprintenddate'";
+        $triageColumns[] = 'firstsprintenddate';
+        $triageTypes .= 's';
+        $triageParams[] = $firstsprintenddate;
     }
     if ($firstsprintstartdate) {
-        $columns .= ", firstsprintstartdate";
-        $values  .= ", '$firstsprintstartdate'";
+        $triageColumns[] = 'firstsprintstartdate';
+        $triageTypes .= 's';
+        $triageParams[] = $firstsprintstartdate;
     }
     
-    $sql = "INSERT INTO tbltriage ($columns) VALUES ($values)";
-    mysqli_query($link, $sql);
+    $quotedColumns = array_map(static fn(string $column): string => "`{$column}`", $triageColumns);
+    $placeholders = implode(', ', array_fill(0, count($triageColumns), '?'));
+    $triageStatement = rmt_db_execute(
+        $link,
+        'INSERT INTO tbltriage (' . implode(', ', $quotedColumns) . ") VALUES ({$placeholders})",
+        $triageTypes,
+        $triageParams
+    );
     $latestid = mysqli_insert_id($link);
+    mysqli_stmt_close($triageStatement);
     $nrequestemailid = base64_encode($latestid);
 
     // Preserve original request language even on older schemas that may not include tbltriage.requestlang.
@@ -196,21 +231,36 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $creatorid = $_SESSION['pid'] ?? 0;
     
     if (hasValue($clientnotes)) {
-        $sql = "INSERT INTO tblcommlog(`triageid`, `dateadded`, `notes`, `creatorid`, `status`) 
-                VALUES ('$latestid', '$datereceived', '$clientnotes', '$creatorid', '$status')";
-        mysqli_query($link, $sql);
+        $statement = rmt_db_execute(
+            $link,
+            'INSERT INTO tblcommlog (`triageid`, `dateadded`, `notes`, `creatorid`, `status`)
+             VALUES (?, ?, ?, ?, ?)',
+            'issii',
+            [$latestid, $datereceived, $clientnotes, $creatorid, $status]
+        );
+        mysqli_stmt_close($statement);
     }
 
     if (hasValue($departmentCommsNote)) {
-        $sql = "INSERT INTO tblcommlog(`triageid`, `dateadded`, `notes`, `creatorid`, `status`) 
-                VALUES ('$latestid', '$datereceived', '$departmentCommsNote', '$creatorid', '$status')";
-        mysqli_query($link, $sql);
+        $statement = rmt_db_execute(
+            $link,
+            'INSERT INTO tblcommlog (`triageid`, `dateadded`, `notes`, `creatorid`, `status`)
+             VALUES (?, ?, ?, ?, ?)',
+            'issii',
+            [$latestid, $datereceived, $departmentCommsNote, $creatorid, $status]
+        );
+        mysqli_stmt_close($statement);
     }
-    
+
     if (hasValue($additionalinfo)) {
-        $sql = "INSERT INTO tblcommlog(`triageid`, `dateadded`, `notes`, `creatorid`, `status`) 
-                VALUES ('$latestid', '$datereceived', '$additionalinfo', '$creatorid', '$status')";
-        mysqli_query($link, $sql);
+        $statement = rmt_db_execute(
+            $link,
+            'INSERT INTO tblcommlog (`triageid`, `dateadded`, `notes`, `creatorid`, `status`)
+             VALUES (?, ?, ?, ?, ?)',
+            'issii',
+            [$latestid, $datereceived, $additionalinfo, $creatorid, $status]
+        );
+        mysqli_stmt_close($statement);
     }
     
     // Determine the team to notify based on first-tier catalogue ownership.
@@ -220,42 +270,37 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         && rmt_db_column_exists($link, 'tblcatalogue', 'contactid');
 
     if ($hasCatalogueContact && $catalogueid && $catalogueid != 0) {
-        $result = mysqli_query($link, "SELECT contactid FROM tblcatalogue WHERE id = '$catalogueid'");
-        $row = mysqli_fetch_array($result);
-        if (!empty($row) && !empty($row[0])) {
-            $contactid = (int)$row[0];
+        $row = rmt_db_fetch_one($link, 'SELECT contactid FROM tblcatalogue WHERE id = ?', 'i', [$catalogueid]);
+        if (!empty($row['contactid'])) {
+            $contactid = (int) $row['contactid'];
         }
     }
     
     if (($contactid <= 0) && $subserviceid && $subserviceid != 0) {
         // Get serviceid from subservice
-        $result = mysqli_query($link, "SELECT serviceid FROM tblsubservices WHERE id = '$subserviceid'");
-        $row = mysqli_fetch_array($result);
-        if (!empty($row)) {
-            $serviceid = $row[0];
+        $row = rmt_db_fetch_one($link, 'SELECT serviceid FROM tblsubservices WHERE id = ?', 'i', [$subserviceid]);
+        if (!empty($row['serviceid'])) {
+            $serviceid = (int) $row['serviceid'];
         }
         
         // Get contact from service
-        $result = mysqli_query($link, "SELECT contactid FROM tblservices WHERE id = '$serviceid'");
-        $row = mysqli_fetch_array($result);
-        if (!empty($row)) {
-            $contactid = $row[0];
+        $row = rmt_db_fetch_one($link, 'SELECT contactid FROM tblservices WHERE id = ?', 'i', [$serviceid]);
+        if (!empty($row['contactid'])) {
+            $contactid = (int) $row['contactid'];
         }
     }
 
     if (($contactid <= 0) && $serviceid && $serviceid != 0) {
         // Get contact from service directly
-        $result = mysqli_query($link, "SELECT contactid FROM tblservices WHERE id = '$serviceid'");
-        $row = mysqli_fetch_array($result);
-        if (!empty($row)) {
-            $contactid = $row[0];
+        $row = rmt_db_fetch_one($link, 'SELECT contactid FROM tblservices WHERE id = ?', 'i', [$serviceid]);
+        if (!empty($row['contactid'])) {
+            $contactid = (int) $row['contactid'];
         }
     }
 
     if ($contactid > 0) {
         // Get team details
-        $result = mysqli_query($link, "SELECT * FROM tblteams WHERE id = '$contactid'");
-        $row = mysqli_fetch_array($result);
+        $row = rmt_db_fetch_one($link, 'SELECT * FROM tblteams WHERE id = ?', 'i', [$contactid]);
         if (!empty($row)) {
             $teamname = $isFrench ? $row['namefr'] : $row['nameen'];
             $teamemail = $row['email'];
@@ -284,18 +329,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Get catalogue name
     $cataloguename = "";
     $nameField = $isFrench ? 'namefr' : 'nameen';
-    $result2 = mysqli_query($link, "SELECT $nameField FROM tblcatalogue WHERE id='$catalogueid' AND status='1'");
-    if ($result2 && mysqli_num_rows($result2) > 0) {
-        $row = mysqli_fetch_assoc($result2);
+    $row = rmt_db_fetch_one(
+        $link,
+        "SELECT {$nameField} FROM tblcatalogue WHERE id = ? AND status = 1",
+        'i',
+        [$catalogueid]
+    );
+    if ($row !== null) {
         $cataloguename = $row[$nameField];
     }
     
     // Get service name
     $servicename = "";
-    $result2 = mysqli_query($link, "SELECT $nameField FROM tblservices WHERE id='$serviceid' AND status='1'");
-    if ($result2 && mysqli_num_rows($result2) > 0) {
-        $row = mysqli_fetch_assoc($result2);
+    $row = rmt_db_fetch_one(
+        $link,
+        "SELECT {$nameField} FROM tblservices WHERE id = ? AND status = 1",
+        'i',
+        [$serviceid]
+    );
+    if ($row !== null) {
         $servicename = $row[$nameField];
+    } elseif ($serviceid === 0) {
+        $servicename = $cataloguename;
     }
     
     $domain = app_base_url();

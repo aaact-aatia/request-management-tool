@@ -6,7 +6,7 @@ require_once __DIR__ . '/session_start.php';
 
 // Set language from session
 $lang_code = $_SESSION['lang'] ?? 'en';
-require("../lang/{$lang_code}.php");
+$lang = require("../lang/{$lang_code}.php");
 
 // Check if the user has the right priv's
 if (!($_SESSION['is_superuser'] OR $_SESSION['is_admin'])) {
@@ -28,6 +28,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	$namefr = mysqli_real_escape_string($link,$_POST['namefr']);
 	$contactid = mysqli_real_escape_string($link,$_POST['contactid']);
 	$survey = mysqli_real_escape_string($link,$_POST['survey']);
+	$status = isset($_POST['status']) ? 1 : 0;
 	$noerror = false;
 	
 	// Custom form validation
@@ -42,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	}
 	
 	// Create SQL statement
-	$sql = "UPDATE `tblcatalogue` SET `nameen` = '$nameen', `namefr` = '$namefr', `contactid` = '$contactid', `survey` = '$survey' WHERE id='$catalogueid'";
+	$sql = "UPDATE `tblcatalogue` SET `nameen` = '$nameen', `namefr` = '$namefr', `contactid` = '$contactid', `survey` = '$survey', `status` = '$status' WHERE id='$catalogueid'";
 	//echo $sql;
 	rmt_admin_query($link,$sql);
 	
@@ -95,6 +96,9 @@ if(rmt_result_num_rows($result2)>0){
 				<option value="0"<?php if($row2['survey'] == 0) echo " selected"; ?>><?php echo $lang_code === 'en' ? 'No' : 'Non'; ?></option>
 				<option value="1"<?php if($row2['survey'] == 1) echo " selected"; ?>><?php echo $lang_code === 'en' ? 'Yes' : 'Oui'; ?></option>
 			</select>
+		</div>
+		<div class="checkbox">
+			<label for="status"><input type="checkbox" id="status" name="status" value="1"<?php if ((int)$row2['status'] === 1) echo ' checked'; ?>> <?= htmlspecialchars($lang['active_label']) ?></label>
 		</div>
 		<div class="form-group form-buttons">
 			<button type="submit" class="btn btn-default"><?php echo $lang_code === 'en' ? 'Save' : 'Sauvegarder'; ?></button>

@@ -29,6 +29,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	$nameen = mysqli_real_escape_string($link,$_POST['nameen']);
 	$namefr = mysqli_real_escape_string($link,$_POST['namefr']);
 	$sds = mysqli_real_escape_string($link,$_POST['sds']);
+	$status = isset($_POST['status']) ? 1 : 0;
 	$noerror = false;
 	
 	// Custom form validation
@@ -38,17 +39,17 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	
 	// If error detected send user back to modal dialog
 	if ($noerror) {
-		header("location:/catalogue-sub-mgmt.php?lang=" . $lang . "?id=$serviceid&cid=$catalogueid&status=failed"); 
+		header("location:/catalogue-sub-mgmt.php?lang=" . $lang . "&id=$serviceid&cid=$catalogueid&status=failed");
 		exit();
 	}
 	
 	// Create SQL statement
-	$sql = "UPDATE `tblsubservices` SET `nameen` = '$nameen', `namefr` = '$namefr', `sds` = '$sds' WHERE id='$subserviceid'";
+	$sql = "UPDATE `tblsubservices` SET `nameen` = '$nameen', `namefr` = '$namefr', `sds` = '$sds', `status` = '$status' WHERE id='$subserviceid'";
 	//echo $sql;
 	rmt_admin_query($link,$sql);
 	
 	// Now redirect
-	header("location:/catalogue-sub-mgmt.php?lang=" . $lang . "?id=$serviceid&cid=$catalogueid&status=success"); 
+	header("location:/catalogue-sub-mgmt.php?lang=" . $lang . "&id=$serviceid&cid=$catalogueid&status=success");
 	exit();
 }
 
@@ -94,6 +95,9 @@ if(rmt_result_num_rows($result2)>0){
 				}
 				?>
 			</select>
+		</div>
+		<div class="checkbox">
+			<label for="status"><input type="checkbox" id="status" name="status" value="1"<?php if ((int)$row2['status'] === 1) echo ' checked'; ?>> <?= $is_french ? 'Actif' : 'Active' ?></label>
 		</div>
 		<div class="form-group form-buttons">
 			<button type="submit" class="btn btn-default"><?php echo $save_btn ?></button>

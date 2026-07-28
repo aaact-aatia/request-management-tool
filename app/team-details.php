@@ -138,7 +138,7 @@ include 'includes/template/head.php';
         <?php endif; ?>
 
         <?php if ($canEditTeams): ?>
-            <p><a class="wb-lbx btn btn-primary" href="includes/edit-teams.php?id=<?= (int)$team['id'] ?>&lang=<?= urlencode($lang) ?>"><?= htmlspecialchars($langFile['teams_edit']) ?></a></p>
+            <p><a class="wb-lbx lbx-modal btn btn-primary" href="includes/edit-teams.php?id=<?= (int)$team['id'] ?>&lang=<?= urlencode($lang) ?>"><?= htmlspecialchars($langFile['teams_edit']) ?></a></p>
         <?php endif; ?>
         <p><a class="btn btn-default" href="teams.php?lang=<?= urlencode($lang) ?>"><?= htmlspecialchars($langFile['teams_details_back']) ?></a></p>
     <?php endif; ?>
