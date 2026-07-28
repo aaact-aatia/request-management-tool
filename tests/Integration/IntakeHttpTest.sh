@@ -4,10 +4,18 @@ set -euo pipefail
 base_url="${RMT_BASE_URL:-http://localhost:8080}"
 work_dir=$(mktemp -d)
 created_id=""
+organization_created_id=""
+organization_session_id=""
 
 cleanup() {
     if [[ -n "$created_id" ]]; then
         db_query "DELETE FROM tbladminlog WHERE triageid = ${created_id}; DELETE FROM tblcommlog WHERE triageid = ${created_id}; DELETE FROM tblfiles WHERE requestid = (SELECT requestid FROM tbltriage WHERE id = ${created_id}); DELETE FROM tbltriage WHERE id = ${created_id};" >/dev/null || true
+    fi
+    if [[ -n "$organization_created_id" ]]; then
+        db_query "DELETE FROM tblorganizations WHERE id = ${organization_created_id};" >/dev/null || true
+    fi
+    if [[ -n "$organization_session_id" ]]; then
+        db_query "DELETE FROM tblphp_sessions WHERE id = '${organization_session_id}';" >/dev/null || true
     fi
     rm -rf "$work_dir"
 }
@@ -179,3 +187,197 @@ if [[ "$stored_note" != "$test_note" ]]; then
     exit 1
 fi
 printf 'PASS: prepared communication insert preserves quote-bearing note\n'
+
+organization_session_id="rmt-organization-http-$$"
+organization_created_id=$(db_query "
+    INSERT INTO tblorganizations
+        (nameen, namefr, abbreviationen, abbreviationfr, source_part, status)
+    VALUES
+        ('Organization HTTP test', 'Test HTTP de l organisation', 'OLD', 'ANC', 1, 1);
+    SELECT LAST_INSERT_ID();
+")
+
+docker compose exec -T web php -r '
+    session_id($argv[1]);
+    require "/var/www/html/includes/session_start.php";
+    $_SESSION = [
+        "pid" => 8,
+        "atype" => 1,
+        "primary_atype" => 1,
+        "is_superuser" => 1,
+        "is_admin" => 1,
+        "email" => "organization-http@example.invalid",
+        "firstname" => "Organization",
+        "team" => "1",
+        "lang" => "en",
+    ];
+    session_write_close();
+' "$organization_session_id"
+
+request \
+    -H "Cookie: PHPSESSID=${organization_session_id}" \
+    "${base_url}/organizations.php?lang=en" > "$work_dir/organizations.html"
+
+assert_contains \
+    "$work_dir/organizations.html" \
+    'Records imported from the TBS Registry were loaded once on July 27, 2026 and are not automatically synchronized.' \
+    'organization page explains that official records are a one-time snapshot'
+assert_contains \
+    "$work_dir/organizations.html" \
+    'https://www.tbs-sct.gc.ca/ap/fip-pcim/reg-eng.asp' \
+    'organization page links to the TBS Registry of Applied Titles'
+
+request \
+    -H "Cookie: PHPSESSID=${organization_session_id}" \
+    "${base_url}/organizations.php?lang=fr" > "$work_dir/organizations-fr.html"
+assert_contains \
+    "$work_dir/organizations-fr.html" \
+    'Les enregistrements importés du Registre du SCT ont été chargés une seule fois le 27 juillet 2026' \
+    'French organization page explains that official records are a one-time snapshot'
+assert_contains \
+    "$work_dir/organizations-fr.html" \
+    'https://www.tbs-sct.gc.ca/ap/fip-pcim/reg-fra.asp' \
+    'French organization page links to the TBS Registry of Applied Titles'
+
+assert_contains \
+    "$work_dir/organizations.html" \
+    "/includes/set-organization-status.php?id=${organization_created_id}&amp;lang=en" \
+    'organization table uses a status lightbox link'
+
+request \
+    -H "Cookie: PHPSESSID=${organization_session_id}" \
+    "${base_url}/includes/edit-organization.php?id=${organization_created_id}&lang=en" > "$work_dir/edit-organization.html"
+assert_contains \
+    "$work_dir/edit-organization.html" \
+    "name=\"organization_id\" value=\"${organization_created_id}\"" \
+    'organization edit dialog uses a WET-safe record key'
+organization_csrf_token=$(sed -n 's/.*name="csrf_token" value="\([^"]*\)".*/\1/p' "$work_dir/edit-organization.html" | head -1)
+
+if [[ ${#organization_csrf_token} -ne 64 ]]; then
+    printf 'FAIL: organization edit dialog did not render a CSRF token\n' >&2
+    exit 1
+fi
+
+request -D "$work_dir/organization-tampered-headers.txt" -o /dev/null \
+    -H "Cookie: PHPSESSID=${organization_session_id}" \
+    --data 'csrf_token=invalid' \
+    --data 'organization_action=set_status' \
+    --data-urlencode "organization_id=${organization_created_id}" \
+    --data 'record_status=0' \
+    "${base_url}/organizations.php?lang=en"
+
+if ! grep -Fiq 'location: /organizations.php?lang=en&status=invalid_request' "$work_dir/organization-tampered-headers.txt"; then
+    printf 'FAIL: organization action accepted a tampered CSRF token\n' >&2
+    exit 1
+fi
+printf 'PASS: organization actions reject tampered CSRF tokens\n'
+
+request -D "$work_dir/organization-edit-headers.txt" -o /dev/null \
+    -H "Cookie: PHPSESSID=${organization_session_id}" \
+    --data-urlencode "csrf_token=${organization_csrf_token}" \
+    --data 'organization_action=save' \
+    --data-urlencode "organization_id=${organization_created_id}" \
+    --data 'nameen=Organization HTTP test' \
+    --data 'namefr=Test HTTP de l organisation' \
+    --data 'abbreviationen=NEW' \
+    --data 'abbreviationfr=NOU' \
+    --data 'record_status=1' \
+    "${base_url}/organizations.php?lang=en"
+
+if ! grep -Fiq 'location: /organizations.php?lang=en&status=success' "$work_dir/organization-edit-headers.txt"; then
+    printf 'FAIL: organization edit did not accept the signed CSRF token\n' >&2
+    exit 1
+fi
+printf 'PASS: organization edit accepts the signed CSRF token\n'
+
+request \
+    -H "Cookie: PHPSESSID=${organization_session_id}" \
+    "${base_url}/includes/set-organization-status.php?id=${organization_created_id}&lang=en" > "$work_dir/set-organization-status.html"
+assert_contains \
+    "$work_dir/set-organization-status.html" \
+    "name=\"organization_id\" value=\"${organization_created_id}\"" \
+    'organization status dialog uses a WET-safe record key'
+organization_status_csrf_token=$(sed -n 's/.*name="csrf_token" value="\([^"]*\)".*/\1/p' "$work_dir/set-organization-status.html" | head -1)
+
+if [[ ${#organization_status_csrf_token} -ne 64 ]]; then
+    printf 'FAIL: organization status dialog did not render a CSRF token\n' >&2
+    exit 1
+fi
+
+request -D "$work_dir/organization-status-headers.txt" -o /dev/null \
+    -H "Cookie: PHPSESSID=${organization_session_id}" \
+    --data-urlencode "csrf_token=${organization_status_csrf_token}" \
+    --data 'organization_action=set_status' \
+    --data-urlencode "organization_id=${organization_created_id}" \
+    --data 'record_status=0' \
+    "${base_url}/organizations.php?lang=en"
+
+if ! grep -Fiq 'location: /organizations.php?lang=en&status=success' "$work_dir/organization-status-headers.txt"; then
+    printf 'FAIL: organization deactivation did not accept the signed CSRF token\n' >&2
+    exit 1
+fi
+
+organization_values=$(db_query "SELECT CONCAT(abbreviationen, '|', abbreviationfr, '|', status, '|', source_part) FROM tblorganizations WHERE id = ${organization_created_id}")
+if [[ "$organization_values" != 'NEW|NOU|0|1' ]]; then
+    printf 'FAIL: imported organization changes were not saved with source provenance intact\n' >&2
+    exit 1
+fi
+printf 'PASS: imported organization changes preserve source provenance\n'
+
+request -D "$work_dir/organization-protected-delete-headers.txt" -o /dev/null \
+    -H "Cookie: PHPSESSID=${organization_session_id}" \
+    --data-urlencode "csrf_token=${organization_status_csrf_token}" \
+    --data 'organization_action=delete' \
+    --data-urlencode "organization_id=${organization_created_id}" \
+    "${base_url}/organizations.php?lang=en"
+
+if ! grep -Fiq 'location: /organizations.php?lang=en&status=failed' "$work_dir/organization-protected-delete-headers.txt"; then
+    printf 'FAIL: imported organization deletion was not rejected\n' >&2
+    exit 1
+fi
+
+organization_count=$(db_query "SELECT COUNT(*) FROM tblorganizations WHERE id = ${organization_created_id}")
+if [[ "$organization_count" != '1' ]]; then
+    printf 'FAIL: imported organization was deleted\n' >&2
+    exit 1
+fi
+printf 'PASS: imported organizations cannot be deleted\n'
+
+db_query "UPDATE tblorganizations SET source_part = 0 WHERE id = ${organization_created_id}" >/dev/null
+
+request \
+    -H "Cookie: PHPSESSID=${organization_session_id}" \
+    "${base_url}/organizations.php?lang=en" > "$work_dir/organizations-manual.html"
+assert_contains \
+    "$work_dir/organizations-manual.html" \
+    "/includes/delete-organization.php?id=${organization_created_id}&amp;lang=en" \
+    'manual organization exposes a delete lightbox link'
+
+request \
+    -H "Cookie: PHPSESSID=${organization_session_id}" \
+    "${base_url}/includes/delete-organization.php?id=${organization_created_id}&lang=en" > "$work_dir/delete-organization.html"
+assert_contains \
+    "$work_dir/delete-organization.html" \
+    "name=\"organization_id\" value=\"${organization_created_id}\"" \
+    'organization delete dialog uses a WET-safe record key'
+organization_delete_csrf_token=$(sed -n 's/.*name="csrf_token" value="\([^"]*\)".*/\1/p' "$work_dir/delete-organization.html" | head -1)
+
+request -D "$work_dir/organization-delete-headers.txt" -o /dev/null \
+    -H "Cookie: PHPSESSID=${organization_session_id}" \
+    --data-urlencode "csrf_token=${organization_delete_csrf_token}" \
+    --data 'organization_action=delete' \
+    --data-urlencode "organization_id=${organization_created_id}" \
+    "${base_url}/organizations.php?lang=en"
+
+if ! grep -Fiq 'location: /organizations.php?lang=en&status=success' "$work_dir/organization-delete-headers.txt"; then
+    printf 'FAIL: manual organization deletion did not succeed\n' >&2
+    exit 1
+fi
+
+organization_count=$(db_query "SELECT COUNT(*) FROM tblorganizations WHERE id = ${organization_created_id}")
+if [[ "$organization_count" != '0' ]]; then
+    printf 'FAIL: manual organization was not deleted\n' >&2
+    exit 1
+fi
+organization_created_id=""
+printf 'PASS: manual organizations can be deleted\n'

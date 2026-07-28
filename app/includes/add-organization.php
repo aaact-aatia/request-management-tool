@@ -2,6 +2,7 @@
 require_once __DIR__ . '/session_start.php';
 require('../sql.php');
 /** @var mysqli $link */
+require_once('csrf.php');
 
 $lang = isset($_GET['lang']) && in_array($_GET['lang'], ['en', 'fr'], true)
     ? $_GET['lang']
@@ -14,10 +15,7 @@ if (!($_SESSION['is_superuser'] || $_SESSION['is_admin'])) {
     exit;
 }
 
-if (empty($_SESSION['organization_csrf_token'])) {
-    $_SESSION['organization_csrf_token'] = bin2hex(random_bytes(32));
-}
-$csrfToken = $_SESSION['organization_csrf_token'];
+$csrfToken = rmt_csrf_token('organizations');
 ?>
 <section class="modal-dialog modal-content overlay-def">
     <header class="modal-header">
@@ -26,8 +24,8 @@ $csrfToken = $_SESSION['organization_csrf_token'];
     <div class="modal-body">
         <form method="post" action="/organizations.php?lang=<?= htmlspecialchars($lang) ?>">
             <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
-            <input type="hidden" name="action" value="save">
-            <input type="hidden" name="id" value="0">
+            <input type="hidden" name="organization_action" value="save">
+            <input type="hidden" name="organization_id" value="0">
 
             <div class="form-group">
                 <label for="add-organization-nameen"><span class="field-name"><?= htmlspecialchars($langFile['organizations_name_en']) ?> <strong>(<?= htmlspecialchars($langFile['required']) ?>)</strong></span></label>

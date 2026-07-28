@@ -4,6 +4,7 @@ require('sql.php');
 require('includes/httpscheck.php');
 require('includes/loggedincheck.php');
 require_once('includes/helpers.php');
+require_once('includes/csrf.php');
 
 if (!($_SESSION['is_superuser'] || $_SESSION['is_admin'])) {
     $lang = $_SESSION['lang'] ?? 'en';
@@ -17,22 +18,17 @@ if (isset($_GET['lang']) && in_array($_GET['lang'], ['en', 'fr'], true)) {
 $lang = in_array($_SESSION['lang'] ?? '', ['en', 'fr'], true) ? $_SESSION['lang'] : 'en';
 $langFile = require("lang/{$lang}.php");
 
-if (empty($_SESSION['organization_csrf_token'])) {
-    $_SESSION['organization_csrf_token'] = bin2hex(random_bytes(32));
-}
-$csrfToken = $_SESSION['organization_csrf_token'];
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $submittedToken = (string) ($_POST['csrf_token'] ?? '');
-    if (!hash_equals($csrfToken, $submittedToken)) {
+    if (!rmt_csrf_token_is_valid('organizations', $submittedToken)) {
         header("Location: /organizations.php?lang={$lang}&status=invalid_request");
         exit;
     }
 
-    $action = (string) ($_POST['action'] ?? '');
+    $action = (string) ($_POST['organization_action'] ?? '');
     try {
         if ($action === 'save') {
-            $id = filter_var($_POST['id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0;
+            $id = filter_var($_POST['organization_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0;
             $nameEn = trim((string) ($_POST['nameen'] ?? ''));
             $nameFr = trim((string) ($_POST['namefr'] ?? ''));
             $abbreviationEn = trim((string) ($_POST['abbreviationen'] ?? ''));
@@ -68,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if ($action === 'set_status') {
-            $id = filter_var($_POST['id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0;
+            $id = filter_var($_POST['organization_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0;
             $recordStatus = (int) ($_POST['record_status'] ?? -1);
             if ($id <= 0 || !in_array($recordStatus, [0, 1], true)) {
                 throw new InvalidArgumentException('Invalid organization status.');
@@ -84,7 +80,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header("Location: /organizations.php?lang={$lang}&status=success");
             exit;
         }
+
+        if ($action === 'delete') {
+            $id = filter_var($_POST['organization_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0;
+            if ($id <= 0) {
+                throw new InvalidArgumentException('Invalid organization ID.');
+            }
+
+            $statement = rmt_db_execute(
+                $link,
+                'DELETE FROM tblorganizations WHERE id = ? AND source_part = 0',
+                'i',
+                [$id]
+            );
+            $deleted = mysqli_stmt_affected_rows($statement) === 1;
+            mysqli_stmt_close($statement);
+            if (!$deleted) {
+                throw new InvalidArgumentException('Only manually maintained organizations can be deleted.');
+            }
+
+            header("Location: /organizations.php?lang={$lang}&status=success");
+            exit;
+        }
     } catch (Throwable $exception) {
+        error_log(sprintf(
+            'Organization update failed: action=%s exception=%s message=%s',
+            $action,
+            get_class($exception),
+            $exception->getMessage()
+        ));
         header("Location: /organizations.php?lang={$lang}&status=failed");
         exit;
     }
@@ -95,7 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $organizationsResult = mysqli_query(
     $link,
-    'SELECT id, nameen, namefr, abbreviationen, abbreviationfr, status
+    'SELECT id, nameen, namefr, abbreviationen, abbreviationfr, source_part, status
      FROM tblorganizations
      ORDER BY nameen ASC'
 );
@@ -112,6 +136,9 @@ $errorMessages = [
 $pageTitle = $langFile['organizations_heading'];
 $pageDescription = $langFile['organizations_description'];
 $tableName = 'tblorganizations';
+$registryUrl = $lang === 'fr'
+    ? 'https://www.tbs-sct.gc.ca/ap/fip-pcim/reg-fra.asp'
+    : 'https://www.tbs-sct.gc.ca/ap/fip-pcim/reg-eng.asp';
 
 include 'includes/template/head.php';
 include 'includes/template/header.php';
@@ -119,6 +146,11 @@ include 'includes/template/header.php';
 <main role="main" property="mainContentOfPage" class="container">
     <h1 property="name" id="wb-cont"><?= htmlspecialchars($langFile['organizations_heading']) ?></h1>
     <p><?= htmlspecialchars($langFile['organizations_description']) ?></p>
+    <section class="alert alert-info">
+        <h2 class="h4"><?= htmlspecialchars($langFile['organizations_directory_note_heading']) ?></h2>
+        <p><?= htmlspecialchars($langFile['organizations_directory_note']) ?></p>
+        <p><a href="<?= htmlspecialchars($registryUrl) ?>"><?= htmlspecialchars($langFile['organizations_registry_link']) ?></a></p>
+    </section>
 
     <?php if ($status === 'success' || $status === 'import_success'): ?>
         <section class="alert alert-success">
@@ -172,14 +204,7 @@ include 'includes/template/header.php';
                         <td lang="<?= htmlspecialchars($lang) ?>"><?= htmlspecialchars($abbreviation) ?></td>
                         <td><?= htmlspecialchars($isActive ? $langFile['organizations_active'] : $langFile['organizations_inactive']) ?></td>
                         <td>
-                            <a class="wb-lbx btn btn-primary btn-block" href="/includes/edit-organization.php?id=<?= (int) $organization['id'] ?>&amp;lang=<?= htmlspecialchars($lang) ?>"><?= htmlspecialchars($langFile['edit_button']) ?><span class="wb-inv"> <?= htmlspecialchars($organization[$lang === 'fr' ? 'namefr' : 'nameen']) ?></span></a>
-                            <form method="post" action="/organizations.php?lang=<?= htmlspecialchars($lang) ?>">
-                                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
-                                <input type="hidden" name="action" value="set_status">
-                                <input type="hidden" name="id" value="<?= (int) $organization['id'] ?>">
-                                <input type="hidden" name="record_status" value="<?= $isActive ? 0 : 1 ?>">
-                                <button type="submit" class="btn btn-primary btn-block"><?= htmlspecialchars($isActive ? $langFile['organizations_deactivate'] : $langFile['organizations_activate']) ?><span class="wb-inv"> <?= htmlspecialchars($organization[$lang === 'fr' ? 'namefr' : 'nameen']) ?></span></button>
-                            </form>
+                            <a class="wb-lbx btn btn-primary btn-block" href="/includes/edit-organization.php?id=<?= (int) $organization['id'] ?>&amp;lang=<?= htmlspecialchars($lang) ?>"><?= htmlspecialchars($langFile['edit_button']) ?><span class="wb-inv"> <?= htmlspecialchars($organization[$lang === 'fr' ? 'namefr' : 'nameen']) ?></span></a> <a class="wb-lbx btn btn-primary btn-block" href="/includes/set-organization-status.php?id=<?= (int) $organization['id'] ?>&amp;lang=<?= htmlspecialchars($lang) ?>"><?= htmlspecialchars($isActive ? $langFile['organizations_deactivate'] : $langFile['organizations_activate']) ?><span class="wb-inv"> <?= htmlspecialchars($organization[$lang === 'fr' ? 'namefr' : 'nameen']) ?></span></a><?php if ((int) $organization['source_part'] === 0): ?> <a class="wb-lbx btn btn-primary btn-block" href="/includes/delete-organization.php?id=<?= (int) $organization['id'] ?>&amp;lang=<?= htmlspecialchars($lang) ?>"><?= htmlspecialchars($langFile['delete_button']) ?><span class="wb-inv"> <?= htmlspecialchars($organization[$lang === 'fr' ? 'namefr' : 'nameen']) ?></span></a><?php endif; ?>
                         </td>
                     </tr>
                 <?php endforeach; ?>

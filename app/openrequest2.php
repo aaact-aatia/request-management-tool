@@ -133,7 +133,7 @@ include 'includes/template/head.php';
         echo renderTextInput('clientemail', $t['email'], $draftData['clientemail'] ?? '', true, false, 'email', 'autocomplete="email"');
         if ($departments === []) {
             echo renderTextInput('departmentagency', $t['department_agency'], $selectedDepartment, false, false, 'text', 'autocomplete="organization" aria-describedby="departmentagency-hint"');
-            echo '<p id="departmentagency-hint" class="small text-muted">' . htmlspecialchars($t['department_agency_hint']) . '</p>';
+            echo '<p id="departmentagency-hint">' . htmlspecialchars($t['department_agency_hint']) . '</p>';
         } else {
             ?>
             <div class="form-group">
@@ -154,7 +154,7 @@ include 'includes/template/head.php';
                         <option value="<?= htmlspecialchars($department['label'], ENT_QUOTES, 'UTF-8') ?>"></option>
                     <?php endforeach; ?>
                 </datalist>
-                <p id="departmentagency-hint" class="small text-muted"><?= htmlspecialchars($t['department_agency_hint']) ?></p>
+                <p id="departmentagency-hint"><?= htmlspecialchars($t['department_agency_hint']) ?></p>
             </div>
             <?php
         }
