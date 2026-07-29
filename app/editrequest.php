@@ -630,7 +630,7 @@ include 'includes/template/head.php';
 								while ($source = mysqli_fetch_assoc($sources)) {
 									$sourceOptions[] = $source;
 								}
-								echo renderSelect('sourceid', $t['request_source'], $sourceOptions, $row['sourceid'], true, $t['select_source'], $readonly);
+								echo renderSelect('sourceid', $t['request_source'], $sourceOptions, $row['sourceid'], false, $t['select_source'], $readonly);
 								?>
 							<?php elseif (in_array($catalogueid, [8, 9]) && hasValue($row['audienceid'] ?? null)): ?>
 								<?php
