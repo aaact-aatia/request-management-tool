@@ -22,7 +22,7 @@ $canEditSlaTimer = $canFullFieldEdit || $isManagerAccount;
 
 <div class="form-group">
     <label for="workerid"><span class="field-name"><?php echo $t['assigned_team_member']; ?>:</span></label>
-    <select class="form-control" id="workerid" name="workerid" <?php echo $canEditWorkerid ? '' : 'disabled="disabled"'; ?>>
+    <select class="form-control full-width" id="workerid" name="workerid" <?php echo $canEditWorkerid ? '' : 'disabled="disabled"'; ?>>
         <option value="0"><?php echo $t['select_team_member']; ?></option>
         <?php 
         // Resolve the contact ID for this request from first-tier catalogue.

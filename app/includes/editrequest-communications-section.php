@@ -31,7 +31,7 @@ if ($canViewExistingComms) {
 ?>
 <div class="form-group">
     <label for="adminnotes"><span class="field-name"><?php echo $t['add_new_commlog']; ?>:</span></label>
-    <textarea class="form-control" id="adminnotes" name="adminnotes" cols="50" rows="10" <?php echo $canEditCommunicationLogs ? '' : 'readonly'; ?>></textarea>
+    <textarea class="form-control full-width" id="adminnotes" name="adminnotes" cols="50" rows="10" <?php echo $canEditCommunicationLogs ? '' : 'readonly'; ?>></textarea>
 </div>
 
 <div class="form-group form-buttons">

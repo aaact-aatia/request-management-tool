@@ -68,11 +68,11 @@ if(rmt_result_num_rows($result2)>0){
 		<form method="post" action="/includes/edit-product.php?id=<?php echo $row2['id']; ?>">
 		<div class="form-group">
 			<label for="pnameen"><span class="field-name"><?php echo $lang_code === 'en' ? 'Name of product (english)' : 'Nom du produit (anglais)'; ?>: <strong>(<?php echo $lang_code === 'en' ? 'required' : 'requis'; ?>)</strong></span></label>
-			<input type="text" class="form-control" id="pnameen" name="pnameen" value="<?php echo htmlspecialchars($row2['nameen']); ?>" required>
+			<input type="text" class="form-control full-width" id="pnameen" name="pnameen" value="<?php echo htmlspecialchars($row2['nameen']); ?>" required>
 		</div>
 		<div class="form-group">
 			<label for="pnamefr"><span class="field-name"><?php echo $lang_code === 'en' ? 'Name of product (french)' : 'Nom du produit (français)'; ?>: <strong>(<?php echo $lang_code === 'en' ? 'required' : 'requis'; ?>)</strong></span></label>
-			<input type="text" class="form-control" id="pnamefr" name="pnamefr" value="<?php echo htmlspecialchars($row2['namefr']); ?>" required>
+			<input type="text" class="form-control full-width" id="pnamefr" name="pnamefr" value="<?php echo htmlspecialchars($row2['namefr']); ?>" required>
 		</div>
 		<div class="form-group form-buttons">
 			<button type="submit" class="btn btn-default"><?php echo $lang_code === 'en' ? 'Save' : 'Sauvegarder'; ?></button>

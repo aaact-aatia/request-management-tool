@@ -124,15 +124,15 @@ include 'includes/template/head.php';
         if ($subserviceid === 95 || $subserviceid === 96) {
             echo renderDateInput('firstsprintstartdate', $t['first_sprint_date'], $draftData['firstsprintstartdate'] ?? '', true);
             echo renderDateInput('firstsprintenddate', $t['last_sprint_date'], $draftData['firstsprintenddate'] ?? '', true);
-            echo renderTextInput('sprintschedule', $t['sprint_schedule'], $draftData['sprintschedule'] ?? '', true, false, 'url');
-            echo renderTextInput('sprintdefects', $t['sprint_defects'], $draftData['sprintdefects'] ?? '', true, false, 'url');
+            echo renderTextInput('sprintschedule', $t['sprint_schedule'], $draftData['sprintschedule'] ?? '', true, false, 'url', '', true);
+            echo renderTextInput('sprintdefects', $t['sprint_defects'], $draftData['sprintdefects'] ?? '', true, false, 'url', '', true);
         }
 
-        echo renderTextInput('clientfname', $t['first_name'], $draftData['clientfname'] ?? '', true, false, 'text', 'autocomplete="given-name"');
-        echo renderTextInput('clientlname', $t['last_name'], $draftData['clientlname'] ?? '', true, false, 'text', 'autocomplete="family-name"');
-        echo renderTextInput('clientemail', $t['email'], $draftData['clientemail'] ?? '', true, false, 'email', 'autocomplete="email"');
+        echo renderTextInput('clientfname', $t['first_name'], $draftData['clientfname'] ?? '', true, false, 'text', 'autocomplete="given-name"', true);
+        echo renderTextInput('clientlname', $t['last_name'], $draftData['clientlname'] ?? '', true, false, 'text', 'autocomplete="family-name"', true);
+        echo renderTextInput('clientemail', $t['email'], $draftData['clientemail'] ?? '', true, false, 'email', 'autocomplete="email"', true);
         if ($departments === []) {
-            echo renderTextInput('departmentagency', $t['department_agency'], $selectedDepartment, false, false, 'text', 'autocomplete="organization" aria-describedby="departmentagency-hint"');
+            echo renderTextInput('departmentagency', $t['department_agency'], $selectedDepartment, false, false, 'text', 'autocomplete="organization" aria-describedby="departmentagency-hint"', true);
             echo '<p id="departmentagency-hint">' . htmlspecialchars($t['department_agency_hint']) . '</p>';
         } else {
             ?>
@@ -140,7 +140,7 @@ include 'includes/template/head.php';
                 <label for="departmentagency"><span class="field-name"><?= htmlspecialchars($t['department_agency']) ?></span></label>
                 <input
                     type="text"
-                    class="form-control"
+                    class="form-control full-width"
                     id="departmentagency"
                     name="departmentagency"
                     list="departmentagency-options"
@@ -158,7 +158,7 @@ include 'includes/template/head.php';
             </div>
             <?php
         }
-        echo renderTextarea('additionalinfo', $t['additional_info'], $draftData['additionalinfo'] ?? '', false);
+        echo renderTextarea('additionalinfo', $t['additional_info'], $draftData['additionalinfo'] ?? '', false, false, 10, true);
         ?>
 
         <div class="form-group form-buttons">

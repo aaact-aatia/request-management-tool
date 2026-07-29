@@ -1191,17 +1191,18 @@ function getTeamMembersByContact($link, $contactid) {
 // HTML RENDERING HELPERS
 // ============================================================================
 
-function renderTextInput($id, $label, $value = '', $required = false, $readonly = false, $type = 'text', $extraAttrs = '') {
+function renderTextInput($id, $label, $value = '', $required = false, $readonly = false, $type = 'text', $extraAttrs = '', $fullWidth = false) {
     $requiredAttr = $required ? 'required' : '';
     $readonlyAttr = $readonly ? 'readonly="readonly"' : '';
     $requiredText = (($_SESSION['lang'] ?? 'en') === 'fr') ? 'obligatoire' : 'required';
     $requiredLabel = $required ? " <strong>($requiredText)</strong>" : '';
     $escapedValue = htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8');
+    $controlClass = $fullWidth ? 'form-control full-width' : 'form-control';
     
     return <<<HTML
     <div class="form-group">
         <label for="$id"><span class="field-name">$label$requiredLabel</span></label>
-        <input type="$type" class="form-control" id="$id" name="$id" 
+        <input type="$type" class="$controlClass" id="$id" name="$id"
                value="$escapedValue" $requiredAttr $readonlyAttr $extraAttrs>
     </div>
 HTML;
@@ -1225,32 +1226,34 @@ function renderDateInput($id, $label, $value = '', $required = false, $min = nul
 HTML;
 }
 
-function renderTextarea($id, $label, $value = '', $required = false, $readonly = false, $rows = 10) {
+function renderTextarea($id, $label, $value = '', $required = false, $readonly = false, $rows = 10, $fullWidth = false) {
     $requiredAttr = $required ? 'required' : '';
     $readonlyAttr = $readonly ? 'readonly' : '';
     $requiredText = (($_SESSION['lang'] ?? 'en') === 'fr') ? 'obligatoire' : 'required';
     $requiredLabel = $required ? " <strong>($requiredText)</strong>" : '';
     $escapedValue = htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8');
+    $controlClass = $fullWidth ? 'form-control full-width' : 'form-control';
     
     return <<<HTML
     <div class="form-group">
         <label for="$id"><span class="field-name">$label$requiredLabel</span></label>
-        <textarea class="form-control" id="$id" name="$id" cols="50" rows="$rows" 
+        <textarea class="$controlClass" id="$id" name="$id" cols="50" rows="$rows"
                   $requiredAttr $readonlyAttr>$escapedValue</textarea>
     </div>
 HTML;
 }
 
-function renderSelect($id, $label, $options, $selectedValue = '', $required = false, $emptyText = 'Make your selection', $disabled = false) {
+function renderSelect($id, $label, $options, $selectedValue = '', $required = false, $emptyText = 'Make your selection', $disabled = false, $fullWidth = false) {
     $requiredAttr = $required ? 'required' : '';
     $requiredText = (($_SESSION['lang'] ?? 'en') === 'fr') ? 'obligatoire' : 'required';
     $requiredLabel = $required ? " <strong>($requiredText)</strong>" : '';
     $disabledAttr = $disabled ? 'disabled="disabled"' : '';
+    $controlClass = $fullWidth ? 'form-control full-width' : 'form-control';
     
     $html = <<<HTML
     <div class="form-group">
         <label for="$id"><span class="field-name">$label$requiredLabel</span></label>
-        <select class="form-control" id="$id" name="$id" $requiredAttr $disabledAttr>
+        <select class="$controlClass" id="$id" name="$id" $requiredAttr $disabledAttr>
             <option value="">$emptyText</option>
 HTML;
     

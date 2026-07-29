@@ -24,7 +24,7 @@ else
 }
 ?>
 				<label for="serviceid"><span class="field-name"><?= htmlspecialchars($translations['service_name'] ?? 'Service name:') ?></span></label>
-				<select class="form-control" id="serviceid" name="serviceid" onchange="ajax2(this.value)">
+				<select class="form-control full-width" id="serviceid" name="serviceid" onchange="ajax2(this.value)">
 					<option value=""><?= htmlspecialchars($translations['select_service'] ?? 'Select a service name') ?></option>
 					<?php 
 					$sql2 = "SELECT * FROM tblservices WHERE catalogueid='$catalogueid' AND status='1' ORDER BY $orderBy ASC";

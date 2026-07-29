@@ -69,15 +69,15 @@ if(rmt_result_num_rows($result2)>0){
 		<form method="post" action="/includes/edit-catalogue.php?id=<?php echo $row2['id']; ?>">
 		<div class="form-group">
 			<label for="nameen"><span class="field-name"><?php echo $lang_code === 'en' ? 'Name (english)' : 'Nom (anglais)'; ?>: <strong>(<?php echo $lang_code === 'en' ? 'required' : 'requis'; ?>)</strong></span></label>
-			<input type="text" class="form-control" id="nameen" name="nameen" value="<?php echo htmlspecialchars($row2['nameen']); ?>" required>
+			<input type="text" class="form-control full-width" id="nameen" name="nameen" value="<?php echo htmlspecialchars($row2['nameen']); ?>" required>
 		</div>
 		<div class="form-group">
 			<label for="namefr"><span class="field-name"><?php echo $lang_code === 'en' ? 'Name (french)' : 'Nom (français)'; ?>: <strong>(<?php echo $lang_code === 'en' ? 'required' : 'requis'; ?>)</strong></span></label>
-			<input type="text" class="form-control" id="namefr" name="namefr" value="<?php echo htmlspecialchars($row2['namefr']); ?>" required>
+			<input type="text" class="form-control full-width" id="namefr" name="namefr" value="<?php echo htmlspecialchars($row2['namefr']); ?>" required>
 		</div>
 		<div class="form-group">
 			<label for="contactid"><span class="field-name"><?php echo $lang_code === 'en' ? 'Contact group' : 'Groupe de contact'; ?>: <strong>(<?php echo $lang_code === 'en' ? 'required' : 'requis'; ?>)</strong></span></label>
-			<select class="form-control" id="contactid" name="contactid" required>
+			<select class="form-control full-width" id="contactid" name="contactid" required>
 				<option value=""<?php if (empty($row2['contactid'])) echo " selected"; ?> disabled><?php echo $lang_code === 'en' ? 'Select contact group' : 'Selectionnez un groupe de contact'; ?></option>
 				<?php
 				$sortField = $lang_code === 'fr' ? 'namefr' : 'nameen';
@@ -92,7 +92,7 @@ if(rmt_result_num_rows($result2)>0){
 		</div>
 		<div class="form-group">
 			<label for="survey"><span class="field-name"><?php echo $lang_code === 'en' ? 'Send survey' : 'Envoyer le sondage'; ?>: <strong>(<?php echo $lang_code === 'en' ? 'required' : 'requis'; ?>)</strong></span></label>
-			<select class="form-control" id="survey" name="survey" required>
+			<select class="form-control full-width" id="survey" name="survey" required>
 				<option value="0"<?php if($row2['survey'] == 0) echo " selected"; ?>><?php echo $lang_code === 'en' ? 'No' : 'Non'; ?></option>
 				<option value="1"<?php if($row2['survey'] == 1) echo " selected"; ?>><?php echo $lang_code === 'en' ? 'Yes' : 'Oui'; ?></option>
 			</select>

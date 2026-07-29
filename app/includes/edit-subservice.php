@@ -76,15 +76,15 @@ if(rmt_result_num_rows($result2)>0){
 		<form method="post" action="/includes/edit-subservice.php?id=<?php echo $subserviceid ?>&sid=<?php echo $serviceid ?>&cid=<?php echo $catalogueid ?>&lang=<?php echo $lang ?>">
 		<div class="form-group">
 			<label for="nameen"><span class="field-name"><?php echo $label_en ?> <strong>(<?php echo $required_label ?>)</strong></span></label>
-			<input type="text" class="form-control" id="nameen" name="nameen" value="<?php echo $row2['nameen'] ?>" required>
+			<input type="text" class="form-control full-width" id="nameen" name="nameen" value="<?php echo $row2['nameen'] ?>" required>
 		</div>
 		<div class="form-group">
 			<label for="namefr"><span class="field-name"><?php echo $label_fr ?> <strong>(<?php echo $required_label ?>)</strong></span></label>
-			<input type="text" class="form-control" id="namefr" name="namefr" value="<?php echo $row2['namefr'] ?>" required>
+			<input type="text" class="form-control full-width" id="namefr" name="namefr" value="<?php echo $row2['namefr'] ?>" required>
 		</div>
 		<div class="form-group">
 			<label for="sds"><span class="field-name"><?php echo $label_sds ?> <strong>(<?php echo $required_label ?>)</strong></span></label>
-			<select class="form-control" id="sds" name="sds" required>
+			<select class="form-control full-width" id="sds" name="sds" required>
 				<?php
 				// Create range for SDS
 				$range = range(1,30);

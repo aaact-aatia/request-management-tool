@@ -181,27 +181,27 @@ if(rmt_result_num_rows($result2)>0){
 		<form method="post" action="/includes/edit-users.php?id=<?php echo $row2['id'] ?>&lang=<?php echo $lang ?>">
 		<div class="form-group">
 			<label for="firstname"><span class="field-name"><?php echo $label_firstname ?> <strong>(<?php echo $required_label ?>)</strong></span></label>
-			<input type="text" class="form-control" id="firstname" name="firstname" value="<?php echo $row2['firstname'] ?>" required>
+			<input type="text" class="form-control full-width" id="firstname" name="firstname" value="<?php echo $row2['firstname'] ?>" required>
 		</div>
 		<div class="form-group">
 			<label for="lastname"><span class="field-name"><?php echo $label_lastname ?> <strong>(<?php echo $required_label ?>)</strong></span></label>
-			<input type="text" class="form-control" id="lastname" name="lastname" value="<?php echo $row2['lastname'] ?>" required>
+			<input type="text" class="form-control full-width" id="lastname" name="lastname" value="<?php echo $row2['lastname'] ?>" required>
 		</div>
 		<div class="form-group">
 			<label for="email"><span class="field-name"><?php echo $label_email ?> <strong>(<?php echo $required_label ?>)</strong></span></label>
-			<input type="email" class="form-control" id="email" name="email" value="<?php echo $row2['email'] ?>" required>
+			<input type="email" class="form-control full-width" id="email" name="email" value="<?php echo $row2['email'] ?>" required>
 		</div>
 		<div class="form-group">
 			<label for="password"><span class="field-name"><?php echo $label_password ?> <strong>(<?php echo $label_password_note ?>)</strong></span></label>
-			<input type="password" class="form-control" id="password" name="password" value="">
+			<input type="password" class="form-control full-width" id="password" name="password" value="">
 		</div>
 		<div class="form-group">
 			<label for="password2"><span class="field-name"><?php echo $label_password2 ?> <strong>(<?php echo $required_label ?>)</strong></span></label>
-			<input type="password" class="form-control" id="password2" name="password2" value="">
+			<input type="password" class="form-control full-width" id="password2" name="password2" value="">
 		</div>
 		<div class="form-group">
 			<label for="accounttype"><span class="field-name"><?php echo $label_accounttype ?> <strong>(<?php echo $required_label ?>)</strong></span></label>
-			<select class="form-control" id="accounttype" name="accounttype" required>
+			<select class="form-control full-width" id="accounttype" name="accounttype" required>
 				<?php 
 				$sql3 = "SELECT * FROM tblaccounttype WHERE status='1' ORDER BY $sort_field ASC";
 				$result3 = rmt_admin_query($link,$sql3);	

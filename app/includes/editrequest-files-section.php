@@ -27,7 +27,7 @@ $blobStorage = new AzureBlobStorageManager();
     <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
         <input
             type="file"
-            class="form-control"
+            class="form-control full-width"
             id="fileToUpload"
             name="fileToUpload[]"
             multiple
