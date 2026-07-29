@@ -160,14 +160,20 @@ include 'includes/template/head.php';
 			}
 			?>
 			
-
+			<h2><?= htmlspecialchars($langFile['settings_password_heading']) ?></h2>
+			<div class="col-xs-12">
+				<form method="post" action="passwordreset.php?lang=<?= urlencode($_SESSION['lang']) ?>">
 				<div class="form-group">
-					<label for="token2"><span class="field-name"><?= htmlspecialchars($langFile['passwordreset_new']) ?> <strong>(<?= htmlspecialchars($langFile['required']) ?>)</strong></span></label>
-					<input type="password" class="form-control" id="token2" name="token2" placeholder="<?= htmlspecialchars($langFile['passwordreset_new_placeholder']) ?>">
+					<label for="token1"><span class="field-name"><?= htmlspecialchars($langFile['passwordreset_current']) ?> <strong>(<?= htmlspecialchars($langFile['required']) ?>)</strong></span></label>
+					<input type="password" class="form-control" id="token1" name="token1" placeholder="<?= htmlspecialchars($langFile['passwordreset_current_placeholder']) ?>" autocomplete="current-password" required>
+				</div>
+				<div class="form-group">
+					<label for="token2"><span class="field-name"><?= htmlspecialchars($langFile['passwordreset_new']) ?> <strong>(<?= htmlspecialchars($langFile['required']) ?>)</strong> <?= htmlspecialchars($langFile['passwordreset_requirements']) ?></span></label>
+					<input type="password" class="form-control" id="token2" name="token2" placeholder="<?= htmlspecialchars($langFile['passwordreset_new_placeholder']) ?>" autocomplete="new-password" required>
 				</div>
 				<div class="form-group">
 					<label for="token3"><span class="field-name"><?= htmlspecialchars($langFile['passwordreset_confirm']) ?> <strong>(<?= htmlspecialchars($langFile['required']) ?>)</strong></span></label>
-					<input type="password" class="form-control" id="token3" name="token3" placeholder="<?= htmlspecialchars($langFile['passwordreset_confirm_placeholder']) ?>">
+					<input type="password" class="form-control" id="token3" name="token3" placeholder="<?= htmlspecialchars($langFile['passwordreset_confirm_placeholder']) ?>" autocomplete="new-password" required>
 				</div>
 				<div class="form-group form-buttons">
 					<button type="submit" class="btn btn-primary"><?= htmlspecialchars($langFile['passwordreset_button']) ?></button>
