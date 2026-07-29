@@ -121,6 +121,65 @@ function rmt_department_directory_official_title(array $departments, string $dep
     return $department;
 }
 
+function rmt_department_directory_title_component(array $departments, string $department, string $lang): string
+{
+    $department = trim($department);
+    foreach ($departments as $option) {
+        if (($option['name'] ?? '') === $department
+            || ($option['label'] ?? '') === $department
+            || rmt_department_directory_abbreviation($option) === $department) {
+            $abbreviation = rmt_department_directory_abbreviation($option);
+            return $abbreviation !== '' ? $abbreviation : (string) $option['name'];
+        }
+    }
+
+    if ($department !== '') {
+        return $department;
+    }
+
+    return $lang === 'fr' ? 'Organisation non fournie' : 'Organization not provided';
+}
+
+function rmt_department_title_component(mysqli $link, string $department, string $lang): string
+{
+    $department = trim($department);
+    if ($department === '') {
+        return $lang === 'fr' ? 'Organisation non fournie' : 'Organization not provided';
+    }
+
+    $result = mysqli_query(
+        $link,
+        'SELECT nameen, namefr, abbreviationen, abbreviationfr FROM tblorganizations WHERE status = 1'
+    );
+    if (!$result) {
+        return $department;
+    }
+
+    $departmentKey = rmt_department_directory_key($department);
+    while ($row = mysqli_fetch_assoc($result)) {
+        $englishEntry = rmt_department_directory_entry((string) $row['nameen'], (string) ($row['abbreviationen'] ?? ''));
+        $frenchEntry = rmt_department_directory_entry((string) $row['namefr'], (string) ($row['abbreviationfr'] ?? ''));
+        $matches = [
+            $englishEntry['name'],
+            $englishEntry['label'],
+            rmt_department_directory_abbreviation($englishEntry),
+            $frenchEntry['name'],
+            $frenchEntry['label'],
+            rmt_department_directory_abbreviation($frenchEntry),
+        ];
+
+        foreach ($matches as $match) {
+            if ($match !== '' && rmt_department_directory_key($match) === $departmentKey) {
+                $targetEntry = $lang === 'fr' ? $frenchEntry : $englishEntry;
+                $abbreviation = rmt_department_directory_abbreviation($targetEntry);
+                return $abbreviation !== '' ? $abbreviation : $targetEntry['name'];
+            }
+        }
+    }
+
+    return $department;
+}
+
 function rmt_get_department_directory(mysqli $link, string $lang): array
 {
     $lang = $lang === 'fr' ? 'fr' : 'en';

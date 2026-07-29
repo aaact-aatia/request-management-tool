@@ -28,6 +28,7 @@ $translations = [
 		'fieldset_client_info' => 'Client information',
 		'fieldset_dates' => 'Dates',
 		'title' => 'Title',
+		'request_subject' => 'Request subject',
 		'last_name' => 'Last name',
 		'first_name' => 'First name',
 		'client_email' => 'Client email',
@@ -152,6 +153,7 @@ $translations = [
 		'fieldset_client_info' => 'Renseignements sur le client',
 		'fieldset_dates' => 'Dates',
 		'title' => 'Titre',
+		'request_subject' => 'Objet de la demande',
 		'last_name' => 'Nom',
 		'first_name' => 'Prénom',
 		'client_email' => 'Courriel du client',
@@ -630,6 +632,12 @@ if(mysqli_num_rows($result)>0){
 					<dt><?= $t['title'] ?></dt>
 					<dd><?php echo htmlspecialchars($row['title'] ?? '') ?></dd>
 				</div>
+				<?php if (!empty($row['request_subject'])) { ?>
+				<div style="break-inside: avoid;">
+					<dt><?= $t['request_subject'] ?></dt>
+					<dd><?php echo htmlspecialchars($row['request_subject']) ?></dd>
+				</div>
+				<?php } ?>
 				<div style="break-inside: avoid;">
 					<dt><?= $t['status'] ?></dt>
 					<dd><?php echo $statusname ?></dd>

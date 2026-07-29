@@ -136,6 +136,24 @@ checkDepartmentDirectory(
     [rmt_department_directory_official_title([], 'Unlisted organization')],
     'unlisted free text is preserved'
 );
+checkDepartmentDirectory(
+    ['TBS', 'Organization Without Acronym', 'Unlisted organization', 'Organisation non fournie'],
+    [
+        rmt_department_directory_title_component(
+            [['name' => 'Treasury Board of Canada Secretariat', 'label' => 'Treasury Board of Canada Secretariat (TBS)']],
+            'Treasury Board of Canada Secretariat (TBS)',
+            'en'
+        ),
+        rmt_department_directory_title_component(
+            [['name' => 'Organization Without Acronym', 'label' => 'Organization Without Acronym']],
+            'Organization Without Acronym',
+            'en'
+        ),
+        rmt_department_directory_title_component([], 'Unlisted organization', 'en'),
+        rmt_department_directory_title_component([], '', 'fr'),
+    ],
+    'title component uses stored acronyms and safe non-acronym fallbacks'
+);
 
 echo "Passed: {$passed}; Failed: {$failed}\n";
 exit($failed === 0 ? 0 : 1);

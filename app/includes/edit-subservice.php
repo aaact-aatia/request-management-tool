@@ -16,6 +16,8 @@ if (!($_SESSION['is_superuser'] OR $_SESSION['is_admin'])) {
 
 // Grab MySQL connection
 require('../sql.php');
+/** @var mysqli $link */
+require_once('helpers.php');
 
 // Now first get the ID
 $subserviceid = $_GET['id'];
@@ -29,6 +31,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	$nameen = mysqli_real_escape_string($link,$_POST['nameen']);
 	$namefr = mysqli_real_escape_string($link,$_POST['namefr']);
 	$sds = mysqli_real_escape_string($link,$_POST['sds']);
+	$requestSubjectType = rmt_normalize_request_subject_type($_POST['request_subject_type'] ?? '', true);
 	$status = isset($_POST['status']) ? 1 : 0;
 	$noerror = false;
 	
@@ -43,10 +46,13 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 		exit();
 	}
 	
-	// Create SQL statement
-	$sql = "UPDATE `tblsubservices` SET `nameen` = '$nameen', `namefr` = '$namefr', `sds` = '$sds', `status` = '$status' WHERE id='$subserviceid'";
-	//echo $sql;
-	rmt_admin_query($link,$sql);
+	$statement = rmt_db_execute(
+		$link,
+		'UPDATE tblsubservices SET nameen = ?, namefr = ?, sds = ?, request_subject_type = ?, status = ? WHERE id = ?',
+		'ssisii',
+		[$nameen, $namefr, $sds, $requestSubjectType, $status, $subserviceid]
+	);
+	mysqli_stmt_close($statement);
 	
 	// Now redirect
 	header("location:/catalogue-sub-mgmt.php?lang=" . $lang . "&id=$serviceid&cid=$catalogueid&status=success");
@@ -60,6 +66,14 @@ $result2 = rmt_admin_query($link,$sql2);
 //List it
 if(rmt_result_num_rows($result2)>0){
 	while($row2 = rmt_result_fetch_array($result2)){
+		$parentRow = rmt_db_fetch_one(
+			$link,
+			'SELECT COALESCE(s.request_subject_type, c.request_subject_type, \'subject\') AS resolved_type FROM tblservices s INNER JOIN tblcatalogue c ON c.id = s.catalogueid WHERE s.id = ?',
+			'i',
+			[(int) $row2['serviceid']]
+		);
+		$parentType = rmt_normalize_request_subject_type($parentRow['resolved_type'] ?? 'subject') ?? 'subject';
+		$parentText = rmt_request_subject_text($parentType, $lang)['label'];
 		$title = $is_french ? ('Modifier l\'élément de sous-service ' . $row2['namefr']) : ('Edit ' . $row2['nameen'] . ' sub-service item');
 		$label_en = $is_french ? 'Nom (anglais):' : 'Name (english):';
 		$label_fr = $is_french ? 'Nom (français):' : 'Name (french):';
@@ -94,6 +108,15 @@ if(rmt_result_num_rows($result2)>0){
 				<?php
 				}
 				?>
+			</select>
+		</div>
+		<div class="form-group">
+			<label for="request_subject_type"><span class="field-name"><?= $is_french ? 'Type d’objet de la demande' : 'Request subject type' ?></span></label>
+			<select class="form-control full-width" id="request_subject_type" name="request_subject_type">
+				<option value=""<?= empty($row2['request_subject_type']) ? ' selected' : '' ?>><?= htmlspecialchars(($is_french ? 'Hériter du service' : 'Inherit from service') . ' (' . $parentText . ')') ?></option>
+				<option value="system"<?= $row2['request_subject_type'] === 'system' ? ' selected' : '' ?>><?= $is_french ? 'Nom du système' : 'System name' ?></option>
+				<option value="document"<?= $row2['request_subject_type'] === 'document' ? ' selected' : '' ?>><?= $is_french ? 'Titre du document' : 'Document title' ?></option>
+				<option value="subject"<?= $row2['request_subject_type'] === 'subject' ? ' selected' : '' ?>><?= $is_french ? 'Objet' : 'Subject' ?></option>
 			</select>
 		</div>
 		<div class="checkbox">

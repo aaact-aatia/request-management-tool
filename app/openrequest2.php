@@ -92,6 +92,8 @@ if ($selection === null) {
 $catalogueid = $selection['catalogueid'];
 $serviceid = $selection['serviceid'];
 $subserviceid = $selection['subserviceid'];
+$requestSubjectType = rmt_resolve_request_subject_type($link, $catalogueid, $serviceid, $subserviceid);
+$requestSubjectText = rmt_request_subject_text($requestSubjectType, $lang);
 $departments = rmt_get_department_directory($link, $lang);
 $selectedDepartment = (string) ($draftData['departmentagency'] ?? '');
 $departmentOptions = rmt_department_directory_options($departments, $selectedDepartment);
@@ -158,6 +160,27 @@ include 'includes/template/head.php';
             </div>
             <?php
         }
+        ?>
+        <section>
+            <h2><?= htmlspecialchars($requestSubjectText['heading']) ?></h2>
+            <div class="form-group">
+                <label for="request_subject">
+                    <span class="field-name"><?= htmlspecialchars($requestSubjectText['label']) ?> <strong>(<?= $lang === 'fr' ? 'obligatoire' : 'required' ?>)</strong></span>
+                </label>
+                <p id="request-subject-help"><?= htmlspecialchars($requestSubjectText['help']) ?></p>
+                <input
+                    type="text"
+                    class="form-control full-width"
+                    id="request_subject"
+                    name="request_subject"
+                    value="<?= htmlspecialchars((string) ($draftData['request_subject'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
+                    maxlength="500"
+                    aria-describedby="request-subject-help"
+                    required
+                >
+            </div>
+        </section>
+        <?php
         echo renderTextarea('additionalinfo', $t['additional_info'], $draftData['additionalinfo'] ?? '', false, false, 10, true);
         ?>
 

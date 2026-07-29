@@ -75,6 +75,23 @@ check(rmt_validate_intake_selection($link, 103, 203, 0) === null, 'inactive serv
 check(rmt_validate_intake_selection($link, 104, 0, 0) === null, 'inactive catalogue is rejected');
 check(rmt_validate_intake_selection($link, 99, 999, 0) === null, 'unknown IDs are rejected');
 
+check(rmt_resolve_request_subject_type($link, 102, 201, 0) === 'system', 'service inherits catalogue subject type');
+check(rmt_resolve_request_subject_type($link, 103, 202, 0) === 'document', 'service overrides catalogue subject type');
+check(rmt_resolve_request_subject_type($link, 103, 202, 301) === 'subject', 'subservice overrides service subject type');
+check(rmt_resolve_request_subject_type($link, 101, 0, 0) === 'subject', 'null hierarchy falls back to subject');
+
+$systemText = rmt_request_subject_text('system', 'en');
+$documentText = rmt_request_subject_text('document', 'en');
+$subjectText = rmt_request_subject_text('subject', 'fr');
+check($systemText['label'] === 'System name', 'system type uses the System name label');
+check($documentText['label'] === 'Document title', 'document type uses the Document title label');
+check($subjectText['label'] === 'Objet', 'subject type has a French label');
+check(
+    rmt_generate_request_title('REQ-26-123', 'SSC', 'Accessibility testing tool')
+        === 'REQ-26-123 - SSC - Accessibility testing tool',
+    'request title uses ticket, organization, and request subject'
+);
+
 mysqli_close($link);
 echo "Passed: {$passed}; Failed: {$failed}\n";
 exit($failed === 0 ? 0 : 1);

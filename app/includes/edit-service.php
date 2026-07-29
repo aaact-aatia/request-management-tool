@@ -16,6 +16,8 @@ if (!($_SESSION['is_superuser'] OR $_SESSION['is_admin'])) {
 
 // Grab MySQL connection
 require('../sql.php');
+/** @var mysqli $link */
+require_once('helpers.php');
 
 // Now first get the ID
 $serviceid = $_GET['id'];
@@ -28,6 +30,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	$nameen = mysqli_real_escape_string($link,$_POST['nameen']);
 	$namefr = mysqli_real_escape_string($link,$_POST['namefr']);
 	$sds = mysqli_real_escape_string($link,$_POST['sds']);
+	$requestSubjectType = rmt_normalize_request_subject_type($_POST['request_subject_type'] ?? '', true);
 	$status = isset($_POST['status']) ? 1 : 0;
 	$noerror = false;
 	
@@ -42,10 +45,13 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 		exit();
 	}
 	
-	// Create SQL statement
-	$sql = "UPDATE `tblservices` SET `nameen` = '$nameen', `namefr` = '$namefr', `sds` = '$sds', `status` = '$status' WHERE id='$serviceid'";
-	//echo $sql;
-	rmt_admin_query($link,$sql);
+	$statement = rmt_db_execute(
+		$link,
+		'UPDATE tblservices SET nameen = ?, namefr = ?, sds = ?, request_subject_type = ?, status = ? WHERE id = ?',
+		'ssisii',
+		[$nameen, $namefr, $sds, $requestSubjectType, $status, $serviceid]
+	);
+	mysqli_stmt_close($statement);
 	
 	// Now redirect
 	header("location:/catalogue-mgmt.php?lang={$lang_code}&id=$catalogueid&status=success"); 
@@ -60,6 +66,9 @@ $result2 = rmt_admin_query($link,$sql2);
 if(rmt_result_num_rows($result2)>0){
 	while($row2 = rmt_result_fetch_array($result2)){
 		$display_name = $lang_code === 'fr' ? $row2['namefr'] : $row2['nameen'];
+		$parentRow = rmt_db_fetch_one($link, 'SELECT request_subject_type FROM tblcatalogue WHERE id = ?', 'i', [(int) $row2['catalogueid']]);
+		$parentType = rmt_normalize_request_subject_type($parentRow['request_subject_type'] ?? 'subject') ?? 'subject';
+		$parentText = rmt_request_subject_text($parentType, $lang_code)['label'];
 ?>
 <section id="filter-id" class="modal-dialog modal-content overlay-def">
 	<header class="modal-header">
@@ -88,6 +97,15 @@ if(rmt_result_num_rows($result2)>0){
 				<?php
 				}
 				?>
+			</select>
+		</div>
+		<div class="form-group">
+			<label for="request_subject_type"><span class="field-name"><?= $lang_code === 'fr' ? 'Type d’objet de la demande' : 'Request subject type' ?></span></label>
+			<select class="form-control full-width" id="request_subject_type" name="request_subject_type">
+				<option value=""<?= empty($row2['request_subject_type']) ? ' selected' : '' ?>><?= htmlspecialchars(($lang_code === 'fr' ? 'Hériter du catalogue' : 'Inherit from catalogue') . ' (' . $parentText . ')') ?></option>
+				<option value="system"<?= $row2['request_subject_type'] === 'system' ? ' selected' : '' ?>><?= $lang_code === 'fr' ? 'Nom du système' : 'System name' ?></option>
+				<option value="document"<?= $row2['request_subject_type'] === 'document' ? ' selected' : '' ?>><?= $lang_code === 'fr' ? 'Titre du document' : 'Document title' ?></option>
+				<option value="subject"<?= $row2['request_subject_type'] === 'subject' ? ' selected' : '' ?>><?= $lang_code === 'fr' ? 'Objet' : 'Subject' ?></option>
 			</select>
 		</div>
 		<div class="checkbox">

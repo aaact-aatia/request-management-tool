@@ -24,7 +24,7 @@ $isTeamLeadAccount = ((int)($_SESSION['atype'] ?? 0) === 4);
 $isEmployeeAccount = ((int)($_SESSION['atype'] ?? 0) === 5);
 $canFullFieldEdit = !$inTestMode && (!empty($_SESSION['is_superuser']) || !empty($_SESSION['is_admin']));
 $canEditStatusAndWorker = in_array((int)($_SESSION['atype'] ?? 0), [3, 4, 5], true) || $canFullFieldEdit;
-$canEditTitle = $canFullFieldEdit || $isManagerAccount || $isTeamLeadAccount;
+$canEditRequestSubject = $canFullFieldEdit || $isManagerAccount || $isTeamLeadAccount;
 $canEditSlaTimer = $canFullFieldEdit || $isManagerAccount;
 $canEditCommunicationLogs = $canFullFieldEdit || $isManagerAccount || $isTeamLeadAccount || $isEmployeeAccount;
 
@@ -69,7 +69,8 @@ if ($isEmployeeAccount) {
 }
 
 $requestid = (string) ($currentRequest['requestid'] ?? '');
-$requesttitle = getPostValue('requesttitle');
+$requesttitle = (string) ($currentRequest['title'] ?? '');
+$requestSubject = trim((string) ($_POST['request_subject'] ?? ''));
 $clientlname = getPostValue('clientlname');
 $clientfname = getPostValue('clientfname');
 $clientemail = getPostValue('clientemail');
@@ -141,12 +142,37 @@ if (!$canFullFieldEdit) {
     $firstsprintstartdate = (string) ($currentRequest['firstsprintstartdate'] ?? '');
     $firstsprintenddate = (string) ($currentRequest['firstsprintenddate'] ?? '');
 
-    if (!$canEditTitle) {
-        $requesttitle = (string) ($currentRequest['title'] ?? '');
+    if (!$canEditRequestSubject) {
+        $requestSubject = (string) ($currentRequest['request_subject'] ?? '');
     }
     if (!$canEditSlaTimer) {
         $slatimer = (string) ($currentRequest['slatimer'] ?? '');
     }
+}
+
+$departmentResult = mysqli_query(
+    $link,
+    "SELECT id, notes FROM tblcommlog
+     WHERE triageid = '$requestuid'
+       AND status = '1'
+       AND (notes LIKE 'Department/agency:%' OR notes LIKE 'Ministère/organisme:%')
+     ORDER BY id ASC
+     LIMIT 1"
+);
+$departmentRow = $departmentResult ? mysqli_fetch_assoc($departmentResult) : null;
+$currentDepartmentAgency = '';
+if ($departmentRow && preg_match('/^(Department\/agency|Ministère\/organisme):\s*(.+)$/miu', (string) $departmentRow['notes'], $matches)) {
+    $currentDepartmentAgency = trim($matches[2]);
+}
+
+$departmentDirectory = rmt_get_department_directory($link, $lang);
+$departmentAgency = $canFullFieldEdit
+    ? rmt_department_directory_official_title($departmentDirectory, $submittedDepartmentAgency)
+    : $currentDepartmentAgency;
+$requestLanguage = rmt_get_request_language($link, $requestuidInt, (string) ($currentRequest['requestlang'] ?? 'en'));
+if ($requestSubject !== '') {
+    $titleDepartment = rmt_department_title_component($link, $departmentAgency, $requestLanguage);
+    $requesttitle = rmt_generate_request_title($requestid, $titleDepartment, $requestSubject);
 }
 
 // Never write an empty string to DATE columns.
@@ -656,7 +682,10 @@ if ($workerIdInt > 0 && $workerIdInt !== $prevWorkerIdInt) {
 // VALIDATION
 // ============================================================================
 
-if (empty($requestid) || empty($requesttitle) || empty($datereceived) || 
+$requestSubjectLength = function_exists('mb_strlen') ? mb_strlen($requestSubject, 'UTF-8') : strlen($requestSubject);
+if (empty($requestid) || empty($requesttitle) || empty($datereceived) ||
+    ($formAction === 'update_request' && $canEditRequestSubject
+        && (empty($requestSubject) || $requestSubjectLength > 500)) ||
     empty($statusid) || empty($catalogueid)) {
     header("location: /editrequest.php?lang=$lang&id=$requestuid&status=failed&focus=update");
     exit();
@@ -671,9 +700,9 @@ $generalRequestChanges = [];
 if ($requestFieldHistoryEnabled) {
     rmt_append_request_change(
         $generalRequestChanges,
-        'request_title',
-        (string) ($currentRequest['title'] ?? ''),
-        (string) $requesttitle
+        'request_subject',
+        (string) ($currentRequest['request_subject'] ?? ''),
+        $requestSubject
     );
     rmt_append_request_change(
         $generalRequestChanges,
@@ -818,8 +847,20 @@ if ($requestFieldHistoryEnabled) {
     }
 }
 
-$sql = "UPDATE `tbltriage` SET 
-    `title` = '$requesttitle',
+if ($requestFieldHistoryEnabled && $canFullFieldEdit) {
+    rmt_append_request_change(
+        $generalRequestChanges,
+        'department_agency',
+        $currentDepartmentAgency,
+        $departmentAgency
+    );
+}
+
+$safeRequestTitle = mysqli_real_escape_string($link, $requesttitle);
+$safeRequestSubject = mysqli_real_escape_string($link, $requestSubject);
+$sql = "UPDATE `tbltriage` SET
+    `title` = '$safeRequestTitle',
+    `request_subject` = " . ($requestSubject === '' ? 'NULL' : "'$safeRequestSubject'") . ",
     `clientlname` = '$clientlname',
     `clientfname` = '$clientfname',
     `clientemail` = '$clientemail',
@@ -871,18 +912,6 @@ $sql .= " WHERE id='$requestuid'";
 mysqli_query($link, $sql);
 
 if ($canFullFieldEdit) {
-    $departmentDirectory = rmt_get_department_directory($link, $lang);
-    $departmentAgency = rmt_department_directory_official_title($departmentDirectory, $submittedDepartmentAgency);
-    $departmentResult = mysqli_query(
-        $link,
-        "SELECT id, notes FROM tblcommlog
-         WHERE triageid = '$requestuid'
-           AND status = '1'
-           AND (notes LIKE 'Department/agency:%' OR notes LIKE 'Ministère/organisme:%')
-         ORDER BY id ASC
-         LIMIT 1"
-    );
-    $departmentRow = $departmentResult ? mysqli_fetch_assoc($departmentResult) : null;
     $departmentNoteLang = $requestlang;
     if ($departmentRow && stripos(trim((string)$departmentRow['notes']), 'Ministère/organisme:') === 0) {
         $departmentNoteLang = 'fr';
@@ -936,9 +965,13 @@ $statusFeedback = null;
 $changedFieldLabels = [];
 
 $feedbackFieldLabels = [
-    'request_title' => [
-        'en' => 'Request title update',
-        'fr' => 'Mise a jour du titre de la demande',
+    'request_subject' => [
+        'en' => 'Request subject',
+        'fr' => 'Objet de la demande',
+    ],
+    'department_agency' => [
+        'en' => 'Department/agency',
+        'fr' => 'Ministère/organisme',
     ],
     'client_last_name' => [
         'en' => 'Last name',
@@ -1083,7 +1116,7 @@ if ($oldWorkerId !== $newWorkerId) {
     $changedFieldLabels[] = rmt_lookup_label($labelsForLang, 'assigned_team_member');
 }
 
-rmt_append_changed_label($changedFieldLabels, $labelsForLang, 'request_title', $currentRequest['title'] ?? '', $requesttitle);
+rmt_append_changed_label($changedFieldLabels, $labelsForLang, 'request_subject', $currentRequest['request_subject'] ?? '', $requestSubject);
 rmt_append_changed_label($changedFieldLabels, $labelsForLang, 'client_last_name', $currentRequest['clientlname'] ?? '', $clientlname);
 rmt_append_changed_label($changedFieldLabels, $labelsForLang, 'client_first_name', $currentRequest['clientfname'] ?? '', $clientfname);
 rmt_append_changed_label($changedFieldLabels, $labelsForLang, 'client_email', $currentRequest['clientemail'] ?? '', $clientemail);

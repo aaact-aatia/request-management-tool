@@ -6,16 +6,32 @@ work_dir=$(mktemp -d)
 created_id=""
 organization_created_id=""
 organization_session_id=""
+edit_session_id=""
+employee_edit_session_id=""
+terminal_subject_type=""
 
 cleanup() {
     if [[ -n "$created_id" ]]; then
-        db_query "DELETE FROM tbladminlog WHERE triageid = ${created_id}; DELETE FROM tblcommlog WHERE triageid = ${created_id}; DELETE FROM tblfiles WHERE requestid = (SELECT requestid FROM tbltriage WHERE id = ${created_id}); DELETE FROM tbltriage WHERE id = ${created_id};" >/dev/null || true
+        db_query "DELETE FROM RequestFieldHistory WHERE requestID = (SELECT requestid FROM tbltriage WHERE id = ${created_id}); DELETE FROM tbladminlog WHERE triageid = ${created_id}; DELETE FROM tblcommlog WHERE triageid = ${created_id}; DELETE FROM tblfiles WHERE requestid = (SELECT requestid FROM tbltriage WHERE id = ${created_id}); DELETE FROM tbltriage WHERE id = ${created_id};" >/dev/null || true
     fi
     if [[ -n "$organization_created_id" ]]; then
         db_query "DELETE FROM tblorganizations WHERE id = ${organization_created_id};" >/dev/null || true
     fi
     if [[ -n "$organization_session_id" ]]; then
         db_query "DELETE FROM tblphp_sessions WHERE id = '${organization_session_id}';" >/dev/null || true
+    fi
+    if [[ -n "$edit_session_id" ]]; then
+        db_query "DELETE FROM tblphp_sessions WHERE id = '${edit_session_id}';" >/dev/null || true
+    fi
+    if [[ -n "$employee_edit_session_id" ]]; then
+        db_query "DELETE FROM tblphp_sessions WHERE id = '${employee_edit_session_id}';" >/dev/null || true
+    fi
+    if [[ -n "$terminal_subject_type" ]]; then
+        if [[ "$terminal_subject_type" == '__NULL__' ]]; then
+            db_query "UPDATE tblcatalogue SET request_subject_type = NULL WHERE id = ${terminal_catalogue_id};" >/dev/null || true
+        else
+            db_query "UPDATE tblcatalogue SET request_subject_type = '${terminal_subject_type}' WHERE id = ${terminal_catalogue_id};" >/dev/null || true
+        fi
     fi
     rm -rf "$work_dir"
 }
@@ -37,6 +53,35 @@ assert_contains() {
     local message=$3
 
     if ! grep -Fq "$expected" "$file"; then
+        printf 'FAIL: %s\n' "$message" >&2
+        exit 1
+    fi
+    printf 'PASS: %s\n' "$message"
+}
+
+assert_control_contains() {
+    local file=$1
+    local control_id=$2
+    local expected=$3
+    local message=$4
+
+    if ! sed -n "/id=\"${control_id}\"/,/>/p" "$file" | grep -Fq "$expected"; then
+        printf 'FAIL: %s\n' "$message" >&2
+        exit 1
+    fi
+    printf 'PASS: %s\n' "$message"
+}
+
+assert_appears_before() {
+    local file=$1
+    local first=$2
+    local second=$3
+    local message=$4
+    local first_line second_line
+
+    first_line=$(grep -Fn "$first" "$file" | head -1 | cut -d: -f1)
+    second_line=$(grep -Fn "$second" "$file" | head -1 | cut -d: -f1)
+    if [[ -z "$first_line" || -z "$second_line" || "$first_line" -ge "$second_line" ]]; then
         printf 'FAIL: %s\n' "$message" >&2
         exit 1
     fi
@@ -67,6 +112,9 @@ if [[ -z "$terminal_catalogue_id" ]]; then
     exit 1
 fi
 
+terminal_subject_type=$(db_query "SELECT COALESCE(request_subject_type, '__NULL__') FROM tblcatalogue WHERE id = ${terminal_catalogue_id}")
+db_query "UPDATE tblcatalogue SET request_subject_type = 'system' WHERE id = ${terminal_catalogue_id}" >/dev/null
+
 request "${base_url}/openrequest.php?lang=en" > "$work_dir/openrequest.html"
 assert_contains \
     "$work_dir/openrequest.html" \
@@ -82,6 +130,102 @@ assert_contains "$work_dir/terminal.html" 'name="serviceid" value="0"' \
     'terminal catalogue normalizes service ID to zero'
 assert_contains "$work_dir/terminal.html" 'value="Treasury Board of Canada Secretariat (TBS)"' \
     'public intake loads organization titles and acronyms from the database'
+assert_contains "$work_dir/terminal.html" '<h2>System information</h2>' \
+    'system subject type renders the English heading'
+assert_contains "$work_dir/terminal.html" 'name="request_subject"' \
+    'step two uses the consistent request_subject field name'
+assert_contains "$work_dir/terminal.html" '<label for="request_subject">' \
+    'request subject has an explicitly associated label'
+assert_contains "$work_dir/terminal.html" 'aria-describedby="request-subject-help"' \
+    'request subject is associated with its help text'
+assert_contains "$work_dir/terminal.html" 'id="request_subject"' \
+    'request subject label target is present'
+assert_contains "$work_dir/terminal.html" 'required' \
+    'request subject conveys required state programmatically'
+assert_contains "$work_dir/terminal.html" 'System name <strong>(required)</strong>' \
+    'system subject type renders a required System name label'
+assert_contains "$work_dir/terminal.html" 'What is the full name of the system?' \
+    'system subject type renders associated help text'
+assert_appears_before "$work_dir/terminal.html" 'id="request_subject"' 'id="additionalinfo"' \
+    'request subject information appears before Additional information'
+
+request -X POST \
+    --data-urlencode "intake_selection=${terminal_catalogue_id}:0:0" \
+    "${base_url}/openrequest2.php?lang=fr" > "$work_dir/system-fr.html"
+assert_contains "$work_dir/system-fr.html" 'Nom du système <strong>(obligatoire)</strong>' \
+    'system subject type renders the French label'
+assert_contains "$work_dir/system-fr.html" 'Quel est le nom complet du système?' \
+    'system subject type renders French help text'
+
+db_query "UPDATE tblcatalogue SET request_subject_type = 'document' WHERE id = ${terminal_catalogue_id}" >/dev/null
+request -X POST \
+    --data-urlencode "intake_selection=${terminal_catalogue_id}:0:0" \
+    "${base_url}/openrequest2.php?lang=en" > "$work_dir/document.html"
+assert_contains "$work_dir/document.html" '<h2>Document information</h2>' \
+    'document subject type renders the Document information heading'
+assert_contains "$work_dir/document.html" 'Document title <strong>(required)</strong>' \
+    'document subject type renders the Document title label'
+
+request -X POST \
+    --data-urlencode "intake_selection=${terminal_catalogue_id}:0:0" \
+    "${base_url}/openrequest2.php?lang=fr" > "$work_dir/document-fr.html"
+assert_contains "$work_dir/document-fr.html" '<h2>Renseignements sur le document</h2>' \
+    'document subject type renders the French heading'
+assert_contains "$work_dir/document-fr.html" 'Titre du document <strong>(obligatoire)</strong>' \
+    'document subject type renders the French label'
+
+db_query "UPDATE tblcatalogue SET request_subject_type = 'subject' WHERE id = ${terminal_catalogue_id}" >/dev/null
+request -X POST \
+    --data-urlencode "intake_selection=${terminal_catalogue_id}:0:0" \
+    "${base_url}/openrequest2.php?lang=en" > "$work_dir/subject.html"
+assert_contains "$work_dir/subject.html" '<h2>Request information</h2>' \
+    'subject type renders the Request information heading'
+assert_contains "$work_dir/subject.html" 'Subject <strong>(required)</strong>' \
+    'subject type renders the Subject label'
+
+request -X POST \
+    --data-urlencode "intake_selection=${terminal_catalogue_id}:0:0" \
+    "${base_url}/openrequest2.php?lang=fr" > "$work_dir/subject-fr.html"
+assert_contains "$work_dir/subject-fr.html" 'Objet <strong>(obligatoire)</strong>' \
+    'subject type renders the French label'
+assert_contains "$work_dir/subject-fr.html" 'Quel est l’objet de votre demande?' \
+    'subject type renders French help text'
+
+draft_headers="$work_dir/draft-headers.txt"
+draft_cookies="$work_dir/draft-cookies.txt"
+request -D "$draft_headers" -o /dev/null -c "$draft_cookies" -X POST \
+    --data-urlencode "catalogueid=${terminal_catalogue_id}" \
+    --data 'serviceid=0' \
+    --data 'subserviceid=0' \
+    --data-urlencode 'request_subject=Restored request subject' \
+    --data 'clientfname=' \
+    --data 'clientlname=Draft' \
+    --data 'clientemail=draft@example.com' \
+    "${base_url}/openrequest3.php?lang=en"
+if ! grep -Fiq 'location: /openrequest2.php?lang=en&status=failed' "$draft_headers"; then
+    printf 'FAIL: failed public intake did not return to step two\n' >&2
+    exit 1
+fi
+request -b "$draft_cookies" "${base_url}/openrequest2.php?lang=en" > "$work_dir/draft.html"
+assert_contains "$work_dir/draft.html" 'value="Restored request subject"' \
+    'request subject survives draft restoration'
+
+missing_subject_before=$(db_query 'SELECT COUNT(*) FROM tbltriage')
+request -D "$work_dir/missing-subject-headers.txt" -o /dev/null -X POST \
+    --data-urlencode "catalogueid=${terminal_catalogue_id}" \
+    --data 'serviceid=0' \
+    --data 'subserviceid=0' \
+    --data 'clientfname=Missing' \
+    --data 'clientlname=Subject' \
+    --data 'clientemail=missing-subject@example.com' \
+    "${base_url}/openrequest3.php?lang=en"
+missing_subject_after=$(db_query 'SELECT COUNT(*) FROM tbltriage')
+if ! grep -Fiq 'location: /openrequest2.php?lang=en&status=failed' "$work_dir/missing-subject-headers.txt" \
+    || [[ "$missing_subject_before" != "$missing_subject_after" ]]; then
+    printf 'FAIL: public intake accepted a missing request subject\n' >&2
+    exit 1
+fi
+printf 'PASS: public intake requires request subject server-side\n'
 
 IFS=$'\t' read -r leaf_catalogue_id leaf_service_id <<< "$(db_query '
     SELECT c.id, s.id
@@ -149,11 +293,12 @@ request -D "$success_headers" -o /dev/null -X POST \
     --data-urlencode "catalogueid=${terminal_catalogue_id}" \
     --data 'serviceid=0' \
     --data 'subserviceid=0' \
-    --data-urlencode 'requesttitle=Client supplied title' \
+    --data-urlencode 'requesttitle=Client supplied generated title' \
+    --data-urlencode 'request_subject=GC Accessibility Conformance Testing Tool' \
     --data 'clientfname=Prepared' \
     --data "clientlname=O'Reilly" \
     --data-urlencode "clientemail=${test_email}" \
-    --data-urlencode 'departmentagency=Client supplied department' \
+    --data-urlencode 'departmentagency=Treasury Board of Canada Secretariat (TBS)' \
     --data-urlencode 'clientphone=613-555-0100' \
     --data-urlencode "clientnotes=${test_note}" \
     --data 'notification=N' \
@@ -167,19 +312,165 @@ if [[ -z "${created_id:-}" ]]; then
 fi
 printf 'PASS: prepared intake insert creates a request\n'
 
-client_managed_values=$(db_query "SELECT CONCAT(COALESCE(title, ''), '|', COALESCE(clientphone, '')) FROM tbltriage WHERE id = ${created_id}")
-if [[ "$client_managed_values" != '|' ]]; then
-    printf 'FAIL: public intake accepted employee-managed title or phone values\n' >&2
+request_values=$(db_query "SELECT CONCAT(requestid, '|', COALESCE(title, ''), '|', COALESCE(request_subject, ''), '|', COALESCE(clientphone, '')) FROM tbltriage WHERE id = ${created_id}")
+request_id=${request_values%%|*}
+expected_values="${request_id}|${request_id} - TBS - GC Accessibility Conformance Testing Tool|GC Accessibility Conformance Testing Tool|"
+if [[ "$request_values" != "$expected_values" ]]; then
+    printf 'FAIL: public intake did not store the subject and server-generated title\n' >&2
     exit 1
 fi
-printf 'PASS: public intake ignores employee-managed title and phone values\n'
+printf 'PASS: public intake stores request subject and generates title server-side\n'
 
 department_note=$(db_query "SELECT notes FROM tblcommlog WHERE triageid = ${created_id} AND notes LIKE 'Department/agency:%' ORDER BY id DESC LIMIT 1")
-if [[ "$department_note" != 'Department/agency: Client supplied department' ]]; then
+if [[ "$department_note" != 'Department/agency: Treasury Board of Canada Secretariat' ]]; then
     printf 'FAIL: public intake did not preserve the department value\n' >&2
     exit 1
 fi
 printf 'PASS: public intake preserves the department value\n'
+
+edit_session_id="rmt-edit-http-$$"
+docker compose exec -T web php -r '
+    session_id($argv[1]);
+    require "/var/www/html/includes/session_start.php";
+    $_SESSION = [
+        "pid" => 8,
+        "atype" => 1,
+        "primary_atype" => 1,
+        "is_superuser" => 1,
+        "is_admin" => 1,
+        "email" => "edit-http@example.invalid",
+        "firstname" => "Edit",
+        "team" => "1",
+        "lang" => "en",
+    ];
+    session_write_close();
+' "$edit_session_id"
+
+request \
+    -H "Cookie: PHPSESSID=${edit_session_id}" \
+    "${base_url}/editrequest.php?lang=en&id=${created_id}" > "$work_dir/edit-request.html"
+assert_control_contains "$work_dir/edit-request.html" 'requesttitle' 'name="requesttitle"' \
+    'staff edit form displays request title'
+assert_control_contains "$work_dir/edit-request.html" 'requesttitle' 'readonly="readonly"' \
+    'staff edit form displays request title read-only'
+assert_contains "$work_dir/edit-request.html" '<label for="request_subject">' \
+    'staff edit form explicitly labels request subject'
+assert_control_contains "$work_dir/edit-request.html" 'request_subject' 'name="request_subject"' \
+    'staff edit form exposes request subject as the editable source'
+assert_control_contains "$work_dir/edit-request.html" 'request_subject' 'required' \
+    'authorized staff request subject is required programmatically'
+
+request \
+    -H "Cookie: PHPSESSID=${edit_session_id}" \
+    "${base_url}/editrequest.php?lang=fr&id=${created_id}" > "$work_dir/edit-request-fr.html"
+assert_contains "$work_dir/edit-request-fr.html" 'Titre de la demande' \
+    'staff edit form renders the French request title label'
+assert_contains "$work_dir/edit-request-fr.html" 'Objet de la demande' \
+    'staff edit form renders the French request subject label'
+
+request -o /dev/null -X POST \
+    -H "Cookie: PHPSESSID=${edit_session_id}" \
+    --data 'form_action=update_request' \
+    --data-urlencode 'requesttitle=Direct title tampering must be ignored' \
+    --data-urlencode 'request_subject=Corrected accessibility testing tool' \
+    --data-urlencode 'departmentagency=Treasury Board of Canada Secretariat (TBS)' \
+    --data-urlencode 'clientfname=Prepared' \
+    --data-urlencode "clientlname=O'Reilly" \
+    --data-urlencode "clientemail=${test_email}" \
+    --data-urlencode 'clientphone=' \
+    --data-urlencode 'datereceived='"$(date +%Y-%m-%d)" \
+    --data-urlencode 'slatimer='"$(date +%Y-%m-%d)" \
+    --data 'statusid=1' \
+    --data-urlencode "catalogueid=${terminal_catalogue_id}" \
+    --data 'serviceid=0' \
+    --data 'subserviceid=0' \
+    --data 'workerid=0' \
+    --data 'requestlang=en' \
+    "${base_url}/editrequest.php?lang=en&id=${created_id}"
+
+edited_values=$(db_query "SELECT CONCAT(title, '|', request_subject) FROM tbltriage WHERE id = ${created_id}")
+expected_edited_values="${request_id} - TBS - Corrected accessibility testing tool|Corrected accessibility testing tool"
+if [[ "$edited_values" != "$expected_edited_values" ]]; then
+    printf 'FAIL: subject correction did not regenerate the derived title\n' >&2
+    exit 1
+fi
+printf 'PASS: direct title edits are ignored and subject correction regenerates title\n'
+
+subject_history=$(db_query "SELECT CONCAT(COALESCE(oldValue, ''), '|', COALESCE(newValue, '')) FROM RequestFieldHistory WHERE requestID = '${request_id}' AND fieldName = 'request_subject' ORDER BY id DESC LIMIT 1")
+if [[ "$subject_history" != 'GC Accessibility Conformance Testing Tool|Corrected accessibility testing tool' ]]; then
+    printf 'FAIL: subject correction was not recorded in RequestFieldHistory\n' >&2
+    exit 1
+fi
+printf 'PASS: subject correction records old and new values in field history\n'
+
+request -o /dev/null -X POST \
+    -H "Cookie: PHPSESSID=${edit_session_id}" \
+    --data 'form_action=update_request' \
+    --data-urlencode 'requesttitle=Another ignored title' \
+    --data-urlencode 'request_subject=Corrected accessibility testing tool' \
+    --data-urlencode 'departmentagency=Shared Services Canada (SSC)' \
+    --data-urlencode 'clientfname=Prepared' \
+    --data-urlencode "clientlname=O'Reilly" \
+    --data-urlencode "clientemail=${test_email}" \
+    --data-urlencode 'clientphone=' \
+    --data-urlencode 'datereceived='"$(date +%Y-%m-%d)" \
+    --data-urlencode 'slatimer='"$(date +%Y-%m-%d)" \
+    --data 'statusid=1' \
+    --data-urlencode "catalogueid=${terminal_catalogue_id}" \
+    --data 'serviceid=0' \
+    --data 'subserviceid=0' \
+    --data 'workerid=0' \
+    --data 'requestlang=en' \
+    "${base_url}/editrequest.php?lang=en&id=${created_id}"
+
+department_title=$(db_query "SELECT title FROM tbltriage WHERE id = ${created_id}")
+if [[ "$department_title" != "${request_id} - SSC - Corrected accessibility testing tool" ]]; then
+    printf 'FAIL: department correction did not regenerate the title acronym\n' >&2
+    exit 1
+fi
+printf 'PASS: department correction regenerates the title acronym\n'
+
+db_query "UPDATE tbltriage SET workerid = 8 WHERE id = ${created_id}" >/dev/null
+employee_edit_session_id="rmt-employee-edit-http-$$"
+docker compose exec -T web php -r '
+    session_id($argv[1]);
+    require "/var/www/html/includes/session_start.php";
+    $_SESSION = [
+        "pid" => 8,
+        "atype" => 5,
+        "primary_atype" => 5,
+        "is_superuser" => 0,
+        "is_admin" => 0,
+        "email" => "employee-edit-http@example.invalid",
+        "firstname" => "Employee",
+        "team" => "1",
+        "lang" => "en",
+    ];
+    session_write_close();
+' "$employee_edit_session_id"
+
+request \
+    -H "Cookie: PHPSESSID=${employee_edit_session_id}" \
+    "${base_url}/editrequest.php?lang=en&id=${created_id}" > "$work_dir/edit-request-employee.html"
+assert_control_contains "$work_dir/edit-request-employee.html" 'request_subject' 'readonly="readonly"' \
+    'restricted staff see request subject read-only'
+
+request -o /dev/null -X POST \
+    -H "Cookie: PHPSESSID=${employee_edit_session_id}" \
+    --data 'form_action=update_request' \
+    --data-urlencode 'requesttitle=Unauthorized direct title change' \
+    --data-urlencode 'request_subject=Unauthorized subject change' \
+    --data 'statusid=1' \
+    --data 'workerid=8' \
+    --data-urlencode 'slatimer='"$(date +%Y-%m-%d)" \
+    "${base_url}/editrequest.php?lang=en&id=${created_id}"
+
+restricted_values=$(db_query "SELECT CONCAT(title, '|', request_subject) FROM tbltriage WHERE id = ${created_id}")
+if [[ "$restricted_values" != "${request_id} - SSC - Corrected accessibility testing tool|Corrected accessibility testing tool" ]]; then
+    printf 'FAIL: restricted staff changed the derived title or request subject\n' >&2
+    exit 1
+fi
+printf 'PASS: restricted staff cannot change request subject or derived title\n'
 
 stored_note=$(db_query "SELECT notes FROM tblcommlog WHERE triageid = ${created_id} AND notes LIKE 'Client%' ORDER BY id DESC LIMIT 1")
 if [[ "$stored_note" != "$test_note" ]]; then

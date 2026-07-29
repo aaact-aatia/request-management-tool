@@ -64,6 +64,7 @@ $translations = [
 		'add_log_button' => 'Add communication log',
 		'request_id' => 'Request ID #',
 		'request_title' => 'Request title',
+		'request_subject' => 'Request subject',
 		'first_sprint_start' => 'First Sprint Start Date',
 		'first_sprint_end' => 'First Sprint End Date',
 		'sprint_schedule' => 'Sprint Schedule',
@@ -163,6 +164,7 @@ $translations = [
 		'add_log_button' => 'Ajouter le journal de communications',
 		'request_id' => '# de la demande',
 		'request_title' => 'Titre de la demande',
+		'request_subject' => 'Objet de la demande',
 		'first_sprint_start' => 'Date de début du premier sprint',
 		'first_sprint_end' => 'Date de fin du premier sprint',
 		'sprint_schedule' => 'Calendrier du sprint',
@@ -429,7 +431,7 @@ include 'includes/template/head.php';
 			$isManagerAccount = ((int)($_SESSION['atype'] ?? 0) === 3);
 			$isTeamLeadAccount = ((int)($_SESSION['atype'] ?? 0) === 4);
 			$canEditStatusAndWorker = canEditRequests();
-			$canEditTitle = $canFullFieldEdit || $isManagerAccount || $isTeamLeadAccount;
+			$canEditRequestSubject = $canFullFieldEdit || $isManagerAccount || $isTeamLeadAccount;
 			$canEditWorkerid = in_array((int)($_SESSION['atype'] ?? 0), [3, 4, 5], true) || $canFullFieldEdit;
 			$canEditSlaTimer = $canFullFieldEdit || $isManagerAccount;
 			$readonly = !$canFullFieldEdit;
@@ -507,7 +509,12 @@ include 'includes/template/head.php';
 						<?php echo renderTextInput('requestid', $t['request_id'], $row['requestid'], false, true, 'text', '', true); ?>
 					</div>
 					<div class="col-md-6">
-						<?php echo renderTextInput('requesttitle', $t['request_title'], $row['title'], true, !$canEditTitle, 'text', '', true); ?>
+						<?php echo renderTextInput('requesttitle', $t['request_title'], $row['title'], false, true, 'text', '', true); ?>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-md-12">
+						<?php echo renderTextInput('request_subject', $t['request_subject'], $row['request_subject'] ?? '', $canEditRequestSubject, !$canEditRequestSubject, 'text', 'maxlength="500"', true); ?>
 					</div>
 				</div>
 
