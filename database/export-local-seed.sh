@@ -36,18 +36,18 @@ SELECT id, nameen, namefr, email, team_lead_user_id, dateadded, dateupdated, upd
 FROM \`$MYSQL_DATABASE\`.tblteams;
 
 INSERT INTO \`$export_database\`.tblcatalogue
-    (id, nameen, namefr, contactid, survey, status)
-SELECT id, nameen, namefr, contactid, survey, status
+    (id, nameen, namefr, contactid, request_subject_type, survey, status)
+SELECT id, nameen, namefr, contactid, request_subject_type, survey, status
 FROM \`$MYSQL_DATABASE\`.tblcatalogue;
 
 INSERT INTO \`$export_database\`.tblservices
-    (id, catalogueid, nameen, namefr, sds, contactid, status)
-SELECT id, catalogueid, nameen, namefr, sds, contactid, status
+    (id, catalogueid, nameen, namefr, sds, contactid, request_subject_type, status)
+SELECT id, catalogueid, nameen, namefr, sds, contactid, request_subject_type, status
 FROM \`$MYSQL_DATABASE\`.tblservices;
 
 INSERT INTO \`$export_database\`.tblsubservices
-    (id, serviceid, nameen, namefr, sds, contactid, status)
-SELECT id, serviceid, nameen, namefr, sds, contactid, status
+    (id, serviceid, nameen, namefr, sds, contactid, request_subject_type, status)
+SELECT id, serviceid, nameen, namefr, sds, contactid, request_subject_type, status
 FROM \`$MYSQL_DATABASE\`.tblsubservices;
 SQL
 
