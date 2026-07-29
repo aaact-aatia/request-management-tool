@@ -130,6 +130,8 @@ assert_contains "$work_dir/terminal.html" 'name="serviceid" value="0"' \
     'terminal catalogue normalizes service ID to zero'
 assert_contains "$work_dir/terminal.html" 'value="Treasury Board of Canada Secretariat (TBS)"' \
     'public intake loads organization titles and acronyms from the database'
+assert_control_contains "$work_dir/terminal.html" 'departmentagency' 'value=""' \
+    'new intake leaves department or agency blank'
 assert_contains "$work_dir/terminal.html" '<h2>System information</h2>' \
     'system subject type renders the English heading'
 assert_contains "$work_dir/terminal.html" 'name="request_subject"' \
@@ -367,13 +369,21 @@ assert_contains "$work_dir/edit-request-fr.html" 'Titre de la demande' \
     'staff edit form renders the French request title label'
 assert_contains "$work_dir/edit-request-fr.html" 'Objet de la demande' \
     'staff edit form renders the French request subject label'
+assert_control_contains "$work_dir/edit-request-fr.html" 'departmentagency' 'value="Secrétariat du Conseil du Trésor du Canada (SCT)"' \
+    'staff edit form localizes an English department selection in French'
+assert_control_contains "$work_dir/edit-request-fr.html" 'departmentagency' 'aria-describedby="departmentagency-hint"' \
+    'localized department selection is not described by the custom-name warning'
+assert_control_contains "$work_dir/edit-request-fr.html" 'departmentagency-review' 'role="status" hidden' \
+    'localized department selection hides the custom-name warning status'
+assert_contains "$work_dir/edit-request-fr.html" "departmentInput.addEventListener('input', updateDepartmentReview)" \
+    'editable department field updates the warning when its value changes'
 
 request -o /dev/null -X POST \
     -H "Cookie: PHPSESSID=${edit_session_id}" \
     --data 'form_action=update_request' \
     --data-urlencode 'requesttitle=Direct title tampering must be ignored' \
     --data-urlencode 'request_subject=Corrected accessibility testing tool' \
-    --data-urlencode 'departmentagency=Treasury Board of Canada Secretariat (TBS)' \
+    --data-urlencode 'departmentagency=Secrétariat du Conseil du Trésor du Canada (SCT)' \
     --data-urlencode 'clientfname=Prepared' \
     --data-urlencode "clientlname=O'Reilly" \
     --data-urlencode "clientemail=${test_email}" \
@@ -386,7 +396,7 @@ request -o /dev/null -X POST \
     --data 'subserviceid=0' \
     --data 'workerid=0' \
     --data 'requestlang=en' \
-    "${base_url}/editrequest.php?lang=en&id=${created_id}"
+    "${base_url}/editrequest.php?lang=fr&id=${created_id}"
 
 edited_values=$(db_query "SELECT CONCAT(title, '|', request_subject) FROM tbltriage WHERE id = ${created_id}")
 expected_edited_values="${request_id} - TBS - Corrected accessibility testing tool|Corrected accessibility testing tool"
@@ -402,6 +412,14 @@ if [[ "$subject_history" != 'GC Accessibility Conformance Testing Tool|Corrected
     exit 1
 fi
 printf 'PASS: subject correction records old and new values in field history\n'
+
+localized_department_note=$(db_query "SELECT notes FROM tblcommlog WHERE triageid = ${created_id} AND notes LIKE 'Department/agency:%' ORDER BY id ASC LIMIT 1")
+localized_department_history_count=$(db_query "SELECT COUNT(*) FROM RequestFieldHistory WHERE requestID = '${request_id}' AND fieldName = 'department_agency'")
+if [[ "$localized_department_note" != 'Department/agency: Treasury Board of Canada Secretariat' || "$localized_department_history_count" != '0' ]]; then
+    printf 'FAIL: saving a localized department rendering was recorded as a department change\n' >&2
+    exit 1
+fi
+printf 'PASS: saving a localized department rendering preserves the stored organization identity\n'
 
 request -o /dev/null -X POST \
     -H "Cookie: PHPSESSID=${edit_session_id}" \

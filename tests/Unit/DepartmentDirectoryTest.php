@@ -57,6 +57,46 @@ checkDepartmentDirectory(
     rmt_department_directory_from_rows($rows, 'fr'),
     'French rows use titles and acronyms'
 );
+checkDepartmentDirectory(
+    [
+        'Emploi et Développement social Canada',
+        'Employment and Social Development Canada',
+        'Emploi et Développement social Canada',
+    ],
+    [
+        rmt_department_directory_localized_name_from_rows(
+            [[
+                'nameen' => 'Employment and Social Development Canada',
+                'namefr' => 'Emploi et Développement social Canada',
+                'abbreviationen' => 'ESDC',
+                'abbreviationfr' => 'EDSC',
+            ]],
+            'Employment and Social Development Canada',
+            'fr'
+        ),
+        rmt_department_directory_localized_name_from_rows(
+            [[
+                'nameen' => 'Employment and Social Development Canada',
+                'namefr' => 'Emploi et Développement social Canada',
+                'abbreviationen' => 'ESDC',
+                'abbreviationfr' => 'EDSC',
+            ]],
+            'Emploi et Développement social Canada (EDSC)',
+            'en'
+        ),
+        rmt_department_directory_localized_name_from_rows(
+            [[
+                'nameen' => 'Employment and Social Development Canada',
+                'namefr' => 'Emploi et Développement social Canada',
+                'abbreviationen' => 'ESDC',
+                'abbreviationfr' => 'EDSC',
+            ]],
+            'ESDC',
+            'fr'
+        ),
+    ],
+    'stored organization names and acronyms localize across interface languages'
+);
 checkDepartmentDirectory([], rmt_department_directory_from_rows([], 'en'), 'no database rows returns no departments');
 checkDepartmentDirectory(
     [
@@ -84,6 +124,20 @@ checkDepartmentDirectory(
         'Treasury Board of Canada Secretariat'
     )],
     'official title is displayed with its acronym'
+);
+checkDepartmentDirectory(
+    ['', ''],
+    [
+        rmt_department_directory_input_value(
+            [['name' => 'Canada Emission Reduction Incentives Agency', 'label' => 'Canada Emission Reduction Incentives Agency']],
+            ''
+        ),
+        rmt_department_directory_official_title(
+            [['name' => 'Canada Emission Reduction Incentives Agency', 'label' => 'Canada Emission Reduction Incentives Agency']],
+            ''
+        ),
+    ],
+    'blank department remains blank when the first directory entry has no acronym'
 );
 checkDepartmentDirectory(
     ['Treasury Board of Canada Secretariat'],

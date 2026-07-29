@@ -158,9 +158,14 @@ if ($departmentRow && preg_match('/^(Department\/agency|Ministère\/organisme):\
 }
 
 $departmentDirectory = rmt_get_department_directory($link, $lang);
-$departmentAgency = $canFullFieldEdit
-    ? rmt_department_directory_official_title($departmentDirectory, $submittedDepartmentAgency)
-    : $currentDepartmentAgency;
+$departmentAgency = $currentDepartmentAgency;
+if ($canFullFieldEdit) {
+    $submittedDepartmentOfficialTitle = rmt_department_directory_official_title($departmentDirectory, $submittedDepartmentAgency);
+    $localizedCurrentDepartment = rmt_get_localized_department_name($link, $currentDepartmentAgency, $lang);
+    if (rmt_department_directory_key($submittedDepartmentOfficialTitle) !== rmt_department_directory_key($localizedCurrentDepartment)) {
+        $departmentAgency = $submittedDepartmentOfficialTitle;
+    }
+}
 $requestLanguage = rmt_get_request_language($link, $requestuidInt, (string) ($currentRequest['requestlang'] ?? 'en'));
 if ($requestSubject !== '') {
     $titleDepartment = rmt_department_title_component($link, $departmentAgency, $requestLanguage);

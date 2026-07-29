@@ -400,6 +400,7 @@ include 'includes/template/head.php';
 				$departmentAgency = trim($matches[2]);
 			}
 		}
+		$departmentAgency = rmt_get_localized_department_name($link, $departmentAgency, $lang);
 		$departments = rmt_get_department_directory($link, $lang);
 		$departmentAgencyNeedsReview = $departmentAgency !== '' && !rmt_department_directory_contains($departments, $departmentAgency);
 		$departmentOptions = rmt_department_directory_options($departments, $departmentAgency);
@@ -620,12 +621,16 @@ include 'includes/template/head.php';
 							>
 							<datalist id="departmentagency-options">
 								<?php foreach ($departmentOptions as $department): ?>
-									<option value="<?php echo htmlspecialchars($department['label'], ENT_QUOTES, 'UTF-8'); ?>"></option>
+									<option
+										value="<?php echo htmlspecialchars($department['label'], ENT_QUOTES, 'UTF-8'); ?>"
+										data-name="<?php echo htmlspecialchars($department['name'], ENT_QUOTES, 'UTF-8'); ?>"
+										data-abbreviation="<?php echo htmlspecialchars(rmt_department_directory_abbreviation($department), ENT_QUOTES, 'UTF-8'); ?>"
+									></option>
 								<?php endforeach; ?>
 							</datalist>
 							<p id="departmentagency-hint"><?php echo htmlspecialchars($readonly ? $t['department_agency_readonly_hint'] : $t['department_agency_hint'], ENT_QUOTES, 'UTF-8'); ?></p>
-							<?php if ($departmentAgencyNeedsReview): ?>
-								<p id="departmentagency-review" class="alert alert-warning"><?php echo htmlspecialchars($readonly ? $t['department_agency_readonly_review'] : $t['department_agency_review'], ENT_QUOTES, 'UTF-8'); ?></p>
+							<?php if (!$readonly || $departmentAgencyNeedsReview): ?>
+								<p id="departmentagency-review" class="alert alert-warning" role="status"<?php echo $departmentAgencyNeedsReview ? '' : ' hidden'; ?>><?php echo htmlspecialchars($readonly ? $t['department_agency_readonly_review'] : $t['department_agency_review'], ENT_QUOTES, 'UTF-8'); ?></p>
 							<?php endif; ?>
 						</div>
 					</div>

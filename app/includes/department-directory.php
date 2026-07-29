@@ -76,6 +76,49 @@ function rmt_department_directory_from_rows(array $rows, string $lang): array
     return array_values($departments);
 }
 
+function rmt_department_directory_localized_name_from_rows(array $rows, string $department, string $lang): string
+{
+    $department = trim($department);
+    if ($department === '') {
+        return '';
+    }
+
+    $departmentKey = rmt_department_directory_key($department);
+    foreach ($rows as $row) {
+        if (!is_array($row)) {
+            continue;
+        }
+
+        $englishEntry = rmt_department_directory_entry(
+            (string) ($row['nameen'] ?? ''),
+            (string) ($row['abbreviationen'] ?? '')
+        );
+        $frenchEntry = rmt_department_directory_entry(
+            (string) ($row['namefr'] ?? ''),
+            (string) ($row['abbreviationfr'] ?? '')
+        );
+        $matches = [
+            $englishEntry['name'],
+            $englishEntry['label'],
+            rmt_department_directory_abbreviation($englishEntry),
+            $frenchEntry['name'],
+            $frenchEntry['label'],
+            rmt_department_directory_abbreviation($frenchEntry),
+        ];
+
+        foreach ($matches as $match) {
+            if ($match !== '' && rmt_department_directory_key($match) === $departmentKey) {
+                $targetEntry = $lang === 'fr' ? $frenchEntry : $englishEntry;
+                return $targetEntry['name'] !== '' && $targetEntry['name'] !== '-'
+                    ? $targetEntry['name']
+                    : $department;
+            }
+        }
+    }
+
+    return $department;
+}
+
 function rmt_department_directory_options(array $departments, string $selectedDepartment): array
 {
     $selectedDepartment = trim($selectedDepartment);
@@ -96,6 +139,10 @@ function rmt_department_directory_options(array $departments, string $selectedDe
 function rmt_department_directory_input_value(array $departments, string $department): string
 {
     $department = trim($department);
+    if ($department === '') {
+        return '';
+    }
+
     foreach ($departments as $option) {
         if (($option['name'] ?? '') === $department
             || ($option['label'] ?? '') === $department
@@ -110,6 +157,10 @@ function rmt_department_directory_input_value(array $departments, string $depart
 function rmt_department_directory_official_title(array $departments, string $department): string
 {
     $department = trim($department);
+    if ($department === '') {
+        return '';
+    }
+
     foreach ($departments as $option) {
         if (($option['name'] ?? '') === $department
             || ($option['label'] ?? '') === $department
@@ -195,4 +246,23 @@ function rmt_get_department_directory(mysqli $link, string $lang): array
     }
 
     return rmt_department_directory_from_rows(mysqli_fetch_all($result, MYSQLI_ASSOC), $lang);
+}
+
+function rmt_get_localized_department_name(mysqli $link, string $department, string $lang): string
+{
+    $result = mysqli_query(
+        $link,
+        'SELECT nameen, namefr, abbreviationen, abbreviationfr
+         FROM tblorganizations
+         WHERE status = 1'
+    );
+    if (!$result) {
+        return trim($department);
+    }
+
+    return rmt_department_directory_localized_name_from_rows(
+        mysqli_fetch_all($result, MYSQLI_ASSOC),
+        $department,
+        $lang
+    );
 }
