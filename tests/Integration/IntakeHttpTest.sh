@@ -59,6 +59,18 @@ assert_contains() {
     printf 'PASS: %s\n' "$message"
 }
 
+assert_not_contains() {
+    local file=$1
+    local unexpected=$2
+    local message=$3
+
+    if grep -Fq "$unexpected" "$file"; then
+        printf 'FAIL: %s\n' "$message" >&2
+        exit 1
+    fi
+    printf 'PASS: %s\n' "$message"
+}
+
 assert_control_contains() {
     local file=$1
     local control_id=$2
@@ -347,6 +359,14 @@ docker compose exec -T web php -r '
     ];
     session_write_close();
 ' "$edit_session_id"
+
+request \
+    -H "Cookie: PHPSESSID=${edit_session_id}" \
+    "${base_url}/index.php?lang=en" > "$work_dir/overview.html"
+assert_contains "$work_dir/overview.html" ">${request_id} - TBS - GC Accessibility Conformance Testing Tool</a>" \
+    'overview card uses the generated request title as its link text'
+assert_not_contains "$work_dir/overview.html" ">a11y-${request_id}</a>" \
+    'overview card does not use the ticket code as link text when a title exists'
 
 request \
     -H "Cookie: PHPSESSID=${edit_session_id}" \

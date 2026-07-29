@@ -1,3 +1,6 @@
+.request-card-title a {
+	overflow-wrap: anywhere;
+}
 /* =============================================================================
    RMT Application Styles
    Overrides and additions to WET4 / GCWeb defaults

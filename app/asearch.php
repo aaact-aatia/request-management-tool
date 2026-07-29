@@ -618,10 +618,10 @@ include 'includes/template/head.php';
 		<div class="col-sm-6 col-md-4 mrgn-bttm-md">
 			<div class="panel <?= $panelClass ?> hght-inhrt">
 				<div class="panel-heading">
-					<h3 class="h5 mrgn-tp-sm mrgn-bttm-sm">
-						<a href="viewrequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?php echo base64_encode($row['id']);?>&reqid=<?php echo urlencode('a11y-' . $row['requestid']);?>">a11y-<?php echo htmlspecialchars($row['requestid']);?></a>
-					</h3>
-					<p class="mrgn-bttm-0"><?php echo htmlspecialchars($row['title'] ?? '');?></p>
+					<h2 class="h5 mrgn-tp-sm mrgn-bttm-sm request-card-title">
+						<?php $searchResultTitle = trim((string) ($row['title'] ?? '')); ?>
+						<a href="viewrequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?php echo base64_encode($row['id']);?>&reqid=<?php echo urlencode('a11y-' . $row['requestid']);?>"><?php echo htmlspecialchars($searchResultTitle !== '' ? $searchResultTitle : 'a11y-' . $row['requestid']);?></a>
+					</h2>
 				</div>
 				<div class="panel-body">
 					<?php if (!$suppressSlaWarning) { ?>

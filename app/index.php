@@ -556,7 +556,7 @@ include 'includes/template/head.php';
 						'panelClass' => $panelClass,
 						'requestUrl' => $t['view_request'] . '&erid=' . base64_encode($row['id']) . '&reqid=' . urlencode('a11y-' . ($row['requestid'] ?? '')),
 						'requestCode' => 'a11y-' . ($row['requestid'] ?? ''),
-						'title' => !empty($row['title']) ? $row['title'] : $t['no_title'],
+						'title' => (string) ($row['title'] ?? ''),
 						'statusPrefix' => $t['status'],
 						'statusText' => $statusname,
 						'statusLabelClass' => $statusLabelClass,

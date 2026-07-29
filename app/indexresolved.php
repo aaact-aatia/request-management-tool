@@ -431,7 +431,7 @@ include 'includes/template/head.php';
 							'panelClass' => $panelClass,
 							'requestUrl' => 'viewrequest.php?lang=' . $_SESSION['lang'] . '&erid=' . base64_encode($row['id']) . '&reqid=' . urlencode('a11y-' . ($row['requestid'] ?? '')),
 							'requestCode' => 'a11y-' . ($row['requestid'] ?? ''),
-							'title' => !empty($row['title']) ? $row['title'] : '[No title entered]',
+							'title' => (string) ($row['title'] ?? ''),
 							'statusPrefix' => $langFile['indexresolved_col_status'],
 							'statusText' => $statusname,
 							'statusLabelClass' => $statusLabelClass,
