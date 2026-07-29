@@ -477,7 +477,7 @@ include 'includes/template/head.php';
                 <!-- Row: Request ID | Request Title -->
                 <div class="row">
                     <div class="col-md-6">
-                        <?php echo renderTextInput('requestid', $t['request_id'], $row['requestid'], true, $readonly); ?>
+                        <?php echo renderTextInput('requestid', $t['request_id'], $row['requestid'], false, true); ?>
                     </div>
                     <div class="col-md-6">
                         <?php echo renderTextInput('requesttitle', $t['request_title'], $row['title'], true, !$canEditTitle); ?>

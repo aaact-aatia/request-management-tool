@@ -68,7 +68,7 @@ if ($isEmployeeAccount) {
     }
 }
 
-$requestid = getPostValue('requestid');
+$requestid = (string) ($currentRequest['requestid'] ?? '');
 $requesttitle = getPostValue('requesttitle');
 $clientlname = getPostValue('clientlname');
 $clientfname = getPostValue('clientfname');
@@ -124,7 +124,6 @@ if (!$canEditStatusAndWorker) {
 
 if (!$canFullFieldEdit) {
     // Non-full-edit roles are restricted; manager gets approved exceptions.
-    $requestid = (string) ($currentRequest['requestid'] ?? '');
     $clientlname = (string) ($currentRequest['clientlname'] ?? '');
     $clientfname = (string) ($currentRequest['clientfname'] ?? '');
     $clientemail = (string) ($currentRequest['clientemail'] ?? '');
@@ -833,7 +832,6 @@ if ($requestFieldHistoryEnabled) {
 }
 
 $sql = "UPDATE `tbltriage` SET 
-    `requestid` = '$requestid',
     `title` = '$requesttitle',
     `clientlname` = '$clientlname',
     `clientfname` = '$clientfname',
