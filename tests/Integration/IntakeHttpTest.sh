@@ -137,10 +137,26 @@ terminal_subject_type=$(db_query "SELECT COALESCE(request_subject_type, '__NULL_
 db_query "UPDATE tblcatalogue SET request_subject_type = 'system' WHERE id = ${terminal_catalogue_id}" >/dev/null
 
 request "${base_url}/openrequest.php?lang=en" > "$work_dir/openrequest.html"
+assert_contains "$work_dir/openrequest.html" 'What do you need?' \
+    'English intake asks what the client needs'
+assert_contains "$work_dir/openrequest.html" 'What type of service?' \
+    'English intake asks for the service type'
 assert_contains \
     "$work_dir/openrequest.html" \
     "&quot;name&quot;:&quot;intake_selection&quot;,&quot;value&quot;:&quot;${terminal_catalogue_id}:0:0&quot;" \
     'enhanced terminal catalogue uses one atomic hierarchy value'
+
+request "${base_url}/openrequest.php?lang=fr" > "$work_dir/openrequest-fr.html"
+assert_contains "$work_dir/openrequest-fr.html" 'De quoi avez-vous besoin?' \
+    'French intake asks what the client needs'
+assert_contains "$work_dir/openrequest-fr.html" 'De quel type de service avez-vous besoin?' \
+    'French intake asks for the service type'
+
+request "${base_url}/openrequest.php?lang=en&wbdisable=true" > "$work_dir/openrequest-basic.html"
+assert_control_contains "$work_dir/openrequest-basic.html" 'basic-intake-selection' 'required' \
+    'simplified intake keeps the combined question required'
+assert_contains "$work_dir/openrequest-basic.html" 'What do you need?' \
+    'simplified intake uses the client-facing question'
 
 request -X POST \
     --data-urlencode "intake_selection=${terminal_catalogue_id}:0:0" \
@@ -405,6 +421,13 @@ assert_not_contains "$work_dir/services-empty.html" 'id="serviceid"' \
 conditional_leaf_service_id=$(db_query "INSERT INTO tblservices (catalogueid, nameen, namefr, status) VALUES (${terminal_catalogue_id}, 'Conditional leaf service', 'Service terminal conditionnel', 1); SELECT LAST_INSERT_ID();")
 conditional_branch_service_id=$(db_query "INSERT INTO tblservices (catalogueid, nameen, namefr, status) VALUES (${terminal_catalogue_id}, 'Conditional branch service', 'Service parent conditionnel', 1); SELECT LAST_INSERT_ID();")
 conditional_subservice_id=$(db_query "INSERT INTO tblsubservices (serviceid, nameen, namefr, status) VALUES (${conditional_branch_service_id}, 'Conditional sub-service', 'Sous-service conditionnel', 1); SELECT LAST_INSERT_ID();")
+
+request "${base_url}/openrequest.php?lang=en" > "$work_dir/openrequest-with-subservice.html"
+assert_contains "$work_dir/openrequest-with-subservice.html" 'What specific service do you need?' \
+    'English intake asks for the specific service when available'
+request "${base_url}/openrequest.php?lang=fr" > "$work_dir/openrequest-with-subservice-fr.html"
+assert_contains "$work_dir/openrequest-with-subservice-fr.html" 'De quel service précis avez-vous besoin?' \
+    'French intake asks for the specific service when available'
 
 request -H "Cookie: PHPSESSID=${edit_session_id}" \
     "${base_url}/addrequest-ajax1.php?v1=${terminal_catalogue_id}" > "$work_dir/services-available.html"
