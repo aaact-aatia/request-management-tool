@@ -7,9 +7,10 @@ function ajax1(val1) {
 		url: "addrequest-ajax1.php?v1=" + val1,
 		success: function(result) {
 			$(".divservice").html(result);
+			$(".divservice").toggle($.trim(result) !== "");
 		}
 	});
-	$(".divsubservice").hide();
+	$(".divsubservice").empty().hide();
 }
 
 function ajax2(val1) {
@@ -17,7 +18,7 @@ function ajax2(val1) {
 		url: "addrequest-ajax2.php?v1=" + val1,
 		success: function(result) {
 			$(".divsubservice").html(result);
+			$(".divsubservice").toggle($.trim(result) !== "");
 		}
 	});
-	$(".divsubservice").show();
 }

@@ -518,6 +518,7 @@ include 'includes/template/head.php';
 					<div class="col-md-6">
 						<?php if (hasValue($row['catalogueid'])): ?>
 							<?php $services = getServicesByCategory($link, $row['catalogueid'], $lang); ?>
+							<?php if (mysqli_num_rows($services) > 0): ?>
 							<div class="form-group divservice">
 								<label for="serviceid"><span class="field-name"><?php echo $t['service_name']; ?>:</span></label>
 								<select class="form-control full-width" id="serviceid" name="serviceid" onchange="ajax2(this.value)" <?php echo $readonly ? 'disabled="disabled"' : ''; ?>>
@@ -529,6 +530,9 @@ include 'includes/template/head.php';
 									<?php endwhile; ?>
 								</select>
 							</div>
+							<?php else: ?>
+								<div class="form-group divservice"></div>
+							<?php endif; ?>
 						<?php else: ?>
 							<div class="form-group divservice"></div>
 						<?php endif; ?>
@@ -539,7 +543,7 @@ include 'includes/template/head.php';
 				<?php
 				if (hasValue($row['serviceid'])) {
 					$subservices = getSubservicesByService($link, $row['serviceid'], $lang);
-					if (mysqli_num_rows($subservices) > 0 && $row['subserviceid'] != 0) {
+					if (mysqli_num_rows($subservices) > 0) {
 				?>
 						<div class="row">
 							<div class="col-md-6">
@@ -560,6 +564,8 @@ include 'includes/template/head.php';
 					} else {
 						echo '<div class="form-group divsubservice"></div>';
 					}
+				} else {
+					echo '<div class="form-group divsubservice"></div>';
 				}
 				?>
 

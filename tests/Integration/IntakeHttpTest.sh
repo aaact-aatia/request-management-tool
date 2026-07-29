@@ -9,8 +9,17 @@ organization_session_id=""
 edit_session_id=""
 employee_edit_session_id=""
 terminal_subject_type=""
+conditional_leaf_service_id=""
+conditional_branch_service_id=""
+conditional_subservice_id=""
 
 cleanup() {
+    if [[ -n "$conditional_subservice_id" ]]; then
+        db_query "DELETE FROM tblsubservices WHERE id = ${conditional_subservice_id};" >/dev/null || true
+    fi
+    if [[ -n "$conditional_leaf_service_id" || -n "$conditional_branch_service_id" ]]; then
+        db_query "DELETE FROM tblservices WHERE id IN (${conditional_leaf_service_id:-0}, ${conditional_branch_service_id:-0});" >/dev/null || true
+    fi
     if [[ -n "$created_id" ]]; then
         db_query "DELETE FROM RequestFieldHistory WHERE requestID = (SELECT requestid FROM tbltriage WHERE id = ${created_id}); DELETE FROM tbladminlog WHERE triageid = ${created_id}; DELETE FROM tblcommlog WHERE triageid = ${created_id}; DELETE FROM tblfiles WHERE requestid = (SELECT requestid FROM tbltriage WHERE id = ${created_id}); DELETE FROM tbltriage WHERE id = ${created_id};" >/dev/null || true
     fi
@@ -371,6 +380,12 @@ assert_not_contains "$work_dir/overview.html" ">a11y-${request_id}</a>" \
 request \
     -H "Cookie: PHPSESSID=${edit_session_id}" \
     "${base_url}/editrequest.php?lang=en&id=${created_id}" > "$work_dir/edit-request.html"
+assert_not_contains "$work_dir/edit-request.html" 'id="serviceid"' \
+    'staff edit form hides Service when the catalogue has no active services'
+assert_not_contains "$work_dir/edit-request.html" 'id="subserviceid"' \
+    'staff edit form hides Sub-service when no service is available'
+assert_contains "$work_dir/edit-request.html" 'class="form-group divsubservice"' \
+    'staff edit form retains the Sub-service target for dependent updates'
 assert_control_contains "$work_dir/edit-request.html" 'requesttitle' 'name="requesttitle"' \
     'staff edit form displays request title'
 assert_control_contains "$work_dir/edit-request.html" 'requesttitle' 'readonly="readonly"' \
@@ -381,6 +396,30 @@ assert_control_contains "$work_dir/edit-request.html" 'request_subject' 'name="r
     'staff edit form exposes request subject as the editable source'
 assert_control_contains "$work_dir/edit-request.html" 'request_subject' 'required' \
     'authorized staff request subject is required programmatically'
+
+request -H "Cookie: PHPSESSID=${edit_session_id}" \
+    "${base_url}/addrequest-ajax1.php?v1=${terminal_catalogue_id}" > "$work_dir/services-empty.html"
+assert_not_contains "$work_dir/services-empty.html" 'id="serviceid"' \
+    'catalogue AJAX hides Service when no active services exist'
+
+conditional_leaf_service_id=$(db_query "INSERT INTO tblservices (catalogueid, nameen, namefr, status) VALUES (${terminal_catalogue_id}, 'Conditional leaf service', 'Service terminal conditionnel', 1); SELECT LAST_INSERT_ID();")
+conditional_branch_service_id=$(db_query "INSERT INTO tblservices (catalogueid, nameen, namefr, status) VALUES (${terminal_catalogue_id}, 'Conditional branch service', 'Service parent conditionnel', 1); SELECT LAST_INSERT_ID();")
+conditional_subservice_id=$(db_query "INSERT INTO tblsubservices (serviceid, nameen, namefr, status) VALUES (${conditional_branch_service_id}, 'Conditional sub-service', 'Sous-service conditionnel', 1); SELECT LAST_INSERT_ID();")
+
+request -H "Cookie: PHPSESSID=${edit_session_id}" \
+    "${base_url}/addrequest-ajax1.php?v1=${terminal_catalogue_id}" > "$work_dir/services-available.html"
+assert_contains "$work_dir/services-available.html" 'id="serviceid"' \
+    'catalogue AJAX shows Service when active services exist'
+
+request -H "Cookie: PHPSESSID=${edit_session_id}" \
+    "${base_url}/addrequest-ajax2.php?v1=${conditional_leaf_service_id}" > "$work_dir/subservices-empty.html"
+assert_not_contains "$work_dir/subservices-empty.html" 'id="subserviceid"' \
+    'service AJAX hides Sub-service when no active sub-services exist'
+
+request -H "Cookie: PHPSESSID=${edit_session_id}" \
+    "${base_url}/addrequest-ajax2.php?v1=${conditional_branch_service_id}" > "$work_dir/subservices-available.html"
+assert_contains "$work_dir/subservices-available.html" 'id="subserviceid"' \
+    'service AJAX shows Sub-service when active sub-services exist'
 
 request \
     -H "Cookie: PHPSESSID=${edit_session_id}" \

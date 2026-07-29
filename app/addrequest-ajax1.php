@@ -22,21 +22,24 @@ else
 {
 	$catalogueid = "";
 }
-?>
+
+	$sql = "SELECT id, $nameColumn AS name FROM tblservices WHERE catalogueid='$catalogueid' AND status='1' ORDER BY $orderBy ASC";
+	$result = mysqli_query($link, $sql);
+	if ($result && mysqli_num_rows($result) > 0) {
+	?>
 				<label for="serviceid"><span class="field-name"><?= htmlspecialchars($translations['service_name'] ?? 'Service name:') ?></span></label>
 				<select class="form-control full-width" id="serviceid" name="serviceid" onchange="ajax2(this.value)">
 					<option value=""><?= htmlspecialchars($translations['select_service'] ?? 'Select a service name') ?></option>
 					<?php 
-					$sql2 = "SELECT * FROM tblservices WHERE catalogueid='$catalogueid' AND status='1' ORDER BY $orderBy ASC";
-					$result2 = mysqli_query($link,$sql2);	
-					while($row2 = mysqli_fetch_array($result2)){
+					while($row2 = mysqli_fetch_array($result)){
 					?>
-					<option value="<?php echo $row2['id']; ?>"><?php echo htmlspecialchars($row2[$nameColumn]); ?></option>
+					<option value="<?php echo $row2['id']; ?>"><?php echo htmlspecialchars($row2['name']); ?></option>
 					<?php
 					}
 					?>
 				</select>
 <?php
+}
 // Close connection
 mysqli_close($link);
 ?>
