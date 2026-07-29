@@ -73,8 +73,7 @@ $requesttitle = getPostValue('requesttitle');
 $clientlname = getPostValue('clientlname');
 $clientfname = getPostValue('clientfname');
 $clientemail = getPostValue('clientemail');
-$departmentagency = getPostValue('departmentagency');
-$departmentagencyCommlogId = (int)getPostValue('departmentagency_commlogid', 0);
+$submittedDepartmentAgency = trim((string)($_POST['departmentagency'] ?? ''));
 $clientphone = getPostValue('clientphone');
 $sourceid = getPostValue('sourceid');
 $statusid = getPostValue('statusid');
@@ -101,10 +100,6 @@ $sprintdefects = getPostValue('sprintdefects');
 $sprintschedule = getPostValue('sprintschedule');
 $firstsprintstartdate = getPostValue('firstsprintstartdate');
 $firstsprintenddate = getPostValue('firstsprintenddate');
-$commlog1 = getPostValue('commlog1');
-$commlogid1 = getPostValue('commlogid1');
-$commlog2 = getPostValue('commlog2');
-$commlogid2 = getPostValue('commlogid2');
 $adminnotes = getPostValue('adminnotes');
 $updaterid = $_SESSION['pid'];
 $todaydate = getTodayDate();
@@ -146,10 +141,6 @@ if (!$canFullFieldEdit) {
     $firstsprintstartdate = (string) ($currentRequest['firstsprintstartdate'] ?? '');
     $firstsprintenddate = (string) ($currentRequest['firstsprintenddate'] ?? '');
 
-    // Keep communications metadata unchanged outside full-edit scope.
-    $departmentagency = '';
-    $departmentagencyCommlogId = 0;
-
     if (!$canEditTitle) {
         $requesttitle = (string) ($currentRequest['title'] ?? '');
     }
@@ -173,24 +164,6 @@ if (empty($dateresolved) && $isTargetResolved) {
     $dateresolved = NULL;
 }
 
-function upsertDepartmentAgencyInNotes($notes, $departmentValue, $lang) {
-    $cleanedNotes = preg_replace('/^\s*(Department\/agency|Ministère\/organisme):\s*.*(?:\R|$)/miu', '', (string)$notes);
-    $cleanedNotes = trim((string)$cleanedNotes);
-
-    if (!hasValue($departmentValue)) {
-        return $cleanedNotes;
-    }
-
-    $prefix = ($lang === 'fr') ? 'Ministère/organisme: ' : 'Department/agency: ';
-    $line = $prefix . $departmentValue;
-
-    if ($cleanedNotes === '') {
-        return $line;
-    }
-
-    return $line . "\n\n" . $cleanedNotes;
-}
-
 function rmt_audit_normalize_value($value) {
     if (is_null($value)) {
         return null;
@@ -202,6 +175,20 @@ function rmt_audit_normalize_value($value) {
     }
 
     return $normalized;
+}
+
+function rmt_replace_department_agency_note($notes, $departmentValue, $lang) {
+    $cleanedNotes = preg_replace('/^\s*(Department\/agency|Ministère\/organisme):\s*.*(?:\R|$)/miu', '', (string)$notes);
+    $cleanedNotes = trim((string)$cleanedNotes);
+
+    if (!hasValue($departmentValue)) {
+        return $cleanedNotes;
+    }
+
+    $prefix = ($lang === 'fr') ? 'Ministère/organisme: ' : 'Department/agency: ';
+    $departmentLine = $prefix . $departmentValue;
+
+    return $cleanedNotes === '' ? $departmentLine : $departmentLine . "\n\n" . $cleanedNotes;
 }
 
 function rmt_audit_values_equal($oldValue, $newValue) {
@@ -883,61 +870,43 @@ if (!empty($firstsprintenddate)) {
 $sql .= " WHERE id='$requestuid'";
 mysqli_query($link, $sql);
 
-// Update communication logs (admin/superadmin/manager)
-if ($canEditCommunicationLogs) {
-    if (!empty($commlogid1)) {
-        if ($requestFieldHistoryEnabled) {
-            $existingCommlog1Result = mysqli_query($link, "SELECT notes FROM tblcommlog WHERE id='$commlogid1' LIMIT 1");
-            $existingCommlog1Row = $existingCommlog1Result ? mysqli_fetch_assoc($existingCommlog1Result) : null;
-            rmt_append_request_change(
-                $generalRequestChanges,
-                'client_communication_log',
-                (string) ($existingCommlog1Row['notes'] ?? ''),
-                stripslashes((string) $commlog1)
-            );
-        }
-        $sql = "UPDATE `tblcommlog` SET `notes` = '$commlog1' WHERE id='$commlogid1'";
-        mysqli_query($link, $sql);
-    }
-    if (!empty($commlogid2)) {
-        if ($requestFieldHistoryEnabled) {
-            $existingCommlog2Result = mysqli_query($link, "SELECT notes FROM tblcommlog WHERE id='$commlogid2' LIMIT 1");
-            $existingCommlog2Row = $existingCommlog2Result ? mysqli_fetch_assoc($existingCommlog2Result) : null;
-            rmt_append_request_change(
-                $generalRequestChanges,
-                'staff_communication_log',
-                (string) ($existingCommlog2Row['notes'] ?? ''),
-                stripslashes((string) $commlog2)
-            );
-        }
-        $sql = "UPDATE `tblcommlog` SET `notes` = '$commlog2' WHERE id='$commlogid2'";
-        mysqli_query($link, $sql);
-    }
-}
-
-// Keep Department/agency synchronized in client communications notes.
 if ($canFullFieldEdit) {
-    $targetCommlogId = $departmentagencyCommlogId;
-    if ($targetCommlogId <= 0) {
-        $targetResult = mysqli_query($link, "SELECT id FROM tblcommlog WHERE triageid = '$requestuid' AND status = '1' ORDER BY id ASC LIMIT 1");
-        if ($targetResult && mysqli_num_rows($targetResult) > 0) {
-            $targetRow = mysqli_fetch_assoc($targetResult);
-            $targetCommlogId = (int)$targetRow['id'];
-        }
+    $departmentDirectory = rmt_get_department_directory($link, $lang);
+    $departmentAgency = rmt_department_directory_official_title($departmentDirectory, $submittedDepartmentAgency);
+    $departmentResult = mysqli_query(
+        $link,
+        "SELECT id, notes FROM tblcommlog
+         WHERE triageid = '$requestuid'
+           AND status = '1'
+           AND (notes LIKE 'Department/agency:%' OR notes LIKE 'Ministère/organisme:%')
+         ORDER BY id ASC
+         LIMIT 1"
+    );
+    $departmentRow = $departmentResult ? mysqli_fetch_assoc($departmentResult) : null;
+    $departmentNoteLang = $requestlang;
+    if ($departmentRow && stripos(trim((string)$departmentRow['notes']), 'Ministère/organisme:') === 0) {
+        $departmentNoteLang = 'fr';
+    } elseif ($departmentRow && stripos(trim((string)$departmentRow['notes']), 'Department/agency:') === 0) {
+        $departmentNoteLang = 'en';
     }
 
-    if ($targetCommlogId > 0) {
-        $notesResult = mysqli_query($link, "SELECT notes FROM tblcommlog WHERE id = '$targetCommlogId' AND triageid = '$requestuid' AND status = '1' LIMIT 1");
-        if ($notesResult && mysqli_num_rows($notesResult) > 0) {
-            $notesRow = mysqli_fetch_assoc($notesResult);
-            $updatedNotes = upsertDepartmentAgencyInNotes($notesRow['notes'], $departmentagency, $lang);
-            $updatedNotesEscaped = mysqli_real_escape_string($link, $updatedNotes);
-            mysqli_query($link, "UPDATE tblcommlog SET notes = '$updatedNotesEscaped' WHERE id = '$targetCommlogId' AND triageid = '$requestuid' AND status = '1'");
+    if ($departmentRow) {
+        $departmentCommlogId = (int)$departmentRow['id'];
+        $updatedDepartmentNotes = rmt_replace_department_agency_note($departmentRow['notes'], $departmentAgency, $departmentNoteLang);
+        if ($updatedDepartmentNotes === '') {
+            mysqli_query($link, "UPDATE tblcommlog SET status = '0' WHERE id = '$departmentCommlogId' AND triageid = '$requestuid'");
+        } else {
+            $safeDepartmentNotes = mysqli_real_escape_string($link, $updatedDepartmentNotes);
+            mysqli_query($link, "UPDATE tblcommlog SET notes = '$safeDepartmentNotes' WHERE id = '$departmentCommlogId' AND triageid = '$requestuid'");
         }
-    } elseif (hasValue($departmentagency)) {
-        $departmentPrefix = ($lang === 'fr') ? 'Ministère/organisme: ' : 'Department/agency: ';
-        $departmentNote = mysqli_real_escape_string($link, $departmentPrefix . $departmentagency);
-        mysqli_query($link, "INSERT INTO tblcommlog(`triageid`, `dateadded`, `notes`, `creatorid`, `status`) VALUES ('$requestuid', '$todaydate', '$departmentNote', '$updaterid', '1')");
+    } elseif (hasValue($departmentAgency)) {
+        $departmentNotes = rmt_replace_department_agency_note('', $departmentAgency, $departmentNoteLang);
+        $safeDepartmentNotes = mysqli_real_escape_string($link, $departmentNotes);
+        mysqli_query(
+            $link,
+            "INSERT INTO tblcommlog(`triageid`, `dateadded`, `notes`, `creatorid`, `status`)
+             VALUES ('$requestuid', '$todaydate', '$safeDepartmentNotes', '$updaterid', '1')"
+        );
     }
 }
 
@@ -982,10 +951,6 @@ $feedbackFieldLabels = [
     'client_email' => [
         'en' => 'Client email',
         'fr' => 'Courriel du client',
-    ],
-    'department_agency' => [
-        'en' => 'Department/agency',
-        'fr' => 'Ministere/organisme',
     ],
     'client_phone' => [
         'en' => 'Client phone number',

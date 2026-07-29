@@ -21,6 +21,39 @@ function rmt_department_directory_key(string $name): string
     return function_exists('mb_strtolower') ? mb_strtolower($name, 'UTF-8') : strtolower($name);
 }
 
+function rmt_department_directory_abbreviation(array $department): string
+{
+    $label = trim((string)($department['label'] ?? ''));
+    if (preg_match('/\(([^()]*)\)$/u', $label, $matches) !== 1) {
+        return '';
+    }
+
+    return trim($matches[1]);
+}
+
+function rmt_department_directory_contains(array $departments, string $department): bool
+{
+    $departmentKey = rmt_department_directory_key($department);
+    if ($departmentKey === '') {
+        return false;
+    }
+
+    foreach ($departments as $option) {
+        $values = [
+            (string)($option['name'] ?? ''),
+            (string)($option['label'] ?? ''),
+            rmt_department_directory_abbreviation($option),
+        ];
+        foreach ($values as $value) {
+            if ($value !== '' && rmt_department_directory_key($value) === $departmentKey) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
 function rmt_department_directory_from_rows(array $rows, string $lang): array
 {
     $titleField = $lang === 'fr' ? 'namefr' : 'nameen';
@@ -48,9 +81,11 @@ function rmt_department_directory_options(array $departments, string $selectedDe
     $selectedDepartment = trim($selectedDepartment);
     $departmentNames = array_column($departments, 'name');
     $departmentLabels = array_column($departments, 'label');
+    $departmentAbbreviations = array_map('rmt_department_directory_abbreviation', $departments);
     if ($selectedDepartment !== ''
         && !in_array($selectedDepartment, $departmentNames, true)
-        && !in_array($selectedDepartment, $departmentLabels, true)) {
+        && !in_array($selectedDepartment, $departmentLabels, true)
+        && !in_array($selectedDepartment, $departmentAbbreviations, true)) {
         $departments[] = ['name' => $selectedDepartment, 'label' => $selectedDepartment];
         usort($departments, static fn(array $left, array $right): int => strnatcasecmp($left['name'], $right['name']));
     }
@@ -62,7 +97,9 @@ function rmt_department_directory_input_value(array $departments, string $depart
 {
     $department = trim($department);
     foreach ($departments as $option) {
-        if (($option['name'] ?? '') === $department || ($option['label'] ?? '') === $department) {
+        if (($option['name'] ?? '') === $department
+            || ($option['label'] ?? '') === $department
+            || rmt_department_directory_abbreviation($option) === $department) {
             return (string) $option['label'];
         }
     }
@@ -74,7 +111,9 @@ function rmt_department_directory_official_title(array $departments, string $dep
 {
     $department = trim($department);
     foreach ($departments as $option) {
-        if (($option['name'] ?? '') === $department || ($option['label'] ?? '') === $department) {
+        if (($option['name'] ?? '') === $department
+            || ($option['label'] ?? '') === $department
+            || rmt_department_directory_abbreviation($option) === $department) {
             return (string) $option['name'];
         }
     }

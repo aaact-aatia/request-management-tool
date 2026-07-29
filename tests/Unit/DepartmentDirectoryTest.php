@@ -94,6 +94,44 @@ checkDepartmentDirectory(
     'acronym label is normalized to the official title for storage'
 );
 checkDepartmentDirectory(
+    ['Treasury Board of Canada Secretariat (TBS)'],
+    [rmt_department_directory_input_value(
+        [['name' => 'Treasury Board of Canada Secretariat', 'label' => 'Treasury Board of Canada Secretariat (TBS)']],
+        'TBS'
+    )],
+    'stored acronym is displayed as the matching directory option'
+);
+checkDepartmentDirectory(
+    ['Treasury Board of Canada Secretariat'],
+    [rmt_department_directory_official_title(
+        [['name' => 'Treasury Board of Canada Secretariat', 'label' => 'Treasury Board of Canada Secretariat (TBS)']],
+        'TBS'
+    )],
+    'stored acronym is normalized to the official title'
+);
+checkDepartmentDirectory(
+    [true, true, true, false],
+    [
+        rmt_department_directory_contains(
+            [['name' => 'Treasury Board of Canada Secretariat', 'label' => 'Treasury Board of Canada Secretariat (TBS)']],
+            'treasury board of canada secretariat'
+        ),
+        rmt_department_directory_contains(
+            [['name' => 'Treasury Board of Canada Secretariat', 'label' => 'Treasury Board of Canada Secretariat (TBS)']],
+            'Treasury Board of Canada Secretariat (TBS)'
+        ),
+        rmt_department_directory_contains(
+            [['name' => 'Treasury Board of Canada Secretariat', 'label' => 'Treasury Board of Canada Secretariat (TBS)']],
+            'tbs'
+        ),
+        rmt_department_directory_contains(
+            [['name' => 'Treasury Board of Canada Secretariat', 'label' => 'Treasury Board of Canada Secretariat (TBS)']],
+            'Unlisted organization'
+        ),
+    ],
+    'directory matching accepts names, labels, and acronyms without flagging case differences'
+);
+checkDepartmentDirectory(
     ['Unlisted organization'],
     [rmt_department_directory_official_title([], 'Unlisted organization')],
     'unlisted free text is preserved'

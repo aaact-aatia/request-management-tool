@@ -15,6 +15,7 @@ require('includes/httpscheck.php');
 require('includes/calculate-bdays.php');
 require('emailController.php');
 require('includes/helpers.php');
+require_once('includes/department-directory.php');
 
 // Language detection
 $lang = detectLanguage();
@@ -74,9 +75,15 @@ $translations = [
 		'language_english' => 'English',
 		'language_french' => 'French',
 		'department_agency' => 'Department/agency',
+		'select_department_agency' => 'Select a department or agency',
+		'department_agency_hint' => 'Optional. Start typing a department, agency, or acronym, or enter another organization.',
+		'department_agency_readonly_hint' => 'Department or agency recorded during intake. This field is read-only.',
+		'department_agency_review' => 'Review needed: This value is not in the organization directory. Confirm it or select a recognized organization.',
+		'department_agency_readonly_review' => 'Review needed: This value is not in the organization directory. Confirm it with the requester and ask an administrator to update it if needed.',
 		'client_phone' => 'Client phone #',
 		'request_source' => 'Request source',
 		'select_source' => 'Select a request source',
+		'intake_additional_information' => 'Additional information from intake',
 		'date_received' => 'Date received',
 		'date_updated' => 'Date updated',
 		'date_required' => 'Date required',
@@ -113,7 +120,6 @@ $translations = [
 		'select_all' => 'Select All',
 		'download_all' => 'Download All',
 		'communications_heading' => 'Communications',
-		'edit_original_commlog' => 'Edit original communications log entry',
 		'view_existing_comms' => 'View existing communications',
 		'add_new_commlog' => 'Add new AAACT communications log entry',
 		'staff_use_only' => 'AAACT use only',
@@ -168,9 +174,15 @@ $translations = [
 		'language_english' => 'Anglais',
 		'language_french' => 'Francais',
 		'department_agency' => 'Ministère/organisme',
+		'select_department_agency' => 'Sélectionnez un ministère ou organisme',
+		'department_agency_hint' => 'Facultatif. Commencez à saisir un ministère, un organisme ou un acronyme, ou entrez une autre organisation.',
+		'department_agency_readonly_hint' => 'Ministère ou organisme enregistré lors de la demande initiale. Ce champ est en lecture seule.',
+		'department_agency_review' => 'Vérification requise : cette valeur ne figure pas dans le répertoire des organisations. Confirmez-la ou sélectionnez une organisation reconnue.',
+		'department_agency_readonly_review' => 'Vérification requise : cette valeur ne figure pas dans le répertoire des organisations. Confirmez-la auprès de la personne qui a fait la demande et demandez à un administrateur de la mettre à jour au besoin.',
 		'client_phone' => 'Numéro de téléphone client',
 		'request_source' => 'Source de la demande',
 		'select_source' => 'Sélectionnez une source pour la demande',
+		'intake_additional_information' => 'Informations supplémentaires de la demande initiale',
 		'date_received' => 'Date de réception',
 		'date_updated' => 'Date de mise à jour',
 		'date_required' => 'Date requise',
@@ -207,7 +219,6 @@ $translations = [
 		'select_all' => 'Tout sélectionner',
 		'download_all' => 'Tout télécharger',
 		'communications_heading' => 'Communications',
-		'edit_original_commlog' => 'Modifier le journal des communications client',
 		'view_existing_comms' => 'Afficher les communications existantes',
 		'add_new_commlog' => 'Ajouter une nouvelle entrée au journal des communications du AATIA',
 		'staff_use_only' => 'À l\'usage du AATIA uniquement',
@@ -386,19 +397,26 @@ include 'includes/template/head.php';
 		}
 
 		$departmentAgency = '';
-		$departmentAgencyCommlogId = 0;
+		$originalIntakeNotes = [];
 		$originalRequestLang = rmt_get_request_language($link, (int) $requestuid, $_SESSION['lang'] ?? 'en');
 		$originalRequestLangLabel = ($originalRequestLang === 'fr') ? $t['language_french'] : $t['language_english'];
 		$deptPrefixRegex = '/^(Department\/agency|Ministère\/organisme):\s*(.+)$/miu';
 
-		$deptResult = mysqli_query($link, "SELECT id, notes FROM tblcommlog WHERE triageid = '$requestuid' AND status = '1' ORDER BY id ASC");
-		while ($deptRow = mysqli_fetch_assoc($deptResult)) {
-			if (preg_match($deptPrefixRegex, (string)$deptRow['notes'], $matches)) {
+		$intakeResult = mysqli_query($link, "SELECT id, notes FROM tblcommlog WHERE triageid = '$requestuid' AND status = '1' ORDER BY id ASC");
+		while ($intakeRow = mysqli_fetch_assoc($intakeResult)) {
+			$intakeNote = trim((string)($intakeRow['notes'] ?? ''));
+			if (preg_match($deptPrefixRegex, $intakeNote, $matches)) {
 				$departmentAgency = trim($matches[2]);
-				$departmentAgencyCommlogId = (int)$deptRow['id'];
-				break;
+				$intakeNote = trim((string)preg_replace('/^\s*(Department\/agency|Ministère\/organisme):\s*.*(?:\R|$)/miu', '', $intakeNote));
+			}
+			if ($intakeNote !== '') {
+				$originalIntakeNotes[] = $intakeNote;
 			}
 		}
+		$departments = rmt_get_department_directory($link, $lang);
+		$departmentAgencyNeedsReview = $departmentAgency !== '' && !rmt_department_directory_contains($departments, $departmentAgency);
+		$departmentOptions = rmt_department_directory_options($departments, $departmentAgency);
+		$departmentInputValue = rmt_department_directory_input_value($departmentOptions, $departmentAgency);
 	?>
 
 		<form method="POST" enctype="multipart/form-data" action="editrequest.php?lang=<?php echo $lang; ?>&id=<?php echo $row['id']; ?>">
@@ -583,6 +601,15 @@ include 'includes/template/head.php';
 					</div>
 				<?php endif; ?>
 
+				<?php if (!empty($originalIntakeNotes)): ?>
+					<section aria-labelledby="intake-additional-information-heading">
+						<h2 id="intake-additional-information-heading" class="h4"><?php echo htmlspecialchars($t['intake_additional_information'], ENT_QUOTES, 'UTF-8'); ?></h2>
+						<?php foreach ($originalIntakeNotes as $originalIntakeNote): ?>
+							<p><?php echo nl2br(htmlspecialchars($originalIntakeNote, ENT_QUOTES, 'UTF-8')); ?></p>
+						<?php endforeach; ?>
+					</section>
+				<?php endif; ?>
+
 			</fieldset>
 
 			<!-- Fieldset: Client Information -->
@@ -599,14 +626,36 @@ include 'includes/template/head.php';
 					</div>
 				</div>
 
-				<!-- Row: Client Email | Department/Agency -->
+				<!-- Row: Client Email | Department/Agency from intake -->
 				<div class="row">
 					<div class="col-md-6">
 						<?php echo renderTextInput('clientemail', $t['client_email'], $row['clientemail'], false, $readonly, 'email'); ?>
 					</div>
 					<div class="col-md-6">
-						<?php echo renderTextInput('departmentagency', $t['department_agency'], $departmentAgency, false, $readonly); ?>
-						<input type="hidden" name="departmentagency_commlogid" value="<?php echo $departmentAgencyCommlogId; ?>">
+						<div class="form-group">
+							<label for="departmentagency"><span class="field-name"><?php echo htmlspecialchars($t['department_agency'], ENT_QUOTES, 'UTF-8'); ?></span></label>
+							<input
+								type="text"
+								class="form-control"
+								id="departmentagency"
+								name="departmentagency"
+								list="departmentagency-options"
+								value="<?php echo htmlspecialchars($departmentInputValue, ENT_QUOTES, 'UTF-8'); ?>"
+								autocomplete="organization"
+								aria-describedby="departmentagency-hint<?php echo $departmentAgencyNeedsReview ? ' departmentagency-review' : ''; ?>"
+								<?php echo $readonly ? '' : 'placeholder="' . htmlspecialchars($t['select_department_agency'], ENT_QUOTES, 'UTF-8') . '"'; ?>
+								<?php echo $readonly ? 'readonly="readonly"' : ''; ?>
+							>
+							<datalist id="departmentagency-options">
+								<?php foreach ($departmentOptions as $department): ?>
+									<option value="<?php echo htmlspecialchars($department['label'], ENT_QUOTES, 'UTF-8'); ?>"></option>
+								<?php endforeach; ?>
+							</datalist>
+							<p id="departmentagency-hint"><?php echo htmlspecialchars($readonly ? $t['department_agency_readonly_hint'] : $t['department_agency_hint'], ENT_QUOTES, 'UTF-8'); ?></p>
+							<?php if ($departmentAgencyNeedsReview): ?>
+								<p id="departmentagency-review" class="alert alert-warning"><?php echo htmlspecialchars($readonly ? $t['department_agency_readonly_review'] : $t['department_agency_review'], ENT_QUOTES, 'UTF-8'); ?></p>
+							<?php endif; ?>
+						</div>
 					</div>
 				</div>
 

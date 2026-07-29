@@ -20,7 +20,6 @@
 <?php endif; ?>
 
 <?php
-$x = 1;
 $canEditCommunicationLogs = in_array((int)($_SESSION['atype'] ?? 0), [3, 4, 5], true) || !empty($_SESSION['is_superuser']) || !empty($_SESSION['is_admin']);
 $canViewExistingComms = !empty($_SESSION['is_superuser']) || !empty($_SESSION['is_admin']) || in_array((int)($_SESSION['atype'] ?? 0), [3, 4, 6], true);
 $existingCommsCount = 0;
@@ -29,27 +28,7 @@ if ($canViewExistingComms) {
     $existingCommsCountRow = $existingCommsCountResult ? mysqli_fetch_assoc($existingCommsCountResult) : null;
     $existingCommsCount = (int)($existingCommsCountRow['total'] ?? 0);
 }
-// Grab existing communication logs
-$result2 = mysqli_query($link, "SELECT ID, notes FROM tblcommlog WHERE triageid = '$requestuid'");
-while ($row2 = mysqli_fetch_assoc($result2)) {
-    $ocommlogid = $row2['ID'];
-    $ocommlog = preg_replace('/^\s*(Department\/agency|Ministère\/organisme):\s*.*(?:\R|$)/miu', '', (string)$row2['notes']);
-    $ocommlog = trim((string)$ocommlog);
-    if ($ocommlog === '') {
-        continue;
-    }
 ?>
-<div class="form-group">
-    <label for="commlog<?php echo $x; ?>"><span class="field-name"><?php echo $t['edit_original_commlog']; ?>:</span></label>
-    <textarea class="form-control" id="commlog<?php echo $x; ?>" name="commlog<?php echo $x; ?>" 
-              cols="50" rows="10" <?php echo $canEditCommunicationLogs ? '' : 'readonly'; ?>><?php echo htmlspecialchars($ocommlog, ENT_QUOTES, 'UTF-8'); ?></textarea>
-    <input type="hidden" id="commlogid<?php echo $x; ?>" name="commlogid<?php echo $x; ?>" value="<?php echo $ocommlogid; ?>" />
-</div>
-<?php
-    $x++;
-}
-?>
-
 <div class="form-group">
     <label for="adminnotes"><span class="field-name"><?php echo $t['add_new_commlog']; ?>:</span></label>
     <textarea class="form-control" id="adminnotes" name="adminnotes" cols="50" rows="10" <?php echo $canEditCommunicationLogs ? '' : 'readonly'; ?>></textarea>
