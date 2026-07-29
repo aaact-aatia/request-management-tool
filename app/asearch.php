@@ -242,7 +242,11 @@ if ($hasSearchParams){
 			$teamScopeClause = " AND 1=0";
 		} else {
 			$teamIdCsv = implode(',', array_map('intval', $userTeamIds));
-			$teamScopeClause = " AND ((serviceid IN (SELECT id FROM tblservices WHERE contactid IN ($teamIdCsv))) OR (subserviceid IN (SELECT id FROM tblsubservices WHERE contactid IN ($teamIdCsv))))";
+			$teamScopeClause = " AND COALESCE(
+				(SELECT NULLIF(ss.contactid, 0) FROM tblsubservices ss WHERE ss.id = tbltriage.subserviceid AND ss.serviceid = tbltriage.serviceid),
+				(SELECT NULLIF(s.contactid, 0) FROM tblservices s WHERE s.id = tbltriage.serviceid AND s.catalogueid = tbltriage.catalogueid),
+				(SELECT NULLIF(c.contactid, 0) FROM tblcatalogue c WHERE c.id = tbltriage.catalogueid)
+			) IN ($teamIdCsv)";
 		}
 	}
 
@@ -549,6 +553,7 @@ include 'includes/template/head.php';
 						$tarraycontactid = $row2 ? $row2[2] : 0;
 					}
 				}
+				$tarraycontactid = rmt_resolve_responsible_team_id($link, (int) $catalogueid, (int) $serviceid, (int) $subserviceid);
 				
 				// Sub-service is not empty so grab the name
 				$result2 = mysqli_query($link, "SELECT $nameField FROM tblcatalogue WHERE id = '$catalogueid'");

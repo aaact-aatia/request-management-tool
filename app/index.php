@@ -407,6 +407,7 @@ include 'includes/template/head.php';
 					$tarraycontactid = $row_lookup ? $row_lookup[2] : 0;
 			}
 		}
+					$tarraycontactid = rmt_resolve_responsible_team_id($link, (int) $catalogueid, (int) $serviceid, (int) $subserviceid);
 
 					$canViewRow = true;
 					if ($isTeamLeadAccount) {

@@ -271,6 +271,7 @@ include 'includes/template/head.php';
 					if (empty($tarraycontactid)){
 						$tarraycontactid = "";
 					}
+					$tarraycontactid = rmt_resolve_responsible_team_id($link, (int) $catalogueid, (int) $serviceid, (int) $subserviceid);
 					
 					if (!empty($catalogueid)) {
 						// Sub-service is not empty so grab the name

@@ -61,7 +61,11 @@ if ($isTeamLeadAccount) {
 		$teamScopeExpression = '1=0';
 	} else {
 		$teamIdCsv = implode(',', array_map('intval', $teamIds));
-		$teamScopeExpression = "((serviceid IN (SELECT id FROM tblservices WHERE contactid IN ($teamIdCsv))) OR (subserviceid IN (SELECT id FROM tblsubservices WHERE contactid IN ($teamIdCsv))))";
+		$teamScopeExpression = "COALESCE(
+			(SELECT NULLIF(ss.contactid, 0) FROM tblsubservices ss WHERE ss.id = tbltriage.subserviceid AND ss.serviceid = tbltriage.serviceid),
+			(SELECT NULLIF(s.contactid, 0) FROM tblservices s WHERE s.id = tbltriage.serviceid AND s.catalogueid = tbltriage.catalogueid),
+			(SELECT NULLIF(c.contactid, 0) FROM tblcatalogue c WHERE c.id = tbltriage.catalogueid)
+		) IN ($teamIdCsv)";
 		$teamScopeClause = " AND " . $teamScopeExpression;
 	}
 }

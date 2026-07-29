@@ -404,6 +404,37 @@ function rmt_resolve_request_subject_type(
     return rmt_normalize_request_subject_type($row['resolved_type'] ?? 'subject') ?? 'subject';
 }
 
+function rmt_resolve_responsible_team_id(
+    mysqli $link,
+    int $catalogueId,
+    int $serviceId = 0,
+    int $subserviceId = 0
+): int {
+    $row = rmt_db_fetch_one(
+        $link,
+        'SELECT COALESCE(NULLIF(ss.contactid, 0), NULLIF(s.contactid, 0), NULLIF(c.contactid, 0), 0) AS team_id
+         FROM tblcatalogue c
+         LEFT JOIN tblservices s ON s.id = ? AND s.catalogueid = c.id
+         LEFT JOIN tblsubservices ss ON ss.id = ? AND ss.serviceid = s.id
+         WHERE c.id = ?',
+        'iii',
+        [$serviceId, $subserviceId, $catalogueId]
+    );
+
+    return max(0, (int) ($row['team_id'] ?? 0));
+}
+
+function rmt_get_active_teams(mysqli $link): array {
+    $result = rmt_admin_query($link, 'SELECT id, nameen, namefr FROM tblteams WHERE status = 1 ORDER BY nameen, namefr');
+    $teams = [];
+
+    while ($team = rmt_result_fetch_array($result)) {
+        $teams[] = $team;
+    }
+
+    return $teams;
+}
+
 function rmt_request_subject_text(string $type, string $lang): array {
     $type = rmt_normalize_request_subject_type($type) ?? 'subject';
     $translations = [

@@ -39,20 +39,12 @@ if (!$currentRequest) {
 
 if ($isTeamLeadAccount) {
     $teamIds = getEffectiveTeamIds($link);
-
-    $requestContactId = 0;
-    $subserviceIdInt = (int)($currentRequest['subserviceid'] ?? 0);
-    $serviceIdInt = (int)($currentRequest['serviceid'] ?? 0);
-    if ($subserviceIdInt > 0) {
-        $contactResult = mysqli_query($link, "SELECT contactid FROM tblsubservices WHERE id = '$subserviceIdInt' LIMIT 1");
-        $contactRow = $contactResult ? mysqli_fetch_assoc($contactResult) : null;
-        $requestContactId = (int)($contactRow['contactid'] ?? 0);
-    }
-    if ($requestContactId === 0 && $serviceIdInt > 0) {
-        $contactResult = mysqli_query($link, "SELECT contactid FROM tblservices WHERE id = '$serviceIdInt' LIMIT 1");
-        $contactRow = $contactResult ? mysqli_fetch_assoc($contactResult) : null;
-        $requestContactId = (int)($contactRow['contactid'] ?? 0);
-    }
+    $requestContactId = rmt_resolve_responsible_team_id(
+        $link,
+        (int) ($currentRequest['catalogueid'] ?? 0),
+        (int) ($currentRequest['serviceid'] ?? 0),
+        (int) ($currentRequest['subserviceid'] ?? 0)
+    );
 
     if ($requestContactId <= 0 || !in_array((string)$requestContactId, $teamIds, true)) {
         header("location:/index.php?lang=$lang&status=accessdenied");
@@ -491,21 +483,16 @@ $requestlang = in_array($postedRequestLang, ['en', 'fr'], true)
     : rmt_get_request_language($link, $requestuidInt, $requestlang);
 
 // Determine team contact
-$contactid = -1;
+$contactid = rmt_resolve_responsible_team_id(
+    $link,
+    (int) $catalogueid,
+    (int) $serviceid,
+    (int) $subserviceid
+);
 $teamname = "";
 $teamemail = "";
 $contactname = "";
 $contactemail = "";
-
-if (hasValue($subserviceid)) {
-    $result = mysqli_query($link, "SELECT contactid FROM tblsubservices WHERE id = '$subserviceid'");
-    $row = mysqli_fetch_assoc($result);
-    if ($row) $contactid = $row['contactid'];
-} elseif (hasValue($serviceid)) {
-    $result = mysqli_query($link, "SELECT contactid FROM tblservices WHERE id = '$serviceid'");
-    $row = mysqli_fetch_assoc($result);
-    if ($row) $contactid = $row['contactid'];
-}
 
 if ($contactid > 0) {
     $result = mysqli_query($link, "SELECT * FROM tblteams WHERE id = '$contactid'");
@@ -573,58 +560,21 @@ if (!$isCurrentResolved && $isTargetResolved) {
     // Status changed (not to resolved) - client notifications are manual only.
 }
 
-// Send emails for service/subservice changes
-if ($csubserviceid != $subserviceid && hasValue($subserviceid)) {
-    // Subservice changed
-    $result = mysqli_query($link, "SELECT contactid FROM tblsubservices WHERE id = '$subserviceid'");
+// Notify the newly responsible team when a hierarchy edit changes ownership.
+$contactidold = rmt_resolve_responsible_team_id(
+    $link,
+    (int) $ccatalogueid,
+    (int) $cserviceid,
+    (int) $csubserviceid
+);
+if (($cserviceid != $serviceid || $csubserviceid != $subserviceid) && $contactid > 0 && $contactid !== $contactidold) {
+    $result = mysqli_query($link, "SELECT * FROM tblteams WHERE id = '$contactid'");
     $row = mysqli_fetch_assoc($result);
-    $contactid = $row['contactid'];
-    
-    // Get old contactid
-    if ($csubserviceid == 0) {
-        $resultold = mysqli_query($link, "SELECT contactid FROM tblservices WHERE id = '$cserviceid'");
-    } else {
-        $resultold = mysqli_query($link, "SELECT contactid FROM tblsubservices WHERE id = '$csubserviceid'");
-    }
-    $rowold = mysqli_fetch_assoc($resultold);
-    $contactidold = $rowold['contactid'];
-    
-    if ($contactid != $contactidold) {
-        $result = mysqli_query($link, "SELECT * FROM tblteams WHERE id = '$contactid'");
-        $row = mysqli_fetch_assoc($result);
+    if ($row) {
         $personalisation['teamname'] = $row['nameen'];
         $personalisation['team_email'] = $row['email'];
         $newTeamEmail = $row['email'];
-        
-        $reassignedTemplate = app_notify_template_id('notification_generic');
-        $reassignedCategory = rmt_notification_template_category('reassigned');
-        $reassignedTeamPersonalisation = $personalisation + [
-            'notification_event' => 'reassigned',
-            'template_category_id' => $reassignedCategory['id'],
-            'template_category_name_en' => $reassignedCategory['name_en'],
-            'template_category_name_fr' => $reassignedCategory['name_fr'],
-            'subject' => rmt_notification_subject('reassigned', 'internal', 'en', $personalisation),
-            'message' => rmt_notification_message('reassigned', 'internal', 'en', $personalisation),
-        ];
-        sendEmail($newTeamEmail, $reassignedTemplate, json_encode($reassignedTeamPersonalisation), ['recipientType' => 'internal']);
-    }
-} elseif ($cserviceid != $serviceid) {
-    // Service changed
-    $result = mysqli_query($link, "SELECT contactid FROM tblservices WHERE id = '$serviceid'");
-    $row = mysqli_fetch_assoc($result);
-    $contactid = $row['contactid'];
-    
-    $resultold = mysqli_query($link, "SELECT contactid FROM tblservices WHERE id = '$cserviceid'");
-    $rowold = mysqli_fetch_assoc($resultold);
-    $contactidold = $rowold['contactid'];
-    
-    if ($contactid != $contactidold) {
-        $result = mysqli_query($link, "SELECT * FROM tblteams WHERE id = '$contactid'");
-        $row = mysqli_fetch_assoc($result);
-        $personalisation['teamname'] = $row['nameen'];
-        $personalisation['team_email'] = $row['email'];
-        $newTeamEmail = $row['email'];
-        
+
         $reassignedTemplate = app_notify_template_id('notification_generic');
         $reassignedCategory = rmt_notification_template_category('reassigned');
         $reassignedTeamPersonalisation = $personalisation + [

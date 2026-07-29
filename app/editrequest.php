@@ -371,20 +371,12 @@ include 'includes/template/head.php';
 		$effectiveAtype = (int)($_SESSION['atype'] ?? 0);
 		if ($effectiveAtype === 4) {
 			$teamIds = getEffectiveTeamIds($link);
-
-			$requestContactId = 0;
-			$subserviceIdInt = (int)($row['subserviceid'] ?? 0);
-			$serviceIdInt = (int)($row['serviceid'] ?? 0);
-			if ($subserviceIdInt > 0) {
-				$contactResult = mysqli_query($link, "SELECT contactid FROM tblsubservices WHERE id = '$subserviceIdInt' LIMIT 1");
-				$contactRow = $contactResult ? mysqli_fetch_assoc($contactResult) : null;
-				$requestContactId = (int)($contactRow['contactid'] ?? 0);
-			}
-			if ($requestContactId === 0 && $serviceIdInt > 0) {
-				$contactResult = mysqli_query($link, "SELECT contactid FROM tblservices WHERE id = '$serviceIdInt' LIMIT 1");
-				$contactRow = $contactResult ? mysqli_fetch_assoc($contactResult) : null;
-				$requestContactId = (int)($contactRow['contactid'] ?? 0);
-			}
+			$requestContactId = rmt_resolve_responsible_team_id(
+				$link,
+				(int) ($row['catalogueid'] ?? 0),
+				(int) ($row['serviceid'] ?? 0),
+				(int) ($row['subserviceid'] ?? 0)
+			);
 
 			if ($requestContactId <= 0 || !in_array((string)$requestContactId, $teamIds, true)) {
 				header("location:/index.php?lang=$lang&status=accessdenied");
@@ -459,23 +451,12 @@ include 'includes/template/head.php';
 						<select class="form-control full-width" id="workerid" name="workerid" <?php echo $canEditWorkerid ? '' : 'disabled="disabled"'; ?>>
 							<option value="0"><?php echo $t['select_team_member']; ?></option>
 							<?php
-							$contactid = 0;
-							$hasCatalogueContact = function_exists('rmt_db_column_exists') && rmt_db_column_exists($link, 'tblcatalogue', 'contactid');
-							if ($hasCatalogueContact && !empty($row['catalogueid'])) {
-								$r = mysqli_query($link, "SELECT contactid FROM tblcatalogue WHERE id='" . (int)$row['catalogueid'] . "'");
-								$cr = mysqli_fetch_assoc($r);
-								$contactid = (int)($cr['contactid'] ?? 0);
-							}
-							if (!empty($row['subserviceid']) && !$contactid) {
-								$r = mysqli_query($link, "SELECT contactid FROM tblsubservices WHERE id='" . (int)$row['subserviceid'] . "'");
-								$cr = mysqli_fetch_assoc($r);
-								$contactid = (int)($cr['contactid'] ?? 0);
-							}
-							if (!$contactid && !empty($row['serviceid'])) {
-								$r = mysqli_query($link, "SELECT contactid FROM tblservices WHERE id='" . (int)$row['serviceid'] . "'");
-								$cr = mysqli_fetch_assoc($r);
-								$contactid = (int)($cr['contactid'] ?? 0);
-							}
+							$contactid = rmt_resolve_responsible_team_id(
+								$link,
+								(int) ($row['catalogueid'] ?? 0),
+								(int) ($row['serviceid'] ?? 0),
+								(int) ($row['subserviceid'] ?? 0)
+							);
 							if (!$contactid) {
 								$contactid = 1;
 							}

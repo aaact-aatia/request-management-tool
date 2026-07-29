@@ -408,6 +408,7 @@ if(mysqli_num_rows($result)>0){
 	} else {
 		$uReview = true;
 	}
+	$tarraycontactid = rmt_resolve_responsible_team_id($link, (int) $catalogueid, (int) $serviceid, (int) $subserviceid);
 	
 	if ($catalogueid!=0) {
 		// Sub-service is not empty so grab the name

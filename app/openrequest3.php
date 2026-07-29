@@ -269,40 +269,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         mysqli_stmt_close($statement);
     }
     
-    // Determine the team to notify based on first-tier catalogue ownership.
-    // Fall back to legacy service/subservice contact ownership for older data.
-    $contactid = -1;
-    $hasCatalogueContact = function_exists('rmt_db_column_exists')
-        && rmt_db_column_exists($link, 'tblcatalogue', 'contactid');
-
-    if ($hasCatalogueContact && $catalogueid && $catalogueid != 0) {
-        $row = rmt_db_fetch_one($link, 'SELECT contactid FROM tblcatalogue WHERE id = ?', 'i', [$catalogueid]);
-        if (!empty($row['contactid'])) {
-            $contactid = (int) $row['contactid'];
-        }
-    }
-    
-    if (($contactid <= 0) && $subserviceid && $subserviceid != 0) {
-        // Get serviceid from subservice
-        $row = rmt_db_fetch_one($link, 'SELECT serviceid FROM tblsubservices WHERE id = ?', 'i', [$subserviceid]);
-        if (!empty($row['serviceid'])) {
-            $serviceid = (int) $row['serviceid'];
-        }
-        
-        // Get contact from service
-        $row = rmt_db_fetch_one($link, 'SELECT contactid FROM tblservices WHERE id = ?', 'i', [$serviceid]);
-        if (!empty($row['contactid'])) {
-            $contactid = (int) $row['contactid'];
-        }
-    }
-
-    if (($contactid <= 0) && $serviceid && $serviceid != 0) {
-        // Get contact from service directly
-        $row = rmt_db_fetch_one($link, 'SELECT contactid FROM tblservices WHERE id = ?', 'i', [$serviceid]);
-        if (!empty($row['contactid'])) {
-            $contactid = (int) $row['contactid'];
-        }
-    }
+    $contactid = rmt_resolve_responsible_team_id($link, $catalogueid, $serviceid, $subserviceid);
 
     if ($contactid > 0) {
         // Get team details

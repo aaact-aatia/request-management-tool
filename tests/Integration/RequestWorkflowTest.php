@@ -79,6 +79,10 @@ check(rmt_resolve_request_subject_type($link, 102, 201, 0) === 'system', 'servic
 check(rmt_resolve_request_subject_type($link, 103, 202, 0) === 'document', 'service overrides catalogue subject type');
 check(rmt_resolve_request_subject_type($link, 103, 202, 301) === 'subject', 'subservice overrides service subject type');
 check(rmt_resolve_request_subject_type($link, 101, 0, 0) === 'subject', 'null hierarchy falls back to subject');
+check(rmt_resolve_responsible_team_id($link, 101, 0, 0) === 1, 'terminal catalogue uses catalogue team');
+check(rmt_resolve_responsible_team_id($link, 102, 201, 0) === 1, 'service inherits catalogue team');
+check(rmt_resolve_responsible_team_id($link, 103, 202, 0) === 2, 'service overrides catalogue team');
+check(rmt_resolve_responsible_team_id($link, 103, 202, 301) === 3, 'subservice overrides service team');
 
 $systemText = rmt_request_subject_text('system', 'en');
 $documentText = rmt_request_subject_text('document', 'en');

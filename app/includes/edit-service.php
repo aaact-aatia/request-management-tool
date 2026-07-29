@@ -30,14 +30,16 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	$nameen = mysqli_real_escape_string($link,$_POST['nameen']);
 	$namefr = mysqli_real_escape_string($link,$_POST['namefr']);
 	$sds = mysqli_real_escape_string($link,$_POST['sds']);
+	$contactId = (int) ($_POST['contactid'] ?? 0);
 	$requestSubjectType = rmt_normalize_request_subject_type($_POST['request_subject_type'] ?? '', true);
 	$status = isset($_POST['status']) ? 1 : 0;
 	$noerror = false;
 	
 	// Custom form validation
-	if ($nameen=="" OR $namefr=="" OR $sds=="" OR $catalogueid=="") {
+	if ($nameen=="" OR $namefr=="" OR $sds=="" OR $catalogueid=="" || ($contactId > 0 && !rmt_db_fetch_one($link, 'SELECT id FROM tblteams WHERE id = ? AND status = 1', 'i', [$contactId]))) {
 		$noerror = true;
 	}
+	$contactId = $contactId > 0 ? $contactId : null;
 	
 	// If error detected send user back to modal dialog
 	if ($noerror) {
@@ -47,9 +49,9 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	
 	$statement = rmt_db_execute(
 		$link,
-		'UPDATE tblservices SET nameen = ?, namefr = ?, sds = ?, request_subject_type = ?, status = ? WHERE id = ?',
-		'ssisii',
-		[$nameen, $namefr, $sds, $requestSubjectType, $status, $serviceid]
+		'UPDATE tblservices SET nameen = ?, namefr = ?, sds = ?, contactid = ?, request_subject_type = ?, status = ? WHERE id = ?',
+		'ssiisii',
+		[$nameen, $namefr, $sds, $contactId, $requestSubjectType, $status, $serviceid]
 	);
 	mysqli_stmt_close($statement);
 	
@@ -69,6 +71,12 @@ if(rmt_result_num_rows($result2)>0){
 		$parentRow = rmt_db_fetch_one($link, 'SELECT request_subject_type FROM tblcatalogue WHERE id = ?', 'i', [(int) $row2['catalogueid']]);
 		$parentType = rmt_normalize_request_subject_type($parentRow['request_subject_type'] ?? 'subject') ?? 'subject';
 		$parentText = rmt_request_subject_text($parentType, $lang_code)['label'];
+		$parentTeamId = rmt_resolve_responsible_team_id($link, (int) $row2['catalogueid']);
+		$parentTeam = $parentTeamId > 0
+			? rmt_db_fetch_one($link, 'SELECT nameen, namefr FROM tblteams WHERE id = ?', 'i', [$parentTeamId])
+			: null;
+		$parentTeamName = $parentTeam[$lang_code === 'fr' ? 'namefr' : 'nameen'] ?? ($lang_code === 'fr' ? 'aucune équipe' : 'no team');
+		$teams = rmt_get_active_teams($link);
 ?>
 <section id="filter-id" class="modal-dialog modal-content overlay-def">
 	<header class="modal-header">
@@ -97,6 +105,15 @@ if(rmt_result_num_rows($result2)>0){
 				<?php
 				}
 				?>
+			</select>
+		</div>
+		<div class="form-group">
+			<label for="contactid"><span class="field-name"><?= $lang_code === 'fr' ? 'Équipe responsable' : 'Responsible team' ?></span></label>
+			<select class="form-control full-width" id="contactid" name="contactid">
+				<option value=""<?= empty($row2['contactid']) ? ' selected' : '' ?>><?= htmlspecialchars(($lang_code === 'fr' ? 'Hériter du catalogue' : 'Inherit from catalogue') . ' (' . $parentTeamName . ')') ?></option>
+				<?php foreach ($teams as $team): ?>
+				<option value="<?= (int) $team['id'] ?>"<?= (int) $row2['contactid'] === (int) $team['id'] ? ' selected' : '' ?>><?= htmlspecialchars($team[$lang_code === 'fr' ? 'namefr' : 'nameen']) ?></option>
+				<?php endforeach; ?>
 			</select>
 		</div>
 		<div class="form-group">
