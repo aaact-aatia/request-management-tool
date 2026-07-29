@@ -326,6 +326,7 @@ printf 'PASS: tampered final submission creates no request\n'
 
 test_email="prepared-intake-$$@example.com"
 test_note="Client's note: keep 'quotes' exactly."
+additional_info="Accessibility testing context for request details."
 success_headers="$work_dir/success-headers.txt"
 
 request -D "$success_headers" -o /dev/null -X POST \
@@ -340,6 +341,7 @@ request -D "$success_headers" -o /dev/null -X POST \
     --data-urlencode 'departmentagency=Treasury Board of Canada Secretariat (TBS)' \
     --data-urlencode 'clientphone=613-555-0100' \
     --data-urlencode "clientnotes=${test_note}" \
+    --data-urlencode "additionalinfo=${additional_info}" \
     --data 'notification=N' \
     "${base_url}/openrequest3.php?lang=en"
 
@@ -351,14 +353,21 @@ if [[ -z "${created_id:-}" ]]; then
 fi
 printf 'PASS: prepared intake insert creates a request\n'
 
-request_values=$(db_query "SELECT CONCAT(requestid, '|', COALESCE(title, ''), '|', COALESCE(request_subject, ''), '|', COALESCE(clientphone, '')) FROM tbltriage WHERE id = ${created_id}")
+request_values=$(db_query "SELECT CONCAT(requestid, '|', COALESCE(title, ''), '|', COALESCE(request_subject, ''), '|', COALESCE(clientphone, ''), '|', COALESCE(additionalinfo, '')) FROM tbltriage WHERE id = ${created_id}")
 request_id=${request_values%%|*}
-expected_values="${request_id}|${request_id} - TBS - GC Accessibility Conformance Testing Tool|GC Accessibility Conformance Testing Tool|"
+expected_values="${request_id}|${request_id} - TBS - GC Accessibility Conformance Testing Tool|GC Accessibility Conformance Testing Tool||${additional_info}"
 if [[ "$request_values" != "$expected_values" ]]; then
-    printf 'FAIL: public intake did not store the subject and server-generated title\n' >&2
+    printf 'FAIL: public intake did not store request details and the server-generated title\n' >&2
     exit 1
 fi
-printf 'PASS: public intake stores request subject and generates title server-side\n'
+printf 'PASS: public intake stores request details and generates title server-side\n'
+
+additional_comms=$(db_query "SELECT COUNT(*) FROM tblcommlog WHERE triageid = ${created_id} AND notes = '${additional_info}'")
+if [[ "$additional_comms" != '0' ]]; then
+    printf 'FAIL: public intake stored Additional information as a communication\n' >&2
+    exit 1
+fi
+printf 'PASS: public intake keeps Additional information out of communications\n'
 
 department_note=$(db_query "SELECT notes FROM tblcommlog WHERE triageid = ${created_id} AND notes LIKE 'Department/agency:%' ORDER BY id DESC LIMIT 1")
 if [[ "$department_note" != 'Department/agency: Treasury Board of Canada Secretariat' ]]; then
@@ -384,6 +393,28 @@ docker compose exec -T web php -r '
     ];
     session_write_close();
 ' "$edit_session_id"
+
+request \
+    -H "Cookie: PHPSESSID=${edit_session_id}" \
+    "${base_url}/viewrequest.php?lang=en&rid=${created_id}" > "$work_dir/view-request.html"
+assert_contains "$work_dir/view-request.html" '<dt>Additional information</dt>' \
+    'request view labels intake Additional information in Request details'
+assert_not_contains "$work_dir/view-request.html" 'Client communications log' \
+    'request view omits the Client communications log'
+additional_occurrences=$(grep -Fc "$additional_info" "$work_dir/view-request.html")
+if [[ "$additional_occurrences" != '1' ]]; then
+    printf 'FAIL: request view displayed Additional information outside Request details\n' >&2
+    exit 1
+fi
+printf 'PASS: request view does not repeat Additional information in communications\n'
+
+request \
+    -H "Cookie: PHPSESSID=${edit_session_id}" \
+    "${base_url}/viewrequest.php?lang=fr&rid=${created_id}" > "$work_dir/view-request-fr.html"
+assert_contains "$work_dir/view-request-fr.html" '<dt>Renseignements supplémentaires</dt>' \
+    'French request view uses the intake Additional information label'
+assert_not_contains "$work_dir/view-request-fr.html" 'Journal des communications avec le client' \
+    'French request view omits the Client communications log'
 
 request \
     -H "Cookie: PHPSESSID=${edit_session_id}" \

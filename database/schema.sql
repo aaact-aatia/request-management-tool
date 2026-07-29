@@ -120,6 +120,7 @@ CREATE TABLE IF NOT EXISTS `tbltriage` (
   `requestid` varchar(50) DEFAULT NULL,
   `title` varchar(500) DEFAULT NULL,
   `request_subject` varchar(500) DEFAULT NULL,
+  `additionalinfo` text DEFAULT NULL,
   `clientlname` varchar(100) DEFAULT NULL,
   `clientfname` varchar(100) DEFAULT NULL,
   `clientemail` varchar(255) DEFAULT NULL,

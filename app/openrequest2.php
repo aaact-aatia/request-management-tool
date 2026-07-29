@@ -53,7 +53,7 @@ $translations = [
         'department_agency' => 'Ministère/organisme',
         'select_department_agency' => 'Sélectionnez un ministère ou organisme',
         'department_agency_hint' => 'Facultatif. Commencez à saisir un ministère, un organisme ou un acronyme, ou entrez une autre organisation.',
-        'additional_info' => 'Informations supplémentaires',
+        'additional_info' => 'Renseignements supplémentaires',
         'submit' => 'Soumettre'
     ]
 ];

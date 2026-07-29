@@ -187,13 +187,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Insert the full triage record in one shot
     $triageColumns = [
         'requestid', 'creatorid', 'catalogueid', 'serviceid', 'subserviceid', 'statusid',
-        'datereceived', 'slatimer', 'title', 'request_subject', 'clientlname', 'clientfname',
+        'datereceived', 'slatimer', 'title', 'request_subject', 'additionalinfo', 'clientlname', 'clientfname',
         'clientemail', 'clientphone', 'daterequired', 'bdm', 'attach1', 'attach2', 'attach3', 'status'
     ];
-    $triageTypes = 'siiiiisssssssssssssi';
+    $triageTypes = 'siiiiissssssssssssssi';
     $triageParams = [
         $nrequestid, $userid, $catalogueid, $serviceid, $subserviceid, $statusid,
-        $dateopened, $slatimer, $requesttitle, $requestSubject, $clientlname, $clientfname,
+        $dateopened, $slatimer, $requesttitle, $requestSubject, $additionalinfo, $clientlname, $clientfname,
         $clientemail, $clientphone, $daterequiredu ? null : $daterequired,
         $bdm, $attach1, $attach2, $attach3, $status
     ];
@@ -258,17 +258,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         mysqli_stmt_close($statement);
     }
 
-    if (hasValue($additionalinfo)) {
-        $statement = rmt_db_execute(
-            $link,
-            'INSERT INTO tblcommlog (`triageid`, `dateadded`, `notes`, `creatorid`, `status`)
-             VALUES (?, ?, ?, ?, ?)',
-            'issii',
-            [$latestid, $datereceived, $additionalinfo, $creatorid, $status]
-        );
-        mysqli_stmt_close($statement);
-    }
-    
     $contactid = rmt_resolve_responsible_team_id($link, $catalogueid, $serviceid, $subserviceid);
 
     if ($contactid > 0) {
