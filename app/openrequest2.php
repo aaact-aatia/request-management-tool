@@ -53,7 +53,7 @@ $translations = [
         'department_agency' => 'Ministère/organisme',
         'select_department_agency' => 'Sélectionnez un ministère ou organisme',
         'department_agency_hint' => 'Facultatif. Commencez à saisir un ministère, un organisme ou un acronyme, ou entrez une autre organisation.',
-        'additional_info' => 'Informations supplémentaires',
+        'additional_info' => 'Renseignements supplémentaires',
         'submit' => 'Soumettre'
     ]
 ];
@@ -92,6 +92,8 @@ if ($selection === null) {
 $catalogueid = $selection['catalogueid'];
 $serviceid = $selection['serviceid'];
 $subserviceid = $selection['subserviceid'];
+$requestSubjectType = rmt_resolve_request_subject_type($link, $catalogueid, $serviceid, $subserviceid);
+$requestSubjectText = rmt_request_subject_text($requestSubjectType, $lang);
 $departments = rmt_get_department_directory($link, $lang);
 $selectedDepartment = (string) ($draftData['departmentagency'] ?? '');
 $departmentOptions = rmt_department_directory_options($departments, $selectedDepartment);
@@ -124,15 +126,15 @@ include 'includes/template/head.php';
         if ($subserviceid === 95 || $subserviceid === 96) {
             echo renderDateInput('firstsprintstartdate', $t['first_sprint_date'], $draftData['firstsprintstartdate'] ?? '', true);
             echo renderDateInput('firstsprintenddate', $t['last_sprint_date'], $draftData['firstsprintenddate'] ?? '', true);
-            echo renderTextInput('sprintschedule', $t['sprint_schedule'], $draftData['sprintschedule'] ?? '', true, false, 'url');
-            echo renderTextInput('sprintdefects', $t['sprint_defects'], $draftData['sprintdefects'] ?? '', true, false, 'url');
+            echo renderTextInput('sprintschedule', $t['sprint_schedule'], $draftData['sprintschedule'] ?? '', true, false, 'url', '', true);
+            echo renderTextInput('sprintdefects', $t['sprint_defects'], $draftData['sprintdefects'] ?? '', true, false, 'url', '', true);
         }
 
-        echo renderTextInput('clientfname', $t['first_name'], $draftData['clientfname'] ?? '', true, false, 'text', 'autocomplete="given-name"');
-        echo renderTextInput('clientlname', $t['last_name'], $draftData['clientlname'] ?? '', true, false, 'text', 'autocomplete="family-name"');
-        echo renderTextInput('clientemail', $t['email'], $draftData['clientemail'] ?? '', true, false, 'email', 'autocomplete="email"');
+        echo renderTextInput('clientfname', $t['first_name'], $draftData['clientfname'] ?? '', true, false, 'text', 'autocomplete="given-name"', true);
+        echo renderTextInput('clientlname', $t['last_name'], $draftData['clientlname'] ?? '', true, false, 'text', 'autocomplete="family-name"', true);
+        echo renderTextInput('clientemail', $t['email'], $draftData['clientemail'] ?? '', true, false, 'email', 'autocomplete="email"', true);
         if ($departments === []) {
-            echo renderTextInput('departmentagency', $t['department_agency'], $selectedDepartment, false, false, 'text', 'autocomplete="organization" aria-describedby="departmentagency-hint"');
+            echo renderTextInput('departmentagency', $t['department_agency'], $selectedDepartment, false, false, 'text', 'autocomplete="off" aria-describedby="departmentagency-hint"', true);
             echo '<p id="departmentagency-hint">' . htmlspecialchars($t['department_agency_hint']) . '</p>';
         } else {
             ?>
@@ -140,12 +142,12 @@ include 'includes/template/head.php';
                 <label for="departmentagency"><span class="field-name"><?= htmlspecialchars($t['department_agency']) ?></span></label>
                 <input
                     type="text"
-                    class="form-control"
+                    class="form-control full-width"
                     id="departmentagency"
                     name="departmentagency"
                     list="departmentagency-options"
                     value="<?= htmlspecialchars($departmentInputValue, ENT_QUOTES, 'UTF-8') ?>"
-                    autocomplete="organization"
+                    autocomplete="off"
                     aria-describedby="departmentagency-hint"
                     placeholder="<?= htmlspecialchars($t['select_department_agency'], ENT_QUOTES, 'UTF-8') ?>"
                 >
@@ -158,7 +160,28 @@ include 'includes/template/head.php';
             </div>
             <?php
         }
-        echo renderTextarea('additionalinfo', $t['additional_info'], $draftData['additionalinfo'] ?? '', false);
+        ?>
+        <section>
+            <h2><?= htmlspecialchars($requestSubjectText['heading']) ?></h2>
+            <div class="form-group">
+                <label for="request_subject">
+                    <span class="field-name"><?= htmlspecialchars($requestSubjectText['label']) ?> <strong>(<?= $lang === 'fr' ? 'obligatoire' : 'required' ?>)</strong></span>
+                </label>
+                <p id="request-subject-help"><?= htmlspecialchars($requestSubjectText['help']) ?></p>
+                <input
+                    type="text"
+                    class="form-control full-width"
+                    id="request_subject"
+                    name="request_subject"
+                    value="<?= htmlspecialchars((string) ($draftData['request_subject'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
+                    maxlength="500"
+                    aria-describedby="request-subject-help"
+                    required
+                >
+            </div>
+        </section>
+        <?php
+        echo renderTextarea('additionalinfo', $t['additional_info'], $draftData['additionalinfo'] ?? '', false, false, 10, true);
         ?>
 
         <div class="form-group form-buttons">

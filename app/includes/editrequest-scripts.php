@@ -25,6 +25,37 @@ document.addEventListener('DOMContentLoaded', function () {
             endDateInput.min = this.value;
         });
     }
+
+    const departmentInput = document.getElementById('departmentagency');
+    const departmentOptions = document.getElementById('departmentagency-options');
+    const departmentReview = document.getElementById('departmentagency-review');
+    if (departmentInput && departmentOptions && departmentReview && !departmentInput.readOnly) {
+        const recognizedDepartments = new Set();
+        Array.from(departmentOptions.options).forEach(function (option) {
+            [option.value, option.dataset.name, option.dataset.abbreviation].forEach(function (value) {
+                if (value && value.trim() !== '') {
+                    recognizedDepartments.add(value.trim().toLocaleLowerCase());
+                }
+            });
+        });
+
+        const updateDepartmentReview = function () {
+            const value = departmentInput.value.trim().toLocaleLowerCase();
+            const needsReview = value !== '' && !recognizedDepartments.has(value);
+            departmentReview.hidden = !needsReview;
+
+            const describedBy = new Set((departmentInput.getAttribute('aria-describedby') || '').split(/\s+/).filter(Boolean));
+            if (needsReview) {
+                describedBy.add('departmentagency-review');
+            } else {
+                describedBy.delete('departmentagency-review');
+            }
+            departmentInput.setAttribute('aria-describedby', Array.from(describedBy).join(' '));
+        };
+
+        departmentInput.addEventListener('input', updateDepartmentReview);
+        departmentInput.addEventListener('change', updateDepartmentReview);
+    }
 });
 </script>
 

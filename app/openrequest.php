@@ -115,10 +115,10 @@ include 'includes/template/head.php';
                 class="wb-fieldflow"
                 data-wb-fieldflow='<?= fieldFlowActions([
                     'noForm' => true,
-                    'defaultselectedlabel' => $t['select_catalogue'],
+                    'defaultselectedlabel' => $t['intake_select_catalogue'],
                 ]) ?>'
             >
-                <p><?= htmlspecialchars($t['catalogue_name']) ?></p>
+                <p><?= htmlspecialchars($t['intake_catalogue_question']) ?></p>
                 <ul>
                     <?php foreach ($hierarchy as $catalogueId => $catalogue): ?>
                     <?php
@@ -128,7 +128,7 @@ include 'includes/template/head.php';
                             [
                                 'action' => 'append',
                                 'source' => "#fieldflow-services-{$catalogueId}",
-                                'defaultselectedlabel' => $t['select_service'],
+                                'defaultselectedlabel' => $t['intake_select_service'],
                             ],
                         ];
                     } else {
@@ -147,7 +147,7 @@ include 'includes/template/head.php';
             <?php foreach ($hierarchy as $catalogueId => $catalogue): ?>
             <?php if (!empty($catalogue['services'])): ?>
             <div id="fieldflow-services-<?= $catalogueId ?>" class="hidden">
-                <p><?= htmlspecialchars($t['service_name']) ?></p>
+                <p><?= htmlspecialchars($t['intake_service_question']) ?></p>
                 <ul>
                     <?php foreach ($catalogue['services'] as $serviceId => $service): ?>
                     <?php
@@ -158,7 +158,7 @@ include 'includes/template/head.php';
                         $serviceActions[] = [
                             'action' => 'append',
                             'source' => "#fieldflow-subservices-{$serviceId}",
-                            'defaultselectedlabel' => $t['select_subservice'],
+                            'defaultselectedlabel' => $t['intake_select_subservice'],
                         ];
                     }
                     ?>
@@ -170,7 +170,7 @@ include 'includes/template/head.php';
             <?php foreach ($catalogue['services'] as $serviceId => $service): ?>
             <?php if (!empty($service['subservices'])): ?>
             <div id="fieldflow-subservices-<?= $serviceId ?>" class="hidden">
-                <p><?= htmlspecialchars($t['subservice_name']) ?></p>
+                <p><?= htmlspecialchars($t['intake_subservice_question']) ?></p>
                 <ul>
                     <?php foreach ($service['subservices'] as $subserviceId => $subserviceName): ?>
                     <li data-wb-fieldflow='<?= fieldFlowActions([

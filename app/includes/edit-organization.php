@@ -53,23 +53,23 @@ $selectedStatus = (int) $organization['status'];
 
             <div class="form-group">
                 <label for="edit-organization-nameen"><span class="field-name"><?= htmlspecialchars($langFile['organizations_name_en']) ?> <strong>(<?= htmlspecialchars($langFile['required']) ?>)</strong></span></label>
-                <input class="form-control" id="edit-organization-nameen" name="nameen" type="text" lang="en" maxlength="255" required value="<?= htmlspecialchars((string) $organization['nameen'], ENT_QUOTES, 'UTF-8') ?>">
+                <input class="form-control full-width" id="edit-organization-nameen" name="nameen" type="text" lang="en" maxlength="255" required value="<?= htmlspecialchars((string) $organization['nameen'], ENT_QUOTES, 'UTF-8') ?>">
             </div>
             <div class="form-group">
                 <label for="edit-organization-namefr"><span class="field-name"><?= htmlspecialchars($langFile['organizations_name_fr']) ?> <strong>(<?= htmlspecialchars($langFile['required']) ?>)</strong></span></label>
-                <input class="form-control" id="edit-organization-namefr" name="namefr" type="text" lang="fr" maxlength="255" required value="<?= htmlspecialchars((string) $organization['namefr'], ENT_QUOTES, 'UTF-8') ?>">
+                <input class="form-control full-width" id="edit-organization-namefr" name="namefr" type="text" lang="fr" maxlength="255" required value="<?= htmlspecialchars((string) $organization['namefr'], ENT_QUOTES, 'UTF-8') ?>">
             </div>
             <div class="form-group">
                 <label for="edit-organization-abbreviationen"><?= htmlspecialchars($langFile['organizations_abbreviation_en']) ?></label>
-                <input class="form-control" id="edit-organization-abbreviationen" name="abbreviationen" type="text" lang="en" maxlength="50" value="<?= htmlspecialchars((string) $organization['abbreviationen'], ENT_QUOTES, 'UTF-8') ?>">
+                <input class="form-control full-width" id="edit-organization-abbreviationen" name="abbreviationen" type="text" lang="en" maxlength="50" value="<?= htmlspecialchars((string) $organization['abbreviationen'], ENT_QUOTES, 'UTF-8') ?>">
             </div>
             <div class="form-group">
                 <label for="edit-organization-abbreviationfr"><?= htmlspecialchars($langFile['organizations_abbreviation_fr']) ?></label>
-                <input class="form-control" id="edit-organization-abbreviationfr" name="abbreviationfr" type="text" lang="fr" maxlength="50" value="<?= htmlspecialchars((string) $organization['abbreviationfr'], ENT_QUOTES, 'UTF-8') ?>">
+                <input class="form-control full-width" id="edit-organization-abbreviationfr" name="abbreviationfr" type="text" lang="fr" maxlength="50" value="<?= htmlspecialchars((string) $organization['abbreviationfr'], ENT_QUOTES, 'UTF-8') ?>">
             </div>
             <div class="form-group">
                 <label for="edit-organization-status"><?= htmlspecialchars($langFile['organizations_status']) ?></label>
-                <select class="form-control" id="edit-organization-status" name="record_status">
+                <select class="form-control full-width" id="edit-organization-status" name="record_status">
                     <option value="1" <?= $selectedStatus === 1 ? 'selected' : '' ?>><?= htmlspecialchars($langFile['organizations_active']) ?></option>
                     <option value="0" <?= $selectedStatus === 0 ? 'selected' : '' ?>><?= htmlspecialchars($langFile['organizations_inactive']) ?></option>
                 </select>

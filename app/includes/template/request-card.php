@@ -19,7 +19,7 @@ $tags = $requestCard['tags'] ?? '';
 $panelClass = $requestCard['panelClass'] ?? 'panel-default';
 $requestUrl = $requestCard['requestUrl'] ?? '#';
 $requestCode = $requestCard['requestCode'] ?? '';
-$title = $requestCard['title'] ?? '';
+$title = trim((string) ($requestCard['title'] ?? ''));
 $statusPrefix = $requestCard['statusPrefix'] ?? '';
 $statusText = $requestCard['statusText'] ?? '';
 $statusLabelClass = $requestCard['statusLabelClass'] ?? 'label-default';
@@ -36,10 +36,9 @@ $footerHtml = $requestCard['footerHtml'] ?? '';
 <div class="col-sm-6 col-md-4 mrgn-bttm-md" data-wb-tags="<?= htmlspecialchars($tags) ?>">
 	<div class="panel <?= htmlspecialchars($panelClass) ?> hght-inhrt">
 		<div class="panel-heading">
-			<h3 class="h5 mrgn-tp-sm">
-				<a href="<?= htmlspecialchars($requestUrl) ?>"><?= htmlspecialchars($requestCode) ?></a>
+			<h3 class="h5 mrgn-tp-sm request-card-title">
+				<a href="<?= htmlspecialchars($requestUrl) ?>"><?= htmlspecialchars($title !== '' ? $title : $requestCode) ?></a>
 			</h3>
-			<p><?= htmlspecialchars($title) ?></p>
 			<p><?= htmlspecialchars($statusPrefix) ?>: <span class="label <?= htmlspecialchars($statusLabelClass) ?>"><?= htmlspecialchars($statusText) ?></span></p>
 			<?php if ($showSurveySent || $showSurveyAnswered): ?>
 				<p>

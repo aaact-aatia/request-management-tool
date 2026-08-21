@@ -22,31 +22,15 @@ $canEditSlaTimer = $canFullFieldEdit || $isManagerAccount;
 
 <div class="form-group">
     <label for="workerid"><span class="field-name"><?php echo $t['assigned_team_member']; ?>:</span></label>
-    <select class="form-control" id="workerid" name="workerid" <?php echo $canEditWorkerid ? '' : 'disabled="disabled"'; ?>>
+    <select class="form-control full-width" id="workerid" name="workerid" <?php echo $canEditWorkerid ? '' : 'disabled="disabled"'; ?>>
         <option value="0"><?php echo $t['select_team_member']; ?></option>
         <?php 
-        // Resolve the contact ID for this request from first-tier catalogue.
-        // Fall back to legacy service/subservice ownership for older records.
-        $contactid = 0;
-        $hasCatalogueContact = function_exists('rmt_db_column_exists')
-            && rmt_db_column_exists($link, 'tblcatalogue', 'contactid');
-        if ($hasCatalogueContact && !empty($row['catalogueid'])) {
-            $r = mysqli_query($link, "SELECT contactid FROM tblcatalogue WHERE id='" . (int)$row['catalogueid'] . "'");
-            $cr = mysqli_fetch_assoc($r);
-            $contactid = (int)($cr['contactid'] ?? 0);
-        }
-        if (!empty($row['subserviceid'])) {
-            if (!$contactid) {
-                $r = mysqli_query($link, "SELECT contactid FROM tblsubservices WHERE id='" . (int)$row['subserviceid'] . "'");
-                $cr = mysqli_fetch_assoc($r);
-                $contactid = (int)($cr['contactid'] ?? 0);
-            }
-        }
-        if (!$contactid && !empty($row['serviceid'])) {
-            $r = mysqli_query($link, "SELECT contactid FROM tblservices WHERE id='" . (int)$row['serviceid'] . "'");
-            $cr = mysqli_fetch_assoc($r);
-            $contactid = (int)($cr['contactid'] ?? 0);
-        }
+        $contactid = rmt_resolve_responsible_team_id(
+            $link,
+            (int) ($row['catalogueid'] ?? 0),
+            (int) ($row['serviceid'] ?? 0),
+            (int) ($row['subserviceid'] ?? 0)
+        );
 
         // Default to AAACT (contactid=1) when service has no team assignment
         if (!$contactid) {

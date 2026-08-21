@@ -81,19 +81,19 @@ if(rmt_result_num_rows($result2)>0){
 		<form method="post" action="/includes/edit-teams.php?id=<?php echo $row2['id']; ?>">
 		<div class="form-group">
 			<label for="nameen"><span class="field-name"><?php echo $lang_code === 'en' ? 'Team name (english)' : 'Nom de l\'équipe (anglais)'; ?>: <strong>(<?php echo $lang_code === 'en' ? 'required' : 'requis'; ?>)</strong></span></label>
-				<input type="text" class="form-control" id="nameen" name="nameen" value="<?php echo htmlspecialchars($row2['nameen']); ?>" required>
+				<input type="text" class="form-control full-width" id="nameen" name="nameen" value="<?php echo htmlspecialchars($row2['nameen']); ?>" required>
 		</div>
 		<div class="form-group">
 			<label for="namefr"><span class="field-name"><?php echo $lang_code === 'en' ? 'Team name (french)' : 'Nom de l\'équipe (français)'; ?>: <strong>(<?php echo $lang_code === 'en' ? 'required' : 'requis'; ?>)</strong></span></label>
-				<input type="text" class="form-control" id="namefr" name="namefr" value="<?php echo htmlspecialchars($row2['namefr']); ?>" required>
+				<input type="text" class="form-control full-width" id="namefr" name="namefr" value="<?php echo htmlspecialchars($row2['namefr']); ?>" required>
 		</div>
 		<div class="form-group">
 			<label for="email"><span class="field-name"><?php echo $lang_code === 'en' ? 'Team email' : 'Courriel de l\'équipe'; ?>: <strong>(<?php echo $lang_code === 'en' ? 'required' : 'requis'; ?>)</strong></span></label>
-				<input type="email" class="form-control" id="email" name="email" value="<?php echo htmlspecialchars($row2['email']); ?>" required>
+				<input type="email" class="form-control full-width" id="email" name="email" value="<?php echo htmlspecialchars($row2['email']); ?>" required>
 		</div>
 		<div class="form-group">
 			<label for="team_lead_user_id"><span class="field-name"><?php echo $lang_code === 'en' ? 'Team Lead' : 'Chef d\'équipe'; ?>:</span></label>
-			<select class="form-control" id="team_lead_user_id" name="team_lead_user_id">
+			<select class="form-control full-width" id="team_lead_user_id" name="team_lead_user_id">
 				<option value=""><?php echo $lang_code === 'en' ? 'None assigned' : 'Aucun assigné'; ?></option>
 				<?php
 				$leadSql = "SELECT id, firstname, lastname FROM tblusers WHERE atype='4' AND status='1' ORDER BY firstname ASC, lastname ASC";

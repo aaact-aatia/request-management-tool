@@ -375,6 +375,89 @@ function rmt_db_fetch_one(mysqli $link, string $sql, string $types = '', array $
     return $row ?: null;
 }
 
+function rmt_normalize_request_subject_type(?string $type, bool $allowNull = false): ?string {
+    $type = trim((string) $type);
+    if ($allowNull && $type === '') {
+        return null;
+    }
+
+    return in_array($type, ['system', 'document', 'subject'], true) ? $type : 'subject';
+}
+
+function rmt_resolve_request_subject_type(
+    mysqli $link,
+    int $catalogueId,
+    int $serviceId = 0,
+    int $subserviceId = 0
+): string {
+    $row = rmt_db_fetch_one(
+        $link,
+        'SELECT COALESCE(ss.request_subject_type, s.request_subject_type, c.request_subject_type, \'subject\') AS resolved_type
+         FROM tblcatalogue c
+         LEFT JOIN tblservices s ON s.id = ? AND s.catalogueid = c.id
+         LEFT JOIN tblsubservices ss ON ss.id = ? AND ss.serviceid = s.id
+         WHERE c.id = ?',
+        'iii',
+        [$serviceId, $subserviceId, $catalogueId]
+    );
+
+    return rmt_normalize_request_subject_type($row['resolved_type'] ?? 'subject') ?? 'subject';
+}
+
+function rmt_resolve_responsible_team_id(
+    mysqli $link,
+    int $catalogueId,
+    int $serviceId = 0,
+    int $subserviceId = 0
+): int {
+    $row = rmt_db_fetch_one(
+        $link,
+        'SELECT COALESCE(NULLIF(ss.contactid, 0), NULLIF(s.contactid, 0), NULLIF(c.contactid, 0), 0) AS team_id
+         FROM tblcatalogue c
+         LEFT JOIN tblservices s ON s.id = ? AND s.catalogueid = c.id
+         LEFT JOIN tblsubservices ss ON ss.id = ? AND ss.serviceid = s.id
+         WHERE c.id = ?',
+        'iii',
+        [$serviceId, $subserviceId, $catalogueId]
+    );
+
+    return max(0, (int) ($row['team_id'] ?? 0));
+}
+
+function rmt_get_active_teams(mysqli $link): array {
+    $result = rmt_admin_query($link, 'SELECT id, nameen, namefr FROM tblteams WHERE status = 1 ORDER BY nameen, namefr');
+    $teams = [];
+
+    while ($team = rmt_result_fetch_array($result)) {
+        $teams[] = $team;
+    }
+
+    return $teams;
+}
+
+function rmt_request_subject_text(string $type, string $lang): array {
+    $type = rmt_normalize_request_subject_type($type) ?? 'subject';
+    $translations = [
+        'en' => [
+            'system' => ['heading' => 'System information', 'label' => 'System name', 'help' => 'What is the full name of the system?'],
+            'document' => ['heading' => 'Document information', 'label' => 'Document title', 'help' => 'What is the title of the document?'],
+            'subject' => ['heading' => 'Request information', 'label' => 'Subject', 'help' => 'What is the subject of your request?'],
+        ],
+        'fr' => [
+            'system' => ['heading' => 'Renseignements sur le système', 'label' => 'Nom du système', 'help' => 'Quel est le nom complet du système?'],
+            'document' => ['heading' => 'Renseignements sur le document', 'label' => 'Titre du document', 'help' => 'Quel est le titre du document?'],
+            'subject' => ['heading' => 'Renseignements sur la demande', 'label' => 'Objet', 'help' => 'Quel est l’objet de votre demande?'],
+        ],
+    ];
+
+    return $translations[$lang === 'fr' ? 'fr' : 'en'][$type];
+}
+
+function rmt_generate_request_title(string $requestId, string $organization, string $requestSubject): string {
+    $title = trim($requestId) . ' - ' . trim($organization) . ' - ' . trim($requestSubject);
+    return function_exists('mb_substr') ? mb_substr($title, 0, 500, 'UTF-8') : substr($title, 0, 500);
+}
+
 function getDropdownOptions($link, $table, $lang = 'en', $where = "status='1'", $orderBy = null) {
     $nameField = $lang === 'fr' ? 'namefr' : 'nameen';
     $orderField = $orderBy ?? $nameField;
@@ -1191,17 +1274,18 @@ function getTeamMembersByContact($link, $contactid) {
 // HTML RENDERING HELPERS
 // ============================================================================
 
-function renderTextInput($id, $label, $value = '', $required = false, $readonly = false, $type = 'text', $extraAttrs = '') {
+function renderTextInput($id, $label, $value = '', $required = false, $readonly = false, $type = 'text', $extraAttrs = '', $fullWidth = false) {
     $requiredAttr = $required ? 'required' : '';
     $readonlyAttr = $readonly ? 'readonly="readonly"' : '';
     $requiredText = (($_SESSION['lang'] ?? 'en') === 'fr') ? 'obligatoire' : 'required';
     $requiredLabel = $required ? " <strong>($requiredText)</strong>" : '';
     $escapedValue = htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8');
+    $controlClass = $fullWidth ? 'form-control full-width' : 'form-control';
     
     return <<<HTML
     <div class="form-group">
         <label for="$id"><span class="field-name">$label$requiredLabel</span></label>
-        <input type="$type" class="form-control" id="$id" name="$id" 
+        <input type="$type" class="$controlClass" id="$id" name="$id"
                value="$escapedValue" $requiredAttr $readonlyAttr $extraAttrs>
     </div>
 HTML;
@@ -1225,32 +1309,34 @@ function renderDateInput($id, $label, $value = '', $required = false, $min = nul
 HTML;
 }
 
-function renderTextarea($id, $label, $value = '', $required = false, $readonly = false, $rows = 10) {
+function renderTextarea($id, $label, $value = '', $required = false, $readonly = false, $rows = 10, $fullWidth = false) {
     $requiredAttr = $required ? 'required' : '';
     $readonlyAttr = $readonly ? 'readonly' : '';
     $requiredText = (($_SESSION['lang'] ?? 'en') === 'fr') ? 'obligatoire' : 'required';
     $requiredLabel = $required ? " <strong>($requiredText)</strong>" : '';
     $escapedValue = htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8');
+    $controlClass = $fullWidth ? 'form-control full-width' : 'form-control';
     
     return <<<HTML
     <div class="form-group">
         <label for="$id"><span class="field-name">$label$requiredLabel</span></label>
-        <textarea class="form-control" id="$id" name="$id" cols="50" rows="$rows" 
+        <textarea class="$controlClass" id="$id" name="$id" cols="50" rows="$rows"
                   $requiredAttr $readonlyAttr>$escapedValue</textarea>
     </div>
 HTML;
 }
 
-function renderSelect($id, $label, $options, $selectedValue = '', $required = false, $emptyText = 'Make your selection', $disabled = false) {
+function renderSelect($id, $label, $options, $selectedValue = '', $required = false, $emptyText = 'Make your selection', $disabled = false, $fullWidth = false) {
     $requiredAttr = $required ? 'required' : '';
     $requiredText = (($_SESSION['lang'] ?? 'en') === 'fr') ? 'obligatoire' : 'required';
     $requiredLabel = $required ? " <strong>($requiredText)</strong>" : '';
     $disabledAttr = $disabled ? 'disabled="disabled"' : '';
+    $controlClass = $fullWidth ? 'form-control full-width' : 'form-control';
     
     $html = <<<HTML
     <div class="form-group">
         <label for="$id"><span class="field-name">$label$requiredLabel</span></label>
-        <select class="form-control" id="$id" name="$id" $requiredAttr $disabledAttr>
+        <select class="$controlClass" id="$id" name="$id" $requiredAttr $disabledAttr>
             <option value="">$emptyText</option>
 HTML;
     

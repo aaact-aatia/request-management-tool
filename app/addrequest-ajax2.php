@@ -31,7 +31,7 @@ $result = mysqli_query($link,$sql);
 if(mysqli_num_rows($result)>0){
 ?>
 				<label for="subserviceid"><span class="field-name"><?= htmlspecialchars($translations['subservice_name'] ?? 'Sub-service name:') ?></span></label>
-				<select class="form-control" id="subserviceid" name="subserviceid">
+				<select class="form-control full-width" id="subserviceid" name="subserviceid">
 					<option value=""><?= htmlspecialchars($translations['select_subservice'] ?? 'Select a sub-service name') ?></option>
 					<?php 
 					$sql2 = "SELECT * FROM tblsubservices WHERE serviceid='$serviceid' AND status='1' ORDER BY $orderBy ASC";

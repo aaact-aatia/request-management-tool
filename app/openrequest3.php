@@ -42,16 +42,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $statusid = 1; // Initial status
     
     // Grab all form fields using helper
-    $requesttitle = '';
+    $requestSubject = trim((string) ($_POST['request_subject'] ?? ''));
     $audienceid = (int) ($_POST['audience'] ?? 0);
     $clientlname = trim((string) ($_POST['clientlname'] ?? ''));
     $clientfname = trim((string) ($_POST['clientfname'] ?? ''));
     $clientemail = trim((string) ($_POST['clientemail'] ?? ''));
     $submittedDepartment = trim((string) ($_POST['departmentagency'] ?? ''));
-    $departmentagency = rmt_department_directory_official_title(
-        rmt_get_department_directory($link, $lang),
-        $submittedDepartment
-    );
+    $departments = rmt_get_department_directory($link, $lang);
+    $departmentagency = rmt_department_directory_official_title($departments, $submittedDepartment);
     $clientphone = '';
     $requestlang = app_normalize_language($lang);
     $bdm = trim((string) ($_POST['bdm'] ?? '0'));
@@ -94,9 +92,39 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $contactname = "";
     $contactemail = "";
     
-    // Validate required fields
-    if (!hasValue($clientlname) || !hasValue($clientfname) || !hasValue($clientemail)) {
-        header("location:/openrequest.php?lang=" . $lang . "&status=failed");
+    $draftData = [
+        'catalogueid' => $_POST['catalogueid'] ?? '',
+        'serviceid' => $_POST['serviceid'] ?? '',
+        'subserviceid' => $_POST['subserviceid'] ?? '',
+        'subserviceid2' => $_POST['subserviceid2'] ?? '',
+        'request_subject' => $_POST['request_subject'] ?? '',
+        'audience' => $_POST['audience'] ?? '',
+        'clientlname' => $_POST['clientlname'] ?? '',
+        'clientfname' => $_POST['clientfname'] ?? '',
+        'clientemail' => $_POST['clientemail'] ?? '',
+        'departmentagency' => $_POST['departmentagency'] ?? '',
+        'daterequired' => $_POST['daterequired'] ?? '',
+        'bdm' => $_POST['bdm'] ?? '',
+        'attach1' => $_POST['attach1'] ?? '',
+        'attach2' => $_POST['attach2'] ?? '',
+        'attach3' => $_POST['attach3'] ?? '',
+        'clientnotes' => $_POST['clientnotes'] ?? '',
+        'additionalinfo' => $_POST['additionalinfo'] ?? '',
+        'notification' => $_POST['notification'] ?? '',
+        'afterfact' => $_POST['afterfact'] ?? '',
+        'sprintdefects' => $_POST['sprintdefects'] ?? '',
+        'sprintschedule' => $_POST['sprintschedule'] ?? '',
+        'firstsprintstartdate' => $_POST['firstsprintstartdate'] ?? '',
+        'firstsprintenddate' => $_POST['firstsprintenddate'] ?? '',
+        'language' => $_POST['language'] ?? '',
+    ];
+
+    // Validate required fields on the server and restore the completed form on failure.
+    $requestSubjectLength = function_exists('mb_strlen') ? mb_strlen($requestSubject, 'UTF-8') : strlen($requestSubject);
+    if (!hasValue($requestSubject) || $requestSubjectLength > 500
+        || !hasValue($clientlname) || !hasValue($clientfname) || !hasValue($clientemail)) {
+        $_SESSION['openrequest_draft'] = $draftData;
+        header("location:/openrequest2.php?lang=" . $lang . "&status=failed");
         exit();
     }
     
@@ -113,6 +141,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     );
     $sequence = ($seqRow['max_seq'] ?? 0) + 1;
     $nrequestid = sprintf('REQ-%s-%03d', $year, $sequence);
+    $organizationTitleComponent = rmt_department_directory_title_component($departments, $submittedDepartment, $lang);
+    $requesttitle = rmt_generate_request_title($nrequestid, $organizationTitleComponent, $requestSubject);
     $dateopened = date('Y-m-d');
     $slatimer = date('Y-m-d');
     $userid = isset($_SESSION['pid']) && !empty($_SESSION['pid']) ? (int) $_SESSION['pid'] : null;
@@ -122,31 +152,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_FILES['fileToUpload'])) {
         $validatedUploads = rmt_validate_uploaded_files($_FILES['fileToUpload'], $lang);
         if (!empty($validatedUploads['errors'])) {
-            $_SESSION['openrequest_draft'] = [
-                'catalogueid' => $_POST['catalogueid'] ?? '',
-                'serviceid' => $_POST['serviceid'] ?? '',
-                'subserviceid' => $_POST['subserviceid'] ?? '',
-                'subserviceid2' => $_POST['subserviceid2'] ?? '',
-                'audience' => $_POST['audience'] ?? '',
-                'clientlname' => $_POST['clientlname'] ?? '',
-                'clientfname' => $_POST['clientfname'] ?? '',
-                'clientemail' => $_POST['clientemail'] ?? '',
-                'departmentagency' => $_POST['departmentagency'] ?? '',
-                'daterequired' => $_POST['daterequired'] ?? '',
-                'bdm' => $_POST['bdm'] ?? '',
-                'attach1' => $_POST['attach1'] ?? '',
-                'attach2' => $_POST['attach2'] ?? '',
-                'attach3' => $_POST['attach3'] ?? '',
-                'clientnotes' => $_POST['clientnotes'] ?? '',
-                'additionalinfo' => $_POST['additionalinfo'] ?? '',
-                'notification' => $_POST['notification'] ?? '',
-                'afterfact' => $_POST['afterfact'] ?? '',
-                'sprintdefects' => $_POST['sprintdefects'] ?? '',
-                'sprintschedule' => $_POST['sprintschedule'] ?? '',
-                'firstsprintstartdate' => $_POST['firstsprintstartdate'] ?? '',
-                'firstsprintenddate' => $_POST['firstsprintenddate'] ?? '',
-                'language' => $_POST['language'] ?? '',
-            ];
+            $_SESSION['openrequest_draft'] = $draftData;
             $_SESSION['openrequest_upload_error_message'] = implode(' ', $validatedUploads['errors']);
             header("location:/openrequest2.php?lang=" . $lang);
             exit();
@@ -181,13 +187,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Insert the full triage record in one shot
     $triageColumns = [
         'requestid', 'creatorid', 'catalogueid', 'serviceid', 'subserviceid', 'statusid',
-        'datereceived', 'slatimer', 'title', 'clientlname', 'clientfname',
+        'datereceived', 'slatimer', 'title', 'request_subject', 'additionalinfo', 'clientlname', 'clientfname',
         'clientemail', 'clientphone', 'daterequired', 'bdm', 'attach1', 'attach2', 'attach3', 'status'
     ];
-    $triageTypes = 'siiiiissssssssssssi';
+    $triageTypes = 'siiiiissssssssssssssi';
     $triageParams = [
         $nrequestid, $userid, $catalogueid, $serviceid, $subserviceid, $statusid,
-        $dateopened, $slatimer, $requesttitle, $clientlname, $clientfname,
+        $dateopened, $slatimer, $requesttitle, $requestSubject, $additionalinfo, $clientlname, $clientfname,
         $clientemail, $clientphone, $daterequiredu ? null : $daterequired,
         $bdm, $attach1, $attach2, $attach3, $status
     ];
@@ -252,51 +258,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         mysqli_stmt_close($statement);
     }
 
-    if (hasValue($additionalinfo)) {
-        $statement = rmt_db_execute(
-            $link,
-            'INSERT INTO tblcommlog (`triageid`, `dateadded`, `notes`, `creatorid`, `status`)
-             VALUES (?, ?, ?, ?, ?)',
-            'issii',
-            [$latestid, $datereceived, $additionalinfo, $creatorid, $status]
-        );
-        mysqli_stmt_close($statement);
-    }
-    
-    // Determine the team to notify based on first-tier catalogue ownership.
-    // Fall back to legacy service/subservice contact ownership for older data.
-    $contactid = -1;
-    $hasCatalogueContact = function_exists('rmt_db_column_exists')
-        && rmt_db_column_exists($link, 'tblcatalogue', 'contactid');
-
-    if ($hasCatalogueContact && $catalogueid && $catalogueid != 0) {
-        $row = rmt_db_fetch_one($link, 'SELECT contactid FROM tblcatalogue WHERE id = ?', 'i', [$catalogueid]);
-        if (!empty($row['contactid'])) {
-            $contactid = (int) $row['contactid'];
-        }
-    }
-    
-    if (($contactid <= 0) && $subserviceid && $subserviceid != 0) {
-        // Get serviceid from subservice
-        $row = rmt_db_fetch_one($link, 'SELECT serviceid FROM tblsubservices WHERE id = ?', 'i', [$subserviceid]);
-        if (!empty($row['serviceid'])) {
-            $serviceid = (int) $row['serviceid'];
-        }
-        
-        // Get contact from service
-        $row = rmt_db_fetch_one($link, 'SELECT contactid FROM tblservices WHERE id = ?', 'i', [$serviceid]);
-        if (!empty($row['contactid'])) {
-            $contactid = (int) $row['contactid'];
-        }
-    }
-
-    if (($contactid <= 0) && $serviceid && $serviceid != 0) {
-        // Get contact from service directly
-        $row = rmt_db_fetch_one($link, 'SELECT contactid FROM tblservices WHERE id = ?', 'i', [$serviceid]);
-        if (!empty($row['contactid'])) {
-            $contactid = (int) $row['contactid'];
-        }
-    }
+    $contactid = rmt_resolve_responsible_team_id($link, $catalogueid, $serviceid, $subserviceid);
 
     if ($contactid > 0) {
         // Get team details

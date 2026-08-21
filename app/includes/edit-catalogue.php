@@ -16,6 +16,8 @@ if (!($_SESSION['is_superuser'] OR $_SESSION['is_admin'])) {
 
 // Grab MySQL connection
 require('../sql.php');
+/** @var mysqli $link */
+require_once('helpers.php');
 
 // Now first get the ID
 $catalogueid = $_GET['id'];
@@ -28,6 +30,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	$namefr = mysqli_real_escape_string($link,$_POST['namefr']);
 	$contactid = mysqli_real_escape_string($link,$_POST['contactid']);
 	$survey = mysqli_real_escape_string($link,$_POST['survey']);
+	$requestSubjectType = rmt_normalize_request_subject_type($_POST['request_subject_type'] ?? '', true);
 	$status = isset($_POST['status']) ? 1 : 0;
 	$noerror = false;
 	
@@ -42,10 +45,13 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 		exit();
 	}
 	
-	// Create SQL statement
-	$sql = "UPDATE `tblcatalogue` SET `nameen` = '$nameen', `namefr` = '$namefr', `contactid` = '$contactid', `survey` = '$survey', `status` = '$status' WHERE id='$catalogueid'";
-	//echo $sql;
-	rmt_admin_query($link,$sql);
+	$statement = rmt_db_execute(
+		$link,
+		'UPDATE tblcatalogue SET nameen = ?, namefr = ?, contactid = ?, request_subject_type = ?, survey = ?, status = ? WHERE id = ?',
+		'ssisiii',
+		[$nameen, $namefr, $contactid, $requestSubjectType, $survey, $status, $catalogueid]
+	);
+	mysqli_stmt_close($statement);
 	
 	// Now redirect
 	header("location:/catalogue.php?lang={$lang_code}&status=success"); 
@@ -69,15 +75,15 @@ if(rmt_result_num_rows($result2)>0){
 		<form method="post" action="/includes/edit-catalogue.php?id=<?php echo $row2['id']; ?>">
 		<div class="form-group">
 			<label for="nameen"><span class="field-name"><?php echo $lang_code === 'en' ? 'Name (english)' : 'Nom (anglais)'; ?>: <strong>(<?php echo $lang_code === 'en' ? 'required' : 'requis'; ?>)</strong></span></label>
-			<input type="text" class="form-control" id="nameen" name="nameen" value="<?php echo htmlspecialchars($row2['nameen']); ?>" required>
+			<input type="text" class="form-control full-width" id="nameen" name="nameen" value="<?php echo htmlspecialchars($row2['nameen']); ?>" required>
 		</div>
 		<div class="form-group">
 			<label for="namefr"><span class="field-name"><?php echo $lang_code === 'en' ? 'Name (french)' : 'Nom (français)'; ?>: <strong>(<?php echo $lang_code === 'en' ? 'required' : 'requis'; ?>)</strong></span></label>
-			<input type="text" class="form-control" id="namefr" name="namefr" value="<?php echo htmlspecialchars($row2['namefr']); ?>" required>
+			<input type="text" class="form-control full-width" id="namefr" name="namefr" value="<?php echo htmlspecialchars($row2['namefr']); ?>" required>
 		</div>
 		<div class="form-group">
 			<label for="contactid"><span class="field-name"><?php echo $lang_code === 'en' ? 'Contact group' : 'Groupe de contact'; ?>: <strong>(<?php echo $lang_code === 'en' ? 'required' : 'requis'; ?>)</strong></span></label>
-			<select class="form-control" id="contactid" name="contactid" required>
+			<select class="form-control full-width" id="contactid" name="contactid" required>
 				<option value=""<?php if (empty($row2['contactid'])) echo " selected"; ?> disabled><?php echo $lang_code === 'en' ? 'Select contact group' : 'Selectionnez un groupe de contact'; ?></option>
 				<?php
 				$sortField = $lang_code === 'fr' ? 'namefr' : 'nameen';
@@ -92,9 +98,18 @@ if(rmt_result_num_rows($result2)>0){
 		</div>
 		<div class="form-group">
 			<label for="survey"><span class="field-name"><?php echo $lang_code === 'en' ? 'Send survey' : 'Envoyer le sondage'; ?>: <strong>(<?php echo $lang_code === 'en' ? 'required' : 'requis'; ?>)</strong></span></label>
-			<select class="form-control" id="survey" name="survey" required>
+			<select class="form-control full-width" id="survey" name="survey" required>
 				<option value="0"<?php if($row2['survey'] == 0) echo " selected"; ?>><?php echo $lang_code === 'en' ? 'No' : 'Non'; ?></option>
 				<option value="1"<?php if($row2['survey'] == 1) echo " selected"; ?>><?php echo $lang_code === 'en' ? 'Yes' : 'Oui'; ?></option>
+			</select>
+		</div>
+		<div class="form-group">
+			<label for="request_subject_type"><span class="field-name"><?= $lang_code === 'fr' ? 'Type d’objet de la demande' : 'Request subject type' ?></span></label>
+			<select class="form-control full-width" id="request_subject_type" name="request_subject_type">
+				<option value=""<?= empty($row2['request_subject_type']) ? ' selected' : '' ?>><?= $lang_code === 'fr' ? 'Par défaut / Objet' : 'Default / Subject' ?></option>
+				<option value="system"<?= $row2['request_subject_type'] === 'system' ? ' selected' : '' ?>><?= $lang_code === 'fr' ? 'Nom du système' : 'System name' ?></option>
+				<option value="document"<?= $row2['request_subject_type'] === 'document' ? ' selected' : '' ?>><?= $lang_code === 'fr' ? 'Titre du document' : 'Document title' ?></option>
+				<option value="subject"<?= $row2['request_subject_type'] === 'subject' ? ' selected' : '' ?>><?= $lang_code === 'fr' ? 'Objet' : 'Subject' ?></option>
 			</select>
 		</div>
 		<div class="checkbox">

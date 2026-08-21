@@ -28,6 +28,8 @@ $translations = [
 		'fieldset_client_info' => 'Client information',
 		'fieldset_dates' => 'Dates',
 		'title' => 'Title',
+		'request_subject' => 'Request subject',
+		'additional_info' => 'Additional information',
 		'last_name' => 'Last name',
 		'first_name' => 'First name',
 		'client_email' => 'Client email',
@@ -95,7 +97,6 @@ $translations = [
 		'mark_sent' => 'Mark survey as sent',
 		'request_attachments' => 'Request attachments',
 		'attachment_url' => 'Attachment',
-		'client_comms' => 'Client communications log',
 		'delete_comment' => 'Delete comment',
 		'no_comms' => 'No communications available!',
 		'staff_comms' => 'AAACT communications log',
@@ -152,6 +153,8 @@ $translations = [
 		'fieldset_client_info' => 'Renseignements sur le client',
 		'fieldset_dates' => 'Dates',
 		'title' => 'Titre',
+		'request_subject' => 'Objet de la demande',
+		'additional_info' => 'Renseignements supplémentaires',
 		'last_name' => 'Nom',
 		'first_name' => 'Prénom',
 		'client_email' => 'Courriel du client',
@@ -219,7 +222,6 @@ $translations = [
 		'mark_sent' => 'Marquer le sondage comme envoyé',
 		'request_attachments' => 'Pièces jointes de la demande',
 		'attachment_url' => 'Pièce jointe',
-		'client_comms' => 'Journal des communications avec le client',
 		'delete_comment' => 'Supprimer le commentaire',
 		'no_comms' => 'Aucune communication disponible!',
 		'staff_comms' => 'Journal des communications du AATIA',
@@ -406,6 +408,7 @@ if(mysqli_num_rows($result)>0){
 	} else {
 		$uReview = true;
 	}
+	$tarraycontactid = rmt_resolve_responsible_team_id($link, (int) $catalogueid, (int) $serviceid, (int) $subserviceid);
 	
 	if ($catalogueid!=0) {
 		// Sub-service is not empty so grab the name
@@ -630,6 +633,18 @@ if(mysqli_num_rows($result)>0){
 					<dt><?= $t['title'] ?></dt>
 					<dd><?php echo htmlspecialchars($row['title'] ?? '') ?></dd>
 				</div>
+				<?php if (!empty($row['request_subject'])) { ?>
+				<div style="break-inside: avoid;">
+					<dt><?= $t['request_subject'] ?></dt>
+					<dd><?php echo htmlspecialchars($row['request_subject']) ?></dd>
+				</div>
+				<?php } ?>
+				<?php if (!empty($row['additionalinfo'])) { ?>
+				<div style="break-inside: avoid;">
+					<dt><?= $t['additional_info'] ?></dt>
+					<dd><?php echo nl2br(htmlspecialchars($row['additionalinfo'], ENT_QUOTES, 'UTF-8')) ?></dd>
+				</div>
+				<?php } ?>
 				<div style="break-inside: avoid;">
 					<dt><?= $t['status'] ?></dt>
 					<dd><?php echo $statusname ?></dd>
@@ -1087,43 +1102,7 @@ $blobStorage = new AzureBlobStorageManager();
 			<?php	
 			}
 			?>
-			
-			<h2><?= htmlspecialchars($t['client_comms']) ?></h2>
-			
-			<?php
-			// Construct SQL statement
-			$sql2 = "SELECT * FROM tblcommlog WHERE triageid = '$triageid' AND status = '1' ORDER BY id DESC";
-			//echo $sql;
-			
-			$result2 = mysqli_query($link,$sql2);
-			//List it
-			if(mysqli_num_rows($result2)>0) {
-			$hasVisibleClientComms = false;
-			?>
-			<dl>
-				<?php
-				while($row2 = mysqli_fetch_array($result2)){
-					// Check if clientlname or clientfname is not empty
-					$dateadded = $row2['dateadded'];
-					$notes = preg_replace('/^\s*(Department\/agency|Ministère\/organisme):\s*.*(?:\R|$)/miu', '', (string)$row2['notes']);
-					$notes = trim((string)$notes);
-					if ($notes === '') {
-						continue;
-					}
-					$hasVisibleClientComms = true;
-					$nnotes = nl2br(htmlspecialchars($notes));
-				?>
-				
-			<dt><?php echo $dateadded ?><?php if ($canDeleteThisRequest) {?> <a class="wb-lbx lbx-modal" href="includes/delete-comms.php?t=c&id=<?php echo $row2['id'];?>&rid=<?php echo $triageid ?>"><span class="glyphicon glyphicon-trash"></span><span class="wb-inv"> <?= htmlspecialchars($t['delete_comment']) ?></span></a><?php } ?></dt>
-				<dd><?php echo $nnotes ?></dd>
-				<?php } ?>
-			</dl>
-			<?php if (!$hasVisibleClientComms) { ?>
-			<p><?= htmlspecialchars($t['no_comms']) ?></p>
 			<?php } ?>
-			<?php } else { ?>
-			<p><?= htmlspecialchars($t['no_comms']) ?></p>
-			<?php } } ?>
 
 			<?php
 			$canViewStatusChangeLog = isSuperAdmin()

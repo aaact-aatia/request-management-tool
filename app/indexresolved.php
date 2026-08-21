@@ -271,6 +271,7 @@ include 'includes/template/head.php';
 					if (empty($tarraycontactid)){
 						$tarraycontactid = "";
 					}
+					$tarraycontactid = rmt_resolve_responsible_team_id($link, (int) $catalogueid, (int) $serviceid, (int) $subserviceid);
 					
 					if (!empty($catalogueid)) {
 						// Sub-service is not empty so grab the name
@@ -430,7 +431,7 @@ include 'includes/template/head.php';
 							'panelClass' => $panelClass,
 							'requestUrl' => 'viewrequest.php?lang=' . $_SESSION['lang'] . '&erid=' . base64_encode($row['id']) . '&reqid=' . urlencode('a11y-' . ($row['requestid'] ?? '')),
 							'requestCode' => 'a11y-' . ($row['requestid'] ?? ''),
-							'title' => !empty($row['title']) ? $row['title'] : '[No title entered]',
+							'title' => (string) ($row['title'] ?? ''),
 							'statusPrefix' => $langFile['indexresolved_col_status'],
 							'statusText' => $statusname,
 							'statusLabelClass' => $statusLabelClass,

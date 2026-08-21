@@ -10,6 +10,13 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
+subject_type_references=$(grep -c 'request_subject_type' database/export-local-seed.sh)
+if [ "$subject_type_references" -ne 6 ]; then
+    printf 'FAIL: local seed exporter must copy request_subject_type for all three hierarchy tables\n' >&2
+    exit 1
+fi
+printf 'PASS: local seed exporter preserves request subject types\n'
+
 for profile in default clean example local; do
     current_project="rmt-seed-${profile}-test"
     cleanup

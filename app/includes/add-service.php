@@ -16,6 +16,7 @@ if (!($_SESSION['is_superuser'] OR $_SESSION['is_admin'])) {
 
 // Grab MySQL connection
 require('../sql.php');
+require_once('helpers.php');
 
 // Now first get the ID
 $catalogueid = $_GET['id'];
@@ -27,13 +28,15 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	$nameen = mysqli_real_escape_string($link,$_POST['nameen']);
 	$namefr = mysqli_real_escape_string($link,$_POST['namefr']);
 	$sds = mysqli_real_escape_string($link,$_POST['sds']);
+	$contactId = (int) ($_POST['contactid'] ?? 0);
 	$status = isset($_POST['status']) ? 1 : 0;
 	$noerror = false;
 	
 	// Custom form validation
-	if ($nameen=="" OR $namefr=="" OR $sds=="" OR $catalogueid=="") {
+	if ($nameen=="" OR $namefr=="" OR $sds=="" OR $catalogueid=="" || ($contactId > 0 && !rmt_db_fetch_one($link, 'SELECT id FROM tblteams WHERE id = ? AND status = 1', 'i', [$contactId]))) {
 		$noerror = true;
 	}
+	$contactId = $contactId > 0 ? $contactId : null;
 
 	// If error detected send user back to modal dialog
 	if ($noerror) {
@@ -42,10 +45,13 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	}
 	
 	// Create SQL statement
-	$sql = "INSERT INTO tblservices(`nameen`, `namefr`, `catalogueid`, `sds`, `status`) VALUES ('$nameen', '$namefr', '$catalogueid', '$sds', '$status')";
-	//echo $sql;
-	//exit();
-	rmt_admin_query($link,$sql);
+	$statement = rmt_db_execute(
+		$link,
+		'INSERT INTO tblservices (nameen, namefr, catalogueid, sds, contactid, status) VALUES (?, ?, ?, ?, ?, ?)',
+		'ssiiii',
+		[$nameen, $namefr, $catalogueid, $sds, $contactId, $status]
+	);
+	mysqli_stmt_close($statement);
 	
 	// Now redirect
 	header("location:/catalogue-mgmt.php?lang={$lang_code}&id=$catalogueid&status=success");
@@ -53,13 +59,18 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 }
 
 // Grab the catalogue name
+$parentTeamId = 0;
 $sql = "SELECT * FROM tblcatalogue WHERE id='$catalogueid'";
 $result = rmt_admin_query($link,$sql);
 if(rmt_result_num_rows($result)>0) {
 	while($row = rmt_result_fetch_array($result)) {
 		$cataloguename = ($lang_code === 'fr') ? $row['namefr'] : $row['nameen'];
+		$parentTeamId = rmt_resolve_responsible_team_id($link, (int) $row['id']);
 	}
 }
+$parentTeam = $parentTeamId > 0 ? rmt_db_fetch_one($link, 'SELECT nameen, namefr FROM tblteams WHERE id = ?', 'i', [$parentTeamId]) : null;
+$parentTeamName = $parentTeam[$lang_code === 'fr' ? 'namefr' : 'nameen'] ?? ($lang_code === 'fr' ? 'aucune équipe' : 'no team');
+$teams = rmt_get_active_teams($link);
 
 // Translation keys
 $translations = [
@@ -71,6 +82,8 @@ $translations = [
 		'days' => 'days',
 		'required' => '(required)',
 		'active' => 'Active',
+		'responsible_team' => 'Responsible team',
+		'inherit_team' => 'Inherit from catalogue',
 		'add_button' => 'Add'
 	],
 	'fr' => [
@@ -81,6 +94,8 @@ $translations = [
 		'days' => 'jours',
 		'required' => '(requis)',
 		'active' => 'Actif',
+		'responsible_team' => 'Équipe responsable',
+		'inherit_team' => 'Hériter du catalogue',
 		'add_button' => 'Ajouter'
 	]
 ];
@@ -111,6 +126,15 @@ $t = $translations[$lang_code];
 				echo "<option value='$sdsv'>$sdsv {$t['days']}</option>";
 				}
 				?>
+			</select>
+		</div>
+		<div class="form-group">
+			<label for="contactid"><span class="field-name"><?= htmlspecialchars($t['responsible_team']) ?></span></label>
+			<select class="form-control" id="contactid" name="contactid">
+				<option value=""><?= htmlspecialchars($t['inherit_team'] . ' (' . $parentTeamName . ')') ?></option>
+				<?php foreach ($teams as $team): ?>
+				<option value="<?= (int) $team['id'] ?>"><?= htmlspecialchars($team[$lang_code === 'fr' ? 'namefr' : 'nameen']) ?></option>
+				<?php endforeach; ?>
 			</select>
 		</div>
 		<div class="checkbox">

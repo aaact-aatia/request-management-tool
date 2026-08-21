@@ -110,12 +110,12 @@ $updateSql = "UPDATE tblholidays
 			</div>
 			<div class="form-group">
 				<label for="name_en"><?= $t['name_en'] ?> <strong class="required">(<?= $t['required'] ?>)</strong></label>
-				<input type="text" class="form-control" id="name_en" name="name_en"
+				<input type="text" class="form-control full-width" id="name_en" name="name_en"
 					value="<?= htmlspecialchars($holiday['name_en']) ?>" required>
 			</div>
 			<div class="form-group">
 				<label for="name_fr"><?= $t['name_fr'] ?> <strong class="required">(<?= $t['required'] ?>)</strong></label>
-				<input type="text" class="form-control" id="name_fr" name="name_fr"
+				<input type="text" class="form-control full-width" id="name_fr" name="name_fr"
 					value="<?= htmlspecialchars($holiday['name_fr']) ?>" required>
 			</div>
 			<div class="form-group">

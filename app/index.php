@@ -407,6 +407,7 @@ include 'includes/template/head.php';
 					$tarraycontactid = $row_lookup ? $row_lookup[2] : 0;
 			}
 		}
+					$tarraycontactid = rmt_resolve_responsible_team_id($link, (int) $catalogueid, (int) $serviceid, (int) $subserviceid);
 
 					$canViewRow = true;
 					if ($isTeamLeadAccount) {
@@ -555,7 +556,7 @@ include 'includes/template/head.php';
 						'panelClass' => $panelClass,
 						'requestUrl' => $t['view_request'] . '&erid=' . base64_encode($row['id']) . '&reqid=' . urlencode('a11y-' . ($row['requestid'] ?? '')),
 						'requestCode' => 'a11y-' . ($row['requestid'] ?? ''),
-						'title' => !empty($row['title']) ? $row['title'] : $t['no_title'],
+						'title' => (string) ($row['title'] ?? ''),
 						'statusPrefix' => $t['status'],
 						'statusText' => $statusname,
 						'statusLabelClass' => $statusLabelClass,

@@ -34,9 +34,9 @@ $passworderrors = true;
 // Process the sign in form
 if ($_SERVER['REQUEST_METHOD']=='POST'){	
 	// Grab current passwords
-	$cpassword = mysqli_real_escape_string($link,$_POST['token1']);
-	$npassword = mysqli_real_escape_string($link,$_POST['token2']);
-	$n2password = mysqli_real_escape_string($link,$_POST['token3']);
+	$cpassword = (string)($_POST['token1'] ?? '');
+	$npassword = (string)($_POST['token2'] ?? '');
+	$n2password = (string)($_POST['token3'] ?? '');
 	
 	// Check if new passwords match
 	if ($npassword!=$n2password) {
@@ -44,17 +44,17 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	}
 	
 	// Check if password match strength
-	$uppercase = preg_match('@[A-Z]@', $npassword);
-	$lowercase = preg_match('@[a-z]@', $npassword);
-	$number    = preg_match('@[0-9]@', $npassword);
-	$specialChars = preg_match('@[^\w]@', $npassword);
+	$uppercase = preg_match('@\p{Lu}@u', $npassword);
+	$lowercase = preg_match('@\p{Ll}@u', $npassword);
+	$number = preg_match('@\p{N}@u', $npassword);
+	$specialChars = preg_match('@[\p{P}\p{S}]@u', $npassword);
 
-	if(!$uppercase || !$lowercase || !$number || !$specialChars || strlen($npassword) < 8) {
+	if(!$uppercase || !$lowercase || !$number || !$specialChars || mb_strlen($npassword, 'UTF-8') < 8) {
 		$passwordCheck = false;
 	}
 	
 	// Grab logged in user
-	$currentuser = $_SESSION['pid'];
+	$currentuser = (int)$_SESSION['pid'];
 	
 	// Check if current password is correct
 	$sql = "SELECT id,password FROM tblusers WHERE id = '$currentuser'";
@@ -125,7 +125,7 @@ include 'includes/template/header.php';
 					<input type="password" class="form-control" id="token1" name="token1" placeholder="<?= htmlspecialchars($langFile['passwordreset_current_placeholder']) ?>">
 				</div>
 				<div class="form-group">
-					<label for="token2"><span class="field-name"><?= $langFile['passwordreset_new'] ?> <strong>(<?= htmlspecialchars($langFile['required']) ?>)</strong></span></label>
+					<label for="token2"><span class="field-name"><?= $langFile['passwordreset_new'] ?> <strong>(<?= htmlspecialchars($langFile['required']) ?>)</strong> <?= htmlspecialchars($langFile['passwordreset_requirements']) ?></span></label>
 					<input type="password" class="form-control" id="token2" name="token2" placeholder="<?= htmlspecialchars($langFile['passwordreset_new_placeholder']) ?>">
 				</div>
 				<div class="form-group">
