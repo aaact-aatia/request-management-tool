@@ -620,7 +620,7 @@ include 'includes/template/head.php';
 								name="departmentagency"
 								list="departmentagency-options"
 								value="<?php echo htmlspecialchars($departmentInputValue, ENT_QUOTES, 'UTF-8'); ?>"
-								autocomplete="organization"
+								autocomplete="off"
 								aria-describedby="departmentagency-hint<?php echo $departmentAgencyNeedsReview ? ' departmentagency-review' : ''; ?>"
 								<?php echo $readonly ? '' : 'placeholder="' . htmlspecialchars($t['select_department_agency'], ENT_QUOTES, 'UTF-8') . '"'; ?>
 								<?php echo $readonly ? 'readonly="readonly"' : ''; ?>

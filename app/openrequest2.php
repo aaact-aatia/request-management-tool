@@ -134,7 +134,7 @@ include 'includes/template/head.php';
         echo renderTextInput('clientlname', $t['last_name'], $draftData['clientlname'] ?? '', true, false, 'text', 'autocomplete="family-name"', true);
         echo renderTextInput('clientemail', $t['email'], $draftData['clientemail'] ?? '', true, false, 'email', 'autocomplete="email"', true);
         if ($departments === []) {
-            echo renderTextInput('departmentagency', $t['department_agency'], $selectedDepartment, false, false, 'text', 'autocomplete="organization" aria-describedby="departmentagency-hint"', true);
+            echo renderTextInput('departmentagency', $t['department_agency'], $selectedDepartment, false, false, 'text', 'autocomplete="off" aria-describedby="departmentagency-hint"', true);
             echo '<p id="departmentagency-hint">' . htmlspecialchars($t['department_agency_hint']) . '</p>';
         } else {
             ?>
@@ -147,7 +147,7 @@ include 'includes/template/head.php';
                     name="departmentagency"
                     list="departmentagency-options"
                     value="<?= htmlspecialchars($departmentInputValue, ENT_QUOTES, 'UTF-8') ?>"
-                    autocomplete="organization"
+                    autocomplete="off"
                     aria-describedby="departmentagency-hint"
                     placeholder="<?= htmlspecialchars($t['select_department_agency'], ENT_QUOTES, 'UTF-8') ?>"
                 >
