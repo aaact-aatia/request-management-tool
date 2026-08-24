@@ -281,6 +281,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Update changelog for service SLA fix ([11ca693](https://github.com/aaact-aatia/request-management-tool/commit/11ca6934eb422712b02acd5db4bf3dcfc86318ec))
 
+- Update changelog for team label change ([d7612af](https://github.com/aaact-aatia/request-management-tool/commit/d7612af3e4c8c4ff4d3437dade69dd1a9357a0e7))
+
 
 ### Fixed
 
@@ -483,6 +485,8 @@ changes made to 1f25d2de91afa814dd49160085b2f76a39fa88a5. ([9bfaf79](https://git
 - Remove SAMS/OCMC request flow ([36aaef4](https://github.com/aaact-aatia/request-management-tool/commit/36aaef45541dc2bb93a245f569ab65c23d4db2fe))
 
 - Remove NSD/Smart IT ticket field and data ([a672b69](https://github.com/aaact-aatia/request-management-tool/commit/a672b6920dab93dc530917004a4e3e73902d2e3f))
+
+- Retire request source data ([4e8ff86](https://github.com/aaact-aatia/request-management-tool/commit/4e8ff860340dea6d92814076cb168153d0edcd52))
 
 
 ### Testing
