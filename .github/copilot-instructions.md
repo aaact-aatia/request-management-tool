@@ -212,3 +212,6 @@ Follow pattern in `includes/`:
 2. Use `detectLanguage()` and `$t = require("lang/{$lang}.php")` for any new UI strings
 3. Check for AJAX endpoints (search for `ajax*.php` references)
 4. Test with Docker environment before deployment
+
+### Updating the Changelog
+[CHANGELOG.md](../CHANGELOG.md) is generated from Conventional Commit messages via git-cliff — don't hand-edit it. Use a `feat:`/`fix:`/`docs:`/etc. prefix on commit subjects, and regenerate after merging to `main` with the command in [docs/CHANGELOG-WORKFLOW.md](../docs/CHANGELOG-WORKFLOW.md).

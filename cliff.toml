@@ -1,0 +1,62 @@
+[changelog]
+header = """
+# Changelog
+
+All notable changes to the Request Management Tool are documented here.
+
+This project began as a snapshot of [aaact-aatia/rmt](https://github.com/aaact-aatia/rmt)
+at tag `v2.0.0`, then diverged into its own history. Only work done since that
+snapshot is listed below (the initial commit's restructuring is summarized as
+the first entry).
+
+Generated with [git-cliff](https://git-cliff.org) from conventional commit
+messages — see [docs/CHANGELOG-WORKFLOW.md](docs/CHANGELOG-WORKFLOW.md) for
+how to keep this up to date.
+
+### Baseline
+
+- Renamed and restructured the codebase for the Request Management Tool fork
+  (167 files touched vs. upstream `v2.0.0`): consolidated Azure Pipelines
+  configs, reworked `database/seed.sql`, and added the `docs/future/*` and
+  `docs/TEMPLATE_MIGRATION.md` planning docs
+  ([4b9ebfa](https://github.com/aaact-aatia/request-management-tool/commit/4b9ebfa48636d306f14d06d39e1611af64c9a68d)).
+"""
+body = """
+{% for group, commits in commits | group_by(attribute="group") %}
+### {{ group }}
+{% for commit in commits %}
+- {{ commit.message | upper_first | trim }} ([{{ commit.id | truncate(length=7, end="") }}](https://github.com/aaact-aatia/request-management-tool/commit/{{ commit.id }}))
+{% endfor %}
+{% endfor %}
+"""
+trim = true
+footer = ""
+postprocessors = []
+
+[git]
+conventional_commits = true
+filter_unconventional = false
+split_commits = false
+protect_breaking_commits = false
+filter_commits = false
+tag_pattern = "v[0-9]*"
+sort_commits = "oldest"
+commit_parsers = [
+  { message = "^feat", group = "Added" },
+  { message = "^fix", group = "Fixed" },
+  { message = "^refactor", group = "Changed" },
+  { message = "^style", group = "Changed" },
+  { message = "^perf", group = "Changed" },
+  { message = "^docs", group = "Documentation" },
+  { message = "^chore", group = "Chore" },
+  { message = "^ci", group = "CI/CD" },
+  { message = "^test", group = "Testing" },
+  { message = "^remove", group = "Removed" },
+  { message = "^db", group = "Database" },
+  { message = "^ux", group = "Changed" },
+  { message = "^localize", group = "Changed" },
+  { message = "^build", group = "Build" },
+  { message = "^Merge pull request", skip = true },
+  { message = "^Merge branch", skip = true },
+  { message = ".*", group = "Other" },
+]

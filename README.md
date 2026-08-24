@@ -4,6 +4,8 @@ Last updated: 2026-07-28
 Author: Muna Adan
 Editor: Shawn Thompson
 
+See [CHANGELOG.md](CHANGELOG.md) for a history of changes.
+
 ## Overview
 The RMT is a multi-page PHP web application backed by MySQL that handles the administration of accessibility requests from clients. A request comes in via the `new-request` page and can be assigned a status, client, and attached to an employee to triage and/or fulfill the client request.
 

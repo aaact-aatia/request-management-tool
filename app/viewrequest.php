@@ -128,6 +128,14 @@ $translations = [
 		'other_change_survey_link_sent' => 'Client survey link',
 		'other_change_survey_sent_value' => 'Sent (send #%d)',
 		'other_change_survey_resent_value' => 'Resent (send #%d)',
+		'change_log' => 'Request change log',
+		'change_log_type_other' => 'Request information update',
+		'change_log_summary' => 'Change',
+		'change_log_previous' => 'Previous field/status',
+		'change_log_new' => 'New value/status',
+		'change_log_details' => 'Details',
+		'change_log_details_title' => 'Change details',
+		'change_log_details_sr' => 'Details for %s on %s',
 		'unknown_user' => 'Unknown user',
 		'not_found_title' => 'Request not found!',
 		'not_found_msg' => 'Sorry something went wrong with your request, please try again!',
@@ -257,6 +265,14 @@ $translations = [
 		'other_change_survey_link_sent' => 'Lien du sondage client',
 		'other_change_survey_sent_value' => 'Envoye (envoi no %d)',
 		'other_change_survey_resent_value' => 'Renvoye (envoi no %d)',
+		'change_log' => 'Journal des changements de la demande',
+		'change_log_type_other' => 'Mise a jour des informations de la demande',
+		'change_log_summary' => 'Changement',
+		'change_log_previous' => 'Champ/statut precedent',
+		'change_log_new' => 'Nouvelle valeur/statut',
+		'change_log_details' => 'Details',
+		'change_log_details_title' => 'Details du changement',
+		'change_log_details_sr' => 'Details pour %s le %s',
 		'unknown_user' => 'Utilisateur inconnu',
 		'not_found_title' => 'Demande introuvable!',
 		'not_found_msg' => 'Désolé, quelque chose s\'est mal passé avec votre demande, veuillez réessayer!',
@@ -1152,25 +1168,10 @@ $blobStorage = new AzureBlobStorageManager();
 					}
 				}
 				$userNameCache = [];
+				$changeLogRows = [];
 			?>
-			<h2><?= htmlspecialchars($t['status_change_log']) ?></h2>
-			<?php if ($statusHistoryResult && mysqli_num_rows($statusHistoryResult) > 0) { ?>
-			<table class="wb-tables table table-striped" data-paging="false" data-order='[[5, "desc"]]'>
-				<thead>
-					<tr>
-						<th><?= htmlspecialchars($t['status_change_type']) ?></th>
-						<th><?= htmlspecialchars($t['status_change_previous']) ?></th>
-						<th><?= htmlspecialchars($t['status_change_new']) ?></th>
-						<th><?= htmlspecialchars($t['status_change_assignment_from']) ?></th>
-						<th><?= htmlspecialchars($t['status_change_assignment_to']) ?></th>
-						<th><?= htmlspecialchars($t['status_change_changed_on']) ?></th>
-						<th><?= htmlspecialchars($t['status_change_actor']) ?></th>
-						<th><?= htmlspecialchars($t['status_change_sla_due']) ?></th>
-						<th><?= htmlspecialchars($t['status_change_sla_elapsed']) ?></th>
-					</tr>
-				</thead>
-				<tbody>
-					<?php while ($historyRow = mysqli_fetch_assoc($statusHistoryResult)) {
+			<?php if ($statusHistoryResult && mysqli_num_rows($statusHistoryResult) > 0) {
+				while ($historyRow = mysqli_fetch_assoc($statusHistoryResult)) {
 						$changeTypeRaw = (string)($historyRow['changeType'] ?? 'status_change');
 						$changeTypeLabel = $t['status_change_type_status'];
 						if ($changeTypeRaw === 'assignment_change') {
@@ -1226,27 +1227,21 @@ $blobStorage = new AzureBlobStorageManager();
 						$slaElapsedLabel = isset($historyRow['slaElapsedBusinessDays']) && $historyRow['slaElapsedBusinessDays'] !== null
 							? (int)$historyRow['slaElapsedBusinessDays'] . ' ' . $t['business_days']
 							: $t['na'];
-					?>
-					<tr>
-						<td><?= htmlspecialchars($changeTypeLabel) ?></td>
-						<td><?= htmlspecialchars($previousStatusLabel) ?></td>
-						<td><?= htmlspecialchars($newStatusLabel) ?></td>
-						<td><?= htmlspecialchars($previousWorkerLabel) ?></td>
-						<td><?= htmlspecialchars($newWorkerLabel) ?></td>
-						<td><?= htmlspecialchars((string)$historyRow['changeTimeStamp']) ?></td>
-						<td><?= htmlspecialchars($actorLabel) ?></td>
-						<td><?= htmlspecialchars($slaDueDateLabel) ?></td>
-						<td><?= htmlspecialchars($slaElapsedLabel) ?></td>
-					</tr>
-					<?php } ?>
-				</tbody>
-			</table>
-			<?php } else { ?>
-			<p><?= htmlspecialchars($t['status_change_no_entries']) ?></p>
-			<?php } ?>
-
-			<h2><?= htmlspecialchars($t['other_change_log']) ?></h2>
-			<?php
+						$changeLogRows[] = [
+							'type' => $changeTypeLabel,
+							'previous' => $previousStatusLabel,
+							'new' => $newStatusLabel,
+							'assignment_from' => $previousWorkerLabel,
+							'assignment_to' => $newWorkerLabel,
+							'changed_on' => (string)$historyRow['changeTimeStamp'],
+							'actor' => $actorLabel,
+							'sla_due' => $slaDueDateLabel,
+							'sla_elapsed' => $slaElapsedLabel,
+							'event_id' => (int)$historyRow['id'],
+							'details_id' => 'status-change-' . (int)$historyRow['id'],
+						];
+					}
+			}
 			if ($hasRequestFieldHistoryTable) {
 				$triageIdEscaped = mysqli_real_escape_string($link, (string) $triageid);
 				$otherChangeSql = "SELECT id, fieldName, oldValue, newValue, actorUserID, changeTimeStamp FROM RequestFieldHistory WHERE requestID = '$requestIdEscaped' OR (fieldName = 'survey_link_sent' AND requestID = '$triageIdEscaped') ORDER BY id DESC";
@@ -1258,6 +1253,7 @@ $blobStorage = new AzureBlobStorageManager();
 						'client_first_name' => $t['first_name'],
 						'client_email' => $t['client_email'],
 						'client_phone' => $t['client_phone'],
+						'department_agency' => $t['department_agency'],
 						'request_source' => $t['request_intake_source'],
 						'date_received' => $t['date_received'],
 						'date_updated' => $t['date_updated'],
@@ -1361,19 +1357,7 @@ $blobStorage = new AzureBlobStorageManager();
 
 						return $valueKey;
 					};
-			?>
-			<table class="wb-tables table table-striped" data-paging="false" data-order='[[4, "desc"]]'>
-				<thead>
-					<tr>
-						<th><?= htmlspecialchars($t['other_change_field']) ?></th>
-						<th><?= htmlspecialchars($t['other_change_old']) ?></th>
-						<th><?= htmlspecialchars($t['other_change_new']) ?></th>
-						<th><?= htmlspecialchars($t['status_change_actor']) ?></th>
-						<th><?= htmlspecialchars($t['status_change_changed_on']) ?></th>
-					</tr>
-				</thead>
-				<tbody>
-					<?php while ($otherRow = mysqli_fetch_assoc($otherChangeResult)) {
+				while ($otherRow = mysqli_fetch_assoc($otherChangeResult)) {
 						$fieldNameRaw = (string)($otherRow['fieldName'] ?? '');
 						$fieldNameLabel = $otherChangeFieldMap[$fieldNameRaw] ?? ($fieldNameRaw !== '' ? $fieldNameRaw : $t['na']);
 						$oldValueLabel = $resolveHistoryDisplayValue($fieldNameRaw, $otherRow['oldValue'] ?? null);
@@ -1391,26 +1375,89 @@ $blobStorage = new AzureBlobStorageManager();
 							}
 							$otherActorLabel = $userNameCache[$otherActorUserId];
 						}
-					?>
+					$changeLogRows[] = [
+						'type' => $fieldNameLabel,
+						'previous' => $fieldNameLabel . ': ' . $oldValueLabel,
+						'new' => $newValueLabel,
+						'assignment_from' => $t['na'],
+						'assignment_to' => $t['na'],
+						'changed_on' => (string)($otherRow['changeTimeStamp'] ?? ''),
+						'actor' => $otherActorLabel,
+						'sla_due' => $t['na'],
+						'sla_elapsed' => $t['na'],
+						'event_id' => (int)$otherRow['id'],
+						'details_id' => 'other-change-' . (int)$otherRow['id'],
+					];
+				}
+			}
+
+			usort($changeLogRows, static function (array $left, array $right): int {
+				$leftTime = strtotime($left['changed_on']) ?: 0;
+				$rightTime = strtotime($right['changed_on']) ?: 0;
+				return ($rightTime <=> $leftTime) ?: ($right['event_id'] <=> $left['event_id']);
+			});
+			?>
+			<h2><?= htmlspecialchars($t['change_log']) ?></h2>
+			<?php if (!empty($changeLogRows)) { ?>
+			<table class="wb-tables table table-striped" data-paging="false" data-order='[[2, "desc"]]'>
+				<thead>
 					<tr>
-						<td><?= htmlspecialchars($fieldNameLabel) ?></td>
-						<td><?= htmlspecialchars($oldValueLabel) ?></td>
-						<td><?= htmlspecialchars($newValueLabel) ?></td>
-						<td><?= htmlspecialchars($otherActorLabel) ?></td>
-						<td><?= htmlspecialchars((string)($otherRow['changeTimeStamp'] ?? '')) ?></td>
+						<th><?= htmlspecialchars($t['status_change_type']) ?></th>
+						<th><?= htmlspecialchars($t['change_log_summary']) ?></th>
+						<th><?= htmlspecialchars($t['status_change_changed_on']) ?></th>
+						<th><?= htmlspecialchars($t['status_change_actor']) ?></th>
+						<th><?= htmlspecialchars($t['change_log_details']) ?></th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php foreach ($changeLogRows as $changeLogRow) { ?>
+					<tr>
+						<td><?= htmlspecialchars($changeLogRow['type']) ?></td>
+						<td><?= htmlspecialchars($changeLogRow['previous'] . ' / ' . $changeLogRow['new']) ?></td>
+						<td><?= htmlspecialchars($changeLogRow['changed_on']) ?></td>
+						<td><?= htmlspecialchars($changeLogRow['actor']) ?></td>
+						<td>
+							<a href="#<?= htmlspecialchars($changeLogRow['details_id'], ENT_QUOTES, 'UTF-8') ?>" class="wb-lbx lbx-modal">
+								<?= htmlspecialchars($t['change_log_details']) ?>
+								<span class="wb-inv"> <?= htmlspecialchars(sprintf($t['change_log_details_sr'], $changeLogRow['type'], $changeLogRow['changed_on'])) ?></span>
+							</a>
+						</td>
 					</tr>
 					<?php } ?>
 				</tbody>
 			</table>
-			<?php
-				} else {
-			?>
-			<p><?= htmlspecialchars($t['other_change_no_entries']) ?></p>
-			<?php
-				}
-			} else {
-			?>
-			<p><?= htmlspecialchars($t['other_change_no_entries']) ?></p>
+			<?php foreach ($changeLogRows as $changeLogRow) { ?>
+			<section id="<?= htmlspecialchars($changeLogRow['details_id'], ENT_QUOTES, 'UTF-8') ?>" class="mfp-hide modal-dialog modal-content overlay-def">
+				<header class="modal-header">
+					<h2 class="modal-title"><?= htmlspecialchars($t['change_log_details_title']) ?></h2>
+				</header>
+				<div class="modal-body">
+					<dl>
+						<dt><?= htmlspecialchars($t['status_change_type']) ?></dt>
+						<dd><?= htmlspecialchars($changeLogRow['type']) ?></dd>
+						<dt><?= htmlspecialchars($t['change_log_previous']) ?></dt>
+						<dd><?= htmlspecialchars($changeLogRow['previous']) ?></dd>
+						<dt><?= htmlspecialchars($t['change_log_new']) ?></dt>
+						<dd><?= htmlspecialchars($changeLogRow['new']) ?></dd>
+						<dt><?= htmlspecialchars($t['status_change_assignment_from']) ?></dt>
+						<dd><?= htmlspecialchars($changeLogRow['assignment_from']) ?></dd>
+						<dt><?= htmlspecialchars($t['status_change_assignment_to']) ?></dt>
+						<dd><?= htmlspecialchars($changeLogRow['assignment_to']) ?></dd>
+						<dt><?= htmlspecialchars($t['status_change_changed_on']) ?></dt>
+						<dd><?= htmlspecialchars($changeLogRow['changed_on']) ?></dd>
+						<dt><?= htmlspecialchars($t['status_change_actor']) ?></dt>
+						<dd><?= htmlspecialchars($changeLogRow['actor']) ?></dd>
+						<dt><?= htmlspecialchars($t['status_change_sla_due']) ?></dt>
+						<dd><?= htmlspecialchars($changeLogRow['sla_due']) ?></dd>
+						<dt><?= htmlspecialchars($t['status_change_sla_elapsed']) ?></dt>
+						<dd><?= htmlspecialchars($changeLogRow['sla_elapsed']) ?></dd>
+					</dl>
+				</div>
+			</section>
+			<?php } ?>
+			<?php } else { ?>
+			<p><?= htmlspecialchars($t['status_change_no_entries']) ?></p>
+			<?php } ?>
 			<?php } ?>
 			<?php } ?>
 			
