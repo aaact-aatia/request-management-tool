@@ -686,7 +686,7 @@ include 'includes/template/head.php';
 						<?php echo renderDateInput('datereceived', $t['date_received'], $row['datereceived'], true, $dateRange['min'], $dateRange['max'], $readonly); ?>
 					</div>
 					<div class="col-md-6">
-						<?php echo renderDateInput('dateupdated', $t['date_updated'], $row['dateupdated'], false, $dateRange['min'], $dateRange['max'], $readonly); ?>
+						<?php echo renderDateInput('dateupdated', $t['date_updated'], $row['dateupdated'], false, $dateRange['min'], $dateRange['max'], true); ?>
 					</div>
 				</div>
 
@@ -696,7 +696,7 @@ include 'includes/template/head.php';
 						<?php echo renderDateInput('daterequired', $dateRequiredLabel, $row['daterequired'], false, $dateRange['min'], $dateRange['max'], $readonly); ?>
 					</div>
 					<div class="col-md-6">
-						<?php echo renderDateInput('dateresolved', $t['date_resolved'], $row['dateresolved'], false, $dateRange['min'], $dateRange['max'], $readonly); ?>
+						<?php echo renderDateInput('dateresolved', $t['date_resolved'], $row['dateresolved'], false, $dateRange['min'], $dateRange['max'], true); ?>
 					</div>
 				</div>
 
