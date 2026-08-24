@@ -82,8 +82,6 @@ $translations = [
 		'department_agency_review' => 'Review needed: This value is not in the organization directory. Confirm it or select a recognized organization.',
 		'department_agency_readonly_review' => 'Review needed: This value is not in the organization directory. Confirm it with the requester and ask an administrator to update it if needed.',
 		'client_phone' => 'Client phone #',
-		'request_source' => 'Request source',
-		'select_source' => 'Select a request source',
 		'date_received' => 'Date received',
 		'date_updated' => 'Date updated',
 		'date_required' => 'Date required',
@@ -182,8 +180,6 @@ $translations = [
 		'department_agency_review' => 'Vérification requise : cette valeur ne figure pas dans le répertoire des organisations. Confirmez-la ou sélectionnez une organisation reconnue.',
 		'department_agency_readonly_review' => 'Vérification requise : cette valeur ne figure pas dans le répertoire des organisations. Confirmez-la auprès de la personne qui a fait la demande et demandez à un administrateur de la mettre à jour au besoin.',
 		'client_phone' => 'Numéro de téléphone client',
-		'request_source' => 'Source de la demande',
-		'select_source' => 'Sélectionnez une source pour la demande',
 		'date_received' => 'Date de réception',
 		'date_updated' => 'Date de mise à jour',
 		'date_required' => 'Date requise',
@@ -644,7 +640,7 @@ include 'includes/template/head.php';
 					</div>
 				</div>
 
-				<!-- Row: Client Phone | Request Source (catalogue 4) | Audience (catalogues 8/9) -->
+				<!-- Row: Request language and client phone -->
 				<div class="row">
 					<div class="col-md-6">
 						<?php echo renderTextInput('requestlang_display', $t['request_language'], $originalRequestLangLabel . ' (' . $originalRequestLang . ')', false, true, 'text', '', true); ?>
@@ -654,19 +650,10 @@ include 'includes/template/head.php';
 					</div>
 				</div>
 
-				<?php if ($catalogueid == 4 || (in_array($catalogueid, [8, 9]) && hasValue($row['audienceid'] ?? null))): ?>
+				<?php if (in_array($catalogueid, [8, 9]) && hasValue($row['audienceid'] ?? null)): ?>
 					<div class="row">
 						<div class="col-md-6">
-							<?php if ($catalogueid == 4): ?>
-								<?php
-								$sources = getDropdownOptions($link, 'tblsources', $lang);
-								$sourceOptions = [];
-								while ($source = mysqli_fetch_assoc($sources)) {
-									$sourceOptions[] = $source;
-								}
-								echo renderSelect('sourceid', $t['request_source'], $sourceOptions, $row['sourceid'], false, $t['select_source'], $readonly, true);
-								?>
-							<?php elseif (in_array($catalogueid, [8, 9]) && hasValue($row['audienceid'] ?? null)): ?>
+							<?php if (in_array($catalogueid, [8, 9]) && hasValue($row['audienceid'] ?? null)): ?>
 								<?php
 								$audienceOptions = [];
 								if (function_exists('rmt_db_table_exists') && rmt_db_table_exists($link, 'tblaudience')) {

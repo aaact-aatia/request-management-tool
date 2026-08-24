@@ -45,7 +45,6 @@ return [
     'alert_failed_message' => 'La sélection du catalogue, du service ou du sous-service n’est plus valide. Sélectionnez de nouveau les options connexes.',
     'alert_access_denied_heading' => 'Accès refusé:',
     'alert_access_denied_message' => 'Vous ne disposez pas d\'un niveau d\'accès suffisant pour afficher cette page, désolé!',
-    'request_intake_source' => 'Source de la demande',
     
     // Form labels and fields
     'catalogue_label' => 'Sur quel sujet / produit avez-vous besoin d\'aide?',
@@ -75,8 +74,6 @@ return [
     'client_fname' => 'Prénom du client:',
     'client_email' => 'Courriel du client:',
     'client_phone' => 'Numéro de téléphone client:',
-    'request_source' => 'Source de la demande:',
-    'select_source' => 'Sélectionnez la source de la demande',
     'date_received' => 'Date de réception:',
     'date_updated' => 'Date de mise à jour:',
     'date_required' => 'Date requise:',
@@ -345,14 +342,6 @@ return [
     'products_delete_button' => 'Supprimer',
     'products_product_label' => 'le produit',
     'products_no_products' => 'Aucun produit disponible',
-    
-    // Sources management page (sources.php)
-    'sources_page_title' => 'Gestion des sources - Outil de gestion des demandes - Bureau de l\'accessibilité de la TI',
-    'sources_heading' => 'Gestion des sources',
-    'sources_add_button' => 'Ajouter une nouvelle source',
-    'sources_name_column' => 'Nom de la source',
-    'sources_source_label' => 'la source',
-    'sources_no_sources' => 'Aucune source disponible',
     
     // Status management page (status.php)
     'status_page_title' => 'Gestion des statuts - Outil de gestion des demandes - Bureau de l\'accessibilité de la TI',

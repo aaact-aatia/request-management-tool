@@ -144,7 +144,6 @@ $menuLangStrings = $menu_text[$lang_code];
 							<li><a href="/gcnotify-settings.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['gcnotify_settings']) ?></a></li>
 							<?php } ?>
 							<li><a href="/organizations.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['organizations']) ?></a></li>
-							<li><a href="/sources.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['sources']) ?></a></li>
 							<li><a href="/status.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['status']) ?></a></li>
 							<?php
 							// Only Super admins can access this option

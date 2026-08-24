@@ -73,14 +73,6 @@ CREATE TABLE IF NOT EXISTS `tblsubservices` (
     ON UPDATE RESTRICT ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE IF NOT EXISTS `tblsources` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `nameen` varchar(255) NOT NULL,
-  `namefr` varchar(255) NOT NULL,
-  `status` tinyint(1) DEFAULT 1,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
 CREATE TABLE IF NOT EXISTS `tblorganizations` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `nameen` varchar(255) NOT NULL,
@@ -126,7 +118,6 @@ CREATE TABLE IF NOT EXISTS `tbltriage` (
   `clientemail` varchar(255) DEFAULT NULL,
   `clientphone` varchar(50) DEFAULT NULL,
   `requestlang` varchar(2) NOT NULL DEFAULT 'en',
-  `sourceid` int(11) DEFAULT NULL,
   `datereceived` date DEFAULT NULL,
   `dateupdated` date DEFAULT NULL,
   `daterequired` date DEFAULT NULL,

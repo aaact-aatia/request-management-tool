@@ -45,7 +45,6 @@ return [
     'alert_failed_message' => 'The catalogue, service, or sub-service selection is no longer valid. Select the related options again.',
     'alert_access_denied_heading' => 'Access denied:',
     'alert_access_denied_message' => 'You don\'t have sufficient access level to view that page, sorry!',
-    'request_intake_source' => 'Request intake source',
     
     // Form labels and fields
     'catalogue_label' => 'What topic / product do you need help with?',
@@ -75,8 +74,6 @@ return [
     'client_fname' => 'Client first name:',
     'client_email' => 'Client email:',
     'client_phone' => 'Client phone number:',
-    'request_source' => 'Request source:',
-    'select_source' => 'Select a request source',
     'date_received' => 'Date received:',
     'date_updated' => 'Date updated:',
     'date_required' => 'Date required:',
@@ -347,14 +344,6 @@ return [
     'products_delete_button' => 'Delete',
     'products_product_label' => 'product',
     'products_no_products' => 'No products available',
-    
-    // Sources management page (sources.php)
-    'sources_page_title' => 'Source management - Request Management Tool - IT Accessibility Office',
-    'sources_heading' => 'Source management',
-    'sources_add_button' => 'Add new source',
-    'sources_name_column' => 'Name of source',
-    'sources_source_label' => 'source',
-    'sources_no_sources' => 'No sources available',
     
     // Status management page (status.php)
     'status_page_title' => 'Status management - Request Management Tool - IT Accessibility Office',

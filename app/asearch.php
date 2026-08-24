@@ -113,7 +113,7 @@ if ($isTeamLeadAccount) {
 
 // Process search if any parameters are submitted
 $hasSearchParams = !empty($_GET['requestid']) || !empty($_GET['requesttitle']) || !empty($clientlname) || !empty($clientfname) || 
-                    !empty($clientemail) || !empty($clientphone) || !empty($_GET['sourceid']) || !empty($_GET['datereceived']) || 
+					!empty($clientemail) || !empty($clientphone) || !empty($_GET['datereceived']) ||
                     !empty($_GET['datereceived2']) || !empty($_GET['dateupdated']) || !empty($_GET['dateupdated2']) || 
                     !empty($_GET['daterequired']) || !empty($_GET['daterequired2']) || !empty($_GET['dateresolved']) || 
                     !empty($_GET['dateresolved2']) || !empty($_GET['statusid']) || !empty($_GET['catalogueid']) || 
@@ -158,11 +158,6 @@ if ($hasSearchParams){
 		$SQLSV .= " clientphone LIKE '%$clientphone%' AND";
 	}
 	
-	if (!empty($_GET['sourceid'])) {
-		$sourceid = mysqli_real_escape_string($link,$_GET['sourceid']);
-		$nosearch = false;
-		$SQLSV .= " sourceid = '$sourceid' AND";
-	}
 	$datereceived = mysqli_real_escape_string($link, $_GET['datereceived'] ?? '');
 	$datereceived2 = mysqli_real_escape_string($link, $_GET['datereceived2'] ?? '');
 	if ($datereceived!="" && $datereceived2!="") {
@@ -351,26 +346,6 @@ include 'includes/template/head.php';
 				</div>
 			</div>
 			<?php } ?>
-			<div class="row">
-				<div class="col-xs-6">			
-					<div class="form-group">
-						<label for="sourceid"><span class="field-name"><?= htmlspecialchars($langFile['request_source']) ?></span></label>
-						<select class="form-control" id="sourceid" name="sourceid">
-							<option value=""><?= htmlspecialchars($langFile['select_source']) ?></option>
-							<?php 
-							$nameField = ($_SESSION['lang'] === 'fr') ? 'namefr' : 'nameen';
-							$sql2 = "SELECT * FROM tblsources WHERE status='1' ORDER BY $nameField ASC";
-							$result2 = mysqli_query($link,$sql2);	
-							while($row2 = mysqli_fetch_array($result2)){
-							?>
-								<option value="<?php echo $row2['id']; ?>"><?php echo $row2[$nameField]; ?></option>
-							<?php
-							}
-							?>
-						</select>
-					</div>
-				</div>
-			</div>
 			<div class="row">
 				<div class="col-xs-6">
 					<div class="form-group">
