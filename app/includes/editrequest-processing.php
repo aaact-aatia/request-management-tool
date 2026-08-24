@@ -70,14 +70,14 @@ $submittedDepartmentAgency = trim((string)($_POST['departmentagency'] ?? ''));
 $clientphone = getPostValue('clientphone');
 $statusid = getPostValue('statusid');
 $datereceived = getPostValue('datereceived');
-$dateupdated = !empty($_POST['dateupdated']) ? getPostValue('dateupdated') : getTodayDate();
+$dateupdated = getTodayDate();
 
 // Handle nullable dates
 $daterequired = getPostValue('daterequired');
 $daterequiredu = empty($daterequired);
 if ($daterequiredu) $daterequired = NULL;
 
-$dateresolved = getPostValue('dateresolved');
+$dateresolved = NULL;
 $slatimer = getPostValue('slatimer');
 $audienceid = getPostValue('audience', 0);
 $bdm = getPostValue('bdm', 0);
@@ -116,9 +116,7 @@ if (!$canFullFieldEdit) {
     $clientemail = (string) ($currentRequest['clientemail'] ?? '');
     $clientphone = (string) ($currentRequest['clientphone'] ?? '');
     $datereceived = (string) ($currentRequest['datereceived'] ?? '');
-    $dateupdated = (string) ($currentRequest['dateupdated'] ?? '');
     $daterequired = $currentRequest['daterequired'] ?? NULL;
-    $dateresolved = $currentRequest['dateresolved'] ?? NULL;
     $bdm = (string) ($currentRequest['bdm'] ?? 0);
     $attach1 = (string) ($currentRequest['attach1'] ?? '');
     $attach2 = (string) ($currentRequest['attach2'] ?? '');
@@ -170,19 +168,13 @@ if ($requestSubject !== '') {
     $requesttitle = rmt_generate_request_title($requestid, $titleDepartment, $requestSubject);
 }
 
-// Never write an empty string to DATE columns.
-if (empty($dateupdated)) {
-    $dateupdated = !empty($currentRequest['dateupdated'])
-        ? (string) $currentRequest['dateupdated']
-        : getTodayDate();
-}
-
 $isTargetResolved = rmt_is_resolved_status_id($link, $statusid);
-if (empty($dateresolved) && $isTargetResolved) {
-    $dateresolved = getTodayDate();
-} elseif (empty($dateresolved)) {
+if ($isTargetResolved) {
+    $dateresolved = !empty($currentRequest['dateresolved'])
+        ? (string) $currentRequest['dateresolved']
+        : getTodayDate();
+} else {
     $dateresolvedu = true;
-    $dateresolved = NULL;
 }
 
 function rmt_audit_normalize_value($value) {
