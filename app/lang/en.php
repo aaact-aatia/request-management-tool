@@ -391,6 +391,7 @@ return [
     'catalogue_mgmt_no_services' => 'No service items available',
     'catalogue_mgmt_view_subservices' => 'View sub-services',
     'catalogue_mgmt_back_button' => 'Go back to catalogue',
+    'service_sla_managed_by_subservices' => 'The service delivery standard is defined by its sub-services.',
     
     // Catalogue sub-services management page (catalogue-sub-mgmt.php)
     'catalogue_sub_mgmt_title_suffix' => 'Catalogue management - Request Management Tool - IT Accessibility Office',

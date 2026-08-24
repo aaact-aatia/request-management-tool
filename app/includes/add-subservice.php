@@ -53,6 +53,13 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 		[$nameen, $namefr, $serviceid, $sds, $contactId, $status]
 	);
 	mysqli_stmt_close($statement);
+	$statement = rmt_db_execute(
+		$link,
+		'UPDATE tblservices SET sds = NULL WHERE id = ?',
+		'i',
+		[(int) $serviceid]
+	);
+	mysqli_stmt_close($statement);
 	
 	// Now redirect
 	header("location:/catalogue-sub-mgmt.php?lang={$lang_code}&id=$serviceid&cid=$catalogueid&status=success");

@@ -488,6 +488,19 @@ function getSubservicesByService($link, $serviceid, $lang = 'en') {
     );
 }
 
+function rmt_service_has_active_subservices(mysqli $link, int $serviceId): bool {
+    if ($serviceId <= 0) {
+        return false;
+    }
+
+    return (bool) rmt_db_fetch_one(
+        $link,
+        'SELECT 1 FROM tblsubservices WHERE serviceid = ? AND status = 1 LIMIT 1',
+        'i',
+        [$serviceId]
+    );
+}
+
 function rmt_validate_intake_selection(mysqli $link, int $catalogueId, int $serviceId, int $subserviceId = 0): ?array {
     if ($catalogueId <= 0 || $serviceId < 0 || $subserviceId < 0) {
         return null;
@@ -587,9 +600,11 @@ function rmt_get_sla_days_required_for_request($link, int $serviceId = 0, int $s
         if ($subserviceSla > 0) {
             return $subserviceSla;
         }
+
+        return 0;
     }
 
-    if ($serviceId > 0) {
+    if ($serviceId > 0 && !rmt_service_has_active_subservices($link, $serviceId)) {
         // Preserve legacy special-case SLA handling.
         if (in_array($serviceId, [21, 22, 23, 24], true)) {
             return 15;

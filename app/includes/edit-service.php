@@ -6,7 +6,7 @@ require_once __DIR__ . '/session_start.php';
 
 // Set language from session
 $lang_code = $_SESSION['lang'] ?? 'en';
-require("../lang/{$lang_code}.php");
+$t = require("../lang/{$lang_code}.php");
 
 // Check if the user has the right priv's
 if (!($_SESSION['is_superuser'] OR $_SESSION['is_admin'])) {
@@ -29,14 +29,15 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	// Grab form elements
 	$nameen = mysqli_real_escape_string($link,$_POST['nameen']);
 	$namefr = mysqli_real_escape_string($link,$_POST['namefr']);
-	$sds = mysqli_real_escape_string($link,$_POST['sds']);
+	$hasActiveSubservices = rmt_service_has_active_subservices($link, (int) $serviceid);
+	$sds = $hasActiveSubservices ? null : mysqli_real_escape_string($link, $_POST['sds'] ?? '');
 	$contactId = (int) ($_POST['contactid'] ?? 0);
 	$requestSubjectType = rmt_normalize_request_subject_type($_POST['request_subject_type'] ?? '', true);
 	$status = isset($_POST['status']) ? 1 : 0;
 	$noerror = false;
 	
 	// Custom form validation
-	if ($nameen=="" OR $namefr=="" OR $sds=="" OR $catalogueid=="" || ($contactId > 0 && !rmt_db_fetch_one($link, 'SELECT id FROM tblteams WHERE id = ? AND status = 1', 'i', [$contactId]))) {
+	if ($nameen=="" OR $namefr=="" OR (!$hasActiveSubservices && $sds === "") OR $catalogueid=="" || ($contactId > 0 && !rmt_db_fetch_one($link, 'SELECT id FROM tblteams WHERE id = ? AND status = 1', 'i', [$contactId]))) {
 		$noerror = true;
 	}
 	$contactId = $contactId > 0 ? $contactId : null;
@@ -77,6 +78,7 @@ if(rmt_result_num_rows($result2)>0){
 			: null;
 		$parentTeamName = $parentTeam[$lang_code === 'fr' ? 'namefr' : 'nameen'] ?? ($lang_code === 'fr' ? 'aucune équipe' : 'no team');
 		$teams = rmt_get_active_teams($link);
+		$hasActiveSubservices = rmt_service_has_active_subservices($link, (int) $serviceid);
 ?>
 <section id="filter-id" class="modal-dialog modal-content overlay-def">
 	<header class="modal-header">
@@ -94,6 +96,9 @@ if(rmt_result_num_rows($result2)>0){
 		</div>
 		<div class="form-group">
 			<label for="sds"><span class="field-name"><?php echo $lang_code === 'en' ? 'Service delivery standard' : 'Norme de prestation de services'; ?>: <strong>(<?php echo $lang_code === 'en' ? 'required' : 'requis'; ?>)</strong></span></label>
+			<?php if ($hasActiveSubservices) { ?>
+			<p><?= htmlspecialchars($t['service_sla_managed_by_subservices']) ?></p>
+			<?php } else { ?>
 			<select class="form-control full-width" id="sds" name="sds" required>
 				<?php
 				// Create range for SDS
@@ -106,6 +111,7 @@ if(rmt_result_num_rows($result2)>0){
 				}
 				?>
 			</select>
+			<?php } ?>
 		</div>
 		<div class="form-group">
 			<label for="contactid"><span class="field-name"><?= $lang_code === 'fr' ? 'Équipe responsable' : 'Responsible team' ?></span></label>

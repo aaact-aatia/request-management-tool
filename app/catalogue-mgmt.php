@@ -119,9 +119,10 @@ include 'includes/template/head.php';
 						
 					// Get serviceid
 					$serviceid = $row['id'];
+					$hasActiveSubservices = rmt_service_has_active_subservices($link, (int) $serviceid);
 				?>
 					<tr>
-						<th scope="row"><?php echo htmlspecialchars($row[$nameColumn]); if (!empty($row['sds'])) { echo ' <small class="label label-success">' . (int)$row['sds'] . ' ' . ($_SESSION['lang'] === 'fr' ? 'jour(s)' : 'day(s)') . '</small>'; } ?></th>
+						<th scope="row"><?php echo htmlspecialchars($row[$nameColumn]); if (!$hasActiveSubservices && !empty($row['sds'])) { echo ' <small class="label label-success">' . (int)$row['sds'] . ' ' . ($_SESSION['lang'] === 'fr' ? 'jour(s)' : 'day(s)') . '</small>'; } ?></th>
 						<td><?= htmlspecialchars((int)$row['status'] === 1 ? $lang['active_label'] : $lang['inactive_label']) ?></td>
 						<td>
 						<?php 

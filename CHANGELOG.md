@@ -277,7 +277,7 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Record priority workflow completion ([5c52695](https://github.com/aaact-aatia/request-management-tool/commit/5c5269551ff46cb7b2cc9ec8cf522ce5c32d93b9))
 
-- Add generated changelog and workflow ([2b344ed](https://github.com/aaact-aatia/request-management-tool/commit/2b344ed5272eaf945186e76ac1a08bd64fdcdde5))
+- Add generated changelog and workflow ([98ba883](https://github.com/aaact-aatia/request-management-tool/commit/98ba883cef1afc88e680ca8905489f14153b6f5a))
 
 
 ### Fixed
@@ -417,6 +417,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 - Prevent browser autofill from suggesting saved department/agency values ([fc316a5](https://github.com/aaact-aatia/request-management-tool/commit/fc316a51049449bd6e117975d33e2de6a03a0a08))
 
 - Repair client survey links ([34fdcad](https://github.com/aaact-aatia/request-management-tool/commit/34fdcad8046b00f81d4dc687a3df640fcc4f8536))
+
+- Remove parent service SLA when subservices exist ([e0620eb](https://github.com/aaact-aatia/request-management-tool/commit/e0620eb2f63491f5b10a471e0f064ea44f61f586))
 
 
 ### Other
