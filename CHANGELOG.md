@@ -279,6 +279,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Add generated changelog and workflow ([98ba883](https://github.com/aaact-aatia/request-management-tool/commit/98ba883cef1afc88e680ca8905489f14153b6f5a))
 
+- Update changelog for service SLA fix ([11ca693](https://github.com/aaact-aatia/request-management-tool/commit/11ca6934eb422712b02acd5db4bf3dcfc86318ec))
+
 
 ### Fixed
 
@@ -419,6 +421,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 - Repair client survey links ([34fdcad](https://github.com/aaact-aatia/request-management-tool/commit/34fdcad8046b00f81d4dc687a3df640fcc4f8536))
 
 - Remove parent service SLA when subservices exist ([e0620eb](https://github.com/aaact-aatia/request-management-tool/commit/e0620eb2f63491f5b10a471e0f064ea44f61f586))
+
+- Rename catalogue contact groups to teams ([8f2ad62](https://github.com/aaact-aatia/request-management-tool/commit/8f2ad6268706c20078d5aa65c9af8b379ed87258))
 
 
 ### Other
