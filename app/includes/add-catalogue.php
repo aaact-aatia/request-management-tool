@@ -64,9 +64,9 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 			<input type="text" class="form-control" id="namefr" name="namefr" value="" required>
 		</div>
 		<div class="form-group">
-			<label for="contactid"><span class="field-name"><?= htmlspecialchars($lang['catalogue_contact_group_field'] ?? (($lang_code === 'fr') ? 'Groupe de contact' : 'Contact group')) ?>: <strong>(<?= htmlspecialchars($lang['required'] ?? 'required') ?>)</strong></span></label>
+			<label for="contactid"><span class="field-name"><?= htmlspecialchars($lang['catalogue_contact_group_field'] ?? (($lang_code === 'fr') ? 'Équipe' : 'Team')) ?>: <strong>(<?= htmlspecialchars($lang['required'] ?? 'required') ?>)</strong></span></label>
 			<select class="form-control" id="contactid" name="contactid" required>
-				<option value="" selected disabled><?= $lang_code === 'fr' ? 'Selectionnez un groupe de contact' : 'Select contact group' ?></option>
+				<option value="" selected disabled><?= $lang_code === 'fr' ? 'Sélectionnez une équipe' : 'Select team' ?></option>
 				<?php
 				$sortField = $lang_code === 'fr' ? 'namefr' : 'nameen';
 				$teamsSql = "SELECT * FROM tblteams WHERE status='1' ORDER BY {$sortField} ASC";

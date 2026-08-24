@@ -82,9 +82,9 @@ if(rmt_result_num_rows($result2)>0){
 			<input type="text" class="form-control full-width" id="namefr" name="namefr" value="<?php echo htmlspecialchars($row2['namefr']); ?>" required>
 		</div>
 		<div class="form-group">
-			<label for="contactid"><span class="field-name"><?php echo $lang_code === 'en' ? 'Contact group' : 'Groupe de contact'; ?>: <strong>(<?php echo $lang_code === 'en' ? 'required' : 'requis'; ?>)</strong></span></label>
+			<label for="contactid"><span class="field-name"><?php echo $lang_code === 'en' ? 'Team' : 'Équipe'; ?>: <strong>(<?php echo $lang_code === 'en' ? 'required' : 'requis'; ?>)</strong></span></label>
 			<select class="form-control full-width" id="contactid" name="contactid" required>
-				<option value=""<?php if (empty($row2['contactid'])) echo " selected"; ?> disabled><?php echo $lang_code === 'en' ? 'Select contact group' : 'Selectionnez un groupe de contact'; ?></option>
+				<option value=""<?php if (empty($row2['contactid'])) echo " selected"; ?> disabled><?php echo $lang_code === 'en' ? 'Select team' : 'Sélectionnez une équipe'; ?></option>
 				<?php
 				$sortField = $lang_code === 'fr' ? 'namefr' : 'nameen';
 				$teamsSql = "SELECT * FROM tblteams WHERE status='1' ORDER BY {$sortField} ASC";

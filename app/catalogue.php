@@ -162,7 +162,7 @@ include 'includes/template/head.php';
 					<tr>
 						<th scope="col"><?= htmlspecialchars($langFile['catalogue_name_column']) ?></th>
 						<th scope="col"><?= htmlspecialchars($langFile['status_column']) ?></th>
-						<th scope="col"><?= htmlspecialchars($langFile['catalogue_contact_group_column'] ?? (($_SESSION['lang'] === 'fr') ? 'Groupe de contact' : 'Contact group')) ?></th>
+						<th scope="col"><?= htmlspecialchars($langFile['catalogue_contact_group_column'] ?? (($_SESSION['lang'] === 'fr') ? 'Équipes' : 'Teams')) ?></th>
 						<th scope="col"><?= htmlspecialchars($langFile['catalogue_services_column']) ?></th>
 						<th scope="col"><?= htmlspecialchars($langFile['actions_column']) ?></th>
 					</tr>
