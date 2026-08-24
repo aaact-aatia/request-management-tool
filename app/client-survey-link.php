@@ -55,14 +55,10 @@ if ($request !== null) {
     }
 }
 
-$scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-$host = isset($_SERVER['HTTP_HOST']) ? trim((string)$_SERVER['HTTP_HOST']) : '';
-$baseUrl = $host !== '' ? ($scheme . '://' . $host) : '';
-
 $encodedTriageId = $request !== null ? base64_encode((string)$request['id']) : '';
 $encodedRequestPublicId = $request !== null ? urlencode('a11y-' . (string)$request['requestid']) : '';
-$frLink = ($baseUrl !== '' ? $baseUrl : '') . '/client-survey.php?lang=fr&erid=' . $encodedTriageId . '&reqid=' . $encodedRequestPublicId;
-$enLink = ($baseUrl !== '' ? $baseUrl : '') . '/client-survey.php?lang=en&erid=' . $encodedTriageId . '&reqid=' . $encodedRequestPublicId;
+$frLink = app_url('client-survey.php?lang=fr&erid=' . $encodedTriageId . '&reqid=' . $encodedRequestPublicId);
+$enLink = app_url('client-survey.php?lang=en&erid=' . $encodedTriageId . '&reqid=' . $encodedRequestPublicId);
 
 $returnTo = isset($_GET['return_to']) ? trim((string)$_GET['return_to']) : '';
 $isValidReturnTo = preg_match('#^/editrequest\.php\?#', $returnTo) === 1;
@@ -117,6 +113,9 @@ if ($request !== null && $_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             $senderId = isset($_SESSION['pid']) ? (int) $_SESSION['pid'] : 0;
+            if ($surveyEnabled) {
+                rmt_log_client_survey_sent($link, (int) $request['id'], $senderId, $updatedSurveySentCount);
+            }
             rmt_mark_resolved_email_sent($link, (int) $request['id'], $senderId);
             $actionStatus = 'resolved_sent';
         } else {
@@ -184,7 +183,7 @@ include 'includes/template/header.php';
     </section>
     <?php endif; ?>
 
-    <form method="post" action="/client-survey-link.php?lang=<?= htmlspecialchars($lang) ?>&erid=<?= urlencode($encodedTriageId) ?>">
+    <form method="post" action="<?= htmlspecialchars(app_url('client-survey-link.php?lang=' . urlencode($lang) . '&erid=' . urlencode($encodedTriageId))) ?>">
         <div class="form-group form-buttons">
             <button type="submit" class="btn btn-primary" name="email_action" value="send_resolved_email">
                 <?= htmlspecialchars($langFile['client_survey_link_send_resolved']) ?>
@@ -196,16 +195,16 @@ include 'includes/template/header.php';
     <p><?= htmlspecialchars($langFile['client_survey_link_intro']) ?></p>
 
     <div class="form-group">
-        <p class="mrgn-tp-sm"><a href="<?= htmlspecialchars($frLink) ?>" target="_blank" rel="noopener noreferrer"><?= htmlspecialchars($langFile['client_survey_link_french']) ?></a></p>
+        <p class="mrgn-tp-sm"><a href="<?= htmlspecialchars($frLink) ?>"><?= htmlspecialchars($langFile['client_survey_link_french']) ?></a></p>
     </div>
 
     <div class="form-group">
-        <p class="mrgn-tp-sm"><a href="<?= htmlspecialchars($enLink) ?>" target="_blank" rel="noopener noreferrer"><?= htmlspecialchars($langFile['client_survey_link_english']) ?></a></p>
+        <p class="mrgn-tp-sm"><a href="<?= htmlspecialchars($enLink) ?>"><?= htmlspecialchars($langFile['client_survey_link_english']) ?></a></p>
     </div>
     <?php endif; ?>
 
     <p>
-        <a class="btn btn-default" href="/viewrequest.php?lang=<?= htmlspecialchars($lang) ?>&erid=<?= urlencode($encodedTriageId) ?>">
+        <a class="btn btn-default" href="<?= htmlspecialchars(app_url('viewrequest.php?lang=' . urlencode($lang) . '&erid=' . urlencode($encodedTriageId))) ?>">
             <?= htmlspecialchars($langFile['client_survey_link_back_request']) ?>
         </a>
     </p>

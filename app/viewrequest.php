@@ -92,6 +92,7 @@ $translations = [
 		'na' => 'N/A',
 		'css_send' => 'Use the resolved email action above to send the survey links.',
 		'view_links' => 'Open client notification page',
+		'view_survey_links' => 'View survey links',
 		'survey_sent' => 'Survey was sent',
 		'resend' => 'resend?',
 		'mark_sent' => 'Mark survey as sent',
@@ -124,6 +125,9 @@ $translations = [
 		'other_change_staff_note' => 'Staff note added',
 		'other_change_uploaded_file' => 'Uploaded file',
 		'other_change_request_title' => 'Request title update',
+		'other_change_survey_link_sent' => 'Client survey link',
+		'other_change_survey_sent_value' => 'Sent (send #%d)',
+		'other_change_survey_resent_value' => 'Resent (send #%d)',
 		'unknown_user' => 'Unknown user',
 		'not_found_title' => 'Request not found!',
 		'not_found_msg' => 'Sorry something went wrong with your request, please try again!',
@@ -217,6 +221,7 @@ $translations = [
 		'na' => 'S.O.',
 		'css_send' => 'Utilisez l\'action de courriel de resolution ci-dessus pour envoyer les liens du sondage.',
 		'view_links' => 'Ouvrir la page de notification client',
+		'view_survey_links' => 'Voir les liens du sondage',
 		'survey_sent' => 'Le sondage a été envoyé',
 		'resend' => 'renvoyer?',
 		'mark_sent' => 'Marquer le sondage comme envoyé',
@@ -249,6 +254,9 @@ $translations = [
 		'other_change_staff_note' => 'Note du personnel ajoutee',
 		'other_change_uploaded_file' => 'Fichier televerse',
 		'other_change_request_title' => 'Mise a jour du titre de la demande',
+		'other_change_survey_link_sent' => 'Lien du sondage client',
+		'other_change_survey_sent_value' => 'Envoye (envoi no %d)',
+		'other_change_survey_resent_value' => 'Renvoye (envoi no %d)',
 		'unknown_user' => 'Utilisateur inconnu',
 		'not_found_title' => 'Demande introuvable!',
 		'not_found_msg' => 'Désolé, quelque chose s\'est mal passé avec votre demande, veuillez réessayer!',
@@ -1050,6 +1058,9 @@ $blobStorage = new AzureBlobStorageManager();
 				<?php endif; ?>
 			<?php endif; ?>
 			<?php if ($surveyEnabled) {
+			?>
+			<p><a class="btn btn-default" href="<?= htmlspecialchars(app_url('client-survey-link.php?lang=' . urlencode($lang) . '&erid=' . urlencode(base64_encode((string) $triageid)))) ?>"><?= htmlspecialchars($t['view_survey_links']) ?></a></p>
+			<?php
 				// Status is resolved and surveys are enabled, so first check if a client survey has been completed.
 				$surveySql = "SELECT * FROM tblcss WHERE requestid='$triageid' AND status=1";
 				$surveyResult = mysqli_query($link,$surveySql);
@@ -1237,7 +1248,8 @@ $blobStorage = new AzureBlobStorageManager();
 			<h2><?= htmlspecialchars($t['other_change_log']) ?></h2>
 			<?php
 			if ($hasRequestFieldHistoryTable) {
-				$otherChangeSql = "SELECT id, fieldName, oldValue, newValue, actorUserID, changeTimeStamp FROM RequestFieldHistory WHERE requestID = '$requestIdEscaped' ORDER BY id DESC";
+				$triageIdEscaped = mysqli_real_escape_string($link, (string) $triageid);
+				$otherChangeSql = "SELECT id, fieldName, oldValue, newValue, actorUserID, changeTimeStamp FROM RequestFieldHistory WHERE requestID = '$requestIdEscaped' OR (fieldName = 'survey_link_sent' AND requestID = '$triageIdEscaped') ORDER BY id DESC";
 				$otherChangeResult = mysqli_query($link, $otherChangeSql);
 				if ($otherChangeResult && mysqli_num_rows($otherChangeResult) > 0) {
 					$otherChangeFieldMap = [
@@ -1268,6 +1280,7 @@ $blobStorage = new AzureBlobStorageManager();
 						'staff_communication_log' => $t['other_change_staff_comms'],
 						'staff_note_added' => $t['other_change_staff_note'],
 						'uploaded_file' => $t['other_change_uploaded_file'],
+						'survey_link_sent' => $t['other_change_survey_link_sent'],
 					];
 
 					$sourceValueMap = ['0' => $t['na']];
@@ -1337,6 +1350,13 @@ $blobStorage = new AzureBlobStorageManager();
 
 						if ($fieldName === 'assigned_team_member') {
 							return $assignedMemberValueMap[$valueKey] ?? $valueKey;
+						}
+
+						if ($fieldName === 'survey_link_sent') {
+							$sendNumber = max(1, (int) $valueKey);
+							return $sendNumber === 1
+								? sprintf($t['other_change_survey_sent_value'], $sendNumber)
+								: sprintf($t['other_change_survey_resent_value'], $sendNumber);
 						}
 
 						return $valueKey;

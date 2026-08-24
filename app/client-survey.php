@@ -101,7 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 	// If error detected send user back to modal dialog
 	if ($noerror) {
-		header("location:/client-survey.php?lang=" . $_SESSION['lang'] . "&status=incomplete&erid=$nrequestid");
+		header('Location: ' . app_url('client-survey.php?lang=' . urlencode($_SESSION['lang']) . '&status=incomplete&erid=' . urlencode($nrequestid)));
 		exit();
 	}
 
@@ -112,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 		$lockResult = mysqli_query($link, $lockSql);
 		if (!$lockResult || mysqli_num_rows($lockResult) === 0) {
 			mysqli_rollback($link);
-			header("location:/client-survey.php?lang=" . $_SESSION['lang'] . "&status=failed");
+			header('Location: ' . app_url('client-survey.php?lang=' . urlencode($_SESSION['lang']) . '&status=failed'));
 			exit();
 		}
 
@@ -120,12 +120,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 		$existingResult = mysqli_query($link, $existingSql);
 		if (!$existingResult) {
 			mysqli_rollback($link);
-			header("location:/client-survey.php?lang=" . $_SESSION['lang'] . "&status=failed&erid=$nrequestid");
+			header('Location: ' . app_url('client-survey.php?lang=' . urlencode($_SESSION['lang']) . '&status=failed&erid=' . urlencode($nrequestid)));
 			exit();
 		}
 		if ($existingResult && mysqli_num_rows($existingResult) > 0) {
 			mysqli_rollback($link);
-			header("location:/client-survey.php?lang=" . $_SESSION['lang'] . "&status=complete&erid=$nrequestid");
+			header('Location: ' . app_url('client-survey.php?lang=' . urlencode($_SESSION['lang']) . '&status=complete&erid=' . urlencode($nrequestid)));
 			exit();
 		}
 
@@ -133,16 +133,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 		$insertResult = mysqli_query($link, $insertSql);
 		if (!$insertResult) {
 			mysqli_rollback($link);
-			header("location:/client-survey.php?lang=" . $_SESSION['lang'] . "&status=failed&erid=$nrequestid");
+			header('Location: ' . app_url('client-survey.php?lang=' . urlencode($_SESSION['lang']) . '&status=failed&erid=' . urlencode($nrequestid)));
 			exit();
 		}
 
 		mysqli_commit($link);
-		header("location:/client-survey-thank-you.php?lang=" . $_SESSION['lang']);
+		header('Location: ' . app_url('client-survey-thank-you.php?lang=' . urlencode($_SESSION['lang'])));
 		exit();
 	} catch (Throwable $e) {
 		mysqli_rollback($link);
-		header("location:/client-survey.php?lang=" . $_SESSION['lang'] . "&status=failed&erid=$nrequestid");
+		header('Location: ' . app_url('client-survey.php?lang=' . urlencode($_SESSION['lang']) . '&status=failed&erid=' . urlencode($nrequestid)));
 		exit();
 	}
 }
@@ -248,7 +248,7 @@ include 'includes/template/header.php';
 
 			<p><?= htmlspecialchars($langFile['client_survey_intro']) ?></p>
 
-			<form method="post" action="/client-survey.php?lang=<?= $_SESSION['lang'] ?>">
+			<form method="post" action="<?= htmlspecialchars(app_url('client-survey.php?lang=' . urlencode($_SESSION['lang']))) ?>">
 				<input type="hidden" id="requestid" name="requestid" value="<?php echo $requestid ?>">
 
 				<fieldset>
