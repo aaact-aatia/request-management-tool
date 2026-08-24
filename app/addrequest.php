@@ -107,15 +107,6 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	$requestlang = (isset($_SESSION['lang']) && in_array($_SESSION['lang'], ['en', 'fr'], true)) ? $_SESSION['lang'] : 'en';
 	$requestlang = mysqli_real_escape_string($link, $requestlang);
 	
-	if (!empty($_POST['sourceid']))
-	{
-		$sourceid = mysqli_real_escape_string($link,$_POST['sourceid']);
-	}
-	else
-	{
-		$sourceid = "";
-	}
-	
 	if (!empty($_POST['datereceived']))
 	{
 		$datereceived = mysqli_real_escape_string($link,$_POST['datereceived']);
@@ -218,7 +209,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	$status = 1;
 		
 	// Custom form validation
-	if ($requestid=="" OR $requesttitle=="" OR $sourceid=="" OR $datereceived=="" OR $statusid=="" OR $catalogueid=="" OR $serviceid=="") {
+	if ($requestid=="" OR $requesttitle=="" OR $datereceived=="" OR $statusid=="" OR $catalogueid=="" OR $serviceid=="") {
 		$noerror = true;
 	}
 
@@ -229,7 +220,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	}
 	
 	// Create SQL statement
-	$sql = "INSERT INTO tbltriage(`requestid`, `title`, `clientlname`, `clientfname`, `clientemail`, `clientphone`, `requestlang`, `sourceid`, `datereceived`, `dateupdated`, `daterequired`, `dateresolved`, `statusid`, `catalogueid`, `serviceid`, `subserviceid`, `creatorid`, `updaterid`, `status`) VALUES ('$requestid', '$requesttitle', '$clientlname', '$clientfname', '$clientemail', '$clientphone', '$requestlang', '$sourceid', '$datereceived', '$dateupdated', '$daterequired', '$dateresolved', '$statusid', '$catalogueid', '$serviceid', '$subserviceid', '$creatorid', '$updaterid', '$status')";
+	$sql = "INSERT INTO tbltriage(`requestid`, `title`, `clientlname`, `clientfname`, `clientemail`, `clientphone`, `requestlang`, `datereceived`, `dateupdated`, `daterequired`, `dateresolved`, `statusid`, `catalogueid`, `serviceid`, `subserviceid`, `creatorid`, `updaterid`, `status`) VALUES ('$requestid', '$requesttitle', '$clientlname', '$clientfname', '$clientemail', '$clientphone', '$requestlang', '$datereceived', '$dateupdated', '$daterequired', '$dateresolved', '$statusid', '$catalogueid', '$serviceid', '$subserviceid', '$creatorid', '$updaterid', '$status')";
 	//echo $sql;
 	//exit();
 	mysqli_query($link,$sql);
@@ -340,23 +331,6 @@ else{
 			<div class="form-group">
 				<label for="clientphone"><span class="field-name"><?= htmlspecialchars($lang['client_phone']) ?></span></label>
 				<input type="tel" data-rule-phoneUS="true" class="form-control" id="clientphone" name="clientphone" value="">
-			</div>
-			<div class="form-group">
-				<label for="sourceid"><span class="field-name"><?= htmlspecialchars($lang['request_source']) ?> <strong><?= htmlspecialchars($lang['required']) ?></strong></span></label>
-				<select class="form-control" id="sourceid" name="sourceid" required>
-					<option value=""><?= htmlspecialchars($lang['select_source']) ?></option>
-					<?php 
-					$nameField = $_SESSION['lang'] == 'fr' ? 'namefr' : 'nameen';
-					$orderBy = $_SESSION['lang'] == 'fr' ? 'namefr' : 'nameen';
-					$sql2 = "SELECT * FROM tblsources WHERE status='1' ORDER BY $orderBy ASC";
-					$result2 = mysqli_query($link,$sql2);	
-					while($row2 = mysqli_fetch_array($result2)){
-					?>
-						<option value="<?php echo $row2['id']; ?>"><?php echo $row2[$nameField]; ?></option>
-					<?php
-					}
-					?>
-				</select>
 			</div>
 			<div class="form-group">
 				<label for="datereceived"><span class="field-name"><?= htmlspecialchars($lang['date_received']) ?> <strong><?= htmlspecialchars($lang['required']) ?></strong></span></label>

@@ -26,11 +26,6 @@ if (!function_exists('rmt_get_admin_csv_tables')) {
 				'columns' => ['id', 'serviceid', 'nameen', 'namefr', 'sds', 'contactid', 'status'],
 				'order_by' => 'id ASC',
 			],
-			'tblsources' => [
-				'label_key' => 'admin_csv_table_sources',
-				'columns' => ['id', 'nameen', 'namefr', 'status'],
-				'order_by' => 'id ASC',
-			],
 			'tblorganizations' => [
 				'label_key' => 'admin_csv_table_organizations',
 				'columns' => ['id', 'nameen', 'namefr', 'abbreviationen', 'abbreviationfr', 'status'],

@@ -119,9 +119,6 @@ $legends = [
 		'# survey: 0=No survey, 1=Send customer satisfaction survey when request is resolved',
 		'# status: 0=Inactive, 1=Active',
 	],
-	'tblsources' => [
-		'# status: 0=Inactive, 1=Active',
-	],
 	'tblorganizations' => [
 		'# Existing IDs update records during import; blank IDs add records',
 		'# status: 0=Inactive, 1=Active',

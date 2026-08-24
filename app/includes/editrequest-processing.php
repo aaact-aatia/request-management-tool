@@ -68,7 +68,6 @@ $clientfname = getPostValue('clientfname');
 $clientemail = getPostValue('clientemail');
 $submittedDepartmentAgency = trim((string)($_POST['departmentagency'] ?? ''));
 $clientphone = getPostValue('clientphone');
-$sourceid = getPostValue('sourceid');
 $statusid = getPostValue('statusid');
 $datereceived = getPostValue('datereceived');
 $dateupdated = !empty($_POST['dateupdated']) ? getPostValue('dateupdated') : getTodayDate();
@@ -116,7 +115,6 @@ if (!$canFullFieldEdit) {
     $clientfname = (string) ($currentRequest['clientfname'] ?? '');
     $clientemail = (string) ($currentRequest['clientemail'] ?? '');
     $clientphone = (string) ($currentRequest['clientphone'] ?? '');
-    $sourceid = (string) ($currentRequest['sourceid'] ?? '');
     $datereceived = (string) ($currentRequest['datereceived'] ?? '');
     $dateupdated = (string) ($currentRequest['dateupdated'] ?? '');
     $daterequired = $currentRequest['daterequired'] ?? NULL;
@@ -685,12 +683,6 @@ if ($requestFieldHistoryEnabled) {
     );
     rmt_append_request_change(
         $generalRequestChanges,
-        'request_source',
-        rmt_normalize_intish($currentRequest['sourceid'] ?? '0'),
-        rmt_normalize_intish($sourceid ?? '0')
-    );
-    rmt_append_request_change(
-        $generalRequestChanges,
         'date_received',
         $currentRequest['datereceived'] ?? null,
         $datereceived
@@ -820,7 +812,6 @@ $sql = "UPDATE `tbltriage` SET
     `clientfname` = '$clientfname',
     `clientemail` = '$clientemail',
     `clientphone` = '$clientphone',
-    `sourceid` = " . (!empty($sourceid) ? "'$sourceid'" : "NULL") . ",
     `datereceived` = '$datereceived',
     `dateupdated` = '$dateupdated',
     `slatimer` = '$slatimer',
@@ -988,10 +979,6 @@ $feedbackFieldLabels = [
         'en' => 'Sub-service name',
         'fr' => 'Nom du sous-service',
     ],
-    'request_source' => [
-        'en' => 'Request intake source',
-        'fr' => 'Source de la demande',
-    ],
     'sprint_schedule' => [
         'en' => 'Sprint schedule',
         'fr' => 'Calendrier du sprint',
@@ -1112,12 +1099,6 @@ $oldSubserviceId = rmt_normalize_intish($currentRequest['subserviceid'] ?? '0');
 $newSubserviceId = rmt_normalize_intish($subserviceid);
 if ($oldSubserviceId !== $newSubserviceId) {
     $changedFieldLabels[] = rmt_lookup_label($labelsForLang, 'subservice_name');
-}
-
-$oldSourceId = rmt_normalize_intish($currentRequest['sourceid'] ?? '0');
-$newSourceId = rmt_normalize_intish($sourceid);
-if ($oldSourceId !== $newSourceId) {
-    $changedFieldLabels[] = rmt_lookup_label($labelsForLang, 'request_source');
 }
 
 foreach ($generalRequestChanges as $change) {

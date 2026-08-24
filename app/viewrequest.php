@@ -40,7 +40,6 @@ $translations = [
 		'department_agency' => 'Department/agency',
 		'client_phone' => 'Client phone number',
 		'source' => 'Source',
-		'request_intake_source' => 'Request intake source',
 		'sprint_start' => 'Sprint Start Date',
 		'sprint_end' => 'Sprint End Date',
 		'sprint_schedule' => 'Sprint Schedule',
@@ -177,7 +176,6 @@ $translations = [
 		'department_agency' => 'Ministère/organisme',
 		'client_phone' => 'Numéro de téléphone client',
 		'source' => 'Source',
-		'request_intake_source' => 'Source de la demande',
 		'sprint_start' => 'Date de début du sprint',
 		'sprint_end' => 'Date de fin du sprint',
 		'sprint_schedule' => 'Calendrier du sprint',
@@ -635,16 +633,6 @@ if(mysqli_num_rows($result)>0){
 			<?php } ?>
 
 			<?php
-			// Grab the source name
-			$sourceid = $row['sourceid'];
-			if ($sourceid) {
-				$result2 = mysqli_query($link, "SELECT $nameField FROM tblsources WHERE id = '$sourceid'");
-				$row2 = mysqli_fetch_array($result2);
-				$sourcename = $row2 ? $row2[0] : '';
-			} else {
-				$sourcename = '';
-			}
-
 			// Grab the status name
 			$result2 = mysqli_query($link, "SELECT $nameField FROM tblstatus WHERE id = '$statusid'");
 			$row2 = mysqli_fetch_array($result2);
@@ -689,12 +677,6 @@ if(mysqli_num_rows($result)>0){
 				<div style="break-inside: avoid;">
 					<dt><?= $t['subservice_name'] ?></dt>
 					<dd><?php echo $subservicename ?></dd>
-				</div>
-				<?php } ?>
-				<?php if ($sourcename) { ?>
-				<div style="break-inside: avoid;">
-					<dt><?= $t['source'] ?></dt>
-					<dd><?php echo $sourcename ?></dd>
 				</div>
 				<?php } ?>
 				<?php if ($catalogueid == 9 && $audienceid != 0 && $audienceid != null) { ?>
@@ -1254,7 +1236,6 @@ $blobStorage = new AzureBlobStorageManager();
 						'client_email' => $t['client_email'],
 						'client_phone' => $t['client_phone'],
 						'department_agency' => $t['department_agency'],
-						'request_source' => $t['request_intake_source'],
 						'date_received' => $t['date_received'],
 						'date_updated' => $t['date_updated'],
 						'date_required' => $t['date_required'],
@@ -1278,12 +1259,6 @@ $blobStorage = new AzureBlobStorageManager();
 						'uploaded_file' => $t['other_change_uploaded_file'],
 						'survey_link_sent' => $t['other_change_survey_link_sent'],
 					];
-
-					$sourceValueMap = ['0' => $t['na']];
-					$sourceValueResult = mysqli_query($link, "SELECT id, $nameField AS label FROM tblsources");
-					while ($sourceValueResult && $sourceValueRow = mysqli_fetch_assoc($sourceValueResult)) {
-						$sourceValueMap[(string) ((int) ($sourceValueRow['id'] ?? 0))] = trim((string) ($sourceValueRow['label'] ?? ''));
-					}
 
 					$catalogueValueMap = ['0' => $t['na']];
 					$catalogueValueResult = mysqli_query($link, "SELECT id, $nameField AS label FROM tblcatalogue");
@@ -1318,16 +1293,12 @@ $blobStorage = new AzureBlobStorageManager();
 						$assignedMemberValueMap[(string) ((int) ($assignedMemberValueRow['id'] ?? 0))] = $assignedMemberName !== '' ? $assignedMemberName : $t['unknown_user'];
 					}
 
-					$resolveHistoryDisplayValue = static function (string $fieldName, $rawValue) use ($sourceValueMap, $catalogueValueMap, $serviceValueMap, $subserviceValueMap, $audienceValueMap, $assignedMemberValueMap, $t): string {
+					$resolveHistoryDisplayValue = static function (string $fieldName, $rawValue) use ($catalogueValueMap, $serviceValueMap, $subserviceValueMap, $audienceValueMap, $assignedMemberValueMap, $t): string {
 						if ($rawValue === null || $rawValue === '') {
 							return $t['na'];
 						}
 
 						$valueKey = trim((string) $rawValue);
-						if ($fieldName === 'request_source') {
-							return $sourceValueMap[$valueKey] ?? $valueKey;
-						}
-
 						if ($fieldName === 'catalogue_name') {
 							return $catalogueValueMap[$valueKey] ?? $valueKey;
 						}

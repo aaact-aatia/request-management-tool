@@ -16,12 +16,6 @@ INSERT INTO `tblaccounttype` (`id`, `nameen`, `namefr`, `status`) VALUES
 (5, 'Employee', 'Employé', 1),
 (6, 'Director', 'Directeur', 1);
 
--- Sources (for adaptive tech coaching subservices)
-INSERT INTO `tblsources` (`id`, `nameen`, `namefr`, `status`) VALUES
-(1, 'Coaching', 'Coaching', 1),
-(2, 'Installation / Removal', 'Installation / Désinstallation', 1),
-(3, 'Troubleshooting / Configuration', 'Dépannage / Configuration', 1);
-
 -- Products (Adaptive Technology)
 INSERT INTO `tblproducts` (`id`, `nameen`, `namefr`, `status`) VALUES
 (1, 'JAWS (Job Access With Speech)', 'JAWS (Job Access With Speech)', 1),

@@ -110,18 +110,7 @@ if(mysqli_num_rows($result)>0){
 			<dd><?php echo $productname ?></dd>
 			<?php } ?>
 			<?php
-			// Grab the source name
-			$sourceid = $row['sourceid'];
-			if ($sourceid != 0) {
-				$result2 = mysqli_query($link, "SELECT $nameField FROM tblsources WHERE id = '$sourceid'");
-				$row2 = mysqli_fetch_array($result2);
-				$sourcename = $row2[0] ?? '';
-			} else {
-				$sourcename = '';
-			}
-			?>
-			<?php
-			// Grab the source name
+			// Grab the status name
 			$statusid = $row['statusid'];
 			$result2 = mysqli_query($link, "SELECT $nameField FROM tblstatus WHERE id = '$statusid'");
 			$row2 = mysqli_fetch_array($result2);
@@ -129,10 +118,6 @@ if(mysqli_num_rows($result)>0){
 			?>
 			<dt><?php echo $translations['view_details_status'] ?? ($lang === 'fr' ? 'Statut' : 'Status'); ?></dt>
 			<dd><?php echo $statusname ?></dd>
-			<?php if ($sourcename !== '') { ?>
-			<dt><?php echo $translations['view_details_source'] ?? ($lang === 'fr' ? 'Source' : 'Source'); ?></dt>
-			<dd><?php echo $sourcename ?></dd>
-			<?php } ?>
 			<?php 
 			if ($catalogueid!=0) {
 			?>
