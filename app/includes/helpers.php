@@ -746,6 +746,35 @@ function rmt_mark_resolved_email_sent($link, int $triageId, int $creatorId = 0):
     mysqli_query($link, $insertSql);
 }
 
+function rmt_log_client_survey_sent($link, int $triageId, int $creatorId, int $sendNumber): void {
+    if (!($link instanceof mysqli) || $triageId <= 0 || $sendNumber <= 0) {
+        return;
+    }
+
+    $triageIdEscaped = (int) $triageId;
+    $creatorIdEscaped = (int) $creatorId;
+    $today = mysqli_real_escape_string($link, date('Y-m-d'));
+    $sentAt = date('Y-m-d H:i:s');
+    $noteText = $sendNumber === 1
+        ? "Client survey link sent at $sentAt (send #$sendNumber)."
+        : "Client survey link resent at $sentAt (send #$sendNumber).";
+    $note = mysqli_real_escape_string($link, $noteText);
+
+    $insertSql = "INSERT INTO tbladminlog(`triageid`, `dateadded`, `notes`, `creatorid`, `status`) VALUES ('$triageIdEscaped', '$today', '$note', '$creatorIdEscaped', '1')";
+    mysqli_query($link, $insertSql);
+
+    if (rmt_table_has_column($link, 'RequestFieldHistory', 'requestID')) {
+        $requestResult = mysqli_query($link, "SELECT requestid FROM tbltriage WHERE id = '$triageIdEscaped' LIMIT 1");
+        $requestRow = $requestResult ? mysqli_fetch_assoc($requestResult) : null;
+        $requestId = mysqli_real_escape_string($link, (string) ($requestRow['requestid'] ?? $triageId));
+        $fieldName = mysqli_real_escape_string($link, 'survey_link_sent');
+        $newValue = mysqli_real_escape_string($link, (string) $sendNumber);
+        $changeTime = mysqli_real_escape_string($link, $sentAt);
+        $historySql = "INSERT INTO RequestFieldHistory(`requestID`, `fieldName`, `oldValue`, `newValue`, `actorUserID`, `changeTimeStamp`) VALUES ('$requestId', '$fieldName', NULL, '$newValue', '$creatorIdEscaped', '$changeTime')";
+        mysqli_query($link, $historySql);
+    }
+}
+
 function rmt_get_resolved_email_sent_date($link, int $triageId): ?string {
     if (!($link instanceof mysqli) || $triageId <= 0) {
         return null;

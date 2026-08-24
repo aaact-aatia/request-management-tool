@@ -10,6 +10,7 @@ $translations = require(__DIR__ . '/../lang/' . $lang . '.php');
 
 // Grab MySQL connection
 require('../sql.php');
+require_once __DIR__ . '/helpers.php';
 
 // Now first get the ID
 $requestid = isset($_GET['id']) ? (int)$_GET['id'] : 0;
@@ -28,7 +29,10 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	}
 	// Mark the survey as sent in the existing survey counter column.
 	$sql = "UPDATE `tbltriage` SET `cssurvey` = '$updatedSurveySentCount' WHERE id='$requestid'";
-	mysqli_query($link,$sql);
+	if (mysqli_query($link,$sql)) {
+		$creatorId = isset($_SESSION['pid']) ? (int) $_SESSION['pid'] : 0;
+		rmt_log_client_survey_sent($link, $requestid, $creatorId, (int) $updatedSurveySentCount);
+	}
 	
 	// Now redirect
 	header("location:/viewrequest.php?lang=$lang&erid=".$nrequestid."&status=clientsurveysent"); 

@@ -137,6 +137,7 @@ $translations = [
 		'resolved_email_missing_client' => 'Client email is required before sending this message.',
 		'resolved_email_send_success' => 'Resolved + survey email was sent successfully.',
 		'resolved_email_send_failed' => 'Failed to send resolved + survey email. Please try again.',
+		'view_survey_links' => 'View survey links',
 		'required' => 'required',
 		'fieldset_request_details' => 'Request details',
 		'fieldset_client_info' => 'Client information',
@@ -236,6 +237,7 @@ $translations = [
 		'resolved_email_missing_client' => 'Une adresse courriel client est requise avant l\'envoi.',
 		'resolved_email_send_success' => 'Le courriel de resolution + sondage a ete envoye avec succes.',
 		'resolved_email_send_failed' => 'Echec de l\'envoi du courriel de resolution + sondage. Veuillez reessayer.',
+		'view_survey_links' => 'Voir les liens du sondage',
 		'required' => 'requis',
 		'fieldset_request_details' => 'Détails de la demande',
 		'fieldset_client_info' => 'Renseignements sur le client',
@@ -742,6 +744,9 @@ include 'includes/template/head.php';
 			$resolvedEmailSentDate = rmt_get_resolved_email_sent_date($link, (int)$requestuid);
 			$resolvedEmailSent = ($resolvedEmailSentDate !== null && $resolvedEmailSentDate !== '');
 			$isResolvedStatus = rmt_is_resolved_status_id($link, (int)($row['statusid'] ?? 0));
+			$catalogueSurveyResult = mysqli_query($link, "SELECT survey FROM tblcatalogue WHERE id = '" . (int) $catalogueid . "' LIMIT 1");
+			$catalogueSurvey = $catalogueSurveyResult ? mysqli_fetch_assoc($catalogueSurveyResult) : null;
+			$surveyEnabled = ((int) ($catalogueSurvey['survey'] ?? 0) === 1);
 			$encodedRequestId = base64_encode((string)$requestuid);
 			$returnToEdit = rawurlencode('/editrequest.php?lang=' . $lang . '&id=' . (int)$row['id']);
 			?>
@@ -758,7 +763,7 @@ include 'includes/template/head.php';
 						<div class="form-group form-buttons">
 							<button type="submit"
 								class="btn btn-primary"
-								formaction="/client-survey-link.php?lang=<?php echo $lang; ?>&erid=<?php echo urlencode($encodedRequestId); ?>&return_to=<?php echo $returnToEdit; ?>"
+								formaction="<?= htmlspecialchars(app_url('client-survey-link.php?lang=' . urlencode($lang) . '&erid=' . urlencode($encodedRequestId) . '&return_to=' . $returnToEdit)) ?>"
 								formmethod="post"
 								name="email_action"
 								value="send_resolved_email"><?php echo $t['resolved_email_send_button']; ?></button>
@@ -766,6 +771,9 @@ include 'includes/template/head.php';
 					<?php else: ?>
 						<p><?php echo $t['resolved_email_missing_client']; ?></p>
 					<?php endif; ?>
+				<?php endif; ?>
+				<?php if ($surveyEnabled): ?>
+					<p><a class="btn btn-default" href="<?= htmlspecialchars(app_url('client-survey-link.php?lang=' . urlencode($lang) . '&erid=' . urlencode($encodedRequestId))) ?>"><?php echo htmlspecialchars($t['view_survey_links'], ENT_QUOTES, 'UTF-8'); ?></a></p>
 				<?php endif; ?>
 			<?php endif; ?>
 
