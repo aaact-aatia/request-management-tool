@@ -2,6 +2,7 @@
 // Grab MySQL connection (includes session management)
 require('sql.php');
 /** @var mysqli $link */
+require_once 'includes/helpers.php';
 
 // Handle language from query string or session
 if (isset($_GET['lang']) && in_array($_GET['lang'], ['en', 'fr'])) {
@@ -201,7 +202,7 @@ include 'includes/template/head.php';
 							<?php
 								while($row2 = mysqli_fetch_array($result2)){
 							?>
-									<li><?php echo htmlspecialchars($row2[$nameColumn]); if (!empty($row2['sds'])) { echo ' <small class="label label-success">' . (int)$row2['sds'] . ' ' . ($_SESSION['lang'] === 'fr' ? 'jour(s)' : 'day(s)') . '</small>'; } ?></li>
+									<li><?php echo htmlspecialchars($row2[$nameColumn]); if (!rmt_service_has_active_subservices($link, (int) $row2['id']) && !empty($row2['sds'])) { echo ' <small class="label label-success">' . (int)$row2['sds'] . ' ' . ($_SESSION['lang'] === 'fr' ? 'jour(s)' : 'day(s)') . '</small>'; } ?></li>
 							<?php } ?>
 								</ul>
 							<?php } else {

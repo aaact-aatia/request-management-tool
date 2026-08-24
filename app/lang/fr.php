@@ -389,6 +389,7 @@ return [
     'catalogue_mgmt_no_services' => 'Aucun élément de service disponible',
     'catalogue_mgmt_view_subservices' => 'Afficher les sous-services',
     'catalogue_mgmt_back_button' => 'Revenir au catalogue',
+    'service_sla_managed_by_subservices' => 'La norme de prestation est définie par les sous-services.',
     
     // Catalogue sub-services management page (catalogue-sub-mgmt.php)
     'catalogue_sub_mgmt_title_suffix' => 'Gestion du catalogue de services - Outil de gestion des demandes - Bureau de l\'accessibilité de la TI',

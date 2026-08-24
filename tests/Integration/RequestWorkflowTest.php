@@ -45,6 +45,9 @@ check(
     ],
     'service without subservices normalizes the child ID to zero'
 );
+check(rmt_get_sla_days_required_for_request($link, 201, 0) === 5, 'leaf service uses its service-level SLA');
+check(rmt_get_sla_days_required_for_request($link, 202, 0) === 0, 'service with active subservices does not use its service-level SLA');
+check(rmt_get_sla_days_required_for_request($link, 202, 301) === 3, 'selected subservice uses its own SLA');
 check(
     rmt_validate_intake_selection($link, 103, 202, 301) === [
         'catalogueid' => 103,
