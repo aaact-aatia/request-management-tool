@@ -1004,8 +1004,8 @@ $blobStorage = new AzureBlobStorageManager();
 						'template_category_id' => $category['id'],
 						'template_category_name_en' => $category['name_en'],
 						'template_category_name_fr' => $category['name_fr'],
-						'subject' => rmt_notification_subject('resolved', 'client', $requestLanguage, ['requestid' => (string) $row['requestid']]),
-						'message' => rmt_notification_message('resolved', 'client', $requestLanguage, $resolvedContext),
+						'subject' => rmt_notification_subject('resolved', 'client', $requestLanguage, ['requestid' => (string) $row['requestid']], $link, $tarraycontactid, (int) $serviceid, (int) $subserviceid),
+						'message' => rmt_notification_message('resolved', 'client', $requestLanguage, $resolvedContext, $link, $tarraycontactid, (int) $serviceid, (int) $subserviceid),
 					];
 
 					$templateId = app_notify_template_id('notification_generic');

@@ -577,8 +577,8 @@ if (($cserviceid != $serviceid || $csubserviceid != $subserviceid) && $contactid
             'template_category_id' => $reassignedCategory['id'],
             'template_category_name_en' => $reassignedCategory['name_en'],
             'template_category_name_fr' => $reassignedCategory['name_fr'],
-            'subject' => rmt_notification_subject('reassigned', 'internal', 'en', $personalisation),
-            'message' => rmt_notification_message('reassigned', 'internal', 'en', $personalisation),
+            'subject' => rmt_notification_subject('reassigned', 'internal', 'en', $personalisation, $link, $contactid, (int) $serviceid, (int) $subserviceid),
+            'message' => rmt_notification_message('reassigned', 'internal', 'en', $personalisation, $link, $contactid, (int) $serviceid, (int) $subserviceid),
         ];
         sendEmail($newTeamEmail, $reassignedTemplate, json_encode($reassignedTeamPersonalisation), ['recipientType' => 'internal']);
     }
@@ -616,8 +616,8 @@ if ($workerIdInt > 0 && $workerIdInt !== $prevWorkerIdInt) {
             'template_category_id' => $reassignedCategory['id'],
             'template_category_name_en' => $reassignedCategory['name_en'],
             'template_category_name_fr' => $reassignedCategory['name_fr'],
-            'subject' => rmt_notification_subject('reassigned', 'internal', 'en', $personalisation),
-            'message' => rmt_notification_message('reassigned', 'internal', 'en', $personalisation),
+            'subject' => rmt_notification_subject('reassigned', 'internal', 'en', $personalisation, $link, $contactid, (int) $serviceid, (int) $subserviceid),
+            'message' => rmt_notification_message('reassigned', 'internal', 'en', $personalisation, $link, $contactid, (int) $serviceid, (int) $subserviceid),
         ];
         sendEmail($workerEmail, $reassignedTemplate, json_encode($reassignedWorkerPersonalisation), ['recipientType' => 'internal', 'recipientRole' => $workerRoleKey]);
     }

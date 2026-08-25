@@ -36,7 +36,7 @@ $actionStatus = '';
 if ($triageId <= 0) {
     $status = 'failed';
 } else {
-    $sql = "SELECT id, requestid, title, clientfname, clientlname, clientemail, statusid, catalogueid FROM tbltriage WHERE id = '$triageId' LIMIT 1";
+    $sql = "SELECT id, requestid, title, clientfname, clientlname, clientemail, statusid, catalogueid, serviceid, subserviceid FROM tbltriage WHERE id = '$triageId' LIMIT 1";
     $result = mysqli_query($link, $sql);
     if ($result && mysqli_num_rows($result) > 0) {
         $request = mysqli_fetch_assoc($result);
@@ -72,6 +72,12 @@ if ($request !== null && $_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($clientEmail === '') {
         $actionStatus = 'missing_email';
     } elseif ($action === 'send_resolved_email') {
+        $requestTeamId = rmt_resolve_responsible_team_id(
+            $link,
+            (int) $request['catalogueid'],
+            (int) ($request['serviceid'] ?? 0),
+            (int) ($request['subserviceid'] ?? 0)
+        );
         $templateId = app_notify_template_id('notification_generic');
         $category = rmt_notification_template_category('resolved');
         $resolvedContext = [
@@ -84,7 +90,7 @@ if ($request !== null && $_SERVER['REQUEST_METHOD'] === 'POST') {
             $resolvedContext['survey_link_en'] = $enLink;
             $resolvedContext['survey_link_fr'] = $frLink;
         }
-        $resolvedMessage = rmt_notification_message('resolved', 'client', $requestLanguage, $resolvedContext);
+        $resolvedMessage = rmt_notification_message('resolved', 'client', $requestLanguage, $resolvedContext, $link, $requestTeamId, (int) ($request['serviceid'] ?? 0), (int) ($request['subserviceid'] ?? 0));
 
         $personalisation = [
             'requestid' => (string) $request['requestid'],
@@ -98,7 +104,7 @@ if ($request !== null && $_SERVER['REQUEST_METHOD'] === 'POST') {
             'template_category_name_fr' => $category['name_fr'],
             'subject' => rmt_notification_subject('resolved', 'client', $requestLanguage, [
                 'requestid' => (string) $request['requestid'],
-            ]),
+            ], $link, $requestTeamId, (int) ($request['serviceid'] ?? 0), (int) ($request['subserviceid'] ?? 0)),
             'message' => $resolvedMessage,
         ];
 

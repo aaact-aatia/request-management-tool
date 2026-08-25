@@ -64,7 +64,35 @@ See `.env.example` for the generic setting.
 
 ### Template model and ID mapping
 
-The application now uses a single GC Notify template ID for all notification types. The app supplies the event-specific body text through `((message))`.
+The application uses a single GC Notify template ID (the outer email "shell") for all notification types, supplied via `((message))`. The actual subject/body wording is no longer only hardcoded PHP — see "Per-team notification templates" below.
+
+## Per-team notification templates
+
+Subject/body wording is resolved at send time, in this order:
+
+1. A sub-service specific override (`subservice_id` = the request's `tblsubservices.id`).
+2. A service specific override (`service_id` = the request's `tblservices.id`).
+3. A team-specific override (`team_id` = the team's `tblteams.id`).
+4. The app-wide default (`team_id = 0`, `service_id = 0`, `subservice_id = 0`), seeded via `database/migrations/022-seed-default-notification-templates.sql`.
+5. The built-in fallback text in `app/includes/helpers.php` (`rmt_notification_subject_single_language()` / `rmt_notification_message_single_language()`), used only in the unlikely case the app-wide default row is missing from the database.
+
+This mirrors the existing responsible-team resolution chain (`rmt_resolve_responsible_team_id()`: subservice contact -> service contact -> catalogue contact), so a service that has a different owning contact than its catalogue can also have its own notification wording.
+
+The app-wide default (level 4) is the baked-in baseline, seeded via `database/migrations/022-seed-default-notification-templates.sql`. It is editable only by superadmins (`rmt_notification_manageable_teams()` only lists it for superadmins, and `app/includes/edit-notification-template.php` enforces this via `rmt_notification_user_can_manage_scope()`) and can never be deleted/reset through the UI - there's nothing below it to fall back to. Regular admins and managers/team leads only manage real teams (and services/subservices they own), each with working Save/Reset back to the app-wide default.
+
+Two audiences are supported per team/service/subservice:
+
+- `client` — events: `request_created`, `resolved`.
+- `employee` — events: `request_created`, `status_changed`, `reassigned`, `resolved`.
+
+Each audience/event combination has separate English and French rows (`language` column). Template authors write `{{token}}` placeholders (e.g. `{{requestid}}`, `{{teamname}}`, `{{url}}`, `{{salutation}}`, `{{signature}}`) which are substituted with live request data by `rmt_notification_render_template()` in `app/includes/notification-templates.php`.
+
+### Admin UI
+
+`app/notification-templates.php` (with `app/includes/edit-notification-template.php` for the edit/reset modal) lets authorized users maintain these templates:
+
+- Admin/superadmin can edit the global default (`team_id = 0`) and every team's templates.
+- Managers (`atype = 3`) and team leads (`atype = 4`) can only edit templates for the team(s) they manage/lead (`rmt_notification_user_can_manage_team()` in `app/includes/notification-templates.php`).
 
 ### Communication language policy
 
@@ -184,7 +212,7 @@ Recommended default:
 - Alternatively, run `app/sendmailtest1.sh` from the repo root
 
 ### 5. Remaining Implementation Work
-- Expand documentation for the full event/template matrix by language
+- Seed starting global-default template content for each audience/event/language combination (currently blank until an admin authors them, in which case the built-in fallback text is used).
 - Add deeper operational logging if a durable audit trail is required
 
 ## Notes
