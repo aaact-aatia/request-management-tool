@@ -442,6 +442,7 @@ return [
     'notification_templates_source_global' => 'Using global default',
     'notification_templates_source_builtin' => 'Using built-in default',
     'notification_templates_edit' => 'Edit',
+    'notification_templates_preview' => 'Preview',
     'notification_templates_event_request_created' => 'Request created',
     'notification_templates_event_request_afterfact' => 'Request created (after-the-fact)',
     'notification_templates_event_request_aaact' => 'Needs AAACT triage',

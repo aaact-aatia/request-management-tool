@@ -257,8 +257,11 @@ include 'includes/template/head.php';
                     : 'Create one GC Notify template with ((subject)) for the subject and ((message)) for the main email body.'; ?>
             </p>
             <p class="help-block">
-                <a href="/templates/notification-generic.php?lang=<?php echo urlencode($lang); ?>">
-                    <?php echo $isFrench ? 'Voir l apercu du modele generique' : 'View generic template preview'; ?>
+                <?php echo $isFrench
+                    ? 'Le sujet et le message de chaque notification sont geres par equipe (avec un modele global par defaut).'
+                    : 'The subject and message wording for each notification is managed per team (with an app-wide default).'; ?>
+                <a href="/notification-templates.php?lang=<?php echo urlencode($lang); ?>">
+                    <?php echo $isFrench ? 'Gerer les modeles de notification' : 'Manage notification templates'; ?>
                 </a>
             </p>
 

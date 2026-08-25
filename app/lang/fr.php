@@ -441,6 +441,7 @@ return [
     'notification_templates_source_global' => 'Modele global par defaut utilise',
     'notification_templates_source_builtin' => 'Modele integre par defaut utilise',
     'notification_templates_edit' => 'Modifier',
+    'notification_templates_preview' => 'Apercu',
     'notification_templates_event_request_created' => 'Demande creee',
     'notification_templates_event_request_afterfact' => 'Demande creee (apres les faits)',
     'notification_templates_event_request_aaact' => 'Triage AATIA requis',

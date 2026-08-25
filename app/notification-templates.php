@@ -140,9 +140,8 @@ include 'includes/template/head.php';
                 <thead>
                     <tr>
                         <th><?= htmlspecialchars($t['notification_templates_col_event']) ?></th>
-                        <th><?= htmlspecialchars($t['notification_templates_col_language']) ?></th>
-                        <th><?= htmlspecialchars($t['notification_templates_col_source']) ?></th>
-                        <th><?= htmlspecialchars($t['notification_templates_col_updated']) ?></th>
+                        <th><?= htmlspecialchars($t['notification_templates_lang_en']) ?></th>
+                        <th><?= htmlspecialchars($t['notification_templates_lang_fr']) ?></th>
                         <th><?= htmlspecialchars($t['notification_templates_col_actions']) ?></th>
                     </tr>
                 </thead>
@@ -150,9 +149,9 @@ include 'includes/template/head.php';
                 <?php
                 foreach (rmt_notification_events_for_audience($audience) as $event) {
                     $eventLabel = $t['notification_templates_event_' . $event] ?? $event;
+                    $languageSummaries = [];
                     foreach (['en', 'fr'] as $templateLanguage) {
                         $ownRow = rmt_notification_template_fetch($link, $selectedTeamId, $audience, $event, $templateLanguage, $scopeServiceId, $scopeSubserviceId);
-                        $languageLabel = $templateLanguage === 'en' ? $t['notification_templates_lang_en'] : $t['notification_templates_lang_fr'];
 
                         if ($ownRow !== null) {
                             $sourceLabel = $t['notification_templates_source_custom'];
@@ -168,20 +167,24 @@ include 'includes/template/head.php';
                             }
                             $updated = '';
                         }
+
+                        $languageSummaries[$templateLanguage] = $sourceLabel . ($updated !== '' ? ' (' . $updated . ')' : '');
+                    }
                 ?>
                     <tr>
                         <td><?= htmlspecialchars($eventLabel) ?></td>
-                        <td><?= htmlspecialchars($languageLabel) ?></td>
-                        <td><?= htmlspecialchars($sourceLabel) ?></td>
-                        <td><?= htmlspecialchars($updated !== '' ? $updated : '—') ?></td>
+                        <td><?= htmlspecialchars($languageSummaries['en']) ?></td>
+                        <td><?= htmlspecialchars($languageSummaries['fr']) ?></td>
                         <td>
-                            <a class="wb-lbx lbx-modal btn btn-primary btn-block" href="includes/edit-notification-template.php?team_id=<?= $selectedTeamId ?>&service_id=<?= $scopeServiceId ?>&subservice_id=<?= $scopeSubserviceId ?>&audience=<?= urlencode($audience) ?>&event=<?= urlencode($event) ?>&language=<?= urlencode($templateLanguage) ?>&lang=<?= htmlspecialchars($lang) ?>">
-                                <?= htmlspecialchars($t['notification_templates_edit']) ?><span class="wb-inv"> <?= htmlspecialchars($eventLabel . ' ' . $languageLabel) ?></span>
+                            <a class="btn btn-primary btn-block" href="/notification-template-edit.php?team_id=<?= $selectedTeamId ?>&service_id=<?= $scopeServiceId ?>&subservice_id=<?= $scopeSubserviceId ?>&audience=<?= urlencode($audience) ?>&event=<?= urlencode($event) ?>&lang=<?= htmlspecialchars($lang) ?>">
+                                <?= htmlspecialchars($t['notification_templates_edit']) ?><span class="wb-inv"> <?= htmlspecialchars($eventLabel) ?></span>
+                            </a>
+                            <a class="wb-lbx lbx-modal btn btn-default btn-block" href="includes/notification-template-preview-dialog.php?team_id=<?= $selectedTeamId ?>&service_id=<?= $scopeServiceId ?>&subservice_id=<?= $scopeSubserviceId ?>&audience=<?= urlencode($audience) ?>&event=<?= urlencode($event) ?>&lang=<?= htmlspecialchars($lang) ?>">
+                                <?= htmlspecialchars($t['notification_templates_preview']) ?><span class="wb-inv"> <?= htmlspecialchars($eventLabel) ?></span>
                             </a>
                         </td>
                     </tr>
                 <?php
-                    }
                 }
                 ?>
                 </tbody>

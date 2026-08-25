@@ -28,6 +28,23 @@ if (!isset($templateDefinitions[$previewTemplateKey])) {
 $definition = $templateDefinitions[$previewTemplateKey];
 $configuredTemplateId = trim((string) app_setting($previewTemplateKey, ''));
 
+$previewTeams = [];
+if (isSuperAdmin()) {
+    $previewTeams[] = ['id' => RMT_NOTIFICATION_GLOBAL_TEAM_ID, 'nameen' => 'App-wide default', 'namefr' => 'Modele par defaut de l\'application'];
+}
+$statement = rmt_db_execute($link, 'SELECT id, nameen, namefr FROM tblteams WHERE status = 1 ORDER BY nameen ASC');
+$result = mysqli_stmt_get_result($statement);
+while ($teamRow = mysqli_fetch_assoc($result)) {
+    $previewTeams[] = ['id' => (int) $teamRow['id'], 'nameen' => $teamRow['nameen'], 'namefr' => $teamRow['namefr']];
+}
+mysqli_stmt_close($statement);
+
+$previewTeamIds = array_map(static fn(array $team): int => (int) $team['id'], $previewTeams);
+$selectedPreviewTeamId = isset($_GET['team_id']) ? (int) $_GET['team_id'] : RMT_NOTIFICATION_GLOBAL_TEAM_ID;
+if (!in_array($selectedPreviewTeamId, $previewTeamIds, true)) {
+    $selectedPreviewTeamId = RMT_NOTIFICATION_GLOBAL_TEAM_ID;
+}
+
 $messageScenarios = [
     'request_created_client' => [
         'label_en' => 'New request to client',
@@ -94,8 +111,18 @@ $messageScenarios = [
         'label_fr' => 'Notification de changement de statut au client',
         'event' => 'status_changed',
         'recipientType' => 'client',
-        'description_en' => 'Client update when the request status changes.',
-        'description_fr' => 'Mise à jour au client lorsque le statut de la demande change.',
+        'description_en' => 'Reference only: not currently sent to clients (client notifications are limited to new request and resolved/closed).',
+        'description_fr' => 'Reference seulement : non envoye actuellement aux clients (les notifications client se limitent a nouvelle demande et resolue/fermee).',
+        'status_label_en' => 'In progress',
+        'status_label_fr' => 'En cours',
+    ],
+    'status_changed_team' => [
+        'label_en' => 'Status changed notification to team',
+        'label_fr' => 'Notification de changement de statut a l equipe',
+        'event' => 'status_changed',
+        'recipientType' => 'internal',
+        'description_en' => 'Internal team message when the request status changes.',
+        'description_fr' => 'Message interne lorsque le statut de la demande change.',
         'status_label_en' => 'In progress',
         'status_label_fr' => 'En cours',
     ],
@@ -114,8 +141,8 @@ $messageScenarios = [
         'label_fr' => 'Notification de réattribution au client',
         'event' => 'reassigned',
         'recipientType' => 'client',
-        'description_en' => 'Client-facing message when a request is reassigned.',
-        'description_fr' => 'Message destiné au client lorsqu une demande est réattribuée.',
+        'description_en' => 'Reference only: not currently sent to clients (client notifications are limited to new request and resolved/closed).',
+        'description_fr' => 'Reference seulement : non envoye actuellement aux clients (les notifications client se limitent a nouvelle demande et resolue/fermee).',
         'status_label_en' => 'In progress',
         'status_label_fr' => 'En cours',
     ],
@@ -130,6 +157,8 @@ $scenario = $messageScenarios[$selectedScenario];
 $scenarioLabel = $isFrench ? $scenario['label_fr'] : $scenario['label_en'];
 $scenarioDescription = $isFrench ? $scenario['description_fr'] : $scenario['description_en'];
 $scenarioStatusLabel = $isFrench ? $scenario['status_label_fr'] : $scenario['status_label_en'];
+$scenarioAudience = ($scenario['recipientType'] === 'client') ? 'client' : 'employee';
+$isScenarioCustomizable = rmt_notification_is_valid_audience_event($scenarioAudience, $scenario['event']);
 
 $previewPayloadLanguage = ($scenario['recipientType'] === 'client') ? $lang : 'en';
 
@@ -158,13 +187,17 @@ $sampleMessage = rmt_notification_message(
     $scenario['event'],
     $scenario['recipientType'],
     $previewPayloadLanguage,
-    $sampleContext
+    $sampleContext,
+    $isScenarioCustomizable ? $link : null,
+    $selectedPreviewTeamId
 );
 $sampleSubject = rmt_notification_subject(
     $scenario['event'],
     $scenario['recipientType'],
     $previewPayloadLanguage,
-    $sampleContext
+    $sampleContext,
+    $isScenarioCustomizable ? $link : null,
+    $selectedPreviewTeamId
 );
 
 $previewSubjectIntro = $isFrench
@@ -213,37 +246,33 @@ include '../includes/template/head.php';
                 <?php endforeach; ?>
             </select>
         </div>
+        <div class="form-group">
+            <label for="team_id" class="field-name"><?php echo $isFrench ? 'Equipe a previsualiser' : 'Team to preview'; ?></label>
+            <select id="team_id" name="team_id" class="form-control" onchange="this.form.submit()" <?php echo $isScenarioCustomizable ? '' : 'disabled'; ?>>
+                <?php foreach ($previewTeams as $previewTeam): ?>
+                    <option value="<?php echo (int) $previewTeam['id']; ?>" <?php echo ((int) $previewTeam['id'] === $selectedPreviewTeamId) ? 'selected' : ''; ?>>
+                        <?php echo htmlspecialchars($isFrench ? $previewTeam['namefr'] : $previewTeam['nameen']); ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
         <p class="mrgn-bttm-0"><?php echo htmlspecialchars($scenarioDescription); ?></p>
     </form>
 
-    <section class="well" aria-labelledby="template-info-heading">
-        <h2 id="template-info-heading"><?php echo $isFrench ? 'Information sur le modèle' : 'Template information'; ?></h2>
-        <dl class="dl-horizontal">
-            <dt><?php echo $isFrench ? 'Nom du modèle' : 'Template name'; ?></dt>
-            <dd><?php echo htmlspecialchars($isFrench ? $definition['name_fr'] : $definition['name_en']); ?></dd>
-
-            <dt><?php echo $isFrench ? 'Destinataires' : 'Audience'; ?></dt>
-            <dd><?php echo htmlspecialchars($isFrench ? $definition['audience_fr'] : $definition['audience_en']); ?></dd>
-
-            <dt><?php echo $isFrench ? 'Usage' : 'Purpose'; ?></dt>
-            <dd><?php echo htmlspecialchars($isFrench ? $definition['purpose_fr'] : $definition['purpose_en']); ?></dd>
-
-            <dt><?php echo $isFrench ? 'Sujet suggéré' : 'Suggested subject'; ?></dt>
-            <dd>
-                <p class="mrgn-bttm-sm"><?php echo htmlspecialchars($previewSubjectIntro); ?></p>
-                <code><?php echo htmlspecialchars($sampleSubject); ?></code>
-            </dd>
-
-            <dt><?php echo $isFrench ? 'ID du modèle GC Notify' : 'GC Notify template ID'; ?></dt>
-            <dd><code><?php echo htmlspecialchars($configuredTemplateId !== '' ? $configuredTemplateId : 'unset'); ?></code></dd>
-
-            <dt><?php echo $isFrench ? 'Variable de configuration' : 'Setting key'; ?></dt>
-            <dd><code><?php echo htmlspecialchars($previewTemplateKey); ?></code></dd>
-
-            <dt><?php echo $isFrench ? 'Variables utilisées' : 'Variables used'; ?></dt>
-            <dd><code>((subject))</code>, <code>((message))</code>, <code>((requestid))</code>, <code>((url))</code></dd>
-        </dl>
-    </section>
+    <?php if ($isScenarioCustomizable): ?>
+    <p class="alert alert-success">
+        <?php echo $isFrench
+            ? 'Cet apercu reflete le modele reellement configure pour l equipe selectionnee (ou le modele global par defaut). '
+            : 'This preview reflects the actual configured template for the selected team (or the app-wide default). '; ?>
+        <a href="/notification-templates.php?lang=<?php echo urlencode($lang); ?>&team_id=<?php echo $selectedPreviewTeamId; ?>"><?php echo $isFrench ? 'Modifier ce modele' : 'Edit this template'; ?></a>
+    </p>
+    <?php else: ?>
+    <p class="alert alert-info">
+        <?php echo $isFrench
+            ? 'Cet evenement n est pas personnalisable via les modeles de notification - il utilise toujours le texte integre par defaut.'
+            : 'This event is not customizable through the notification templates admin page - it always uses the built-in default wording.'; ?>
+    </p>
+    <?php endif; ?>
 
     <section class="panel panel-default" aria-labelledby="template-preview-heading">
         <header class="panel-heading">
@@ -261,66 +290,10 @@ include '../includes/template/head.php';
         </div>
     </section>
 
-    <section class="panel panel-default" aria-labelledby="template-markdown-heading">
-        <header class="panel-heading">
-            <h2 id="template-markdown-heading" class="panel-title"><?php echo $isFrench ? 'Source markdown' : 'Markdown source'; ?></h2>
-        </header>
-        <div class="panel-body">
-            <p class="mrgn-bttm-md"><?php echo $isFrench
-                ? 'Copiez ce markdown dans GC Notify pour ce modèle.'
-                : 'Copy this markdown into GC Notify for this template.'; ?></p>
-            <label for="templateMarkdown" class="wb-inv"><?php echo $isFrench ? 'Contenu markdown du modèle' : 'Template markdown content'; ?></label>
-            <textarea id="templateMarkdown" class="form-control" style="width:100%; max-width:100%;" rows="10" readonly><?php echo htmlspecialchars($markdown); ?></textarea>
-            <div class="mrgn-tp-md">
-                <button id="copyMarkdownBtn" type="button" class="btn btn-primary">
-                    <?php echo $isFrench ? 'Copier le markdown' : 'Copy markdown'; ?>
-                </button>
-                <a class="btn btn-default" href="/templates/?lang=<?php echo urlencode($lang); ?>"><?php echo $isFrench ? 'Voir tous les modèles' : 'View all templates'; ?></a>
-                <span id="copyStatus" class="mrgn-lft-sm" aria-live="polite"></span>
-            </div>
-        </div>
-    </section>
-
     <?php include '../includes/template/page-details.php'; ?>
 </main>
 
 <?php include '../includes/template/footer.php'; include '../includes/template/scripts.php'; ?>
-<script>
-(function () {
-    var copyButton = document.getElementById('copyMarkdownBtn');
-    var textarea = document.getElementById('templateMarkdown');
-    var status = document.getElementById('copyStatus');
-    if (!copyButton || !textarea || !status) {
-        return;
-    }
-
-    copyButton.addEventListener('click', function () {
-        var onSuccess = function () {
-            status.textContent = <?php echo json_encode($isFrench ? 'Markdown copié.' : 'Markdown copied.'); ?>;
-        };
-
-        var onFailure = function () {
-            status.textContent = <?php echo json_encode($isFrench ? 'Impossible de copier automatiquement. Sélectionnez le texte et copiez-le manuellement.' : 'Unable to copy automatically. Select the text and copy it manually.'); ?>;
-        };
-
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(textarea.value).then(onSuccess).catch(onFailure);
-            return;
-        }
-
-        try {
-            textarea.focus();
-            textarea.select();
-            var copied = document.execCommand('copy');
-            status.textContent = copied
-                ? <?php echo json_encode($isFrench ? 'Markdown copié.' : 'Markdown copied.'); ?>
-                : <?php echo json_encode($isFrench ? 'Impossible de copier automatiquement. Sélectionnez le texte et copiez-le manuellement.' : 'Unable to copy automatically. Select the text and copy it manually.'); ?>;
-        } catch (error) {
-            onFailure();
-        }
-    });
-})();
-</script>
 </body>
 </html>
 <?php

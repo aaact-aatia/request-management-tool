@@ -78,18 +78,18 @@ Subject/body wording is resolved at send time, in this order:
 
 This mirrors the existing responsible-team resolution chain (`rmt_resolve_responsible_team_id()`: subservice contact -> service contact -> catalogue contact), so a service that has a different owning contact than its catalogue can also have its own notification wording.
 
-The app-wide default (level 4) is the baked-in baseline, seeded via `database/migrations/022-seed-default-notification-templates.sql`. It is editable only by superadmins (`rmt_notification_manageable_teams()` only lists it for superadmins, and `app/includes/edit-notification-template.php` enforces this via `rmt_notification_user_can_manage_scope()`) and can never be deleted/reset through the UI - there's nothing below it to fall back to. Regular admins and managers/team leads only manage real teams (and services/subservices they own), each with working Save/Reset back to the app-wide default.
+The app-wide default (level 4) is the baked-in baseline, seeded via `database/migrations/022-seed-default-notification-templates.sql`. It is editable only by superadmins (`rmt_notification_manageable_teams()` only lists it for superadmins, and `app/notification-template-edit.php` enforces this via `rmt_notification_user_can_manage_scope()`) and can never be deleted/reset through the UI - there's nothing below it to fall back to. Regular admins and managers/team leads only manage real teams (and services/subservices they own), each with working Save/Reset back to the app-wide default.
 
 Two audiences are supported per team/service/subservice:
 
 - `client` — events: `request_created`, `resolved`.
 - `employee` — events: `request_created`, `status_changed`, `reassigned`, `resolved`.
 
-Each audience/event combination has separate English and French rows (`language` column). Template authors write `{{token}}` placeholders (e.g. `{{requestid}}`, `{{teamname}}`, `{{url}}`, `{{salutation}}`, `{{signature}}`) which are substituted with live request data by `rmt_notification_render_template()` in `app/includes/notification-templates.php`.
+Each audience/event combination has separate English and French rows (`language` column). Template authors write `{{token}}` placeholders (e.g. `{{requestid}}`, `{{teamname}}`, `{{url}}`, `{{client_fname}}`) which are substituted with live request data by `rmt_notification_render_template()` in `app/includes/notification-templates.php`.
 
 ### Admin UI
 
-`app/notification-templates.php` (with `app/includes/edit-notification-template.php` for the edit/reset modal) lets authorized users maintain these templates:
+`app/notification-templates.php` lists templates for the selected team (and optional service/subservice scope) and links to `app/notification-template-edit.php` - a full page (not a modal) for editing a single template. That edit page has a "Preview" button that opens `app/includes/notification-template-preview-dialog.php` in a lightbox dialog, rendering the currently saved subject/message with sample data.
 
 - Admin/superadmin can edit the global default (`team_id = 0`) and every team's templates.
 - Managers (`atype = 3`) and team leads (`atype = 4`) can only edit templates for the team(s) they manage/lead (`rmt_notification_user_can_manage_team()` in `app/includes/notification-templates.php`).
