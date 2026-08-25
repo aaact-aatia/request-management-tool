@@ -143,6 +143,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Rework notification template editing UX and previews ([2d0a154](https://github.com/aaact-aatia/request-management-tool/commit/2d0a154a0a31e7bf09313325e55b8a10c8b2d064))
 
+- Add per-team notification controls ([c24158c](https://github.com/aaact-aatia/request-management-tool/commit/c24158c4d2e01413c51c21cabcd8cd8d0841bcf3))
+
 
 ### Build
 
@@ -292,6 +294,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 - Regenerate changelog ([ef20232](https://github.com/aaact-aatia/request-management-tool/commit/ef20232aa574737ba6ae54a0c989070074248070))
 
 - Regenerate CHANGELOG.md [skip ci] ([2306c54](https://github.com/aaact-aatia/request-management-tool/commit/2306c54b366a9705d831157c0e2b299c0a1b9c96))
+
+- Regenerate CHANGELOG.md [skip ci] ([e798d8f](https://github.com/aaact-aatia/request-management-tool/commit/e798d8f55ba6052e26c78be25268ca05d7e83385))
 
 
 ### Fixed
