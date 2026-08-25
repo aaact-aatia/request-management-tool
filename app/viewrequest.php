@@ -1009,7 +1009,10 @@ $blobStorage = new AzureBlobStorageManager();
 					];
 
 					$templateId = app_notify_template_id('notification_generic');
-					$sent = sendEmail($resolvedClientEmail, $templateId, json_encode($personalisation), ['recipientType' => 'client']);
+					$sent = false;
+					if (rmt_notification_should_send($link, (int) $triageid, (int) $tarraycontactid, 'client', 'resolved', $resolvedClientEmail)) {
+						$sent = sendEmail($resolvedClientEmail, $templateId, json_encode($personalisation), ['recipientType' => 'client']);
+					}
 					if ($sent) {
 						if ($surveyEnabled) {
 							$currentSurveySentCount = (int) ($row['cssurvey'] ?? 0);

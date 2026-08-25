@@ -108,7 +108,10 @@ if ($request !== null && $_SERVER['REQUEST_METHOD'] === 'POST') {
             'message' => $resolvedMessage,
         ];
 
-        $sent = sendEmail($clientEmail, $templateId, json_encode($personalisation), ['recipientType' => 'client']);
+        $sent = false;
+        if (rmt_notification_should_send($link, (int) $request['id'], $requestTeamId, 'client', 'resolved', $clientEmail)) {
+            $sent = sendEmail($clientEmail, $templateId, json_encode($personalisation), ['recipientType' => 'client']);
+        }
         if ($sent) {
             if ($surveyEnabled) {
                 $result3 = mysqli_query($link, "SELECT cssurvey FROM tbltriage WHERE id = '$triageId'");

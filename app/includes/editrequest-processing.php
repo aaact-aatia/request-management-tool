@@ -580,7 +580,9 @@ if (($cserviceid != $serviceid || $csubserviceid != $subserviceid) && $contactid
             'subject' => rmt_notification_subject('reassigned', 'internal', 'en', $personalisation, $link, $contactid, (int) $serviceid, (int) $subserviceid),
             'message' => rmt_notification_message('reassigned', 'internal', 'en', $personalisation, $link, $contactid, (int) $serviceid, (int) $subserviceid),
         ];
-        sendEmail($newTeamEmail, $reassignedTemplate, json_encode($reassignedTeamPersonalisation), ['recipientType' => 'internal']);
+        if (rmt_notification_should_send($link, $requestuidInt, $contactid, 'employee', 'reassigned', $newTeamEmail)) {
+            sendEmail($newTeamEmail, $reassignedTemplate, json_encode($reassignedTeamPersonalisation), ['recipientType' => 'internal']);
+        }
     }
 }
 
@@ -619,7 +621,9 @@ if ($workerIdInt > 0 && $workerIdInt !== $prevWorkerIdInt) {
             'subject' => rmt_notification_subject('reassigned', 'internal', 'en', $personalisation, $link, $contactid, (int) $serviceid, (int) $subserviceid),
             'message' => rmt_notification_message('reassigned', 'internal', 'en', $personalisation, $link, $contactid, (int) $serviceid, (int) $subserviceid),
         ];
-        sendEmail($workerEmail, $reassignedTemplate, json_encode($reassignedWorkerPersonalisation), ['recipientType' => 'internal', 'recipientRole' => $workerRoleKey]);
+        if (rmt_notification_should_send($link, $requestuidInt, $contactid, 'employee', 'reassigned', $workerEmail)) {
+            sendEmail($workerEmail, $reassignedTemplate, json_encode($reassignedWorkerPersonalisation), ['recipientType' => 'internal', 'recipientRole' => $workerRoleKey]);
+        }
     }
 }
 
