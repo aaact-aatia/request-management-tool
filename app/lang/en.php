@@ -457,6 +457,11 @@ return [
     'notification_templates_save' => 'Save template',
     'notification_templates_reset' => 'Reset to default',
     'notification_templates_reset_confirm' => 'Remove this team\'s custom template and use the default message instead?',
+    'notification_settings_heading' => 'Notification settings',
+    'notification_settings_intro' => 'Choose which client and employee notifications this team receives. New teams and settings without a saved value are enabled by default.',
+    'notification_settings_legend_suffix' => 'notifications',
+    'notification_settings_save' => 'Save notification settings',
+    'notification_settings_saved' => 'The team notification settings were saved successfully.',
 
     // Priority score recalculation page (PriorityUpdates.php)
     'priority_update_heading' => 'Recalculate priority scores',

@@ -456,6 +456,11 @@ return [
     'notification_templates_save' => 'Enregistrer le modele',
     'notification_templates_reset' => 'Reinitialiser par defaut',
     'notification_templates_reset_confirm' => 'Supprimer le modele personnalise de cette equipe et utiliser le message par defaut ?',
+    'notification_settings_heading' => 'Parametres de notification',
+    'notification_settings_intro' => 'Choisissez les notifications aux clients et aux employes que cette equipe recoit. Les nouvelles equipes et les parametres sans valeur enregistree sont actives par defaut.',
+    'notification_settings_legend_suffix' => 'notifications',
+    'notification_settings_save' => 'Enregistrer les parametres de notification',
+    'notification_settings_saved' => 'Les parametres de notification de l equipe ont ete enregistres avec succes.',
 
     // Page de recalcul des cotes de priorite (PriorityUpdates.php)
     'priority_update_heading' => 'Recalculer les cotes de priorité',

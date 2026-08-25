@@ -372,9 +372,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $teamPersonalisation['template_category_id'] = $aaactCategory['id'];
                 $teamPersonalisation['template_category_name_en'] = $aaactCategory['name_en'];
                 $teamPersonalisation['template_category_name_fr'] = $aaactCategory['name_fr'];
-                sendEmail($teamemail, $template_id, json_encode($teamPersonalisation), ['recipientType' => 'internal']);
+                if (rmt_notification_should_send($link, (int) $latestid, $contactid, 'employee', $teamMessageEvent, $teamemail)) {
+                    sendEmail($teamemail, $template_id, json_encode($teamPersonalisation), ['recipientType' => 'internal']);
+                }
             } else {
-                sendEmail($teamemail, $template_id, json_encode($teamPersonalisation), ['recipientType' => 'internal']);
+                if (rmt_notification_should_send($link, (int) $latestid, $contactid, 'employee', $teamMessageEvent, $teamemail)) {
+                    sendEmail($teamemail, $template_id, json_encode($teamPersonalisation), ['recipientType' => 'internal']);
+                }
             }
         }
         
@@ -388,7 +392,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             'subject' => rmt_notification_subject('request_created', 'client', $requestlang, $personalisation, $link, $contactid, $serviceid, $subserviceid),
             'message' => rmt_notification_message('request_created', 'client', $requestlang, $personalisation, $link, $contactid, $serviceid, $subserviceid),
         ];
-        sendEmail($clientemail, $template_id, json_encode($clientPersonalisation), ['recipientType' => 'client']);
+        if (rmt_notification_should_send($link, (int) $latestid, $contactid, 'client', 'request_created', $clientemail)) {
+            sendEmail($clientemail, $template_id, json_encode($clientPersonalisation), ['recipientType' => 'client']);
+        }
         
     } elseif ($notification != "N" || $notification == 1) {
         // Default notification behavior.
@@ -410,7 +416,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 'subject' => rmt_notification_subject($teamMessageEvent, 'internal', 'en', $personalisation, $link, $contactid, $serviceid, $subserviceid),
                 'message' => rmt_notification_message($teamMessageEvent, 'internal', 'en', $personalisation, $link, $contactid, $serviceid, $subserviceid),
             ];
-            sendEmail($teamemail, $template_id, json_encode($teamPersonalisation), ['recipientType' => 'internal']);
+            if (rmt_notification_should_send($link, (int) $latestid, $contactid, 'employee', $teamMessageEvent, $teamemail)) {
+                sendEmail($teamemail, $template_id, json_encode($teamPersonalisation), ['recipientType' => 'internal']);
+            }
         }
 		
         // Always send to client for new submissions.
@@ -423,7 +431,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             'subject' => rmt_notification_subject('request_created', 'client', $requestlang, $personalisation, $link, $contactid, $serviceid, $subserviceid),
             'message' => rmt_notification_message('request_created', 'client', $requestlang, $personalisation, $link, $contactid, $serviceid, $subserviceid),
         ];
-        sendEmail($clientemail, $template_id, json_encode($clientPersonalisation), ['recipientType' => 'client']);
+        if (rmt_notification_should_send($link, (int) $latestid, $contactid, 'client', 'request_created', $clientemail)) {
+            sendEmail($clientemail, $template_id, json_encode($clientPersonalisation), ['recipientType' => 'client']);
+        }
     }
     
 

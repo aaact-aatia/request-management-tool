@@ -36,6 +36,63 @@ function rmt_notification_is_valid_audience_event(string $audience, string $even
     return in_array($event, rmt_notification_events_for_audience($audience), true);
 }
 
+function rmt_notification_setting_fetch(mysqli $link, int $teamId, string $audience, string $event): ?array {
+    if ($teamId <= RMT_NOTIFICATION_GLOBAL_TEAM_ID || !rmt_notification_is_valid_audience_event($audience, $event)) {
+        return null;
+    }
+
+    return rmt_db_fetch_one(
+        $link,
+        'SELECT * FROM tblnotificationsettings WHERE team_id = ? AND audience = ? AND event = ? LIMIT 1',
+        'iss',
+        [$teamId, $audience, $event]
+    );
+}
+
+function rmt_notification_enabled(mysqli $link, int $teamId, string $audience, string $event): bool {
+    $setting = rmt_notification_setting_fetch($link, $teamId, $audience, $event);
+    return $setting === null || (int) ($setting['enabled'] ?? 1) === 1;
+}
+
+function rmt_notification_setting_save(mysqli $link, int $teamId, string $audience, string $event, bool $enabled, int $updatedBy = 0): void {
+    if ($teamId <= RMT_NOTIFICATION_GLOBAL_TEAM_ID || !rmt_notification_is_valid_audience_event($audience, $event)) {
+        return;
+    }
+
+    rmt_db_execute(
+        $link,
+        'INSERT INTO tblnotificationsettings (team_id, audience, event, enabled, updatedby)
+         VALUES (?, ?, ?, ?, ?)
+         ON DUPLICATE KEY UPDATE enabled = VALUES(enabled), updatedby = VALUES(updatedby)',
+        'issii',
+        [$teamId, $audience, $event, $enabled ? 1 : 0, $updatedBy]
+    );
+}
+
+function rmt_notification_log_skip(mysqli $link, int $triageId, int $teamId, string $audience, string $event, string $recipient): void {
+    if (!rmt_notification_is_valid_audience_event($audience, $event)) {
+        return;
+    }
+
+    rmt_db_execute(
+        $link,
+        'INSERT INTO tblnotificationlog (triageid, team_id, audience, event, recipient, result, createdby)
+         VALUES (?, ?, ?, ?, ?, ?, ?)',
+        'iissssi',
+        [$triageId > 0 ? $triageId : null, $teamId > 0 ? $teamId : null, $audience, $event, $recipient, 'skipped_disabled', (int) ($_SESSION['pid'] ?? 0)]
+    );
+}
+
+function rmt_notification_should_send(mysqli $link, int $triageId, int $teamId, string $audience, string $event, string $recipient): bool {
+    if (rmt_notification_enabled($link, $teamId, $audience, $event)) {
+        return true;
+    }
+
+    rmt_notification_log_skip($link, $triageId, $teamId, $audience, $event, $recipient);
+    error_log(sprintf('Notification disabled: skipped %s %s notification to %s.', $audience, $event, $recipient));
+    return false;
+}
+
 /**
  * Reference list of placeholder tokens available to template editors, with labels for the UI.
  * Tokens map to keys already populated in the notification context arrays built by the send flows.
@@ -204,10 +261,6 @@ function rmt_notification_user_can_manage_team(mysqli $link, int $teamId): bool 
         return isSuperAdmin();
     }
 
-    if (isSuperAdmin() || (isset($_SESSION['is_admin']) && $_SESSION['is_admin'] == 1)) {
-        return true;
-    }
-
     $atype = (int) ($_SESSION['atype'] ?? 0);
 
     if ($atype === 3) {
@@ -216,6 +269,11 @@ function rmt_notification_user_can_manage_team(mysqli $link, int $teamId): bool 
     }
 
     if ($atype === 4) {
+        if (isRoleTestMode() && !empty($_SESSION['test_team_ids'])) {
+            $testTeamIds = array_values(array_filter(array_map('intval', explode(',', (string) $_SESSION['test_team_ids']))));
+            return in_array($teamId, $testTeamIds, true);
+        }
+
         $row = rmt_db_fetch_one(
             $link,
             'SELECT id FROM tblteams WHERE id = ? AND team_lead_user_id = ? AND status = 1 LIMIT 1',
@@ -223,6 +281,10 @@ function rmt_notification_user_can_manage_team(mysqli $link, int $teamId): bool 
             [$teamId, (int) ($_SESSION['pid'] ?? 0)]
         );
         return $row !== null;
+    }
+
+    if (isSuperAdmin() || (isset($_SESSION['is_admin']) && $_SESSION['is_admin'] == 1)) {
+        return true;
     }
 
     return false;
@@ -251,7 +313,9 @@ function rmt_notification_user_can_manage_scope(mysqli $link, int $teamId, int $
  * Each entry: ['id' => int, 'nameen' => string, 'namefr' => string].
  */
 function rmt_notification_manageable_teams(mysqli $link): array {
-    $isAdminUser = isSuperAdmin() || (isset($_SESSION['is_admin']) && $_SESSION['is_admin'] == 1);
+    $atype = (int) ($_SESSION['atype'] ?? 0);
+    $isTeamScopedRole = in_array($atype, [3, 4], true);
+    $isAdminUser = !$isTeamScopedRole && (isSuperAdmin() || (isset($_SESSION['is_admin']) && $_SESSION['is_admin'] == 1));
 
     if ($isAdminUser) {
         $teams = [];
@@ -274,12 +338,19 @@ function rmt_notification_manageable_teams(mysqli $link): array {
         return $teams;
     }
 
-    $atype = (int) ($_SESSION['atype'] ?? 0);
     $teams = [];
 
     if ($atype === 3) {
         $managedTeamIds = array_values(array_filter(array_map('intval', (array) ($_SESSION['team'] ?? []))));
         foreach ($managedTeamIds as $teamId) {
+            $row = rmt_db_fetch_one($link, 'SELECT id, nameen, namefr FROM tblteams WHERE id = ? AND status = 1 LIMIT 1', 'i', [$teamId]);
+            if ($row !== null) {
+                $teams[] = ['id' => (int) $row['id'], 'nameen' => $row['nameen'], 'namefr' => $row['namefr']];
+            }
+        }
+    } elseif ($atype === 4 && isRoleTestMode() && !empty($_SESSION['test_team_ids'])) {
+        $testTeamIds = array_values(array_filter(array_map('intval', explode(',', (string) $_SESSION['test_team_ids']))));
+        foreach ($testTeamIds as $teamId) {
             $row = rmt_db_fetch_one($link, 'SELECT id, nameen, namefr FROM tblteams WHERE id = ? AND status = 1 LIMIT 1', 'i', [$teamId]);
             if ($row !== null) {
                 $teams[] = ['id' => (int) $row['id'], 'nameen' => $row['nameen'], 'namefr' => $row['namefr']];
