@@ -361,13 +361,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 'template_category_id' => $teamCategory['id'],
                 'template_category_name_en' => $teamCategory['name_en'],
                 'template_category_name_fr' => $teamCategory['name_fr'],
-                'subject' => rmt_notification_subject($teamMessageEvent, 'internal', 'en', $personalisation),
-                'message' => rmt_notification_message($teamMessageEvent, 'internal', 'en', $personalisation),
+                'subject' => rmt_notification_subject($teamMessageEvent, 'internal', 'en', $personalisation, $link, $contactid, $serviceid, $subserviceid),
+                'message' => rmt_notification_message($teamMessageEvent, 'internal', 'en', $personalisation, $link, $contactid, $serviceid, $subserviceid),
             ];
             if ($teamemail == "daiu-anci@ssc-spc.gc.ca") {
                 $aaactCategory = rmt_notification_template_category('request_aaact');
-                $teamPersonalisation['message'] = rmt_notification_message('request_aaact', 'internal', 'en', $personalisation);
-                $teamPersonalisation['subject'] = rmt_notification_subject('request_aaact', 'internal', 'en', $personalisation);
+                $teamPersonalisation['message'] = rmt_notification_message('request_aaact', 'internal', 'en', $personalisation, $link, $contactid, $serviceid, $subserviceid);
+                $teamPersonalisation['subject'] = rmt_notification_subject('request_aaact', 'internal', 'en', $personalisation, $link, $contactid, $serviceid, $subserviceid);
                 $teamPersonalisation['notification_event'] = 'request_aaact';
                 $teamPersonalisation['template_category_id'] = $aaactCategory['id'];
                 $teamPersonalisation['template_category_name_en'] = $aaactCategory['name_en'];
@@ -385,8 +385,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             'template_category_id' => $clientCategory['id'],
             'template_category_name_en' => $clientCategory['name_en'],
             'template_category_name_fr' => $clientCategory['name_fr'],
-            'subject' => rmt_notification_subject('request_created', 'client', $requestlang, $personalisation),
-            'message' => rmt_notification_message('request_created', 'client', $requestlang, $personalisation),
+            'subject' => rmt_notification_subject('request_created', 'client', $requestlang, $personalisation, $link, $contactid, $serviceid, $subserviceid),
+            'message' => rmt_notification_message('request_created', 'client', $requestlang, $personalisation, $link, $contactid, $serviceid, $subserviceid),
         ];
         sendEmail($clientemail, $template_id, json_encode($clientPersonalisation), ['recipientType' => 'client']);
         
@@ -407,8 +407,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 'template_category_id' => $teamCategory['id'],
                 'template_category_name_en' => $teamCategory['name_en'],
                 'template_category_name_fr' => $teamCategory['name_fr'],
-                'subject' => rmt_notification_subject($teamMessageEvent, 'internal', 'en', $personalisation),
-                'message' => rmt_notification_message($teamMessageEvent, 'internal', 'en', $personalisation),
+                'subject' => rmt_notification_subject($teamMessageEvent, 'internal', 'en', $personalisation, $link, $contactid, $serviceid, $subserviceid),
+                'message' => rmt_notification_message($teamMessageEvent, 'internal', 'en', $personalisation, $link, $contactid, $serviceid, $subserviceid),
             ];
             sendEmail($teamemail, $template_id, json_encode($teamPersonalisation), ['recipientType' => 'internal']);
         }
@@ -420,8 +420,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             'template_category_id' => $clientCategory['id'],
             'template_category_name_en' => $clientCategory['name_en'],
             'template_category_name_fr' => $clientCategory['name_fr'],
-            'subject' => rmt_notification_subject('request_created', 'client', $requestlang, $personalisation),
-            'message' => rmt_notification_message('request_created', 'client', $requestlang, $personalisation),
+            'subject' => rmt_notification_subject('request_created', 'client', $requestlang, $personalisation, $link, $contactid, $serviceid, $subserviceid),
+            'message' => rmt_notification_message('request_created', 'client', $requestlang, $personalisation, $link, $contactid, $serviceid, $subserviceid),
         ];
         sendEmail($clientemail, $template_id, json_encode($clientPersonalisation), ['recipientType' => 'client']);
     }

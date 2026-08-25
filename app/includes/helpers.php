@@ -1,5 +1,6 @@
 <?php
 require_once dirname(__DIR__) . '/env.php';
+require_once __DIR__ . '/notification-templates.php';
 
 if (isset($_SERVER['SCRIPT_FILENAME']) && realpath(__FILE__) === realpath((string) $_SERVER['SCRIPT_FILENAME'])) {
     http_response_code(404);
@@ -943,10 +944,18 @@ function rmt_notification_template_category(string $event): array {
     ];
 }
 
-function rmt_notification_subject_single_language(string $event, string $recipientType, string $language, array $context = []): string {
+function rmt_notification_subject_single_language(string $event, string $recipientType, string $language, array $context = [], ?mysqli $link = null, ?int $teamId = null, int $serviceId = 0, int $subserviceId = 0): string {
     $lang = app_normalize_language($language);
     $isFrench = ($lang === 'fr');
     $isClient = ($recipientType === 'client');
+
+    if ($link !== null) {
+        $audience = $isClient ? 'client' : 'employee';
+        $override = rmt_notification_template_resolve($link, $teamId, $audience, $event, $lang, $serviceId, $subserviceId);
+        if ($override !== null && trim((string) $override['subject']) !== '') {
+            return rmt_notification_render_template((string) $override['subject'], $context, $lang, $recipientType);
+        }
+    }
 
     $requestId = trim((string) ($context['requestid'] ?? ''));
     $statusLabel = trim((string) ($context['status_label'] ?? ''));
@@ -1008,11 +1017,11 @@ function rmt_notification_subject_single_language(string $event, string $recipie
         : 'Accessibility request update ' . $requestId);
 }
 
-function rmt_notification_subject(string $event, string $recipientType, ?string $language, array $context = []): string {
+function rmt_notification_subject(string $event, string $recipientType, ?string $language, array $context = [], ?mysqli $link = null, ?int $teamId = null, int $serviceId = 0, int $subserviceId = 0): string {
     $subjects = [];
 
     foreach (rmt_notification_language_order($recipientType, $language) as $renderLanguage) {
-        $subject = rmt_notification_subject_single_language($event, $recipientType, $renderLanguage, $context);
+        $subject = rmt_notification_subject_single_language($event, $recipientType, $renderLanguage, $context, $link, $teamId, $serviceId, $subserviceId);
         if ($subject !== '' && !in_array($subject, $subjects, true)) {
             $subjects[] = $subject;
         }
@@ -1021,10 +1030,18 @@ function rmt_notification_subject(string $event, string $recipientType, ?string 
     return implode(' / ', $subjects);
 }
 
-function rmt_notification_message_single_language(string $event, string $recipientType, string $language, array $context = []): string {
+function rmt_notification_message_single_language(string $event, string $recipientType, string $language, array $context = [], ?mysqli $link = null, ?int $teamId = null, int $serviceId = 0, int $subserviceId = 0): string {
     $lang = app_normalize_language($language);
     $isFrench = ($lang === 'fr');
     $isClient = ($recipientType === 'client');
+
+    if ($link !== null) {
+        $audience = $isClient ? 'client' : 'employee';
+        $override = rmt_notification_template_resolve($link, $teamId, $audience, $event, $lang, $serviceId, $subserviceId);
+        if ($override !== null && trim((string) $override['body']) !== '') {
+            return rmt_notification_render_template((string) $override['body'], $context, $lang, $recipientType);
+        }
+    }
 
     $requestId = rmt_notification_escape((string) ($context['requestid'] ?? ''));
     $requestTitle = rmt_notification_escape((string) ($context['requesttitle'] ?? ''));
@@ -1224,7 +1241,7 @@ function rmt_notification_message_single_language(string $event, string $recipie
     ]);
 }
 
-function rmt_notification_message(string $event, string $recipientType, ?string $language, array $context = []): string {
+function rmt_notification_message(string $event, string $recipientType, ?string $language, array $context = [], ?mysqli $link = null, ?int $teamId = null, int $serviceId = 0, int $subserviceId = 0): string {
     $order = rmt_notification_language_order($recipientType, $language);
     if (empty($order)) {
         return '';
@@ -1233,12 +1250,12 @@ function rmt_notification_message(string $event, string $recipientType, ?string 
     $firstLanguage = $order[0];
     $secondLanguage = $order[1] ?? null;
 
-    $firstBody = rmt_notification_message_single_language($event, $recipientType, $firstLanguage, $context);
+    $firstBody = rmt_notification_message_single_language($event, $recipientType, $firstLanguage, $context, $link, $teamId, $serviceId, $subserviceId);
     if ($secondLanguage === null) {
         return $firstBody;
     }
 
-    $secondBody = rmt_notification_message_single_language($event, $recipientType, $secondLanguage, $context);
+    $secondBody = rmt_notification_message_single_language($event, $recipientType, $secondLanguage, $context, $link, $teamId, $serviceId, $subserviceId);
 
     if ($firstLanguage === 'en') {
         $transitionLink = 'Message en francais a suivre.';

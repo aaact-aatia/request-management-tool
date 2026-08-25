@@ -50,6 +50,7 @@ $menu_text = [
 		'catalogue' => 'Service catalogue',
 		'holidays' => 'Holidays',
 		'gcnotify_settings' => 'GC Notify settings',
+		'notification_templates' => 'Notification templates',
 		'organizations' => 'Organizations',
 		'sources' => 'Sources',
 		'status' => 'Status',
@@ -74,6 +75,7 @@ $menu_text = [
 		'catalogue' => 'Catalogue de services',
 		'holidays' => 'Jours fériés',
 		'gcnotify_settings' => 'Parametres GC Notify',
+		'notification_templates' => 'Modeles de notification',
 		'organizations' => 'Organisations',
 		'sources' => 'Sources',
 		'status' => 'Statuts',
@@ -135,6 +137,7 @@ $menuLangStrings = $menu_text[$lang_code];
 					<li><a href="#admin-menu" class="item"><?= htmlspecialchars($menuLangStrings['admin']) ?></a>
 						<ul class="sm list-unstyled" id="admin-menu" role="menu">
 							<li><a href="/teams.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['contacts']) ?></a></li>
+							<li><a href="/notification-templates.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['notification_templates']) ?></a></li>
 							<?php
 							// Only Super admins can access this option
 						if ($isSuperAdmin) {
@@ -154,6 +157,14 @@ $menuLangStrings = $menu_text[$lang_code];
 							<?php } ?>
 						</ul>
 					</li>
+				<?php
+				}
+				?>
+				<?php
+				// Managers and team leads (not otherwise admins) manage their own team's templates.
+				if (!$isAdminAccount && !$isSuperAdmin && in_array($effectiveAtype, [3, 4], true)) {
+				?>
+					<li><a href="/notification-templates.php?lang=<?= $lang_code ?>" class="item"><?= htmlspecialchars($menuLangStrings['notification_templates']) ?></a></li>
 				<?php
 				}
 				?>

@@ -223,6 +223,27 @@ CREATE TABLE IF NOT EXISTS `tblcss` (
   UNIQUE KEY `uniq_tblcss_requestid` (`requestid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE IF NOT EXISTS `tblnotificationtemplates` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `team_id` int(11) NOT NULL DEFAULT 0 COMMENT '0 = global default, matches tblteams.id otherwise',
+  `service_id` int(11) NOT NULL DEFAULT 0 COMMENT '0 = not scoped to a specific service',
+  `subservice_id` int(11) NOT NULL DEFAULT 0 COMMENT '0 = not scoped to a specific subservice',
+  `audience` enum('client','employee') NOT NULL,
+  `event` varchar(50) NOT NULL,
+  `language` enum('en','fr') NOT NULL,
+  `subject` varchar(500) NOT NULL DEFAULT '',
+  `body` text NOT NULL,
+  `status` tinyint(1) NOT NULL DEFAULT 1,
+  `dateupdated` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `updatedby` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_notification_template_scope` (`team_id`, `service_id`, `subservice_id`, `audience`, `event`, `language`),
+  KEY `idx_notification_template_team` (`team_id`),
+  KEY `idx_notification_template_service` (`service_id`),
+  KEY `idx_notification_template_subservice` (`subservice_id`),
+  KEY `idx_notification_template_updatedby` (`updatedby`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS `StatusHistory` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `requestID` varchar(50) NOT NULL,
