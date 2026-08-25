@@ -139,6 +139,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Move intake details out of communications ([2574676](https://github.com/aaact-aatia/request-management-tool/commit/2574676e72f1886889a8069ffbae57569c5b5718))
 
+- Add per-team/service notification message templates ([681657d](https://github.com/aaact-aatia/request-management-tool/commit/681657de501674c0aad49fc64482b6d3c8c76ce4))
+
 
 ### Build
 
@@ -158,6 +160,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 - Restart prod app service after main publish ([2316030](https://github.com/aaact-aatia/request-management-tool/commit/2316030b74bb683227b93c8e6162fd3c013a8eeb))
 
 - Skip azure restart when config is missing ([ad8b3bb](https://github.com/aaact-aatia/request-management-tool/commit/ad8b3bbad4eee735f454d9f608ca77393ad1e734))
+
+- Auto-regenerate CHANGELOG.md on push to main ([be9a88b](https://github.com/aaact-aatia/request-management-tool/commit/be9a88b389fca5a62d80f89d6ba99ae6eb92265b))
 
 
 ### Changed
@@ -428,7 +432,7 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Rename catalogue contact groups to teams ([8f2ad62](https://github.com/aaact-aatia/request-management-tool/commit/8f2ad6268706c20078d5aa65c9af8b379ed87258))
 
-- Lock request lifecycle dates ([31acf41](https://github.com/aaact-aatia/request-management-tool/commit/31acf41523d15de2305f4b2a21857150bf1f0eca))
+- Lock request lifecycle dates ([f8a9b17](https://github.com/aaact-aatia/request-management-tool/commit/f8a9b17609b72000be0e6a53012d6515c134326e))
 
 
 ### Other
