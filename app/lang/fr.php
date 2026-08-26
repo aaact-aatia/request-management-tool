@@ -394,6 +394,13 @@ return [
     'actions_column' => 'Actions',
     'edit_button' => 'Modifier',
     'delete_button' => 'Supprimer',
+    'attachment_download_selected' => 'Télécharger les fichiers sélectionnés',
+    'attachment_select_file' => 'Sélectionner %s',
+    'attachment_select_file_to_download' => 'Sélectionnez au moins un fichier à télécharger.',
+    'attachment_image_preview_opened' => 'Aperçu de l\'image ouvert.',
+    'attachment_image_preview_title' => 'Aperçu de l\'image',
+    'attachment_preview_image' => 'Prévisualiser l\'image : %s',
+    'attachment_close_image_preview' => 'Fermer l\'aperçu de l\'image',
     
     // Settings page (settings.php)
     'settings_page_title' => 'Paramètres du compte - Outil de gestion des demandes - Bureau de l\'accessibilité de la TI',

@@ -138,8 +138,6 @@ $translations = [
 		'unknown_user' => 'Unknown user',
 		'not_found_title' => 'Request not found!',
 		'not_found_msg' => 'Sorry something went wrong with your request, please try again!',
-		'image_preview_opened' => 'Image preview opened.',
-		'close_image_preview' => 'Close image preview',
 		'delete_confirm' => 'Are you sure you want to delete this file?',
 		'delete_success' => 'File deleted successfully!',
 	],
@@ -274,14 +272,20 @@ $translations = [
 		'unknown_user' => 'Utilisateur inconnu',
 		'not_found_title' => 'Demande introuvable!',
 		'not_found_msg' => 'Désolé, quelque chose s\'est mal passé avec votre demande, veuillez réessayer!',
-		'image_preview_opened' => 'Aperçu de l\'image ouvert.',
-		'close_image_preview' => 'Fermer l\'aperçu de l\'image',
 		'delete_confirm' => 'Êtes-vous sûr de vouloir supprimer ce fichier?',
 		'delete_success' => 'Fichier supprimé avec succès!',
 	]
 ];
 
 $t = $translations[$lang];
+$sharedTranslations = require __DIR__ . "/lang/{$lang}.php";
+$t['download_all'] = $sharedTranslations['attachment_download_selected'];
+$t['select_file'] = $sharedTranslations['attachment_select_file'];
+$t['select_file_to_download'] = $sharedTranslations['attachment_select_file_to_download'];
+$t['image_preview_opened'] = $sharedTranslations['attachment_image_preview_opened'];
+$t['image_preview_title'] = $sharedTranslations['attachment_image_preview_title'];
+$t['preview_image'] = $sharedTranslations['attachment_preview_image'];
+$t['close_image_preview'] = $sharedTranslations['attachment_close_image_preview'];
 
 function buildSuccessDetailMessages(array $translations, array $feedback): array {
 	$messages = [
@@ -908,14 +912,17 @@ $blobStorage = new AzureBlobStorageManager();
                     <?php
                     while($file = mysqli_fetch_array($result_files)) {
                         $fileExtension = strtolower($file['type']);
-						rmt_allow_file_download_code((string) $file['code']);
+						$fileName = htmlspecialchars((string) $file['name'], ENT_QUOTES, 'UTF-8');
+						$downloadUrl = htmlspecialchars($blobStorage->getFileUrl((string) $file['code']), ENT_QUOTES, 'UTF-8');
+						$selectFileLabel = htmlspecialchars(sprintf($t['select_file'], (string) $file['name']), ENT_QUOTES, 'UTF-8');
                         echo "<tr>";
-                        echo "<td><input type='checkbox' class='fileCheckbox' value='" . $file['name'] . "'></td>";
+						echo "<td><input type='checkbox' class='fileCheckbox' value='" . $fileName . "' aria-label='" . $selectFileLabel . "'></td>";
                         echo "<td>";
                         if (in_array($fileExtension, $validImageExtensions)){ 
-							echo "<a href='#' class='image-link' data-src='" . $blobStorage->getInlineFileUrl((string) $file['code']) . "'>" . $file['name'] . "</a>";
+							$previewLabel = htmlspecialchars(sprintf($t['preview_image'], (string) $file['name']), ENT_QUOTES, 'UTF-8');
+							echo "<button type='button' class='image-link btn btn-link' data-src='" . htmlspecialchars($blobStorage->getInlineFileUrl((string) $file['code']), ENT_QUOTES, 'UTF-8') . "' data-name='" . $fileName . "' aria-label='" . $previewLabel . "'>" . $fileName . "</button>";
                         } else {
-							echo "<a href='" . $blobStorage->getFileUrl((string) $file['code']) . "' download>" . $file['name'] . "</a>";
+							echo "<a href='" . $downloadUrl . "'>" . $fileName . "</a>";
                         }
                         echo "</td>";
                         echo "<td>" . $file['type'] . "</td>";
@@ -926,9 +933,9 @@ $blobStorage = new AzureBlobStorageManager();
 						}
 						echo "<td>" . htmlspecialchars((string) $fileDate, ENT_QUOTES, 'UTF-8') . "</td>";
                         echo "<td>
-                        <a href='#' class='btn btn-primary download-btn' 
-                           data-name='" . htmlspecialchars($file['name'], ENT_QUOTES, 'UTF-8') . "' 
-						   data-file='" . $file['code'] . "'>" . htmlspecialchars($t['download'], ENT_QUOTES, 'UTF-8') . "</a>
+								<a href='" . $downloadUrl . "' class='btn btn-primary download-btn'
+									data-name='" . $fileName . "'
+						   data-file='" . htmlspecialchars((string) $file['code'], ENT_QUOTES, 'UTF-8') . "'>" . htmlspecialchars($t['download'], ENT_QUOTES, 'UTF-8') . "</a>
                     </td>";
                         echo "</tr>";
                     }
@@ -941,7 +948,7 @@ $blobStorage = new AzureBlobStorageManager();
                 <input type="checkbox" id="selectAll">
                 <label for="selectAll"><span class="field-name"><?= $t['select_all'] ?></span></label>
             </div>
-            <a class="btn btn-primary" style="color:white;" id="downloadAll"><?= $t['download_all'] ?></a>
+			<button type="button" class="btn btn-primary" id="downloadAll" data-no-selection-message="<?= htmlspecialchars($t['select_file_to_download'], ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($t['download_all'], ENT_QUOTES, 'UTF-8') ?></button>
 
             <?php
             } else {
@@ -1474,9 +1481,10 @@ $blobStorage = new AzureBlobStorageManager();
 			<?php } ?>
 			<?php include 'includes/template/page-details.php'; ?>
 		</main>
-		<div class="image-preview" id="imagePreview" role="dialog" aria-hidden="true" style="display:none">
-        <button class="close-btn" id="closePreview" aria-label="Close image preview">&times;</button>
-        <img id="previewImage" src="" alt="Preview">
+		<div class="image-preview" id="imagePreview" role="dialog" aria-modal="true" aria-labelledby="imagePreviewTitle" aria-hidden="true" data-opened-message="<?= htmlspecialchars($t['image_preview_opened'], ENT_QUOTES, 'UTF-8') ?>" style="display:none">
+			<h2 id="imagePreviewTitle" class="sr-only"><?= htmlspecialchars($t['image_preview_title'], ENT_QUOTES, 'UTF-8') ?></h2>
+			<button type="button" class="close-btn" id="closePreview" aria-label="<?= htmlspecialchars($t['close_image_preview'], ENT_QUOTES, 'UTF-8') ?>">&times;</button>
+		<img id="previewImage" src="" alt="">
         <p id="imageAnnouncement" class="sr-only" aria-live="assertive"></p>
     </div>
 		<?php include 'includes/template/footer.php'; ?>

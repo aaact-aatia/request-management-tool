@@ -73,7 +73,7 @@ class AzureBlobStorageManager
                 return null;
             }
 
-            $content = @file_get_contents($url);
+            $content = @file_get_contents($url, false, $this->azureStreamContext());
             return ($content === false) ? null : $content;
         }
 
@@ -98,7 +98,7 @@ class AzureBlobStorageManager
                 return null;
             }
 
-            $headers = @get_headers($url, true);
+            $headers = @get_headers($url, true, $this->azureStreamContext());
             if (!is_array($headers)) {
                 return null;
             }
@@ -188,6 +188,8 @@ class AzureBlobStorageManager
             CURLOPT_INFILE => $fileHandle,
             CURLOPT_INFILESIZE => $fileSize,
             CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_CONNECTTIMEOUT => 10,
+            CURLOPT_TIMEOUT => 60,
             CURLOPT_HTTPHEADER => [
                 'x-ms-blob-type: BlockBlob',
                 'x-ms-version: 2021-12-02',
@@ -209,6 +211,15 @@ class AzureBlobStorageManager
         }
 
         return true;
+    }
+
+    private function azureStreamContext()
+    {
+        return stream_context_create([
+            'http' => [
+                'timeout' => 60,
+            ],
+        ]);
     }
 
     private function buildLocalPath(string $blobName): ?string

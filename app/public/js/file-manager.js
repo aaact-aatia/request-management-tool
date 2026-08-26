@@ -8,10 +8,21 @@
 // ============================================================================
 
 const selectAllCheckbox = document.getElementById('selectAll');
+const fileCheckboxes = document.querySelectorAll('.fileCheckbox');
 if (selectAllCheckbox) {
 	selectAllCheckbox.addEventListener('change', function () {
-		const checkboxes = document.querySelectorAll('.fileCheckbox');
-		checkboxes.forEach(function (checkbox) { checkbox.checked = this.checked; }, this);
+		fileCheckboxes.forEach(function (checkbox) { checkbox.checked = this.checked; }, this);
+		this.indeterminate = false;
+	});
+
+	fileCheckboxes.forEach(function (checkbox) {
+		checkbox.addEventListener('change', function () {
+			const selectedCount = Array.from(fileCheckboxes).filter(function (fileCheckbox) {
+				return fileCheckbox.checked;
+			}).length;
+			selectAllCheckbox.checked = selectedCount === fileCheckboxes.length;
+			selectAllCheckbox.indeterminate = selectedCount > 0 && selectedCount < fileCheckboxes.length;
+		});
 	});
 }
 
@@ -22,11 +33,17 @@ if (selectAllCheckbox) {
 const downloadAllButton = document.getElementById('downloadAll');
 if (downloadAllButton) {
 	downloadAllButton.addEventListener('click', function () {
-		const selectedCheckboxes = document.querySelectorAll('.fileCheckbox:checked');
+		const selectedCheckboxes = Array.from(fileCheckboxes).filter(function (checkbox) {
+			return checkbox.checked;
+		});
 		if (selectedCheckboxes.length === 0) {
-			alert('Please select at least one file to download.');
+			alert(this.getAttribute('data-no-selection-message'));
 			return;
 		}
+
+		const form = document.createElement('form');
+		form.method = 'get';
+		form.action = '/download-selected.php';
 		selectedCheckboxes.forEach(function (checkbox) {
 			const row = checkbox.closest('tr');
 			if (!row) {
@@ -35,48 +52,24 @@ if (downloadAllButton) {
 
 			const button = row.querySelector('.download-btn');
 			if (button) {
-				downloadFile(button.getAttribute('data-file'), button.getAttribute('data-name'));
+				const codeInput = document.createElement('input');
+				codeInput.type = 'hidden';
+				codeInput.name = 'codes[]';
+				codeInput.value = button.getAttribute('data-file');
+				form.appendChild(codeInput);
 			}
 		});
+		document.body.appendChild(form);
+		form.submit();
+		form.remove();
 	});
-}
-
-document.querySelectorAll('.download-btn').forEach(function (button) {
-	button.addEventListener('click', function (e) {
-		e.preventDefault();
-		downloadFile(this.getAttribute('data-file'), this.getAttribute('data-name'));
-	});
-});
-
-async function downloadFile(code, name) {
-	try {
-		const response = await fetch('download.php?code=' + encodeURIComponent(code));
-		if (!response.ok) {
-			alert('File not found!');
-			return;
-		}
-		const blob = await response.blob();
-		const sanitizedFileName = sanitizeFileName(name);
-		const downloadLink = document.createElement('a');
-		downloadLink.href = URL.createObjectURL(blob);
-		downloadLink.download = sanitizedFileName;
-		document.body.appendChild(downloadLink);
-		downloadLink.click();
-		document.body.removeChild(downloadLink);
-		URL.revokeObjectURL(downloadLink.href);
-	} catch (error) {
-		console.error('Error downloading the file:', error);
-		alert('Failed to download file.');
-	}
-}
-
-function sanitizeFileName(fileName) {
-	return fileName.replace(/[^\w.-]/g, '_');
 }
 
 // ============================================================================
 // IMAGE PREVIEW
 // ============================================================================
+
+let imagePreviewTrigger = null;
 
 document.querySelectorAll('.image-link').forEach(function (link) {
 	link.addEventListener('click', function (e) {
@@ -87,10 +80,12 @@ document.querySelectorAll('.image-link').forEach(function (link) {
 		if (!imagePreview || !previewImage || !imageAnnouncement) {
 			return;
 		}
+		imagePreviewTrigger = this;
 		previewImage.src = this.dataset.src;
+		previewImage.alt = this.dataset.name || '';
 		imagePreview.style.display = 'flex';
 		imagePreview.setAttribute('aria-hidden', 'false');
-		imageAnnouncement.textContent = 'Image preview opened.';
+		imageAnnouncement.textContent = imagePreview.dataset.openedMessage || '';
 		document.getElementById('closePreview')?.focus();
 	});
 });
@@ -101,16 +96,33 @@ function closePreview() {
 	imagePreview.style.display = 'none';
 	imagePreview.setAttribute('aria-hidden', 'true');
 	const previewImage = document.getElementById('previewImage');
-	if (previewImage) previewImage.src = '';
+	if (previewImage) {
+		previewImage.src = '';
+		previewImage.alt = '';
+	}
 	const imageAnnouncement = document.getElementById('imageAnnouncement');
 	if (imageAnnouncement) imageAnnouncement.textContent = '';
+	imagePreviewTrigger?.focus();
+	imagePreviewTrigger = null;
 }
 
-document.getElementById('imagePreview')?.addEventListener('click', closePreview);
+document.getElementById('imagePreview')?.addEventListener('click', function (event) {
+	if (event.target === this) {
+		closePreview();
+	}
+});
 document.getElementById('closePreview')?.addEventListener('click', closePreview);
 
 document.addEventListener('keydown', function (event) {
+	const imagePreview = document.getElementById('imagePreview');
+	if (!imagePreview || imagePreview.getAttribute('aria-hidden') === 'true') {
+		return;
+	}
+
 	if (event.key === 'Escape') {
 		closePreview();
+	} else if (event.key === 'Tab') {
+		event.preventDefault();
+		document.getElementById('closePreview')?.focus();
 	}
 });
