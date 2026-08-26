@@ -145,6 +145,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Add per-team notification controls ([c24158c](https://github.com/aaact-aatia/request-management-tool/commit/c24158c4d2e01413c51c21cabcd8cd8d0841bcf3))
 
+- Enable persistent attachment storage ([67912c7](https://github.com/aaact-aatia/request-management-tool/commit/67912c72a44d8bf91719d4697d53efb6a49ebd32))
+
 
 ### Build
 
@@ -296,6 +298,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 - Regenerate CHANGELOG.md [skip ci] ([2306c54](https://github.com/aaact-aatia/request-management-tool/commit/2306c54b366a9705d831157c0e2b299c0a1b9c96))
 
 - Regenerate CHANGELOG.md [skip ci] ([e798d8f](https://github.com/aaact-aatia/request-management-tool/commit/e798d8f55ba6052e26c78be25268ca05d7e83385))
+
+- Regenerate CHANGELOG.md [skip ci] ([597cb14](https://github.com/aaact-aatia/request-management-tool/commit/597cb141b01caedb96801c7fb05a15c65192a6cf))
 
 
 ### Fixed
