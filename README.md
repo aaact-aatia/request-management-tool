@@ -363,6 +363,10 @@ Configure the following under **Settings → Environment variables** in the Azur
 | `NOTIFY_OVERRIDE_EMAIL` | *(optional email)* | Fallback redirect recipient used in non-production when no logged-in user email is available |
 | `NOTIFY_OVERRIDE_CLIENT_EMAIL` | *(optional email)* | Client-specific redirect target for non-production testing |
 | `NOTIFY_OVERRIDE_INTERNAL_EMAIL` | *(optional email)* | Internal/team redirect target for non-production testing |
+| `FILE_STORAGE_MODE` | `azure_secret` | Uses direct Azure Blob Storage in App Service; local Docker uses `local` |
+| `AZURE_STORAGE_ACCOUNT` | `your-storage-account` | Environment-specific Blob storage account |
+| `AZURE_STORAGE_CONTAINER` | `your-environment-container` | Separate container for each environment |
+| `AZURE_STORAGE_SAS_TOKEN` | *(secret)* | Environment-specific container SAS with Read, Create, and Write permissions |
 
 Also configure the container registry under **Deployment Center** → **Registry settings**:
 - Registry: `ghcr.io`
@@ -374,7 +378,7 @@ For development environments, prefer `NOTIFY_MODE=redirect` so request notificat
 
 #### Known limitations
 
-- **File storage**: File upload/download is stubbed (`BlobStorage.php` is a no-op). Uploaded files are not persisted. See `docs/future/007-local-file-storage.md`.
+- **File storage**: Local Docker uses a persistent filesystem volume. Azure App Service uses the environment-specific Blob container through the private endpoint. Follow the [Azure App Service Blob storage runbook](docs/AZURE-APP-SERVICE-BLOB-STORAGE.md).
 - **Sessions**: Default PHP file-based sessions do not share state across multiple App Service instances. Enable sticky sessions (ARR Affinity) in the Azure Portal or switch to a shared session store before scaling out.
 - **Current Azure blocker as of setup**: Existing Azure App Services must be configured or recreated as Linux Web App for Containers so the GHCR image runs as the main application container. The current sidecar-only container option is not sufficient for this deployment model.
 

@@ -109,12 +109,24 @@ assert_appears_before() {
     printf 'PASS: %s\n' "$message"
 }
 
-download_status=$(request -o /dev/null -w '%{http_code}' "${base_url}/download.php?code=not-authorized")
-if [[ "$download_status" != "403" ]]; then
-    printf 'FAIL: unauthorized file download returned HTTP %s instead of 403\n' "$download_status" >&2
-    exit 1
+protected_file_code=$(db_query 'SELECT code FROM tblfiles ORDER BY id LIMIT 1')
+if [[ -n "$protected_file_code" ]]; then
+    download_status=$(request -o /dev/null -w '%{http_code}' "${base_url}/download.php?code=${protected_file_code}")
+    if [[ "$download_status" != "403" ]]; then
+        printf 'FAIL: unauthorized file download returned HTTP %s instead of 403\n' "$download_status" >&2
+        exit 1
+    fi
+    printf 'PASS: file downloads require request access\n'
+
+    bulk_download_status=$(request -o /dev/null -w '%{http_code}' "${base_url}/download-selected.php?codes[]=${protected_file_code}")
+    if [[ "$bulk_download_status" != "403" ]]; then
+        printf 'FAIL: unauthorized bulk download returned HTTP %s instead of 403\n' "$bulk_download_status" >&2
+        exit 1
+    fi
+    printf 'PASS: bulk file downloads require request access\n'
+else
+    printf 'SKIP: attachment authorization HTTP checks require an existing tblfiles row\n'
 fi
-printf 'PASS: file downloads require a session grant\n'
 
 terminal_catalogue_id=$(db_query '
     SELECT c.id

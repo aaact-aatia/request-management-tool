@@ -76,15 +76,18 @@ if (!empty($files)) {
         <?php
         foreach ($files as $file) {
             $fileExtension = strtolower($file['type']);
-            rmt_allow_file_download_code((string) $file['code']);
+            $fileName = htmlspecialchars((string) $file['name'], ENT_QUOTES, 'UTF-8');
+            $downloadUrl = htmlspecialchars($blobStorage->getFileUrl((string) $file['code']), ENT_QUOTES, 'UTF-8');
+            $selectFileLabel = htmlspecialchars(sprintf($t['select_file'], (string) $file['name']), ENT_QUOTES, 'UTF-8');
             echo "<tr>";
-            echo "<td><input type='checkbox' class='fileCheckbox' value='" . $file['name'] . "'></td>";
+            echo "<td><input type='checkbox' class='fileCheckbox' value='" . $fileName . "' aria-label='" . $selectFileLabel . "'></td>";
             echo "<td>";
             
             if (in_array($fileExtension, $validImageExtensions)) {
-                echo "<a href='#' class='image-link' data-src='" . $blobStorage->getInlineFileUrl((string) $file['code']) . "'>" . $file['name'] . "</a>";
+                $previewLabel = htmlspecialchars(sprintf($t['preview_image'], (string) $file['name']), ENT_QUOTES, 'UTF-8');
+                echo "<button type='button' class='image-link btn btn-link' data-src='" . htmlspecialchars($blobStorage->getInlineFileUrl((string) $file['code']), ENT_QUOTES, 'UTF-8') . "' data-name='" . $fileName . "' aria-label='" . $previewLabel . "'>" . $fileName . "</button>";
             } else {
-                echo "<a href='" . $blobStorage->getFileUrl((string) $file['code']) . "' download>" . $file['name'] . "</a>";
+                echo "<a href='" . $downloadUrl . "'>" . $fileName . "</a>";
             }
             
             echo "</td>";
@@ -96,7 +99,7 @@ if (!empty($files)) {
             }
             echo "<td>" . htmlspecialchars((string) $fileDate, ENT_QUOTES, 'UTF-8') . "</td>";
             echo "<td>";
-            echo "<a href='#' class='btn btn-primary download-btn' data-name='" . htmlspecialchars($file['name'], ENT_QUOTES, 'UTF-8') . "' data-file='" . $file['code'] . "'>{$t['download']}</a> ";
+            echo "<a href='" . $downloadUrl . "' class='btn btn-primary download-btn' data-name='" . $fileName . "' data-file='" . htmlspecialchars((string) $file['code'], ENT_QUOTES, 'UTF-8') . "'>{$t['download']}</a> ";
             echo "</td>";
             echo "</tr>";
         }
@@ -109,7 +112,7 @@ if (!empty($files)) {
     <input type="checkbox" id="selectAll">
     <label for="selectAll"><span class="field-name"><?php echo $t['select_all']; ?></span></label>
 </div>
-<a class="btn btn-primary" style="color:white;" id="downloadAll"><?php echo $t['download_all']; ?></a>
+<button type="button" class="btn btn-primary" id="downloadAll" data-no-selection-message="<?php echo htmlspecialchars($t['select_file_to_download'], ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($t['download_all'], ENT_QUOTES, 'UTF-8'); ?></button>
 <?php
 
 if ($hasImageAttachment) {
@@ -161,9 +164,9 @@ if ($hasImageAttachment) {
 }
 </style>
 
-<div class="image-preview" id="imagePreview" role="dialog" aria-modal="true" aria-labelledby="imagePreviewTitle" aria-hidden="true">
-    <h2 id="imagePreviewTitle" class="sr-only"><?php echo $lang === 'fr' ? 'Aperçu de l\'image' : 'Image preview'; ?></h2>
-    <button class="close-btn" id="closePreview" aria-label="<?php echo $lang === 'fr' ? 'Fermer l\'aperçu' : 'Close preview'; ?>">&times;</button>
+<div class="image-preview" id="imagePreview" role="dialog" aria-modal="true" aria-labelledby="imagePreviewTitle" aria-hidden="true" data-opened-message="<?php echo htmlspecialchars($t['image_preview_opened'], ENT_QUOTES, 'UTF-8'); ?>">
+    <h2 id="imagePreviewTitle" class="sr-only"><?php echo htmlspecialchars($t['image_preview_title'], ENT_QUOTES, 'UTF-8'); ?></h2>
+    <button type="button" class="close-btn" id="closePreview" aria-label="<?php echo htmlspecialchars($t['close_image_preview'], ENT_QUOTES, 'UTF-8'); ?>">&times;</button>
     <img id="previewImage" src="" alt="">
     <p id="imageAnnouncement" class="sr-only" aria-live="assertive"></p>
 </div>

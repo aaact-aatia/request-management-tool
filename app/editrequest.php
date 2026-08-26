@@ -242,6 +242,14 @@ $translations = [
 ];
 
 $t = $translations[$lang];
+$sharedTranslations = require __DIR__ . "/lang/{$lang}.php";
+$t['download_all'] = $sharedTranslations['attachment_download_selected'];
+$t['select_file'] = $sharedTranslations['attachment_select_file'];
+$t['select_file_to_download'] = $sharedTranslations['attachment_select_file_to_download'];
+$t['image_preview_opened'] = $sharedTranslations['attachment_image_preview_opened'];
+$t['image_preview_title'] = $sharedTranslations['attachment_image_preview_title'];
+$t['preview_image'] = $sharedTranslations['attachment_preview_image'];
+$t['close_image_preview'] = $sharedTranslations['attachment_close_image_preview'];
 
 // ============================================================================
 // FORM PROCESSING

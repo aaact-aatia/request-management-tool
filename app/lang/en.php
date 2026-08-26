@@ -396,6 +396,13 @@ return [
     'actions_column' => 'Actions',
     'edit_button' => 'Edit',
     'delete_button' => 'Delete',
+    'attachment_download_selected' => 'Download selected files',
+    'attachment_select_file' => 'Select %s',
+    'attachment_select_file_to_download' => 'Please select at least one file to download.',
+    'attachment_image_preview_opened' => 'Image preview opened.',
+    'attachment_image_preview_title' => 'Image preview',
+    'attachment_preview_image' => 'Preview image: %s',
+    'attachment_close_image_preview' => 'Close image preview',
     
     // Settings page (settings.php)
     'settings_page_title' => 'Account settings - Request Management Tool - IT Accessibility Office',

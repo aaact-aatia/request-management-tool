@@ -87,6 +87,18 @@ check(rmt_resolve_responsible_team_id($link, 102, 201, 0) === 1, 'service inheri
 check(rmt_resolve_responsible_team_id($link, 103, 202, 0) === 2, 'service overrides catalogue team');
 check(rmt_resolve_responsible_team_id($link, 103, 202, 301) === 3, 'subservice overrides service team');
 
+$originalSession = $_SESSION;
+$_SESSION = [];
+check(!rmt_can_access_request($link, ['workerid' => 1]), 'anonymous user cannot access request attachments');
+$_SESSION = ['pid' => 10, 'atype' => 3];
+check(rmt_can_access_request($link, ['workerid' => 20]), 'manager can access request attachments');
+$_SESSION = ['pid' => 10, 'atype' => 5];
+check(rmt_can_access_request($link, ['workerid' => 10]), 'assigned employee can access request attachments');
+check(!rmt_can_access_request($link, ['workerid' => 20]), 'unassigned employee cannot access request attachments');
+$_SESSION = ['pid' => 10, 'atype' => 5, 'primary_atype' => 1, 'is_superuser' => 1, 'is_admin' => 1];
+check(!rmt_can_access_request($link, ['workerid' => 20]), 'role-test employee cannot inherit administrative attachment access');
+$_SESSION = $originalSession;
+
 $systemText = rmt_request_subject_text('system', 'en');
 $documentText = rmt_request_subject_text('document', 'en');
 $subjectText = rmt_request_subject_text('subject', 'fr');

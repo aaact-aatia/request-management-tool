@@ -1,14 +1,14 @@
-# Plan 007: Local File Storage
+# Plan 007: File Storage Backends
 
-- **Status**: Implemented — deployment environments must provision persistent storage
+- **Status**: Implemented; Azure App Service configuration remains environment-specific
 - **Date Planned**: 2026-05-01
-- **Last Updated**: 2026-07-23
-- **Estimated Remaining Effort**: Deployment-specific volume provisioning only
-- **Blocked by**: Persistent storage volume provisioned for the production hosting environment
+- **Last Updated**: 2026-08-25
+- **Estimated Remaining Effort**: App Service private-network and SAS configuration
+- **Blocked by**: Environment-specific Azure configuration and validation
 
 ## Overview
 
-Azure Blob Storage was removed when the Azure VM deployment was retired. `app/BlobStorage.php` supports local filesystem storage as a replacement. Docker mounts the named `rmt_uploads` volume at `/var/uploads/rmt`, and `entrypoint.sh` prepares directory permissions. Production deployment requires equivalent persistent storage at the configured path.
+`app/BlobStorage.php` provides multiple storage backends behind one application interface. Local Docker uses a named filesystem volume mounted at `/var/uploads/rmt`. Azure App Service uses direct Azure Blob Storage with a container-scoped SAS and separate development and production containers.
 
 ## Current State
 
@@ -17,7 +17,7 @@ Azure Blob Storage was removed when the Azure VM deployment was retired. `app/Bl
 | Mode | Behaviour |
 | --- | --- |
 | `local` | Reads/writes files to `FILE_STORAGE_LOCAL_PATH` on the container filesystem |
-| `azure_secret` | Azure Blob Storage via SAS token (legacy — not in use) |
+| `azure_secret` | Azure Blob Storage via a container-scoped SAS token for App Service |
 | `azure_mi` | Reserved for Azure managed identity; uploads and reads currently fail closed |
 | `disabled` | File uploads are fully disabled — upload UI is hidden, validator rejects any submission |
 
@@ -45,7 +45,7 @@ All file storage behaviour is controlled by these environment variables:
 | --- | --- |
 | `local` | Store files on the local filesystem at `FILE_STORAGE_LOCAL_PATH` |
 | `disabled` | Disable file uploads entirely — upload UI is hidden, no files are written |
-| `azure_secret` | Azure Blob via SAS token (not in active use) |
+| `azure_secret` | Azure Blob via a container-scoped SAS token |
 | `azure_mi` | Reserved; currently fails closed because managed identity is not implemented |
 
 - **Local dev default**: `local`
@@ -57,7 +57,7 @@ All file storage behaviour is controlled by these environment variables:
 
 - Must be outside the webroot (`/var/www/html`) — files are never served directly
 - Must be writable by the web server process (`www-data`)
-- **Must be a persistent volume in production** — the container filesystem is ephemeral on Azure App Service and similar platforms
+- Must use a persistent volume in any deployed environment that selects `local` mode
 - Default: `/var/uploads/rmt`
 
 ### `FILE_UPLOAD_MAX_FILES`
@@ -70,9 +70,13 @@ Default: `5`
 Maximum size in MB per individual file.
 Default: `10`
 
-## Production Setup
+## Azure App Service Setup
 
-Once a persistent volume is provisioned and mounted (e.g. at `/mnt/uploads/rmt`):
+Follow the [Azure App Service Blob storage runbook](../AZURE-APP-SERVICE-BLOB-STORAGE.md). Configure each App Service with its environment-specific container and SAS. Do not configure `FILE_STORAGE_LOCAL_PATH` for direct Blob mode.
+
+## Filesystem Deployment Alternative
+
+For a deployment with a persistent filesystem mounted at `/mnt/uploads/rmt`:
 
 1. **Set env vars** in the hosting platform:
 
@@ -95,7 +99,7 @@ Once a persistent volume is provisioned and mounted (e.g. at `/mnt/uploads/rmt`)
      - rmt_uploads:/var/uploads/rmt
    ```
 
-4. **Validate** — test file upload on a new request, file download from view/edit, and file delete from edit request.
+4. **Validate** - test file upload on a new request and file download from view/edit.
 
 ## Disabling Uploads Temporarily (pre-production)
 
@@ -108,5 +112,5 @@ Set `FILE_STORAGE_MODE=disabled` to disable the feature entirely until persisten
 ## Notes
 
 - No schema changes required — `tblfiles.code` already stores the unique filename used as the storage key.
-- `app/download.php` serves files through a PHP controller using session-authorised file codes; it is not affected by the storage mode toggle.
-- If the app is later deployed to a platform without persistent disk (e.g. Azure Container Apps), consider replacing with S3-compatible object storage (MinIO, Azure Blob, AWS S3) using the existing `AzureBlobStorageManager` interface.
+- `app/download.php` serves files through a PHP controller that verifies access to the owning request; storage credentials and direct Blob URLs are never sent to the browser.
+- Development and production Blob containers require separate SAS tokens and independent App Service settings.

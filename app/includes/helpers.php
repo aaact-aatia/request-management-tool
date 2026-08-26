@@ -137,6 +137,36 @@ function canViewReports() {
     return isset($_SESSION['pid']); // Everyone can view reports
 }
 
+function rmt_can_access_request(mysqli $link, array $request): bool {
+    if (empty($_SESSION['pid'])) {
+        return false;
+    }
+
+    $accountType = (int) ($_SESSION['atype'] ?? 0);
+    $hasAdministrativeAccess = !isRoleTestMode() && (isSuperAdmin() || !empty($_SESSION['is_admin']));
+    if ($hasAdministrativeAccess || in_array($accountType, [1, 2, 3, 6], true)) {
+        return true;
+    }
+
+    if ($accountType === 4) {
+        $responsibleTeamId = rmt_resolve_responsible_team_id(
+            $link,
+            (int) ($request['catalogueid'] ?? 0),
+            (int) ($request['serviceid'] ?? 0),
+            (int) ($request['subserviceid'] ?? 0)
+        );
+
+        return $responsibleTeamId > 0
+            && in_array((string) $responsibleTeamId, getEffectiveTeamIds($link), true);
+    }
+
+    if ($accountType === 5) {
+        return (int) ($request['workerid'] ?? 0) === getEffectiveEmployeeUserId($link);
+    }
+
+    return false;
+}
+
 // ============================================================================
 // VALUE HELPERS
 // ============================================================================
@@ -299,47 +329,6 @@ function rmt_validate_uploaded_files(array $fileUpload, string $lang = 'en'): ar
         'files' => $validFiles,
         'errors' => $errorMessages,
     ];
-}
-
-function rmt_allow_file_download_code(string $fileCode): void {
-    $fileCode = trim($fileCode);
-    if ($fileCode === '') {
-        return;
-    }
-
-    if (!isset($_SESSION['allowed_file_codes']) || !is_array($_SESSION['allowed_file_codes'])) {
-        $_SESSION['allowed_file_codes'] = [];
-    }
-
-    $now = time();
-    $ttl = 2 * 60 * 60;
-
-    foreach ($_SESSION['allowed_file_codes'] as $code => $timestamp) {
-        if (($now - (int) $timestamp) > $ttl) {
-            unset($_SESSION['allowed_file_codes'][$code]);
-        }
-    }
-
-    $_SESSION['allowed_file_codes'][$fileCode] = $now;
-}
-
-function rmt_is_file_download_code_allowed(string $fileCode): bool {
-    if (!isset($_SESSION['allowed_file_codes']) || !is_array($_SESSION['allowed_file_codes'])) {
-        return false;
-    }
-
-    $timestamp = (int) ($_SESSION['allowed_file_codes'][$fileCode] ?? 0);
-    if ($timestamp <= 0) {
-        return false;
-    }
-
-    $ttl = 2 * 60 * 60;
-    if ((time() - $timestamp) > $ttl) {
-        unset($_SESSION['allowed_file_codes'][$fileCode]);
-        return false;
-    }
-
-    return true;
 }
 
 function getPostValue($key, $default = "") {

@@ -13,16 +13,25 @@ if (!isset($_GET['code']) || trim((string) $_GET['code']) === '') {
 }
 
 $fileCode = trim((string) $_GET['code']);
-if (!rmt_is_file_download_code_allowed($fileCode)) {
-    http_response_code(403);
+$inlineRequested = isset($_GET['inline']) && $_GET['inline'] === '1';
+
+$file = rmt_db_fetch_one(
+    $link,
+    'SELECT f.*, t.catalogueid, t.serviceid, t.subserviceid, t.workerid
+     FROM tblfiles f
+     INNER JOIN tbltriage t ON t.requestid = f.requestid
+     WHERE f.code = ?
+     LIMIT 1',
+    's',
+    [$fileCode]
+);
+if ($file === null) {
+    http_response_code(404);
     exit;
 }
 
-$inlineRequested = isset($_GET['inline']) && $_GET['inline'] === '1';
-
-$file = rmt_db_fetch_one($link, 'SELECT * FROM tblfiles WHERE code = ? LIMIT 1', 's', [$fileCode]);
-if ($file === null) {
-    http_response_code(404);
+if (!rmt_can_access_request($link, $file)) {
+    http_response_code(403);
     exit;
 }
 
