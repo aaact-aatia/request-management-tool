@@ -147,6 +147,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Enable persistent attachment storage ([67912c7](https://github.com/aaact-aatia/request-management-tool/commit/67912c72a44d8bf91719d4697d53efb6a49ebd32))
 
+- Name attachment archives by request ([40188ee](https://github.com/aaact-aatia/request-management-tool/commit/40188ee0f210c3321ef400599f3575d69d634483))
+
 
 ### Build
 
@@ -301,6 +303,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Regenerate CHANGELOG.md [skip ci] ([597cb14](https://github.com/aaact-aatia/request-management-tool/commit/597cb141b01caedb96801c7fb05a15c65192a6cf))
 
+- Regenerate CHANGELOG.md [skip ci] ([520066d](https://github.com/aaact-aatia/request-management-tool/commit/520066dbe3b627a6dda995114c53476b35dec875))
+
 
 ### Fixed
 
@@ -445,6 +449,10 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 - Rename catalogue contact groups to teams ([8f2ad62](https://github.com/aaact-aatia/request-management-tool/commit/8f2ad6268706c20078d5aa65c9af8b379ed87258))
 
 - Lock request lifecycle dates ([f8a9b17](https://github.com/aaact-aatia/request-management-tool/commit/f8a9b17609b72000be0e6a53012d6515c134326e))
+
+- Log attachment authorization denials ([ec05606](https://github.com/aaact-aatia/request-management-tool/commit/ec056062a65ba7ab71da5e7683d1f518b86b1b61))
+
+- Refresh attachment download script ([d30009a](https://github.com/aaact-aatia/request-management-tool/commit/d30009a8ba06937c8cdfb2175c4568cb412cc5e3))
 
 
 ### Other
