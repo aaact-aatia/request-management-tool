@@ -1,4 +1,4 @@
-<script src="/public/js/file-manager.js"></script>
+<script src="/public/js/file-manager.js?v=<?= (int) @filemtime(__DIR__ . '/../public/js/file-manager.js') ?>"></script>
 <script src="/public/js/ajax-dropdowns.js"></script>
 <script>
 // Sprint date validation (editrequest-specific)

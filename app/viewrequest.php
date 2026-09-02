@@ -1489,7 +1489,7 @@ $blobStorage = new AzureBlobStorageManager();
     </div>
 		<?php include 'includes/template/footer.php'; ?>
 		<?php include 'includes/template/scripts.php'; ?>
-		<script src="/public/js/file-manager.js"></script>
+		<script src="/public/js/file-manager.js?v=<?= (int) @filemtime(__DIR__ . '/public/js/file-manager.js') ?>"></script>
 	</body>
 
 </html>
