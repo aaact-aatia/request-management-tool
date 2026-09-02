@@ -422,6 +422,9 @@ include 'includes/template/head.php';
 		$result_lookup = mysqli_query($link, "SELECT $nameField FROM tblcatalogue WHERE id = '$catalogueid'");
 		$row_lookup = mysqli_fetch_array($result_lookup);
 				$cataloguename = $row_lookup ? $row_lookup[0] : '';
+				$subservicename = rmt_request_hierarchy_name($row, 'subservice', $lang, $subservicename);
+				$servicename = rmt_request_hierarchy_name($row, 'service', $lang, $servicename);
+				$cataloguename = rmt_request_hierarchy_name($row, 'catalogue', $lang, $cataloguename);
 
 					// Grab the date it was received
 					$slatimer = $row['slatimer'];

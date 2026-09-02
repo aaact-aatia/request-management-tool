@@ -391,6 +391,21 @@ return [
     'catalogue_sub_mgmt_no_subservices' => 'No sub-service items available',
     'catalogue_sub_mgmt_back_service' => 'Go back to service',
     'catalogue_sub_mgmt_back_catalogue' => 'Go back to catalogue',
+
+    // Catalogue deletion dialogs
+    'delete_catalogue_title' => 'Delete %s catalogue item',
+    'delete_service_title' => 'Delete %s service item',
+    'delete_subservice_title' => 'Delete %s sub-service item',
+    'delete_catalogue_open_request_one' => '%d open request is assigned to this item.',
+    'delete_catalogue_open_request_many' => '%d open requests are assigned to this item.',
+    'delete_catalogue_archive_message' => 'Closed requests will keep the current names for archive purposes.',
+    'delete_catalogue_warning' => 'This item will be permanently deleted and cannot be restored.',
+    'delete_catalogue_reassign_label' => 'Reassign open requests to (optional)',
+    'delete_catalogue_keep_assignments' => 'Do not change request assignments',
+    'delete_catalogue_permanently' => 'Delete permanently',
+    'delete_catalogue_cancel' => 'Cancel',
+    'delete_catalogue_error_title' => 'Catalogue item not found',
+    'delete_catalogue_error_message' => 'The requested catalogue item does not exist or has already been deleted.',
     
     // Common action labels
     'actions_column' => 'Actions',

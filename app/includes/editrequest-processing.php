@@ -852,6 +852,7 @@ if (!empty($firstsprintenddate)) {
 
 $sql .= " WHERE id='$requestuid'";
 mysqli_query($link, $sql);
+rmt_refresh_request_catalogue_snapshot($link, (int) $requestuid);
 
 if ($canFullFieldEdit) {
     $departmentNoteLang = $requestlang;

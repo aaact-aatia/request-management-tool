@@ -279,6 +279,9 @@ include 'includes/template/head.php';
 						$row2 = ($result2 instanceof mysqli_result) ? mysqli_fetch_array($result2) : null;
 						$cataloguename = $row2[0] ?? '';
 					}
+					$subservicename = rmt_request_hierarchy_name($row, 'subservice', $lang, $subservicename ?? '');
+					$servicename = rmt_request_hierarchy_name($row, 'service', $lang, $servicename ?? '');
+					$cataloguename = rmt_request_hierarchy_name($row, 'catalogue', $lang, $cataloguename ?? '');
 					
 					// Grab the date it was received
 					$slatimer = $row['slatimer'];

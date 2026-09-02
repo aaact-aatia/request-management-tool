@@ -230,6 +230,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	$result = mysqli_query($link, "SELECT MAX(id) FROM tbltriage");
 	$row = mysqli_fetch_array($result);
 	$latestid = $row[0];
+	rmt_refresh_request_catalogue_snapshot($link, (int) $latestid);
 	
 	// Check if notes has anything and add to table
 	if ($clientnotes!="") {

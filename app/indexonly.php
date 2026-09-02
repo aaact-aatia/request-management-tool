@@ -174,18 +174,18 @@ include 'includes/template/head.php';
 						// Sub-service is not empty so grab the name
 						$result2 = mysqli_query($link, "SELECT $nameColumn,sds,contactid FROM tblservices WHERE id = '$serviceid'");
 						$row2 = mysqli_fetch_array($result2);
-						$servicename = $row2[0];
+						$servicename = $row2 ? $row2[0] : '';
 						if ($sla==0) {
 							if ($serviceid==21 || $serviceid==22 || $serviceid==23 || $serviceid==24) {
 								$sla = 15;
 								$dsla = $sla * 2;
 							} else {
-								$sla = $row2[1];
+								$sla = $row2 ? $row2[1] : 0;
 								$dsla = $sla * 2;
 							}
 						}
 						if (empty($tarraycontactid)) {
-							$tarraycontactid = $row2[2];
+							$tarraycontactid = $row2 ? $row2[2] : 0;
 						}						
 					}
 					$tarraycontactid = rmt_resolve_responsible_team_id($link, (int) $catalogueid, (int) $serviceid, (int) $subserviceid);
@@ -194,8 +194,11 @@ include 'includes/template/head.php';
 						// Sub-service is not empty so grab the name
 						$result2 = mysqli_query($link, "SELECT $nameColumn FROM tblcatalogue WHERE id = '$catalogueid'");
 						$row2 = mysqli_fetch_array($result2);
-						$cataloguename = $row2[0];
+						$cataloguename = $row2 ? $row2[0] : '';
 					}
+					$subservicename = rmt_request_hierarchy_name($row, 'subservice', $lang, $subservicename);
+					$servicename = rmt_request_hierarchy_name($row, 'service', $lang, $servicename);
+					$cataloguename = rmt_request_hierarchy_name($row, 'catalogue', $lang, $cataloguename);
 					
 					// Grab the date it was received
 					$slatimer = $row['slatimer'];

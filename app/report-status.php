@@ -318,6 +318,12 @@ echo '</tbody></table>';
 							$result2 = mysqli_query($link, "SELECT $nameColumn FROM tblcatalogue WHERE id = '$catalogueid'");
 							$row2 = mysqli_fetch_array($result2);
 							$cataloguename = $row2[0] ?? '';
+							if ($cataloguename === '') {
+								$snapshotColumn = ($lang === 'fr') ? 'cataloguenamefr' : 'cataloguenameen';
+								$snapshotResult = mysqli_query($link, "SELECT $snapshotColumn FROM tbltriage WHERE catalogueid = '$catalogueid' AND $snapshotColumn IS NOT NULL LIMIT 1");
+								$snapshotRow = mysqli_fetch_array($snapshotResult);
+								$cataloguename = $snapshotRow[0] ?? '';
+							}
 					?>
 					<th><?php echo $cataloguename; ?></th>
 					<?php

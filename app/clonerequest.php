@@ -114,6 +114,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
     WHERE id = '$requestid';
     ";
     if (mysqli_query($link, $sql_insert)) {
+		$newRequestId = mysqli_insert_id($link);
+		rmt_refresh_request_catalogue_snapshot($link, (int) $newRequestId);
         if($toclose == "1" || $toclose == 1){
             $sql_update = "UPDATE tbltriage SET statusid = 2 where id = '$requestid'";
             mysqli_query($link,$sql_update);

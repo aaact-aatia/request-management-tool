@@ -365,6 +365,40 @@ function rmt_db_fetch_one(mysqli $link, string $sql, string $types = '', array $
     return $row ?: null;
 }
 
+function rmt_refresh_request_catalogue_snapshot(mysqli $link, int $requestId): void {
+    if ($requestId <= 0 || !rmt_db_column_exists($link, 'tbltriage', 'cataloguenameen')) {
+        return;
+    }
+
+    $statement = rmt_db_execute(
+        $link,
+        'UPDATE tbltriage t
+         LEFT JOIN tblcatalogue c ON c.id = t.catalogueid
+         LEFT JOIN tblservices s ON s.id = t.serviceid
+         LEFT JOIN tblsubservices ss ON ss.id = t.subserviceid
+         SET t.cataloguenameen = c.nameen,
+             t.cataloguenamefr = c.namefr,
+             t.servicenameen = s.nameen,
+             t.servicenamefr = s.namefr,
+             t.subservicenameen = ss.nameen,
+             t.subservicenamefr = ss.namefr
+         WHERE t.id = ?',
+        'i',
+        [$requestId]
+    );
+    mysqli_stmt_close($statement);
+}
+
+function rmt_request_hierarchy_name(array $request, string $level, string $lang, string $liveName = ''): string {
+    if ($liveName !== '') {
+        return $liveName;
+    }
+
+    $languageSuffix = ($lang === 'fr') ? 'fr' : 'en';
+    $snapshotColumn = $level . 'name' . $languageSuffix;
+    return (string) ($request[$snapshotColumn] ?? '');
+}
+
 function rmt_normalize_request_subject_type(?string $type, bool $allowNull = false): ?string {
     $type = trim((string) $type);
     if ($allowNull && $type === '') {
