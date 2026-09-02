@@ -24,6 +24,7 @@ if ($fileCodes === []) {
 $storage = new AzureBlobStorageManager();
 $filesToArchive = [];
 $usedNames = [];
+$archiveRequestId = null;
 
 foreach ($fileCodes as $fileCode) {
     $file = rmt_db_fetch_one(
@@ -44,6 +45,14 @@ foreach ($fileCodes as $fileCode) {
 
     if (!rmt_can_access_request($link, $file)) {
         http_response_code(403);
+        exit;
+    }
+
+    $fileRequestId = (string) ($file['requestid'] ?? '');
+    if ($archiveRequestId === null) {
+        $archiveRequestId = $fileRequestId;
+    } elseif ($fileRequestId !== $archiveRequestId) {
+        http_response_code(400);
         exit;
     }
 
@@ -91,8 +100,11 @@ try {
     }
     unset($archive);
 
+    $safeRequestId = preg_replace('/[^A-Za-z0-9_.-]/', '_', (string) $archiveRequestId) ?: 'request';
+    $archiveFileName = 'a11y-' . $safeRequestId . '-attachments.zip';
+
     header('Content-Type: application/zip');
-    header('Content-Disposition: attachment; filename="request-attachments.zip"');
+    header('Content-Disposition: attachment; filename="' . $archiveFileName . '"');
     header('Content-Length: ' . filesize($archivePath));
     header('Cache-Control: no-store, no-cache, must-revalidate');
     header('Pragma: no-cache');
