@@ -31,6 +31,24 @@ if ($file === null) {
 }
 
 if (!rmt_can_access_request($link, $file)) {
+    $responsibleTeamId = rmt_resolve_responsible_team_id(
+        $link,
+        (int) ($file['catalogueid'] ?? 0),
+        (int) ($file['serviceid'] ?? 0),
+        (int) ($file['subserviceid'] ?? 0)
+    );
+    error_log(sprintf(
+        'Attachment download denied: authenticated=%d atype=%d superadmin=%d admin=%d role_test=%d worker=%d effective_employee=%d responsible_team=%d effective_teams=%s',
+        empty($_SESSION['pid']) ? 0 : 1,
+        (int) ($_SESSION['atype'] ?? 0),
+        isSuperAdmin() ? 1 : 0,
+        empty($_SESSION['is_admin']) ? 0 : 1,
+        isRoleTestMode() ? 1 : 0,
+        (int) ($file['workerid'] ?? 0),
+        getEffectiveEmployeeUserId($link),
+        $responsibleTeamId,
+        implode(',', getEffectiveTeamIds($link))
+    ));
     http_response_code(403);
     exit;
 }
