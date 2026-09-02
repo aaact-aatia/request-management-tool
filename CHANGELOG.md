@@ -149,6 +149,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Name attachment archives by request ([40188ee](https://github.com/aaact-aatia/request-management-tool/commit/40188ee0f210c3321ef400599f3575d69d634483))
 
+- Permanently delete catalogue items ([8bd9aaa](https://github.com/aaact-aatia/request-management-tool/commit/8bd9aaace9616208acc1628e5c03a8394422441a))
+
 
 ### Build
 
@@ -305,6 +307,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Regenerate CHANGELOG.md [skip ci] ([520066d](https://github.com/aaact-aatia/request-management-tool/commit/520066dbe3b627a6dda995114c53476b35dec875))
 
+- Regenerate CHANGELOG.md [skip ci] ([9d419aa](https://github.com/aaact-aatia/request-management-tool/commit/9d419aa979fe4529d5b802a776ccb078ef1a1404))
+
 
 ### Fixed
 
@@ -453,6 +457,10 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 - Log attachment authorization denials ([ec05606](https://github.com/aaact-aatia/request-management-tool/commit/ec056062a65ba7ab71da5e7683d1f518b86b1b61))
 
 - Refresh attachment download script ([d30009a](https://github.com/aaact-aatia/request-management-tool/commit/d30009a8ba06937c8cdfb2175c4568cb412cc5e3))
+
+- Hide generated dialog close footer ([b662120](https://github.com/aaact-aatia/request-management-tool/commit/b6621207336713de216c91f1fdf7b524e9e9a3d1))
+
+- Keep language toggle on public host ([a3a6ab0](https://github.com/aaact-aatia/request-management-tool/commit/a3a6ab02580df267f5d49e6575180fbd7f8e2ee4))
 
 
 ### Other
