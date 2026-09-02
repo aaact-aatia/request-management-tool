@@ -442,6 +442,9 @@ if(mysqli_num_rows($result)>0){
 		$row2 = mysqli_fetch_array($result2);
 		$cataloguename = $row2 ? $row2[0] : '';
 	}
+	$subservicename = rmt_request_hierarchy_name($row, 'subservice', $lang, $subservicename);
+	$servicename = rmt_request_hierarchy_name($row, 'service', $lang, $servicename);
+	$cataloguename = rmt_request_hierarchy_name($row, 'catalogue', $lang, $cataloguename);
 
 		$effectiveAtype = (int)($_SESSION['atype'] ?? 0);
 		if ($effectiveAtype === 4) {

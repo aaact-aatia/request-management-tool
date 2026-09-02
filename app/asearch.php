@@ -534,6 +534,9 @@ include 'includes/template/head.php';
 				$result2 = mysqli_query($link, "SELECT $nameField FROM tblcatalogue WHERE id = '$catalogueid'");
 				$row2 = mysqli_fetch_array($result2);
 				$cataloguename = $row2 ? $row2[0] : '';
+				$subservicename = rmt_request_hierarchy_name($row, 'subservice', $lang, $subservicename);
+				$servicename = rmt_request_hierarchy_name($row, 'service', $lang, $servicename);
+				$cataloguename = rmt_request_hierarchy_name($row, 'catalogue', $lang, $cataloguename);
 
 				// Grab the date it was received
 				$slatimer = $row['slatimer'];

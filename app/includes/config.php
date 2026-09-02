@@ -4,6 +4,8 @@ if (isset($_SERVER['SCRIPT_FILENAME']) && realpath(__FILE__) === realpath((strin
     exit();
 }
 
+require_once dirname(__DIR__) . '/env.php';
+
 /**
  * Configuration Helper
  * Loads app configuration from config.json
@@ -47,8 +49,7 @@ function get_language_toggle_url($disabled_on_pages = ['openrequest2']) {
     $lang = $_SESSION['lang'] ?? 'en';
     $toggleLang = ($lang === 'en') ? 'fr' : 'en';
     
-    $currenturl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") 
-        . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+    $currenturl = app_base_url() . (string) ($_SERVER['REQUEST_URI'] ?? '/');
     
     // Check if toggle should be disabled on this page
     foreach ($disabled_on_pages as $page) {

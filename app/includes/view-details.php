@@ -37,17 +37,17 @@ if(mysqli_num_rows($result)>0){
 			// Sub-service is not empty so grab the name
 			$result2 = mysqli_query($link, "SELECT $nameField,sds FROM tblsubservices WHERE id = '$subserviceid'");
 			$row2 = mysqli_fetch_array($result2);
-			$subservicename = $row2[0];
-			$sla = $row2[1];
+			$subservicename = $row2 ? $row2[0] : '';
+			$sla = $row2 ? $row2[1] : 0;
 		}
 		
 		if ($serviceid!=0) {
 			// Sub-service is not empty so grab the name
 			$result2 = mysqli_query($link, "SELECT $nameField,sds FROM tblservices WHERE id = '$serviceid'");
 			$row2 = mysqli_fetch_array($result2);
-			$servicename = $row2[0];
+			$servicename = $row2 ? $row2[0] : '';
 			if ($sla==0) {
-				$sla = $row2[1];
+				$sla = $row2 ? $row2[1] : 0;
 			}
 		}
 		
@@ -55,8 +55,11 @@ if(mysqli_num_rows($result)>0){
 			// Sub-service is not empty so grab the name
 			$result2 = mysqli_query($link, "SELECT $nameField FROM tblcatalogue WHERE id = '$catalogueid'");
 			$row2 = mysqli_fetch_array($result2);
-			$cataloguename = $row2[0];
+			$cataloguename = $row2 ? $row2[0] : '';
 		}
+		$subservicename = rmt_request_hierarchy_name($row, 'subservice', $lang, $subservicename ?? '');
+		$servicename = rmt_request_hierarchy_name($row, 'service', $lang, $servicename ?? '');
+		$cataloguename = rmt_request_hierarchy_name($row, 'catalogue', $lang, $cataloguename ?? '');
 		
 		// Grab the date it was received
 		$datereceived = $row['datereceived'];

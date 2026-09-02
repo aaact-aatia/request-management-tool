@@ -389,6 +389,21 @@ return [
     'catalogue_sub_mgmt_no_subservices' => 'Aucun élément de sous-service disponible',
     'catalogue_sub_mgmt_back_service' => 'Retour au service',
     'catalogue_sub_mgmt_back_catalogue' => 'Revenir au catalogue',
+
+    // Dialogues de suppression du catalogue
+    'delete_catalogue_title' => 'Supprimer l\'élément de catalogue %s',
+    'delete_service_title' => 'Supprimer l\'élément de service %s',
+    'delete_subservice_title' => 'Supprimer l\'élément de sous-service %s',
+    'delete_catalogue_open_request_one' => '%d demande ouverte est attribuée à cet élément.',
+    'delete_catalogue_open_request_many' => '%d demandes ouvertes sont attribuées à cet élément.',
+    'delete_catalogue_archive_message' => 'Les demandes fermées conserveront les noms actuels à des fins d’archivage.',
+    'delete_catalogue_warning' => 'Cet élément sera supprimé définitivement et ne pourra pas être restauré.',
+    'delete_catalogue_reassign_label' => 'Réattribuer les demandes ouvertes à (facultatif)',
+    'delete_catalogue_keep_assignments' => 'Ne pas modifier l’attribution des demandes',
+    'delete_catalogue_permanently' => 'Supprimer définitivement',
+    'delete_catalogue_cancel' => 'Annuler',
+    'delete_catalogue_error_title' => 'Élément de catalogue introuvable',
+    'delete_catalogue_error_message' => 'L’élément de catalogue demandé n’existe pas ou a déjà été supprimé.',
     
     // Common action labels
     'actions_column' => 'Actions',

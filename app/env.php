@@ -213,7 +213,11 @@ function app_notify_redirect_recipient(string $recipientType = 'general'): ?stri
 
 function app_base_url(): string
 {
-    $configuredBaseUrl = trim((string) app_setting('APP_BASE_URL', ''));
+    $configuredBaseUrl = trim((string) app_env('APP_BASE_URL', ''));
+    if ($configuredBaseUrl === '') {
+        $configuredBaseUrl = trim((string) app_setting('APP_BASE_URL', ''));
+    }
+
     if ($configuredBaseUrl !== '') {
         return rtrim($configuredBaseUrl, '/');
     }

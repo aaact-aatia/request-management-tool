@@ -14,6 +14,10 @@
 .panel-warning > .panel-heading {
 	color: #000;
 }
+
+.modal-dialog:has(.popup-modal-dismiss) > .modal-footer {
+	display: none;
+}
 /***** **** *** ** * | THIS IS THE CSS FOR THE NEW APP TOP 2017-08-29 | * ** *** **** *****/
 /***** **** *** ** * |												  | * ** *** **** *****/
 /***** **** *** ** * |												  | * ** *** **** *****/

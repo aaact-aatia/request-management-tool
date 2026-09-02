@@ -227,6 +227,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     );
     $latestid = mysqli_insert_id($link);
     mysqli_stmt_close($triageStatement);
+    rmt_refresh_request_catalogue_snapshot($link, (int) $latestid);
     $nrequestemailid = base64_encode($latestid);
 
     // Preserve original request language even on older schemas that may not include tbltriage.requestlang.

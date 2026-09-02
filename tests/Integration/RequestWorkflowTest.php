@@ -2,6 +2,7 @@
 require_once '/var/www/html/sql.php';
 /** @var mysqli $link */
 require_once '/var/www/html/includes/helpers.php';
+require_once '/var/www/html/includes/catalogue-delete.php';
 
 $passed = 0;
 $failed = 0;
@@ -110,6 +111,61 @@ check(
         === 'REQ-26-123 - SSC - Accessibility testing tool',
     'request title uses ticket, organization, and request subject'
 );
+
+$openStatus = rmt_db_fetch_one($link, 'SELECT id FROM tblstatus WHERE COALESCE(is_resolved, 0) = 0 ORDER BY id LIMIT 1');
+$resolvedStatus = rmt_db_fetch_one($link, 'SELECT id FROM tblstatus WHERE is_resolved = 1 ORDER BY id LIMIT 1');
+check($openStatus !== null && $resolvedStatus !== null, 'catalogue deletion test statuses are available');
+
+if ($openStatus !== null && $resolvedStatus !== null) {
+    mysqli_query($link, "INSERT INTO tblcatalogue (nameen, namefr, status) VALUES ('Delete test catalogue', 'Catalogue test suppression', 1)");
+    $deleteCatalogueId = mysqli_insert_id($link);
+    mysqli_query($link, "INSERT INTO tblservices (catalogueid, nameen, namefr, status) VALUES ($deleteCatalogueId, 'Delete test service', 'Service test suppression', 1)");
+    $deleteServiceId = mysqli_insert_id($link);
+    mysqli_query($link, "INSERT INTO tblsubservices (serviceid, nameen, namefr, status) VALUES ($deleteServiceId, 'Old sub-service', 'Ancien sous-service', 1)");
+    $oldSubserviceId = mysqli_insert_id($link);
+    mysqli_query($link, "INSERT INTO tblsubservices (serviceid, nameen, namefr, status) VALUES ($deleteServiceId, 'Replacement sub-service', 'Sous-service de remplacement', 1)");
+    $replacementSubserviceId = mysqli_insert_id($link);
+
+    mysqli_query($link, "INSERT INTO tbltriage (requestid, catalogueid, serviceid, subserviceid, statusid, status) VALUES ('DELETE-OPEN-KEEP', $deleteCatalogueId, $deleteServiceId, $oldSubserviceId, {$openStatus['id']}, 1)");
+    $openKeepRequestId = mysqli_insert_id($link);
+    mysqli_query($link, "INSERT INTO tbltriage (requestid, catalogueid, serviceid, subserviceid, statusid, status) VALUES ('DELETE-CLOSED-KEEP', $deleteCatalogueId, $deleteServiceId, $oldSubserviceId, {$resolvedStatus['id']}, 1)");
+    $closedKeepRequestId = mysqli_insert_id($link);
+
+    check(rmt_catalogue_unresolved_request_count($link, 'subservice', $oldSubserviceId) === 1, 'only unresolved requests are offered for reassignment');
+    rmt_delete_catalogue_hierarchy($link, 'subservice', $oldSubserviceId, 0, $deleteServiceId);
+    $deletedSubservice = rmt_db_fetch_one($link, 'SELECT id FROM tblsubservices WHERE id = ?', 'i', [$oldSubserviceId]);
+    $openKeepRequest = rmt_db_fetch_one($link, 'SELECT * FROM tbltriage WHERE id = ?', 'i', [$openKeepRequestId]);
+    $closedKeepRequest = rmt_db_fetch_one($link, 'SELECT * FROM tbltriage WHERE id = ?', 'i', [$closedKeepRequestId]);
+    check($deletedSubservice === null, 'sub-service row is permanently deleted');
+    check((int) $openKeepRequest['subserviceid'] === $oldSubserviceId, 'default deletion leaves open request assignment unchanged');
+    check((int) $closedKeepRequest['subserviceid'] === $oldSubserviceId, 'closed request assignment remains unchanged');
+    check(
+        $closedKeepRequest['subservicenameen'] === 'Old sub-service'
+            && $closedKeepRequest['subservicenamefr'] === 'Ancien sous-service',
+        'closed request keeps bilingual archived sub-service names'
+    );
+
+    mysqli_query($link, "INSERT INTO tblsubservices (serviceid, nameen, namefr, status) VALUES ($deleteServiceId, 'Second old sub-service', 'Deuxieme ancien sous-service', 1)");
+    $secondOldSubserviceId = mysqli_insert_id($link);
+    mysqli_query($link, "INSERT INTO tbltriage (requestid, catalogueid, serviceid, subserviceid, statusid, status) VALUES ('DELETE-OPEN-MOVE', $deleteCatalogueId, $deleteServiceId, $secondOldSubserviceId, {$openStatus['id']}, 1)");
+    $openMoveRequestId = mysqli_insert_id($link);
+    mysqli_query($link, "INSERT INTO tbltriage (requestid, catalogueid, serviceid, subserviceid, statusid, status) VALUES ('DELETE-CLOSED-STAY', $deleteCatalogueId, $deleteServiceId, $secondOldSubserviceId, {$resolvedStatus['id']}, 1)");
+    $closedStayRequestId = mysqli_insert_id($link);
+
+    rmt_delete_catalogue_hierarchy($link, 'subservice', $secondOldSubserviceId, $replacementSubserviceId, $deleteServiceId);
+    $openMoveRequest = rmt_db_fetch_one($link, 'SELECT * FROM tbltriage WHERE id = ?', 'i', [$openMoveRequestId]);
+    $closedStayRequest = rmt_db_fetch_one($link, 'SELECT * FROM tbltriage WHERE id = ?', 'i', [$closedStayRequestId]);
+    check((int) $openMoveRequest['subserviceid'] === $replacementSubserviceId, 'selected replacement reassigns the open request');
+    check($openMoveRequest['subservicenameen'] === 'Replacement sub-service', 'reassigned request snapshot uses the replacement name');
+    check((int) $closedStayRequest['subserviceid'] === $secondOldSubserviceId, 'selected replacement does not alter a closed request');
+    check($closedStayRequest['subservicenameen'] === 'Second old sub-service', 'closed request archives the deleted name during reassignment');
+
+    mysqli_query($link, "DELETE FROM tbltriage WHERE id IN ($openKeepRequestId, $closedKeepRequestId, $openMoveRequestId, $closedStayRequestId)");
+    rmt_delete_catalogue_hierarchy($link, 'catalogue', $deleteCatalogueId, 0, 0);
+    $deletedCatalogue = rmt_db_fetch_one($link, 'SELECT id FROM tblcatalogue WHERE id = ?', 'i', [$deleteCatalogueId]);
+    $deletedService = rmt_db_fetch_one($link, 'SELECT id FROM tblservices WHERE id = ?', 'i', [$deleteServiceId]);
+    check($deletedCatalogue === null && $deletedService === null, 'catalogue deletion permanently removes its hierarchy');
+}
 
 mysqli_close($link);
 echo "Passed: {$passed}; Failed: {$failed}\n";
