@@ -116,7 +116,7 @@ include 'includes/template/head.php';
 				</div>
 				<?php
 				$selectedTestTeamId = '';
-				$showTestTeamScope = ((int)$currentAtype === 4);
+				$showTestTeamScope = in_array((int)$currentAtype, [3, 4], true);
 				$selectedTestEmployeeId = '';
 				$showTestEmployeeScope = ((int)$currentAtype === 5);
 				if (!empty($_SESSION['test_team_ids'])) {
@@ -198,11 +198,11 @@ include 'includes/template/head.php';
 			}
 
 			function refreshTeamScopeVisibility() {
-				var isTeamLead = accountTypeSelect.value === '4';
+				var isTeamScopedRole = accountTypeSelect.value === '3' || accountTypeSelect.value === '4';
 				var isEmployee = accountTypeSelect.value === '5';
-				teamGroup.style.display = isTeamLead ? '' : 'none';
-				teamSelect.disabled = !isTeamLead;
-				if (!isTeamLead) {
+				teamGroup.style.display = isTeamScopedRole ? '' : 'none';
+				teamSelect.disabled = !isTeamScopedRole;
+				if (!isTeamScopedRole) {
 					teamSelect.value = '';
 				}
 

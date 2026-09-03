@@ -47,7 +47,7 @@ if (isset($_POST['test_atype'])) {
         // Valid account type - switch to it
         $_SESSION['atype'] = $newAtype;
 
-        if ((int)$newAtype === 4 && $testTeamId !== '' && ctype_digit($testTeamId)) {
+        if (in_array((int)$newAtype, [3, 4], true) && $testTeamId !== '' && ctype_digit($testTeamId)) {
 			$teamCheck = mysqli_query($link, "SELECT id FROM tblteams WHERE id = '$testTeamId' AND status = 1 LIMIT 1");
             if ($teamCheck && mysqli_num_rows($teamCheck) > 0) {
                 $_SESSION['test_team_ids'] = (string)$testTeamId;

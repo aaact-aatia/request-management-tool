@@ -378,8 +378,8 @@ if (!empty($_SESSION['pid'])):
 					}
 				}
 
-				if ((int)$testAtype === 4) {
-					// Show effective team scope only for Team Lead role testing.
+				if (in_array((int)$testAtype, [3, 4], true)) {
+					// Show effective team scope for team-scoped role testing.
 					$effectiveTeamIds = [];
 					if (!empty($_SESSION['test_team_ids'])) {
 						$effectiveTeamIds = array_values(array_filter(array_map('trim', explode(',', (string)$_SESSION['test_team_ids']))));
