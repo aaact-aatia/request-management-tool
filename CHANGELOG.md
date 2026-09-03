@@ -309,6 +309,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Regenerate CHANGELOG.md [skip ci] ([9d419aa](https://github.com/aaact-aatia/request-management-tool/commit/9d419aa979fe4529d5b802a776ccb078ef1a1404))
 
+- Regenerate CHANGELOG.md [skip ci] ([bf04d8b](https://github.com/aaact-aatia/request-management-tool/commit/bf04d8be7980b33b75508f28e48e7dc0297e8a27))
+
 
 ### Fixed
 
@@ -462,6 +464,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Keep language toggle on public host ([a3a6ab0](https://github.com/aaact-aatia/request-management-tool/commit/a3a6ab02580df267f5d49e6575180fbd7f8e2ee4))
 
+- Correct French catalogue apostrophe ([56eb56e](https://github.com/aaact-aatia/request-management-tool/commit/56eb56e8a5a1bfd519e3658b0166a2d1a82b8310))
+
 
 ### Other
 
@@ -514,6 +518,8 @@ This reverts commit 709ed3d7517df3a74649deb27fd1eb71e032d1db, reversing
 changes made to 1f25d2de91afa814dd49160085b2f76a39fa88a5. ([9bfaf79](https://github.com/aaact-aatia/request-management-tool/commit/9bfaf79a81dd140ec16ea180394f2d91030c6d50))
 
 - Compact request change log details ([2ef5c9a](https://github.com/aaact-aatia/request-management-tool/commit/2ef5c9a91c074ffd50e48f32bcc00c0b2aebfde5))
+
+- Remove quick test request utility ([6ff0bc9](https://github.com/aaact-aatia/request-management-tool/commit/6ff0bc9ca02d2440459f9b7f3e2461f655e434d6))
 
 
 ### Removed
