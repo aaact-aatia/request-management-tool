@@ -56,6 +56,7 @@ $translations = [
 		'filter_options' => 'Filter options',
 		'filter_all' => 'All',
 		'filter_status_label' => 'Status',
+		'unassigned' => 'Unassigned',
 		'filter_catalogue_label' => 'Service type',
 		'filter_priority_label' => 'Request alerts',
 		'filter_scope_label' => 'Requests',
@@ -111,6 +112,7 @@ $translations = [
 		'filter_options' => 'Options de filtrage',
 		'filter_all' => 'Tous',
 		'filter_status_label' => 'Statut',
+		'unassigned' => 'Non assignée',
 		'filter_catalogue_label' => 'Type de service',
 		'filter_priority_label' => 'Alertes de demandes',
 		'filter_scope_label' => 'Demandes',
@@ -352,6 +354,9 @@ include 'includes/template/head.php';
 							<legend class="mrgn-bttm-0"><label for="status-filter" class="fnt-nrml"><?= $t['filter_status_label'] ?></label></legend>
 							<select id="status-filter" name="status-filter" class="full-width wb-tagfilter-ctrl form-control">
 								<option value=""><?= $t['filter_all'] ?></option>
+								<?php if ($hasScopeOptions): ?>
+									<option value="unassigned"><?= htmlspecialchars($t['unassigned']) ?></option>
+								<?php endif; ?>
 								<?php foreach ($statusOptions as $so): ?>
 									<option value="status-<?= $so['id'] ?>"><?= htmlspecialchars($so[$nameField]) ?></option>
 								<?php endforeach; ?>
@@ -539,6 +544,9 @@ include 'includes/template/head.php';
 					<?php
 					// Build tag string for this card
 					$cardTags = 'status-' . $statusid . ' cat-' . $catalogueid;
+					if (empty($row['workerid'])) {
+						$cardTags .= ' unassigned';
+					}
 					$hasSurveySent = ((int)($row['cssurvey'] ?? 0) > 0);
 					$hasSurveyAnswered = !empty($surveyAnsweredByRequest[(int)$row['id']]);
 					if ($hasSurveySent) {
