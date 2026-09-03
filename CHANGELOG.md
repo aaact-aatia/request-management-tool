@@ -157,6 +157,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Add manager team scope testing ([0a16a8e](https://github.com/aaact-aatia/request-management-tool/commit/0a16a8e95bfa642db9dc4a916add2d632b40afa8))
 
+- Consolidate request dashboard ([64ce707](https://github.com/aaact-aatia/request-management-tool/commit/64ce7070d72a74528794269398e85e3d2c2213e3))
+
 
 ### Build
 
@@ -322,6 +324,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 - Regenerate CHANGELOG.md [skip ci] ([56cc523](https://github.com/aaact-aatia/request-management-tool/commit/56cc5236af16b1a0f0027364bebb13bb81587cd1))
 
 - Regenerate CHANGELOG.md [skip ci] ([ffd3cf5](https://github.com/aaact-aatia/request-management-tool/commit/ffd3cf5057a3271c9596addea3b93509ff1f3bb0))
+
+- Regenerate CHANGELOG.md [skip ci] ([9d0dd4c](https://github.com/aaact-aatia/request-management-tool/commit/9d0dd4cc8b0d5a4aa2c49378a12f204defe328a8))
 
 
 ### Fixed
