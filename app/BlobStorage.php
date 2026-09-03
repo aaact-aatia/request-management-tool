@@ -133,19 +133,48 @@ class AzureBlobStorageManager
         return date('Y-m-d H:i', $timestamp);
     }
 
-    public function deleteBlob(string $blobName): void
+    public function deleteBlob(string $blobName): bool
     {
         if ($this->mode === 'azure_secret') {
-            // Delete is intentionally deferred for phase 1.
-            return;
+            $url = $this->buildAzureBlobUrl($blobName, true);
+            if ($url === null) {
+                return false;
+            }
+
+            $curl = curl_init($url);
+            curl_setopt_array($curl, [
+                CURLOPT_CUSTOMREQUEST => 'DELETE',
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_CONNECTTIMEOUT => 10,
+                CURLOPT_TIMEOUT => 60,
+                CURLOPT_HTTPHEADER => [
+                    'x-ms-version: 2021-12-02',
+                ],
+            ]);
+
+            $response = curl_exec($curl);
+            $statusCode = (int) curl_getinfo($curl, CURLINFO_HTTP_CODE);
+            $error = curl_error($curl);
+            curl_close($curl);
+
+            if ($response === false || !in_array($statusCode, [200, 202, 204, 404], true)) {
+                error_log('Azure delete failed for blob ' . $blobName . ': HTTP ' . $statusCode . ' ' . $error);
+                return false;
+            }
+
+            return true;
         }
 
         if ($this->mode === 'local') {
             $path = $this->buildLocalPath($blobName);
             if ($path !== null && is_file($path)) {
-                @unlink($path);
+                return @unlink($path);
             }
+
+            return true;
         }
+
+        return false;
     }
 
     private function uploadLocal(string $filePath, string $blobName): bool

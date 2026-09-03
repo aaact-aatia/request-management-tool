@@ -96,7 +96,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 		
 			$checkSql = "SELECT COUNT(*) as count FROM tbltriage 
 						WHERE status = '1' 
-						AND (statusid='1' OR statusid='3' OR statusid='5' OR statusid='6' OR statusid='7' OR statusid='10' OR statusid='11' OR statusid='12')
+						AND statusid NOT IN ('4', '5', '6')
 						AND workerid = '$userId'
 						LIMIT 1";
 			$checkResult = mysqli_query($link, $checkSql);

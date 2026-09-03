@@ -313,8 +313,10 @@ CREATE TABLE IF NOT EXISTS `tblfiles` (
   `code` varchar(100) NOT NULL,
   `type` varchar(50) DEFAULT NULL,
   `size` int(11) DEFAULT NULL,
+  `uploadedby` int(11) DEFAULT NULL,
   `status` tinyint(1) DEFAULT 1,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_tblfiles_uploadedby` (`uploadedby`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `tblholidays` (

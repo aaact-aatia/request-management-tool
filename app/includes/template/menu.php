@@ -30,13 +30,15 @@ $isAdminAccount = !$isTestingDifferentType && (
 );
 $isDirector = !empty($_SESSION['pid']) && $effectiveAtype === 6;
 $isEmployee = !empty($_SESSION['pid']) && $effectiveAtype === 5;
+$isTeamScopedAccount = !empty($_SESSION['pid']) && in_array($effectiveAtype, [3, 4], true);
+$isGlobalOverviewAccount = $isAdminAccount || $isSuperAdmin;
 $canSeeCoreNav = !empty($_SESSION['pid']) && (!isReadOnly() || $isDirector);
 
 // Menu text translations
 $menu_text = [
 	'en' => [
 		'nav_heading' => 'Main navigation menu',
-		'overview' => 'Overview',
+		'overview' => 'Requests',
 		'view_all' => 'View all requests',
 		'view_my' => 'View my requests only',
 		'view_resolved' => 'View closed requests',
@@ -60,7 +62,7 @@ $menu_text = [
 	],
 	'fr' => [
 		'nav_heading' => 'Menu de navigation principal',
-		'overview' => 'Aperçu',
+		'overview' => 'Demandes',
 		'view_all' => 'Afficher toutes les demandes',
 		'view_my' => 'Afficher mes demandes uniquement',
 		'view_resolved' => 'Afficher les demandes fermées',
@@ -93,13 +95,12 @@ $menuLangStrings = $menu_text[$lang_code];
 			<ul class="list-inline menu" role="menubar">
 				<?php
 				if ($canSeeCoreNav) {
-				?>
+					if ($isEmployee || $isTeamScopedAccount || $isGlobalOverviewAccount) { ?>
+					<li><a href="/<?= $isEmployee ? 'indexonly' : 'index' ?>.php?lang=<?= $lang_code ?>" class="item"><?= htmlspecialchars($menuLangStrings['overview']) ?></a></li>
+				<?php } else { ?>
 					<li><a href="#" class="item"><?= htmlspecialchars($menuLangStrings['overview']) ?></a>
 						<ul class="sm list-unstyled" id="s2" role="menu">
-							<?php if ($isEmployee) { ?>
-							<li><a href="/indexonly.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['view_my']) ?></a></li>
-							<li><a href="/indexresolved.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['view_resolved']) ?></a></li>
-							<?php } else { ?>
+							<?php if (!$isEmployee) { ?>
 							<li><a href="/index.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['view_all']) ?></a></li>
 							<?php if (!$isDirector) { ?>
 							<li><a href="/indexonly.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['view_my']) ?></a></li>
@@ -108,6 +109,7 @@ $menuLangStrings = $menu_text[$lang_code];
 							<?php } ?>
 						</ul>
 					</li>
+				<?php } ?>
 				<?php } ?>
 					<li><a href="/openrequest.php?lang=<?= $lang_code ?>" class="item"><?= htmlspecialchars($menuLangStrings['new_request']) ?></a></li>
 				<?php if ($canSeeCoreNav && !$isEmployee) { ?>

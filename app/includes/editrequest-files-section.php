@@ -5,6 +5,7 @@
  */
 
 $blobStorage = new AzureBlobStorageManager();
+require_once __DIR__ . '/csrf.php';
 ?>
 
 <h2><?php echo $t['files_heading']; ?></h2>
@@ -45,7 +46,7 @@ $blobStorage = new AzureBlobStorageManager();
 <br><br>
 
 <?php
-$result_files = mysqli_query($link, "SELECT * FROM tblfiles WHERE requestid = '$requestid'");
+$result_files = mysqli_query($link, "SELECT f.*, t.catalogueid, t.serviceid, t.subserviceid, t.workerid FROM tblfiles f INNER JOIN tbltriage t ON t.requestid = f.requestid WHERE f.requestid = '$requestid'");
 $validImageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'tiff', 'svg', 'ico'];
 
 $files = [];
@@ -100,6 +101,11 @@ if (!empty($files)) {
             echo "<td>" . htmlspecialchars((string) $fileDate, ENT_QUOTES, 'UTF-8') . "</td>";
             echo "<td>";
             echo "<a href='" . $downloadUrl . "' class='btn btn-primary download-btn' data-name='" . $fileName . "' data-file='" . htmlspecialchars((string) $file['code'], ENT_QUOTES, 'UTF-8') . "'>{$t['download']}</a> ";
+            if (rmt_can_delete_file($link, $file)) {
+                echo "<input type='hidden' name='request_id' value='" . (int) $requestuid . "'>";
+                echo "<input type='hidden' name='csrf_token' value='" . htmlspecialchars(rmt_csrf_token('file-delete'), ENT_QUOTES, 'UTF-8') . "'>";
+                echo "<button type='submit' class='btn btn-danger' formaction='/includes/delete-file.php' formmethod='post' formnovalidate name='file_id' value='" . (int) $file['id'] . "' onclick=\"return confirm('" . htmlspecialchars($t['delete_file_confirmation'], ENT_QUOTES, 'UTF-8') . "');\">" . htmlspecialchars($t['delete'], ENT_QUOTES, 'UTF-8') . "</button>";
+            }
             echo "</td>";
             echo "</tr>";
         }

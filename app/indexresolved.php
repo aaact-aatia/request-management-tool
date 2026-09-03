@@ -423,7 +423,7 @@ include 'includes/template/head.php';
 						<?php if (canDeleteRequests()) { ?>
 							<a class="wb-lbx lbx-modal btn btn-danger btn-block" href="includes/delete-request.php?id=<?= $row['id'] ?>"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span><span class="mrgn-lft-sm"><?= htmlspecialchars($langFile['indexresolved_delete']) ?></span><span class="wb-inv"> a11y-<?= htmlspecialchars($row['requestid']) ?> <?= htmlspecialchars($langFile['indexresolved_request']) ?></span></a>
 						<?php } ?>
-						<?php if(in_array('1', $teamSessionIds, true)){?>
+						<?php if (canCloneRequests()) { ?>
 							<a class="btn btn-primary btn-block" href="clonerequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?= base64_encode($row['id']) ?>&toClose=2"><?= htmlspecialchars($langFile['indexresolved_clone']) ?> <span class="wb-inv">a11y-<?= htmlspecialchars($row['requestid']) ?> <?= htmlspecialchars($langFile['indexresolved_request']) ?></span></a>
 						<?php } ?>
 						<?php

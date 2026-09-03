@@ -62,12 +62,13 @@ Your Azure role must permit viewing the container and generating a service SAS. 
    - Read
    - Create
    - Write
-7. Do not select Delete or List unless a separately reviewed feature requires them.
+   - Delete
+7. Do not select List unless a separately reviewed feature requires it.
 8. Choose the shortest practical expiry, no longer than 90 days. The account is configured to log SAS-policy violations; do not treat logging as enforcement.
 9. Generate the SAS token.
 10. Copy the SAS token into the App Service setting described below. Do not commit it or place it in tickets or chat.
 
-The current application needs Read for downloads and metadata checks, and Create and Write for block-blob uploads. Add applies to append blobs and is not required. The application does not currently delete Azure blobs.
+The current application needs Read for downloads and metadata checks, Create and Write for block-blob uploads, and Delete when an authorized user removes an attachment. Add applies to append blobs and is not required.
 
 ## Configure App Service Settings
 
@@ -81,7 +82,7 @@ The following table defines the direct Blob configuration.
 | `AZURE_STORAGE_ACCOUNT` | Environment-specific storage account name | Enabled when deployment slots are used |
 | `AZURE_STORAGE_CONTAINER` | Environment-specific container name | Enabled when deployment slots are used |
 | `AZURE_STORAGE_PREFIX` | Empty, unless a prefix was approved | Enabled when deployment slots are used |
-| `AZURE_STORAGE_SAS_TOKEN` | Container SAS token | Enabled when deployment slots are used |
+| `AZURE_STORAGE_SAS_TOKEN` | Container SAS token with Read, Create, Write, and Delete permissions | Enabled when deployment slots are used |
 | `AZURE_STORAGE_ENDPOINT_SUFFIX` | `core.windows.net` | Enabled when deployment slots are used |
 | `FILE_UPLOAD_MAX_FILES` | `5` | Enabled when deployment slots are used |
 | `FILE_UPLOAD_MAX_SIZE_MB` | `10` | Enabled when deployment slots are used |
@@ -116,7 +117,7 @@ Use the following symptoms to identify the likely configuration problem.
 | Upload returns an error immediately | Missing or incorrect Blob setting | Account, container, and SAS settings |
 | Connection times out | App Service cannot reach the private endpoint | VNet integration, routes, network security rules, and port 443 |
 | DNS resolves publicly | Private DNS is missing or not linked | `privatelink.blob.core.windows.net` VNet link and A record |
-| Azure returns 403 | SAS is expired, scoped incorrectly, or missing permission | Container scope, expiry, and Read/Create/Write permissions |
+| Azure returns 403 | SAS is expired, scoped incorrectly, or missing permission | Container scope, expiry, and Read/Create/Write/Delete permissions |
 | Upload works but download fails | SAS lacks Read permission | Regenerate the environment's container SAS with Read permission |
 
 Set `FILE_STORAGE_MODE=disabled` while network or credential problems are corrected. Never temporarily enable public Blob access to work around private endpoint configuration.

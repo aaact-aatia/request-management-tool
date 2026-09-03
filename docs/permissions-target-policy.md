@@ -147,7 +147,7 @@ The following mapping is the proposed implementation contract for role-based fie
 | `departmentagency` | Client | No | No | No | Edit | Edit | Stored in communications note prefix; keep client-tier. |
 | `attach1`, `attach2`, `attach3` (URL attachments) | Client | Edit | Edit | Edit | Edit | Edit | Deferred for now in implementation scope. |
 | File uploads (`fileToUpload`) | Workflow | No | No | No | No | No | Disabled in edit flow until storage is implemented. |
-| File delete actions | Internal | No | No | No | Edit | Edit | Edit-flow file deletion unavailable while storage migration is pending. |
+| File delete actions | Internal | Own uploaded files | Files uploaded by their team | Files uploaded by their staff | Edit | Edit | The server verifies uploader ownership and request visibility; legacy files without uploader metadata cannot be deleted by scoped roles. |
 | `catalogueid`, `serviceid`, `subserviceid` | Workflow | No | No | No | Edit | Edit | Routing and service ownership impact. |
 | `statusid` | Workflow | Edit | Edit | Edit | Edit | Edit | Workflow/state transition field. |
 | `datereceived`, `dateupdated`, `daterequired`, `dateresolved` | Workflow | No | No | No | Edit | Edit | Operational timeline fields. |
