@@ -62,8 +62,8 @@ echo "Testing Core Pages:\n";
 echo "-------------------\n";
 testPage("$baseUrl/openrequest.php?lang=en", "Open Request (EN)", $passed, $failed);
 testPage("$baseUrl/openrequest.php?lang=fr", "Open Request (FR)", $passed, $failed);
-testPage("$baseUrl/index.php?lang=en", "Dashboard (EN)", $passed, $failed);
-testPage("$baseUrl/index.php?lang=fr", "Dashboard (FR)", $passed, $failed);
+testPage("$baseUrl/requests.php?lang=en", "Dashboard (EN)", $passed, $failed);
+testPage("$baseUrl/requests.php?lang=fr", "Dashboard (FR)", $passed, $failed);
 
 echo "\n";
 echo "Testing Helper Functions:\n";

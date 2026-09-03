@@ -102,14 +102,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 			$checkResult = mysqli_query($link, $checkSql);
 			$checkRow = mysqli_fetch_array($checkResult);
 			
-			// Redirect based on whether they have assigned requests
-			if ($checkRow['count'] > 0) {
-				// Has assigned requests - go to indexonly
-				header("location:indexonly.php?lang={$_SESSION['lang']}");
-			} else {
-				// No assigned requests - go to all open requests
-				header("location:index.php?lang={$_SESSION['lang']}");
-			}
+			header("location:requests.php?lang={$_SESSION['lang']}");
 			exit();
 		}
 	}

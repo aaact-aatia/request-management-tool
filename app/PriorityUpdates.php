@@ -11,7 +11,7 @@ $lang = detectLanguage();
 $t = require("lang/{$lang}.php");
 
 if (!isSuperAdmin()) {
-    header("location:/index.php?lang={$lang}&status=forbidden");
+    header("location:/requests.php?lang={$lang}&status=forbidden");
     exit();
 }
 
@@ -117,7 +117,7 @@ include 'includes/template/head.php';
     <form method="post" action="/PriorityUpdates.php?lang=<?= urlencode($lang) ?>">
         <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['priority_update_token'], ENT_QUOTES, 'UTF-8') ?>">
         <button type="submit" class="btn btn-primary"><?= htmlspecialchars($t['priority_update_submit']) ?></button>
-        <a class="btn btn-default" href="/index.php?lang=<?= urlencode($lang) ?>"><?= htmlspecialchars($t['priority_update_cancel']) ?></a>
+        <a class="btn btn-default" href="/requests.php?lang=<?= urlencode($lang) ?>"><?= htmlspecialchars($t['priority_update_cancel']) ?></a>
     </form>
 
     <?php if ($errorMessage !== '' || $wasUpdated): ?>

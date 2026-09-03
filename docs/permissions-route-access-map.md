@@ -25,8 +25,8 @@ Access classes:
 
 | Route | Access Class | Target Policy | Notes |
 |---|---|---|---|
-| `app/index.php` | `AUTH_REQUIRED` | Internal landing/list view | Scope by role (all vs assigned/team). |
-| `app/indexonly.php` | `AUTH_REQUIRED` | Internal list view | Scope by role. Employee is restricted to assigned requests. |
+| `app/requests.php` | `AUTH_REQUIRED` | Internal requests list view | Scope by role. Employee is restricted to assigned requests. |
+| `app/index.php` | Redirects to `requests.php` | Legacy compatibility route | Preserves old bookmarks and links. |
 | `app/indexresolved.php` | `AUTH_REQUIRED` | Internal resolved list | Scope by role. Team Lead is restricted to team-related requests; Employee is restricted to assigned closed/resolved requests. |
 | `app/asearch.php` | `AUTH_REQUIRED` | Internal search | Scope by role and data visibility rules. Team Lead defaults to team-related scope and can explicitly choose all-requests search. |
 

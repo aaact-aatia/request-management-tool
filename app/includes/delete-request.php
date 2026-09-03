@@ -19,7 +19,7 @@ if (!isset($_SESSION['is_superuser']) || (!$_SESSION['is_superuser'] && !$_SESSI
 
 // Check if ID parameter exists
 if (!isset($_GET['id']) || empty($_GET['id'])) {
-	header("location:/index.php?lang=$lang&status=error"); 
+	header("location:/requests.php?lang=$lang&status=error");
 	exit();
 }
 
@@ -53,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 	rmt_admin_query($link, $sql);
 	
 	// Now redirect
-	header("location:/index.php?lang=$lang&status=dsuccess"); 
+	header("location:/requests.php?lang=$lang&status=dsuccess");
 	exit();
 }
 

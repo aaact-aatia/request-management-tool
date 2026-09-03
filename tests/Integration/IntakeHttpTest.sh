@@ -430,7 +430,7 @@ assert_not_contains "$work_dir/view-request-fr.html" 'Journal des communications
 
 request \
     -H "Cookie: PHPSESSID=${edit_session_id}" \
-    "${base_url}/index.php?lang=en" > "$work_dir/overview.html"
+    "${base_url}/requests.php?lang=en" > "$work_dir/overview.html"
 assert_contains "$work_dir/overview.html" ">${request_id} - TBS - GC Accessibility Conformance Testing Tool</a>" \
     'overview card uses the generated request title as its link text'
 assert_not_contains "$work_dir/overview.html" ">a11y-${request_id}</a>" \
