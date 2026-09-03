@@ -151,6 +151,10 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Permanently delete catalogue items ([8bd9aaa](https://github.com/aaact-aatia/request-management-tool/commit/8bd9aaace9616208acc1628e5c03a8394422441a))
 
+- Enable role-scoped file deletion ([f47ea6f](https://github.com/aaact-aatia/request-management-tool/commit/f47ea6f48eb90bf3dd05edf14b04921b9ff0c176))
+
+- Improve role-based request overviews ([97a6ab9](https://github.com/aaact-aatia/request-management-tool/commit/97a6ab9c77de5e295c20dc8c631ac5c439b94175))
+
 
 ### Build
 
@@ -310,6 +314,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 - Regenerate CHANGELOG.md [skip ci] ([9d419aa](https://github.com/aaact-aatia/request-management-tool/commit/9d419aa979fe4529d5b802a776ccb078ef1a1404))
 
 - Regenerate CHANGELOG.md [skip ci] ([bf04d8b](https://github.com/aaact-aatia/request-management-tool/commit/bf04d8be7980b33b75508f28e48e7dc0297e8a27))
+
+- Regenerate CHANGELOG.md [skip ci] ([75bf33b](https://github.com/aaact-aatia/request-management-tool/commit/75bf33bd8b4464f101a8c79f3e19e7ca219e6efd))
 
 
 ### Fixed
@@ -534,5 +540,7 @@ changes made to 1f25d2de91afa814dd49160085b2f76a39fa88a5. ([9bfaf79](https://git
 ### Testing
 
 - Expand dev requests with assignment and SLA scenarios ([eb5620e](https://github.com/aaact-aatia/request-management-tool/commit/eb5620e02856c56861816d37c4e8c4994aa1b153))
+
+- Complete file upload coverage ([2013844](https://github.com/aaact-aatia/request-management-tool/commit/2013844583c575e0909c3d615a7ad411b15d8047))
 
 
