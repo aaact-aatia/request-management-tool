@@ -31,7 +31,7 @@ The default is `local` outside production and `disabled` in production. Producti
 - `app/openrequest3.php` — handles file uploads on new request submission
 - `app/version-history.php` — requires the class (no method calls)
 
-Database table `tblfiles` stores file metadata: `code` (unique filename), `name`, `type`, `size`, `date`, `requestid`.
+Database table `tblfiles` stores file metadata: `code` (unique filename), `name`, `type`, `size`, `uploadedby`, `status`, and `requestid`.
 
 ## Environment Variables Reference
 
@@ -111,6 +111,7 @@ Set `FILE_STORAGE_MODE=disabled` to disable the feature entirely until persisten
 
 ## Notes
 
-- No schema changes required — `tblfiles.code` already stores the unique filename used as the storage key.
+- Migration `027-add-file-uploader.sql` adds `tblfiles.uploadedby`, allowing employees to delete their own uploads and managers/team leads to delete uploads within their scope.
 - `app/download.php` serves files through a PHP controller that verifies access to the owning request; storage credentials and direct Blob URLs are never sent to the browser.
+- `app/includes/delete-file.php` verifies CSRF, request access, uploader ownership, and role scope before deleting storage and metadata.
 - Development and production Blob containers require separate SAS tokens and independent App Service settings.
