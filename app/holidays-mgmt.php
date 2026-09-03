@@ -21,7 +21,7 @@ require('includes/loggedincheck.php');
 
 // Check if Super Admin
 if (!($_SESSION['is_superuser'] OR $_SESSION['is_admin'])) {
-    header("Location: index.php");
+    header("Location: requests.php");
     exit();
 }
 

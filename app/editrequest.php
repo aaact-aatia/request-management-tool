@@ -384,13 +384,13 @@ include 'includes/template/head.php';
 			);
 
 			if ($requestContactId <= 0 || !in_array((string)$requestContactId, $teamIds, true)) {
-				header("location:/index.php?lang=$lang&status=accessdenied");
+				header("location:/requests.php?lang=$lang&status=accessdenied");
 				exit();
 			}
 		} elseif ($effectiveAtype === 5) {
 			$effectiveEmployeeId = getEffectiveEmployeeUserId($link);
 			if ((int)($row['workerid'] ?? 0) !== $effectiveEmployeeId) {
-				header("location:/indexonly.php?lang=$lang&status=accessdenied");
+				header("location:/requests.php?lang=$lang&status=accessdenied");
 				exit();
 			}
 		}

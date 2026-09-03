@@ -451,7 +451,7 @@ if(mysqli_num_rows($result)>0){
 		if ($effectiveAtype === 4) {
 			$teamIds = getEffectiveTeamIds($link);
 			if (empty($tarraycontactid) || !in_array((string)$tarraycontactid, $teamIds, true)) {
-				header("location:/index.php?lang=$lang&status=accessdenied");
+				header("location:/requests.php?lang=$lang&status=accessdenied");
 				exit();
 			}
 		}

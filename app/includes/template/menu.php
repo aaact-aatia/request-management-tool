@@ -96,14 +96,14 @@ $menuLangStrings = $menu_text[$lang_code];
 				<?php
 				if ($canSeeCoreNav) {
 					if ($isEmployee || $isTeamScopedAccount || $isGlobalOverviewAccount) { ?>
-					<li><a href="/<?= $isEmployee ? 'indexonly' : 'index' ?>.php?lang=<?= $lang_code ?>" class="item"><?= htmlspecialchars($menuLangStrings['overview']) ?></a></li>
+						<li><a href="/requests.php?lang=<?= $lang_code ?>" class="item"><?= htmlspecialchars($menuLangStrings['overview']) ?></a></li>
 				<?php } else { ?>
 					<li><a href="#" class="item"><?= htmlspecialchars($menuLangStrings['overview']) ?></a>
 						<ul class="sm list-unstyled" id="s2" role="menu">
 							<?php if (!$isEmployee) { ?>
-							<li><a href="/index.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['view_all']) ?></a></li>
+							<li><a href="/requests.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['view_all']) ?></a></li>
 							<?php if (!$isDirector) { ?>
-							<li><a href="/indexonly.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['view_my']) ?></a></li>
+								<li><a href="/requests.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['view_my']) ?></a></li>
 							<?php } ?>
 							<li><a href="/indexresolved.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['view_resolved']) ?></a></li>
 							<?php } ?>
