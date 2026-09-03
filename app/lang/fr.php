@@ -184,6 +184,11 @@ return [
     // Index Only page (indexonly.php) - Active requests dashboard
     'indexonly_page_title' => 'Outil de gestion des demandes - Bureau de l\'accessibilité de la TI',
     'indexonly_heading' => 'Aperçu de mes demandes',
+    'indexonly_requests' => 'Demandes',
+    'indexonly_additional_requests' => 'Inclure également les demandes :',
+    'indexonly_show_team' => 'Afficher les autres demandes de mon équipe',
+    'indexonly_show_full_team' => 'provenant de toute mon équipe',
+    'indexonly_show_closed' => 'fermées',
     'indexonly_col_request' => '# de la demande',
     'indexonly_col_title' => 'Titre',
     'indexonly_col_client' => 'Client',

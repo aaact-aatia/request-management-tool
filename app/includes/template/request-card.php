@@ -33,7 +33,7 @@ $slaAlertClass = $requestCard['slaAlertClass'] ?? 'alert-warning';
 $bodyHtml = $requestCard['bodyHtml'] ?? '';
 $footerHtml = $requestCard['footerHtml'] ?? '';
 ?>
-<div class="col-sm-6 col-md-4 mrgn-bttm-md" data-wb-tags="<?= htmlspecialchars($tags) ?>">
+<div class="col-sm-6 col-md-4 mrgn-bttm-md wb-tagfilter-item" data-wb-tags="<?= htmlspecialchars($tags) ?>">
 	<div class="panel <?= htmlspecialchars($panelClass) ?> hght-inhrt">
 		<div class="panel-heading">
 			<h3 class="h5 mrgn-tp-sm request-card-title">

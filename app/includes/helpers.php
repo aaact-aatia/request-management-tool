@@ -69,6 +69,16 @@ function canDeleteRequests() {
             (isset($_SESSION['atype']) && (int) $_SESSION['atype'] === 1);
 }
 
+function canCloneRequests() {
+    if (isRoleTestMode()) {
+        return isset($_SESSION['atype']) && in_array((int)$_SESSION['atype'], [3, 4, 6], true);
+    }
+
+    return !empty($_SESSION['is_superuser'])
+        || !empty($_SESSION['is_admin'])
+        || (isset($_SESSION['atype']) && in_array((int)$_SESSION['atype'], [1, 3, 4, 6], true));
+}
+
 function canManageSLA() {
     // If in test mode, only use tested atype permissions, not superuser flags
     $inTestMode = isRoleTestMode();
@@ -106,6 +116,30 @@ function getEffectiveEmployeeUserId($link): int {
     }
 
     return (int)($_SESSION['pid'] ?? 0);
+}
+
+function getEffectiveEmployeeTeamIds($link): array {
+    $employeeId = getEffectiveEmployeeUserId($link);
+    if ($employeeId <= 0) {
+        return [];
+    }
+
+    $teamResult = mysqli_query($link, "SELECT team FROM tblusers WHERE id = '$employeeId' AND status = 1 LIMIT 1");
+    $teamRow = $teamResult ? mysqli_fetch_assoc($teamResult) : null;
+
+    return array_values(array_filter(array_map('trim', explode(',', (string)($teamRow['team'] ?? '')))));
+}
+
+function employeeCanAccessTeamRequest($link, array $request): bool {
+    $responsibleTeamId = rmt_resolve_responsible_team_id(
+        $link,
+        (int)($request['catalogueid'] ?? 0),
+        (int)($request['serviceid'] ?? 0),
+        (int)($request['subserviceid'] ?? 0)
+    );
+
+    return $responsibleTeamId > 0
+        && in_array((string)$responsibleTeamId, getEffectiveEmployeeTeamIds($link), true);
 }
 
 function isReadOnly() {
@@ -161,7 +195,8 @@ function rmt_can_access_request(mysqli $link, array $request): bool {
     }
 
     if ($accountType === 5) {
-        return (int) ($request['workerid'] ?? 0) === getEffectiveEmployeeUserId($link);
+        return (int) ($request['workerid'] ?? 0) === getEffectiveEmployeeUserId($link)
+            || employeeCanAccessTeamRequest($link, $request);
     }
 
     return false;

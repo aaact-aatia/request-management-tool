@@ -43,6 +43,8 @@ require('includes/calculate-bdays.php');
 
 // Determine database column for name fields
 $nameColumn = ($_SESSION['lang'] === 'fr') ? 'namefr' : 'nameen';
+$showTeamRequests = isset($_GET['show_team']) && $_GET['show_team'] === '1';
+$showClosedRequests = isset($_GET['show_closed']) && $_GET['show_closed'] === '1';
 
 // =============================================================================
 // PAGE FRONTMATTER - Define page metadata
@@ -53,8 +55,8 @@ $page = [
 		'fr' => 'Mes demandes'
 	],
 	'description' => [
-		'en' => 'View requests assigned to me',
-		'fr' => 'Voir les demandes qui me sont assignées'
+		'en' => 'View requests assigned to me, with optional team and closed request views',
+		'fr' => 'Voir les demandes qui me sont assignées, avec des options pour l’équipe et les demandes fermées'
 	]
 ];
 
@@ -80,10 +82,26 @@ include 'includes/template/head.php';
 	<?php include 'includes/template/header.php'; ?>
 		<main role="main" property="mainContentOfPage" class="container">
 			<h1 property="name" id="wb-cont"><?= htmlspecialchars($langFile['indexonly_heading']) ?></h1>
+			<form method="get" action="indexonly.php" class="mrgn-bttm-lg">
+				<input type="hidden" name="lang" value="<?= htmlspecialchars($_SESSION['lang']) ?>">
+				<fieldset class="gc-chckbxrdio">
+					<legend class="mrgn-bttm-0"><?= htmlspecialchars($langFile['indexonly_additional_requests']) ?></legend>
+					<ul class="list-unstyled lst-spcd-2">
+						<li class="checkbox"><input type="checkbox" id="show-team-requests" name="show_team" value="1" onchange="this.form.submit()" <?= $showTeamRequests ? 'checked' : '' ?>><label for="show-team-requests"><?= htmlspecialchars($langFile['indexonly_show_full_team']) ?></label></li>
+						<li class="checkbox"><input type="checkbox" id="show-closed-requests" name="show_closed" value="1" onchange="this.form.submit()" <?= $showClosedRequests ? 'checked' : '' ?>><label for="show-closed-requests"><?= htmlspecialchars($langFile['indexonly_show_closed']) ?></label></li>
+					</ul>
+				</fieldset>
+			</form>
 			<?php
 			$userid = getEffectiveEmployeeUserId($link);
+			$teamIds = [];
+			if ($showTeamRequests) {
+				$teamIds = getEffectiveEmployeeTeamIds($link);
+			}
 			// Construct SQL statement
-			$sql = "SELECT * FROM tbltriage WHERE status = '1' AND workerid = '$userid' AND (statusid='1' OR statusid='3' OR statusid='5' OR statusid='6' OR statusid='7' OR statusid='10' OR statusid='11' OR statusid='12') ORDER BY requestid DESC";
+			$workerFilter = $showTeamRequests ? '' : " AND workerid = '$userid'";
+			$statusFilter = $showClosedRequests ? '' : " AND statusid NOT IN ('4', '5', '6')";
+			$sql = "SELECT * FROM tbltriage WHERE status = '1'$workerFilter$statusFilter ORDER BY requestid DESC";
 			
 			$result = mysqli_query($link,$sql);
 			$surveyAnsweredByRequest = [];
@@ -99,34 +117,15 @@ include 'includes/template/head.php';
 			<section class="provisional wb-tagfilter wb-filter" data-wb-filter='{"selector": "[data-wb-tags]", "section": ".wb-tagfilter-items", "uiTemplate": "#indexonly-filter-ui"}'>
 				<h2 class="wb-inv"><?= ($_SESSION['lang'] === 'fr') ? 'Options de filtrage' : 'Filter options' ?></h2>
 				<div id="indexonly-filter-ui" class="row">
+					<div class="col-sm-12">
+						<p id="indexonly-filter-info" class="wb-fltr-info mrgn-bttm-sm"><span data-nbitem><?= (int)mysqli_num_rows($result) ?></span> <?= htmlspecialchars($langFile['indexonly_results_out_of'] ?? (($_SESSION['lang'] === 'fr') ? 'résultats sur' : 'results out of')) ?> <span data-total><?= (int)mysqli_num_rows($result) ?></span></p>
+					</div>
 					<div class="col-md-12">
 						<div class="form-group">
 							<div class="input-group">
 								<label for="indexonly-search" class="input-group-addon"><?= ($_SESSION['lang'] === 'fr') ? 'Filtrer' : 'Filter' ?></label>
 								<input type="search" class="form-control" id="indexonly-search">
 							</div>
-						</div>
-					</div>
-					<div class="col-md-12">
-						<div class="form-group">
-						<fieldset class="gc-chckbxrdio">
-							<legend class="mrgn-bttm-0"><?= htmlspecialchars($langFile['indexonly_col_status']) ?></legend>
-							<ul class="list-unstyled lst-spcd-2">
-								<li class="checkbox"><input type="checkbox" id="sla-escalation-filter" name="priority-filter" class="wb-tagfilter-ctrl" value="sla-escalation"><label for="sla-escalation-filter"><?= htmlspecialchars($langFile['indexonly_escalation_required']) ?></label></li>
-								<li class="checkbox"><input type="checkbox" id="sla-close-filter" name="priority-filter" class="wb-tagfilter-ctrl" value="sla-close"><label for="sla-close-filter"><?= htmlspecialchars($langFile['indexonly_request_close_sla']) ?></label></li>
-							</ul>
-				</fieldset>
-				</div>
-			</div>
-			<div class="col-md-12">
-				<div class="form-group">
-					<fieldset class="gc-chckbxrdio">
-						<legend class="mrgn-bttm-0"><?= htmlspecialchars($langFile['indexonly_filter_survey'] ?? (($_SESSION['lang'] === 'fr') ? 'Sondage' : 'Survey')) ?></legend>
-						<ul class="list-unstyled lst-spcd-2">
-							<li class="checkbox"><input type="checkbox" id="survey-sent-filter-my" name="survey-filter" class="wb-tagfilter-ctrl" value="survey-sent"><label for="survey-sent-filter-my"><?= htmlspecialchars($langFile['indexonly_survey_sent'] ?? (($_SESSION['lang'] === 'fr') ? 'Envoyé' : 'Sent')) ?></label></li>
-							<li class="checkbox"><input type="checkbox" id="survey-answered-filter-my" name="survey-filter" class="wb-tagfilter-ctrl" value="survey-answered"><label for="survey-answered-filter-my"><?= htmlspecialchars($langFile['indexonly_survey_answered'] ?? (($_SESSION['lang'] === 'fr') ? 'Répondu' : 'Answered')) ?></label></li>
-						</ul>
-							</fieldset>
 						</div>
 					</div>
 				</div>
@@ -230,8 +229,11 @@ include 'includes/template/head.php';
 
 					$suppressSlaWarning = rmt_is_resolved_status_id($link, $statusid) || in_array((int)$statusid, [5, 6], true);
 					
-					// indexonly is a personal queue: show only tickets assigned to logged-in user.
-					if ($userid === (int)$row['workerid']) {
+					// Personal queues use the assigned worker; team queues use responsible team ownership.
+					$canViewRow = $showTeamRequests
+						? !empty($tarraycontactid) && in_array((string)$tarraycontactid, $teamIds, true)
+						: $userid === (int)$row['workerid'];
+					if ($canViewRow) {
 						$hasVisibleRows = true;
 
 						// Build tags for client-side filter
@@ -309,13 +311,14 @@ include 'includes/template/head.php';
 
 					ob_start();
 					?>
-					<?php if (canEditRequests()) { ?>
+						<?php $canEditThisRequest = canEditRequests() && (!$showTeamRequests || $userid === (int)$row['workerid']); ?>
+						<?php if ($canEditThisRequest) { ?>
 					<a class="btn btn-default btn-block" href="editrequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?= base64_encode($row['id']) ?>&reqid=<?= urlencode('a11y-' . ($row['requestid'] ?? '')) ?>"><span class="glyphicon glyphicon-pencil" aria-hidden="true"></span><span class="mrgn-lft-sm"><?= htmlspecialchars($langFile['indexonly_edit']) ?></span><span class="wb-inv"> a11y-<?= htmlspecialchars($row['requestid']) ?> <?= htmlspecialchars($langFile['indexonly_request']) ?></span></a>
 					<?php } ?>
 						<?php if (canDeleteRequests()) { ?>
 						<a class="wb-lbx lbx-modal btn btn-danger btn-block" href="includes/delete-request.php?id=<?= $row['id'] ?>"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span><span class="mrgn-lft-sm"><?= htmlspecialchars($langFile['indexonly_delete']) ?></span><span class="wb-inv"> a11y-<?= htmlspecialchars($row['requestid']) ?> <?= htmlspecialchars($langFile['indexonly_request']) ?></span></a>
 						<?php } ?>
-					<?php if(in_array('1', $_SESSION['team'])){?>
+					<?php if (canCloneRequests()) { ?>
 						<a class="btn btn-primary btn-block" href="clonerequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?= base64_encode($row['id']) ?>&toClose=2"><?= htmlspecialchars($langFile['indexonly_clone']) ?> <span class="wb-inv">a11y-<?= htmlspecialchars($row['requestid']) ?> <?= htmlspecialchars($langFile['indexonly_request']) ?></span></a>
 						<a class="btn btn-primary btn-block" href="clonerequest.php?lang=<?= $_SESSION['lang'] ?>&erid=<?= base64_encode($row['id']) ?>&toClose=1"><?= htmlspecialchars($langFile['indexonly_clone_close']) ?> <span class="wb-inv">a11y-<?= htmlspecialchars($row['requestid']) ?> <?= htmlspecialchars($langFile['indexonly_request']) ?></span></a>
 					<?php } ?>
@@ -364,6 +367,18 @@ include 'includes/template/head.php';
 		</main>
 		
 		<?php include 'includes/template/footer.php'; include 'includes/template/scripts.php'; ?>
+		<script>
+			(function ($) {
+				$(document).on('wb-filtered', '.wb-tagfilter', function () {
+					var $filter = $(this);
+					var $items = $filter.find('.wb-tagfilter-items [data-wb-tags]');
+					var visibleCount = $items.filter(':not(.wb-tgfltr-out):not(.wb-fltr-out)').length;
+
+					$filter.find('#indexonly-filter-info [data-nbitem]').text(visibleCount);
+					$filter.find('#indexonly-filter-info [data-total]').text($items.length);
+				});
+			})(jQuery);
+		</script>
 	</body>
 </html>
 <?php

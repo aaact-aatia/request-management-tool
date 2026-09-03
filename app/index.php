@@ -45,6 +45,8 @@ $translations = [
 		'request_service' => 'Request service',
 		'status' => 'Status',
 		'edit' => 'Edit',
+		'clone' => 'Clone',
+		'clone_close' => 'Clone & Close',
 		'no_requests' => 'No requests available!',
 		'escalation_required' => 'Escalation required',
 		'close_to_sla' => 'Request is close to SLA',
@@ -55,7 +57,15 @@ $translations = [
 		'filter_all' => 'All',
 		'filter_status_label' => 'Status',
 		'filter_catalogue_label' => 'Service type',
-		'filter_priority_label' => 'Priority',
+		'filter_priority_label' => 'Request alerts',
+		'filter_scope_label' => 'Requests',
+		'show_other_team_requests' => 'from other teams',
+		'show_full_team_requests' => 'from my full team',
+		'show_closed_requests' => 'closed',
+		'additional_requests' => 'Also include requests that are:',
+		'filter_survey' => 'Survey',
+		'survey_sent' => 'Sent',
+		'survey_answered' => 'Answered',
 		'sort_by' => 'Sort by',
 		'sort_submitted_newest' => 'Submitted date: newest first',
 		'sort_submitted_oldest' => 'Submitted date: oldest first',
@@ -90,6 +100,8 @@ $translations = [
 		'request_service' => 'Service demandé',
 		'status' => 'Statut',
 		'edit' => 'Modifier',
+		'clone' => 'Clone',
+		'clone_close' => 'Clone & Fermer',
 		'no_requests' => 'Aucune demande disponible!',
 		'escalation_required' => 'Escalade requise',
 		'close_to_sla' => 'La demande approche du NdS',
@@ -100,7 +112,15 @@ $translations = [
 		'filter_all' => 'Tous',
 		'filter_status_label' => 'Statut',
 		'filter_catalogue_label' => 'Type de service',
-		'filter_priority_label' => 'Priorité',
+		'filter_priority_label' => 'Alertes de demandes',
+		'filter_scope_label' => 'Demandes',
+		'show_other_team_requests' => 'provenant d’autres équipes',
+		'show_full_team_requests' => 'provenant de toute mon équipe',
+		'show_closed_requests' => 'fermées',
+		'additional_requests' => 'Inclure également les demandes :',
+		'filter_survey' => 'Sondage',
+		'survey_sent' => 'Envoyé',
+		'survey_answered' => 'Répondu',
 		'sort_by' => 'Trier par',
 		'sort_submitted_newest' => 'Date de soumission : plus recentes',
 		'sort_submitted_oldest' => 'Date de soumission : plus anciennes',
@@ -257,13 +277,30 @@ include 'includes/template/head.php';
 
 			$effectiveAtype = (int)($_SESSION['atype'] ?? 0);
 			$isTeamLeadAccount = ($effectiveAtype === 4);
+			$isTeamScopedAccount = in_array($effectiveAtype, [3, 4], true);
+			$isAdministrativeAccount = !isRoleTestMode() && (
+				!empty($_SESSION['is_superuser']) || !empty($_SESSION['is_admin']) || in_array($effectiveAtype, [1, 2], true)
+			);
+			$hasScopeOptions = $isTeamScopedAccount || $isAdministrativeAccount;
+			$showOtherTeamRequests = $isTeamScopedAccount && isset($_GET['show_other_team']) && $_GET['show_other_team'] === '1';
+			$showClosedRequests = $hasScopeOptions && isset($_GET['show_closed']) && $_GET['show_closed'] === '1';
 			$userTeamIds = [];
-			if ($isTeamLeadAccount) {
+			if ($isTeamScopedAccount) {
 				$userTeamIds = getEffectiveTeamIds($link);
 			}
 
 			// Construct SQL statement
-			$sql = "SELECT * FROM tbltriage WHERE status = 1 AND (statusid=1 OR statusid=2 OR statusid=3 OR statusid=7 OR statusid=10 OR statusid='11' OR statusid='12') ORDER BY $sortSql";
+			$activeStatusFilter = $showClosedRequests ? '' : " AND statusid NOT IN ('4', '5', '6')";
+			$teamScopeFilter = '';
+			if ($isTeamScopedAccount && !$showOtherTeamRequests) {
+				$teamIdsForQuery = array_values(array_filter(array_map('intval', $userTeamIds), static function ($teamId) {
+					return $teamId > 0;
+				}));
+				$teamScopeFilter = empty($teamIdsForQuery)
+					? ' AND 1 = 0'
+					: " AND COALESCE(NULLIF((SELECT contactid FROM tblsubservices WHERE id = tbltriage.subserviceid AND contactid > 0 LIMIT 1), 0), NULLIF((SELECT contactid FROM tblservices WHERE id = tbltriage.serviceid AND contactid > 0 LIMIT 1), 0), (SELECT contactid FROM tblcatalogue WHERE id = tbltriage.catalogueid LIMIT 1), 0) IN (" . implode(',', $teamIdsForQuery) . ')';
+			}
+			$sql = "SELECT * FROM tbltriage WHERE status = 1$activeStatusFilter$teamScopeFilter ORDER BY $sortSql";
 			//echo $sql;
 			
 	$result = mysqli_query($link, $sql);
@@ -271,14 +308,31 @@ include 'includes/template/head.php';
 	// Pre-fetch filter options for tag filter controls
 	$nameField = $lang == 'fr' ? 'namefr' : 'nameen';
 	$statusOptions = [];
-	$statusOptResult = mysqli_query($link, "SELECT id, `$nameField` FROM tblstatus WHERE status = 1 AND id NOT IN (4,5,6) ORDER BY id");
+	$statusOptFilter = $showClosedRequests ? '' : ' AND id NOT IN (4,5,6)';
+	$statusOptResult = mysqli_query($link, "SELECT id, `$nameField` FROM tblstatus WHERE status = 1$statusOptFilter ORDER BY id");
 	while ($sr = mysqli_fetch_assoc($statusOptResult)) {
 		$statusOptions[] = $sr;
 	}
 	$catalogueOptions = [];
-	$catOptResult = mysqli_query($link, "SELECT id, `$nameField` FROM tblcatalogue WHERE status = 1 ORDER BY `$nameField`");
+	$catalogueScopeFilter = '';
+	if ($isTeamScopedAccount && !$showOtherTeamRequests) {
+		$teamIdsForCatalogue = array_values(array_filter(array_map('intval', $userTeamIds), static function ($teamId) {
+			return $teamId > 0;
+		}));
+		$catalogueScopeFilter = empty($teamIdsForCatalogue)
+			? ' AND 1 = 0'
+			: " AND (c.contactid IN (" . implode(',', $teamIdsForCatalogue) . ") OR EXISTS (SELECT 1 FROM tblservices s LEFT JOIN tblsubservices ss ON ss.serviceid = s.id AND ss.status = 1 WHERE s.catalogueid = c.id AND COALESCE(NULLIF(ss.contactid, 0), NULLIF(s.contactid, 0), c.contactid) IN (" . implode(',', $teamIdsForCatalogue) . ")))";
+	}
+	$catOptResult = mysqli_query($link, "SELECT c.id, c.`$nameField` FROM tblcatalogue c WHERE c.status = 1$catalogueScopeFilter ORDER BY c.`$nameField`");
 	while ($cr = mysqli_fetch_assoc($catOptResult)) {
 		$catalogueOptions[] = $cr;
+	}
+	$surveyAnsweredByRequest = [];
+	$surveyResult = mysqli_query($link, "SELECT DISTINCT requestid FROM tblcss WHERE status = 1");
+	if ($surveyResult) {
+		while ($surveyRow = mysqli_fetch_assoc($surveyResult)) {
+			$surveyAnsweredByRequest[(int)$surveyRow['requestid']] = true;
+		}
 	}
 
 			//List it
@@ -288,8 +342,10 @@ include 'includes/template/head.php';
 			<h2 class="wb-inv"><?= $t['filter_options'] ?></h2>
 			<div id="rmt-search-filter" class="row">
 				<div class="col-sm-12">
-					<p class="wb-fltr-info mrgn-bttm-sm"><span data-nbitem></span> <?= $t['results_of'] ?> <span data-total></span></p>
+					<p id="rmt-search-filter-info" class="wb-fltr-info mrgn-bttm-sm"><span data-nbitem><?= (int)mysqli_num_rows($result) ?></span> <?= $t['results_of'] ?> <span data-total><?= (int)mysqli_num_rows($result) ?></span></p>
 				</div>
+			</div>
+			<div class="row">
 				<div class="col-md-4">
 					<div class="form-group">
 						<fieldset>
@@ -316,7 +372,37 @@ include 'includes/template/head.php';
 						</fieldset>
 					</div>
 				</div>
-				<div class="col-md-12">
+			</div>
+			<div class="row">
+				<?php if ($hasScopeOptions): ?>
+				<div class="col-md-4">
+					<form method="get" action="index.php">
+						<input type="hidden" name="lang" value="<?= htmlspecialchars($lang) ?>">
+						<input type="hidden" name="sort" value="<?= htmlspecialchars($sort) ?>">
+					<fieldset class="gc-chckbxrdio">
+						<legend class="mrgn-bttm-0"><?= htmlspecialchars($t['additional_requests']) ?></legend>
+						<ul class="list-unstyled lst-spcd-2">
+							<?php if ($isTeamScopedAccount): ?>
+							<li class="checkbox"><input type="checkbox" id="show-other-team-requests" name="show_other_team" value="1" onchange="this.form.submit()" <?= $showOtherTeamRequests ? 'checked' : '' ?>><label for="show-other-team-requests"><?= htmlspecialchars($t['show_other_team_requests']) ?></label></li>
+							<?php endif; ?>
+							<li class="checkbox"><input type="checkbox" id="show-closed-requests" name="show_closed" value="1" onchange="this.form.submit()" <?= $showClosedRequests ? 'checked' : '' ?>><label for="show-closed-requests"><?= htmlspecialchars($t['show_closed_requests']) ?></label></li>
+						</ul>
+					</fieldset>
+					</form>
+				</div>
+				<?php endif; ?>
+				<div class="col-md-4">
+					<div class="form-group">
+						<fieldset class="gc-chckbxrdio">
+							<legend class="mrgn-bttm-0"><?= htmlspecialchars($t['filter_survey']) ?></legend>
+							<ul class="list-unstyled lst-spcd-2">
+								<li class="checkbox"><input type="checkbox" id="survey-sent-filter-dashboard" name="survey-filter" class="wb-tagfilter-ctrl" value="survey-sent"><label for="survey-sent-filter-dashboard"><?= htmlspecialchars($t['survey_sent']) ?></label></li>
+								<li class="checkbox"><input type="checkbox" id="survey-answered-filter-dashboard" name="survey-filter" class="wb-tagfilter-ctrl" value="survey-answered"><label for="survey-answered-filter-dashboard"><?= htmlspecialchars($t['survey_answered']) ?></label></li>
+							</ul>
+						</fieldset>
+					</div>
+				</div>
+				<div class="col-md-4">
 					<div class="form-group">
 					<fieldset class="gc-chckbxrdio">
 						<legend class="mrgn-bttm-0"><?= $t['filter_priority_label'] ?></legend>
@@ -326,7 +412,10 @@ include 'includes/template/head.php';
 							</ul>
 						</fieldset>
 					</div>
-				</div>				<div class="col-md-12">
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-12">
 					<div class="form-group">
 						<div class="input-group">
 							<label for="rmt-search" class="input-group-addon"><?= $t['search_label'] ?></label>
@@ -410,7 +499,7 @@ include 'includes/template/head.php';
 					$tarraycontactid = rmt_resolve_responsible_team_id($link, (int) $catalogueid, (int) $serviceid, (int) $subserviceid);
 
 					$canViewRow = true;
-					if ($isTeamLeadAccount) {
+					if ($isTeamScopedAccount && !$showOtherTeamRequests) {
 						$canViewRow = !empty($tarraycontactid) && in_array((string)$tarraycontactid, $userTeamIds, true);
 					}
 					if (!$canViewRow) {
@@ -450,6 +539,14 @@ include 'includes/template/head.php';
 					<?php
 					// Build tag string for this card
 					$cardTags = 'status-' . $statusid . ' cat-' . $catalogueid;
+					$hasSurveySent = ((int)($row['cssurvey'] ?? 0) > 0);
+					$hasSurveyAnswered = !empty($surveyAnsweredByRequest[(int)$row['id']]);
+					if ($hasSurveySent) {
+						$cardTags .= ' survey-sent';
+					}
+					if ($hasSurveyAnswered) {
+						$cardTags .= ' survey-answered';
+					}
 					if ($doverdue) {
 						$cardTags .= ' sla-escalation';
 					} elseif ($closedue) {
@@ -535,7 +632,8 @@ include 'includes/template/head.php';
 					$cardFooterHtml = '';
 					$canEditThisRequest = canEditRequests();
 					$canDeleteThisRequest = canDeleteRequests();
-					if ($canEditThisRequest || $canDeleteThisRequest) {
+					$canCloneThisRequest = canCloneRequests();
+					if ($canEditThisRequest || $canDeleteThisRequest || $canCloneThisRequest) {
 						ob_start();
 						?>
 						<div class="row">
@@ -547,6 +645,12 @@ include 'includes/template/head.php';
 							<?php if ($canDeleteThisRequest): ?>
 								<div class="<?= $canEditThisRequest ? 'col-xs-6' : 'col-xs-12' ?>">
 									<a href="includes/delete-request.php?id=<?= $row['id'] ?>" class="wb-lbx lbx-modal btn btn-danger btn-block"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span><span class="mrgn-lft-sm"><?= $t['delete_label'] ?></span></a>
+								</div>
+							<?php endif; ?>
+							<?php if ($canCloneThisRequest): ?>
+								<div class="col-xs-12 mrgn-tp-md">
+									<a href="clonerequest.php?lang=<?= $lang ?>&erid=<?= base64_encode($row['id']) ?>&toClose=2" class="btn btn-primary btn-block"><span class="mrgn-rght-sm"><?= htmlspecialchars($t['clone']) ?></span><span class="wb-inv">a11y-<?= htmlspecialchars($row['requestid']) ?> <?= htmlspecialchars($t['request_num']) ?></span></a>
+									<a href="clonerequest.php?lang=<?= $lang ?>&erid=<?= base64_encode($row['id']) ?>&toClose=1" class="btn btn-primary btn-block"><span class="mrgn-rght-sm"><?= htmlspecialchars($t['clone_close']) ?></span><span class="wb-inv">a11y-<?= htmlspecialchars($row['requestid']) ?> <?= htmlspecialchars($t['request_num']) ?></span></a>
 								</div>
 							<?php endif; ?>
 						</div>
@@ -586,6 +690,18 @@ include 'includes/template/head.php';
 		
 <?php include 'includes/template/footer.php';
 include 'includes/template/scripts.php'; ?>
+		<script>
+			(function ($) {
+				$(document).on('wb-filtered', '.wb-tagfilter', function () {
+					var $filter = $(this);
+					var $items = $filter.find('.wb-tagfilter-items [data-wb-tags]');
+					var visibleCount = $items.filter(':not(.wb-tgfltr-out):not(.wb-fltr-out)').length;
+
+					$filter.find('#rmt-search-filter-info [data-nbitem]').text(visibleCount);
+					$filter.find('#rmt-search-filter-info [data-total]').text($items.length);
+				});
+			})(jQuery);
+		</script>
 		</body>
 
 	</html>
