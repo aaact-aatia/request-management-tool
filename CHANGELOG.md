@@ -155,6 +155,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Improve role-based request overviews ([97a6ab9](https://github.com/aaact-aatia/request-management-tool/commit/97a6ab9c77de5e295c20dc8c631ac5c439b94175))
 
+- Add manager team scope testing ([0a16a8e](https://github.com/aaact-aatia/request-management-tool/commit/0a16a8e95bfa642db9dc4a916add2d632b40afa8))
+
 
 ### Build
 
@@ -318,6 +320,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 - Regenerate CHANGELOG.md [skip ci] ([75bf33b](https://github.com/aaact-aatia/request-management-tool/commit/75bf33bd8b4464f101a8c79f3e19e7ca219e6efd))
 
 - Regenerate CHANGELOG.md [skip ci] ([56cc523](https://github.com/aaact-aatia/request-management-tool/commit/56cc5236af16b1a0f0027364bebb13bb81587cd1))
+
+- Regenerate CHANGELOG.md [skip ci] ([ffd3cf5](https://github.com/aaact-aatia/request-management-tool/commit/ffd3cf5057a3271c9596addea3b93509ff1f3bb0))
 
 
 ### Fixed
