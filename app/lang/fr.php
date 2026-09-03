@@ -412,6 +412,7 @@ return [
     'attachment_download_selected' => 'Télécharger les fichiers sélectionnés',
     'attachment_select_file' => 'Sélectionner %s',
     'attachment_select_file_to_download' => 'Sélectionnez au moins un fichier à télécharger.',
+    'attachment_delete_file_confirmation' => 'Voulez-vous vraiment supprimer ce fichier?',
     'attachment_image_preview_opened' => 'Aperçu de l\'image ouvert.',
     'attachment_image_preview_title' => 'Aperçu de l\'image',
     'attachment_preview_image' => 'Prévisualiser l\'image : %s',

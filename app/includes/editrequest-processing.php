@@ -386,7 +386,10 @@ if (isset($_FILES['fileToUpload'])) {
             $safeFileType = mysqli_real_escape_string($link, $fileType);
 
             if ($storageManager->uploadFile($fileTmpPath, $randomCode)) {
-                $uploadSql = "INSERT INTO tblfiles (`requestid`, `name`, `code`, `type`, `size`) VALUES ('$requestid', '$fileName', '$safeRandomCode', '$safeFileType', '$fileSize')";
+                $uploaderId = ((int) ($_SESSION['atype'] ?? 0) === 5)
+                    ? getEffectiveEmployeeUserId($link)
+                    : (int) ($_SESSION['pid'] ?? 0);
+                $uploadSql = "INSERT INTO tblfiles (`requestid`, `name`, `code`, `type`, `size`, `uploadedby`) VALUES ('$requestid', '$fileName', '$safeRandomCode', '$safeFileType', '$fileSize', '" . $uploaderId . "')";
                 mysqli_query($link, $uploadSql);
                 if ($uploadedFileName !== '') {
                     $uploadedFileNames[] = $uploadedFileName;

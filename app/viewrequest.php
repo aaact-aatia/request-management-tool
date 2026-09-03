@@ -282,6 +282,7 @@ $sharedTranslations = require __DIR__ . "/lang/{$lang}.php";
 $t['download_all'] = $sharedTranslations['attachment_download_selected'];
 $t['select_file'] = $sharedTranslations['attachment_select_file'];
 $t['select_file_to_download'] = $sharedTranslations['attachment_select_file_to_download'];
+$t['delete_file_confirmation'] = $sharedTranslations['attachment_delete_file_confirmation'];
 $t['image_preview_opened'] = $sharedTranslations['attachment_image_preview_opened'];
 $t['image_preview_title'] = $sharedTranslations['attachment_image_preview_title'];
 $t['preview_image'] = $sharedTranslations['attachment_preview_image'];
@@ -886,6 +887,7 @@ if(mysqli_num_rows($result)>0){
 
 <?php 
 $blobStorage = new AzureBlobStorageManager();
+require_once __DIR__ . '/includes/csrf.php';
 ?>
 
             <h2><?= $t['files'] ?></h2>
@@ -893,7 +895,7 @@ $blobStorage = new AzureBlobStorageManager();
 
             <?php
             $requestid = $row['requestid'];
-            $result_files = mysqli_query($link, "SELECT * FROM tblfiles WHERE requestid = '$requestid'");
+			$result_files = mysqli_query($link, "SELECT f.*, t.catalogueid, t.serviceid, t.subserviceid, t.workerid FROM tblfiles f INNER JOIN tbltriage t ON t.requestid = f.requestid WHERE f.requestid = '$requestid'");
             $validImageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'tiff', 'svg', 'ico'];
             
             if (mysqli_num_rows($result_files) > 0) {
@@ -939,7 +941,15 @@ $blobStorage = new AzureBlobStorageManager();
 								<a href='" . $downloadUrl . "' class='btn btn-primary download-btn'
 									data-name='" . $fileName . "'
 						   data-file='" . htmlspecialchars((string) $file['code'], ENT_QUOTES, 'UTF-8') . "'>" . htmlspecialchars($t['download'], ENT_QUOTES, 'UTF-8') . "</a>
-                    </td>";
+					";
+						if (rmt_can_delete_file($link, $file)) {
+							echo "<form method='post' action='/includes/delete-file.php' style='display:inline;'>";
+							echo "<input type='hidden' name='file_id' value='" . (int) $file['id'] . "'>";
+							echo "<input type='hidden' name='request_id' value='" . (int) $row['id'] . "'>";
+							echo "<input type='hidden' name='csrf_token' value='" . htmlspecialchars(rmt_csrf_token('file-delete'), ENT_QUOTES, 'UTF-8') . "'>";
+							echo "<button type='submit' class='btn btn-danger' onclick=\"return confirm('" . htmlspecialchars($t['delete_file_confirmation'], ENT_QUOTES, 'UTF-8') . "');\">" . htmlspecialchars($t['delete'], ENT_QUOTES, 'UTF-8') . "</button></form>";
+						}
+						echo "</td>";
                         echo "</tr>";
                     }
                     ?>

@@ -81,7 +81,7 @@ The following table defines the direct Blob configuration.
 | `AZURE_STORAGE_ACCOUNT` | Environment-specific storage account name | Enabled when deployment slots are used |
 | `AZURE_STORAGE_CONTAINER` | Environment-specific container name | Enabled when deployment slots are used |
 | `AZURE_STORAGE_PREFIX` | Empty, unless a prefix was approved | Enabled when deployment slots are used |
-| `AZURE_STORAGE_SAS_TOKEN` | Container SAS token | Enabled when deployment slots are used |
+| `AZURE_STORAGE_SAS_TOKEN` | Container SAS token with Read, Create, Write, and Delete permissions | Enabled when deployment slots are used |
 | `AZURE_STORAGE_ENDPOINT_SUFFIX` | `core.windows.net` | Enabled when deployment slots are used |
 | `FILE_UPLOAD_MAX_FILES` | `5` | Enabled when deployment slots are used |
 | `FILE_UPLOAD_MAX_SIZE_MB` | `10` | Enabled when deployment slots are used |

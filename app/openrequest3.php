@@ -169,15 +169,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $fileSize = $uploadFile['size_kb'];
             $fileTmpPath = $uploadFile['tmp_name'];
             $randomCode = $nrequestid . "-" . bin2hex(random_bytes(16)) . "." . $fileType;
+            $uploaderId = ((int) ($_SESSION['atype'] ?? 0) === 5)
+                ? getEffectiveEmployeeUserId($link)
+                : (int) ($_SESSION['pid'] ?? 0);
             
             // Upload to the configured storage backend.
             if ($azureBlobManager->uploadFile($fileTmpPath, $randomCode)) {
                 $fileStatement = rmt_db_execute(
                     $link,
-                    'INSERT INTO tblfiles (`requestid`, `name`, `code`, `type`, `size`)
-                     VALUES (?, ?, ?, ?, ?)',
-                    'ssssd',
-                    [$nrequestid, $fileNameWithExtension, $randomCode, $fileType, $fileSize]
+                    'INSERT INTO tblfiles (`requestid`, `name`, `code`, `type`, `size`, `uploadedby`)
+                     VALUES (?, ?, ?, ?, ?, ?)',
+                    'ssssdi',
+                    [$nrequestid, $fileNameWithExtension, $randomCode, $fileType, $fileSize, $uploaderId]
                 );
                 mysqli_stmt_close($fileStatement);
             }

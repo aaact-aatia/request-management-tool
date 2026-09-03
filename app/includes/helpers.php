@@ -167,6 +167,49 @@ function rmt_can_access_request(mysqli $link, array $request): bool {
     return false;
 }
 
+function rmt_can_delete_file(mysqli $link, array $file): bool {
+    if (empty($_SESSION['pid']) || !rmt_can_access_request($link, $file)) {
+        return false;
+    }
+
+    $accountType = (int) ($_SESSION['atype'] ?? 0);
+    if (!isRoleTestMode() && (isSuperAdmin() || !empty($_SESSION['is_admin']))) {
+        return true;
+    }
+
+    $uploaderId = (int) ($file['uploadedby'] ?? 0);
+    $currentUserId = (int) ($_SESSION['pid'] ?? 0);
+    if ($accountType === 5) {
+        return $uploaderId > 0 && ($uploaderId === getEffectiveEmployeeUserId($link)
+            || (isRoleTestMode() && $uploaderId === $currentUserId));
+    }
+
+    if (in_array($accountType, [3, 4], true) && $uploaderId === $currentUserId) {
+        return true;
+    }
+
+    if ($uploaderId <= 0) {
+        return false;
+    }
+
+    $uploaderResult = mysqli_query($link, "SELECT manager_id, team FROM tblusers WHERE id = '" . $uploaderId . "' LIMIT 1");
+    $uploader = $uploaderResult ? mysqli_fetch_assoc($uploaderResult) : null;
+    if (!$uploader) {
+        return false;
+    }
+
+    if ($accountType === 3) {
+        return (int) ($uploader['manager_id'] ?? 0) === $currentUserId;
+    }
+
+    if ($accountType === 4) {
+        $uploaderTeams = array_filter(array_map('trim', explode(',', (string) ($uploader['team'] ?? ''))));
+        return (bool) array_intersect($uploaderTeams, getEffectiveTeamIds($link));
+    }
+
+    return false;
+}
+
 // ============================================================================
 // VALUE HELPERS
 // ============================================================================
