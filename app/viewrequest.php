@@ -821,7 +821,7 @@ if(mysqli_num_rows($result)>0){
 					<dd><?php echo htmlspecialchars($row['daterequired']) ?></dd>
 				</div>
 				<?php } ?>
-				<?php if ($row['dateresolved'] != "") { ?>
+								<?php if ($row['dateresolved'] != "" && rmt_is_terminal_status_id($link, $row['statusid'])) { ?>
 				<div style="break-inside: avoid;">
 					<dt><?= $t['date_resolved'] ?></dt>
 					<dd><?php echo htmlspecialchars($row['dateresolved']) ?></dd>

@@ -1412,6 +1412,15 @@ function rmt_is_resolved_status_id($link, $statusId): bool {
     return in_array($statusId, rmt_get_resolved_status_ids($link), true);
 }
 
+function rmt_is_terminal_status_id($link, $statusId): bool {
+    $statusId = (int) $statusId;
+    if ($statusId <= 0) {
+        return false;
+    }
+
+    return rmt_is_resolved_status_id($link, $statusId) || in_array($statusId, [5, 6], true);
+}
+
 function getTeamMembersByContact($link, $contactid) {
     $contactid = mysqli_real_escape_string($link, $contactid);
     
@@ -1453,20 +1462,21 @@ function renderTextInput($id, $label, $value = '', $required = false, $readonly 
 HTML;
 }
 
-function renderDateInput($id, $label, $value = '', $required = false, $min = null, $max = null, $readonly = false) {
+function renderDateInput($id, $label, $value = '', $required = false, $min = null, $max = null, $readonly = false, $disabled = false) {
     $requiredAttr = $required ? 'required' : '';
     $requiredText = (($_SESSION['lang'] ?? 'en') === 'fr') ? 'obligatoire' : 'required';
     $requiredLabel = $required ? " <strong>($requiredText)</strong>" : '';
     $minAttr = $min ? "min=\"$min\"" : '';
     $maxAttr = $max ? "max=\"$max\"" : '';
     $readonlyAttr = $readonly ? 'readonly="readonly"' : '';
+    $disabledAttr = $disabled ? 'disabled="disabled"' : '';
     $escapedValue = htmlspecialchars($value ?? '', ENT_QUOTES, 'UTF-8');
     
     return <<<HTML
     <div class="form-group">
         <label for="$id"><span class="field-name">$label$requiredLabel</span></label>
         <input type="date" class="form-control" id="$id" name="$id" 
-             value="$escapedValue" $requiredAttr $minAttr $maxAttr $readonlyAttr>
+             value="$escapedValue" $requiredAttr $minAttr $maxAttr $readonlyAttr $disabledAttr>
     </div>
 HTML;
 }

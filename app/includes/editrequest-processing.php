@@ -69,7 +69,7 @@ $clientemail = getPostValue('clientemail');
 $submittedDepartmentAgency = trim((string)($_POST['departmentagency'] ?? ''));
 $clientphone = getPostValue('clientphone');
 $statusid = getPostValue('statusid');
-$datereceived = getPostValue('datereceived');
+$datereceived = (string) ($currentRequest['datereceived'] ?? '');
 $dateupdated = getTodayDate();
 
 // Handle nullable dates
@@ -168,7 +168,7 @@ if ($requestSubject !== '') {
     $requesttitle = rmt_generate_request_title($requestid, $titleDepartment, $requestSubject);
 }
 
-$isTargetResolved = rmt_is_resolved_status_id($link, $statusid);
+$isTargetResolved = rmt_is_terminal_status_id($link, $statusid);
 if ($isTargetResolved) {
     $dateresolved = !empty($currentRequest['dateresolved'])
         ? (string) $currentRequest['dateresolved']
@@ -250,7 +250,7 @@ $previousWorkerIdForHistory = (int) ($currentRequest['workerid'] ?? 0);
 $newWorkerIdForHistory = (int) $workerid;
 $statusChanged = ((string) $cstatusid !== (string) $statusid);
 $assignmentChanged = ($previousWorkerIdForHistory !== $newWorkerIdForHistory);
-$isCurrentResolved = rmt_is_resolved_status_id($link, $cstatusid);
+$isCurrentResolved = rmt_is_terminal_status_id($link, $cstatusid);
 
 if ($formAction === 'update_request' && ($statusChanged || $assignmentChanged)) {
     $exactTime = date('Y-m-d H:i:s');

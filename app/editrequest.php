@@ -692,7 +692,7 @@ include 'includes/template/head.php';
 				<!-- Row: Date Received | Date Updated -->
 				<div class="row">
 					<div class="col-md-6">
-						<?php echo renderDateInput('datereceived', $t['date_received'], $row['datereceived'], true, $dateRange['min'], $dateRange['max'], $readonly); ?>
+												<?php echo renderDateInput('datereceived', $t['date_received'], $row['datereceived'], false, $dateRange['min'], $dateRange['max'], true, true); ?>
 					</div>
 					<div class="col-md-6">
 						<?php echo renderDateInput('dateupdated', $t['date_updated'], $row['dateupdated'], false, $dateRange['min'], $dateRange['max'], true); ?>
@@ -704,9 +704,11 @@ include 'includes/template/head.php';
 					<div class="col-md-6">
 						<?php echo renderDateInput('daterequired', $dateRequiredLabel, $row['daterequired'], false, $dateRange['min'], $dateRange['max'], $readonly); ?>
 					</div>
-					<div class="col-md-6">
-						<?php echo renderDateInput('dateresolved', $t['date_resolved'], $row['dateresolved'], false, $dateRange['min'], $dateRange['max'], true); ?>
-					</div>
+					<?php if (rmt_is_terminal_status_id($link, $row['statusid'])): ?>
+						<div class="col-md-6">
+							<?php echo renderDateInput('dateresolved', $t['date_resolved'], $row['dateresolved'], false, $dateRange['min'], $dateRange['max'], true); ?>
+						</div>
+					<?php endif; ?>
 				</div>
 
 				<div class="row">
