@@ -122,7 +122,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Validate required fields on the server and restore the completed form on failure.
     $requestSubjectLength = function_exists('mb_strlen') ? mb_strlen($requestSubject, 'UTF-8') : strlen($requestSubject);
     if (!hasValue($requestSubject) || $requestSubjectLength > 500
-        || !hasValue($clientlname) || !hasValue($clientfname) || !hasValue($clientemail)) {
+        || !hasValue($clientlname) || !hasValue($clientfname) || !hasValue($clientemail)
+        || !hasValue($submittedDepartment)) {
         $_SESSION['openrequest_draft'] = $draftData;
         header("location:/openrequest2.php?lang=" . $lang . "&status=failed");
         exit();

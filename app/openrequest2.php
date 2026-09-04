@@ -33,7 +33,7 @@ $translations = [
         'email' => 'Email',
         'department_agency' => 'Department/agency',
         'select_department_agency' => 'Select a department or agency',
-        'department_agency_hint' => 'Optional. Start typing a department, agency, or acronym, or enter another organization.',
+        'department_agency_hint' => 'Start typing a department, agency, or acronym, or enter another organization.',
         'additional_info' => 'Additional information',
         'submit' => 'Submit'
     ],
@@ -52,7 +52,7 @@ $translations = [
         'email' => 'Courriel',
         'department_agency' => 'Ministère/organisme',
         'select_department_agency' => 'Sélectionnez un ministère ou organisme',
-        'department_agency_hint' => 'Facultatif. Commencez à saisir un ministère, un organisme ou un acronyme, ou entrez une autre organisation.',
+        'department_agency_hint' => 'Commencez à saisir un ministère, un organisme ou un acronyme, ou entrez une autre organisation.',
         'additional_info' => 'Renseignements supplémentaires',
         'submit' => 'Soumettre'
     ]
@@ -134,12 +134,12 @@ include 'includes/template/head.php';
         echo renderTextInput('clientlname', $t['last_name'], $draftData['clientlname'] ?? '', true, false, 'text', 'autocomplete="family-name"', true);
         echo renderTextInput('clientemail', $t['email'], $draftData['clientemail'] ?? '', true, false, 'email', 'autocomplete="email"', true);
         if ($departments === []) {
-            echo renderTextInput('departmentagency', $t['department_agency'], $selectedDepartment, false, false, 'text', 'autocomplete="off" aria-describedby="departmentagency-hint"', true);
+            echo renderTextInput('departmentagency', $t['department_agency'], $selectedDepartment, true, false, 'text', 'autocomplete="off" aria-describedby="departmentagency-hint"', true);
             echo '<p id="departmentagency-hint">' . htmlspecialchars($t['department_agency_hint']) . '</p>';
         } else {
             ?>
             <div class="form-group">
-                <label for="departmentagency"><span class="field-name"><?= htmlspecialchars($t['department_agency']) ?></span></label>
+                <label for="departmentagency"><span class="field-name"><?= htmlspecialchars($t['department_agency']) ?> <strong>(<?= $lang === 'fr' ? 'obligatoire' : 'required' ?>)</strong></span></label>
                 <input
                     type="text"
                     class="form-control full-width"
@@ -150,6 +150,7 @@ include 'includes/template/head.php';
                     autocomplete="off"
                     aria-describedby="departmentagency-hint"
                     placeholder="<?= htmlspecialchars($t['select_department_agency'], ENT_QUOTES, 'UTF-8') ?>"
+                    required
                 >
                 <datalist id="departmentagency-options">
                     <?php foreach ($departmentOptions as $department): ?>
