@@ -159,6 +159,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Consolidate request dashboard ([64ce707](https://github.com/aaact-aatia/request-management-tool/commit/64ce7070d72a74528794269398e85e3d2c2213e3))
 
+- Reorganize advanced search form ([272f7bd](https://github.com/aaact-aatia/request-management-tool/commit/272f7bdce677d461e20e006564c46c73380195c2))
+
 
 ### Build
 
@@ -328,6 +330,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 - Regenerate CHANGELOG.md [skip ci] ([9d0dd4c](https://github.com/aaact-aatia/request-management-tool/commit/9d0dd4cc8b0d5a4aa2c49378a12f204defe328a8))
 
 - Regenerate CHANGELOG.md [skip ci] ([1310a4f](https://github.com/aaact-aatia/request-management-tool/commit/1310a4ffa114bf5a09b3ea89bec295a6b1a0ca26))
+
+- Regenerate CHANGELOG.md [skip ci] ([5d56caf](https://github.com/aaact-aatia/request-management-tool/commit/5d56caffd4fa6dce6ba82964f00d247483122481))
 
 
 ### Fixed
