@@ -161,6 +161,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Reorganize advanced search form ([272f7bd](https://github.com/aaact-aatia/request-management-tool/commit/272f7bdce677d461e20e006564c46c73380195c2))
 
+- Scope employee search options ([978063e](https://github.com/aaact-aatia/request-management-tool/commit/978063e2a3e2942fd92f9a3031a8ffb1bfcb5a89))
+
 
 ### Build
 
@@ -336,6 +338,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 - Regenerate CHANGELOG.md [skip ci] ([603bf94](https://github.com/aaact-aatia/request-management-tool/commit/603bf945ce2535557395250d4f9d297749731eb3))
 
 - Regenerate CHANGELOG.md [skip ci] ([b4069f9](https://github.com/aaact-aatia/request-management-tool/commit/b4069f9da7e4f94dd7c3e384cee4fb48ba024db9))
+
+- Regenerate CHANGELOG.md [skip ci] ([f027b3a](https://github.com/aaact-aatia/request-management-tool/commit/f027b3a2dfc1b9a827941b4f2fda03439b0b25f4))
 
 
 ### Fixed
