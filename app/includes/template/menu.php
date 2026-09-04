@@ -112,8 +112,10 @@ $menuLangStrings = $menu_text[$lang_code];
 				<?php } ?>
 				<?php } ?>
 					<li><a href="/openrequest.php?lang=<?= $lang_code ?>" class="item"><?= htmlspecialchars($menuLangStrings['new_request']) ?></a></li>
-				<?php if ($canSeeCoreNav && !$isEmployee) { ?>
+				<?php if ($canSeeCoreNav) { ?>
 					<li><a href="/asearch.php?lang=<?= $lang_code ?>" class="item"><?= htmlspecialchars($menuLangStrings['search']) ?></a></li>
+				<?php } ?>
+				<?php if ($canSeeCoreNav && !$isEmployee) { ?>
 					<li><a href="/reports.php?lang=<?= $lang_code ?>" class="item"><?= htmlspecialchars($menuLangStrings['reports']) ?></a></li>
 				<?php
 				// Only Super admins can access this option

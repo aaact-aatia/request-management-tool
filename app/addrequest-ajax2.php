@@ -4,6 +4,7 @@ require_once __DIR__ . '/includes/session_start.php';
 
 require('sql.php');
 /** @var mysqli $link */
+require('includes/helpers.php');
 
 // Determine language from session
 $lang = $_SESSION['lang'] ?? 'en';
@@ -24,7 +25,16 @@ else
 }
 
 // Check if results otherwise return empty result
-$sql = "SELECT * FROM tblsubservices WHERE serviceid='$serviceid' AND status='1' ORDER BY $orderBy ASC";
+$subserviceScopeFilter = '';
+if ((int)($_SESSION['atype'] ?? 0) === 5) {
+	$teamIds = array_values(array_filter(array_map('intval', getEffectiveEmployeeTeamIds($link)), static function ($teamId) {
+		return $teamId > 0;
+	}));
+	$subserviceScopeFilter = empty($teamIds)
+		? ' AND 1 = 0'
+		: " AND COALESCE(NULLIF(tblsubservices.contactid, 0), NULLIF(s.contactid, 0), NULLIF(c.contactid, 0)) IN (" . implode(',', $teamIds) . ")";
+}
+$sql = "SELECT tblsubservices.* FROM tblsubservices INNER JOIN tblservices s ON s.id = tblsubservices.serviceid INNER JOIN tblcatalogue c ON c.id = s.catalogueid WHERE tblsubservices.serviceid='$serviceid' AND tblsubservices.status='1'" . $subserviceScopeFilter . " ORDER BY tblsubservices.$orderBy ASC";
 
 $result = mysqli_query($link,$sql);
 //List it
@@ -34,7 +44,7 @@ if(mysqli_num_rows($result)>0){
 				<select class="form-control full-width" id="subserviceid" name="subserviceid">
 					<option value=""><?= htmlspecialchars($translations['select_subservice'] ?? 'Select a sub-service name') ?></option>
 					<?php 
-					$sql2 = "SELECT * FROM tblsubservices WHERE serviceid='$serviceid' AND status='1' ORDER BY $orderBy ASC";
+					$sql2 = $sql;
 					$result2 = mysqli_query($link,$sql2);	
 					while($row2 = mysqli_fetch_array($result2)){
 					?>
