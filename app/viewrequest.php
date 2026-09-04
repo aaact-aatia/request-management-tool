@@ -1137,9 +1137,7 @@ require_once __DIR__ . '/includes/csrf.php';
 			<?php } ?>
 
 			<?php
-			$canViewStatusChangeLog = isSuperAdmin()
-				|| !empty($_SESSION['is_admin'])
-				|| in_array((int)($_SESSION['atype'] ?? 0), [1, 3, 4], true);
+			$canViewStatusChangeLog = !empty($_SESSION['pid']);
 
 			if ($canViewStatusChangeLog) {
 				$hasPreviousStatusColumn = rmt_table_has_column($link, 'StatusHistory', 'previousStatusID');
