@@ -180,7 +180,9 @@ assert_contains "$work_dir/terminal.html" 'name="serviceid" value="0"' \
 assert_contains "$work_dir/terminal.html" 'value="Treasury Board of Canada Secretariat (TBS)"' \
     'public intake loads organization titles and acronyms from the database'
 assert_control_contains "$work_dir/terminal.html" 'departmentagency' 'value=""' \
-    'new intake leaves department or agency blank'
+    'new intake leaves department or agency blank by default'
+assert_control_contains "$work_dir/terminal.html" 'departmentagency' 'required' \
+    'department or agency is required'
 assert_contains "$work_dir/terminal.html" '<h2>System information</h2>' \
     'system subject type renders the English heading'
 assert_contains "$work_dir/terminal.html" 'name="request_subject"' \
@@ -277,6 +279,24 @@ if ! grep -Fiq 'location: /openrequest2.php?lang=en&status=failed' "$work_dir/mi
     exit 1
 fi
 printf 'PASS: public intake requires request subject server-side\n'
+
+missing_department_before=$(db_query 'SELECT COUNT(*) FROM tbltriage')
+request -D "$work_dir/missing-department-headers.txt" -o /dev/null -X POST \
+    --data-urlencode "catalogueid=${terminal_catalogue_id}" \
+    --data 'serviceid=0' \
+    --data 'subserviceid=0' \
+    --data-urlencode 'request_subject=Missing department' \
+    --data 'clientfname=Missing' \
+    --data 'clientlname=Department' \
+    --data 'clientemail=missing-department@example.com' \
+    "${base_url}/openrequest3.php?lang=en"
+missing_department_after=$(db_query 'SELECT COUNT(*) FROM tbltriage')
+if ! grep -Fiq 'location: /openrequest2.php?lang=en&status=failed' "$work_dir/missing-department-headers.txt" \
+    || [[ "$missing_department_before" != "$missing_department_after" ]]; then
+    printf 'FAIL: public intake accepted a missing department or agency\n' >&2
+    exit 1
+fi
+printf 'PASS: public intake requires department or agency server-side\n'
 
 IFS=$'\t' read -r leaf_catalogue_id leaf_service_id <<< "$(db_query '
     SELECT c.id, s.id
