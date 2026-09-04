@@ -346,6 +346,7 @@ include 'includes/template/head.php';
 								$workerName = htmlspecialchars($row2[0] . ' ' . $row2[1]);
 							}
 						}
+						$requestServiceNames = array_filter([$cataloguename, $servicename, $subservicename], static fn($name) => trim((string) $name) !== '');
 				?>
 					<?php
 					$result2 = mysqli_query($link, "SELECT $nameColumn FROM tblstatus WHERE id = '$statusid'");
@@ -358,7 +359,7 @@ include 'includes/template/head.php';
 						<dt><?= htmlspecialchars($langFile['indexonly_col_client']) ?>:</dt>
 						<dd><?= htmlspecialchars($clientname) ?></dd>
 						<dt><?= htmlspecialchars($langFile['indexonly_col_service']) ?>:</dt>
-						<dd><?= htmlspecialchars($cataloguename) ?> / <?= htmlspecialchars($servicename) ?><?php if (!empty($subservicename)) { echo ' / ' . htmlspecialchars($subservicename); } ?></dd>
+						<dd><?= htmlspecialchars(implode(' / ', $requestServiceNames)) ?></dd>
 						<dt><?= ($_SESSION['lang'] === 'fr') ? 'Date de soumission' : 'Submitted date' ?>:</dt>
 						<dd><?= date('Y-m-d', strtotime($row['datereceived'])) ?></dd>
 						<?php if (!empty($workerName)): ?>
