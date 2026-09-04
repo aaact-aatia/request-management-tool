@@ -20,6 +20,7 @@ require('includes/httpscheck.php');
 require('includes/calculate-bdays.php');
 
 require('includes/helpers.php');
+require_once('includes/department-directory.php');
 
 // Grab MySQL connection
 require('sql.php');
@@ -37,6 +38,11 @@ if (!isset($_SESSION['lang']) || !in_array($_SESSION['lang'], ['en', 'fr'])) {
 
 // Load language file
 $langFile = require("lang/{$_SESSION['lang']}.php");
+$nameField = ($_SESSION['lang'] === 'fr') ? 'namefr' : 'nameen';
+$departments = rmt_get_department_directory($link, $_SESSION['lang']);
+$selectedDepartment = trim((string)($_GET['departmentagency'] ?? ''));
+$departmentOptions = rmt_department_directory_options($departments, $selectedDepartment);
+$departmentInputValue = rmt_department_directory_input_value($departmentOptions, $selectedDepartment);
 
 // Set variable to show form or results
 $showform = true;
@@ -66,15 +72,6 @@ if (!empty($_GET['clientemail'] ))
 else
 {
 	$clientemail = "";
-}
-
-if (!empty($_GET['clientphone'] ))
-{
-	$clientphone = mysqli_real_escape_string($link,$_GET['clientphone']);
-}
-else
-{
-	$clientphone = "";
 }
 
 if (!empty($_GET['serviceid'] ))
@@ -111,13 +108,15 @@ if ($isTeamLeadAccount) {
 	$userTeamIds = getEffectiveTeamIds($link);
 }
 
-// Process search if any parameters are submitted
-$hasSearchParams = !empty($_GET['requestid']) || !empty($_GET['requesttitle']) || !empty($clientlname) || !empty($clientfname) || 
-					!empty($clientemail) || !empty($clientphone) || !empty($_GET['datereceived']) ||
-                    !empty($_GET['datereceived2']) || !empty($_GET['dateupdated']) || !empty($_GET['dateupdated2']) || 
-                    !empty($_GET['daterequired']) || !empty($_GET['daterequired2']) || !empty($_GET['dateresolved']) || 
-                    !empty($_GET['dateresolved2']) || !empty($_GET['statusid']) || !empty($_GET['catalogueid']) || 
-					!empty($serviceid) || !empty($subserviceid) || ($isTeamLeadAccount && isset($_GET['searchscope']));
+// Process search if any parameters are submitted. A request with only the hidden
+// language value is an intentional unfiltered search and shows all active requests.
+$searchParameterKeys = [
+	'requestid', 'clientlname', 'clientfname', 'clientemail', 'departmentagency',
+	'datereceived', 'datereceived2', 'dateupdated', 'dateupdated2', 'daterequired', 'daterequired2',
+	'dateresolved', 'dateresolved2', 'statusid', 'catalogueid', 'serviceid', 'subserviceid', 'searchscope', 'searchsubmitted'
+];
+$isModifySearch = isset($_GET['modify']) && $_GET['modify'] === '1';
+$hasSearchParams = !$isModifySearch && count(array_intersect(array_keys($_GET), $searchParameterKeys)) > 0;
 
 if ($hasSearchParams){
 	// Set no search value
@@ -132,12 +131,6 @@ if ($hasSearchParams){
 		$SQLSV .= " requestid = '$requestid' AND";
 	}
 	
-	if (!empty($_GET['requesttitle'])) {
-		$requesttitle = mysqli_real_escape_string($link,strtolower($_GET['requesttitle']));
-		$nosearch = false;
-		$SQLSV .= " LOWER(title) LIKE '%$requesttitle%' AND";
-	}
-
 	if (!empty($clientlname)) {
 		$nosearch = false;
 		$SQLSV .= " LOWER(clientlname) LIKE '%$clientlname%' AND";
@@ -152,12 +145,14 @@ if ($hasSearchParams){
 		$nosearch = false;
 		$SQLSV .= " LOWER(clientemail) LIKE '%$clientemail%' AND";
 	}
-	
-	if (!empty($clientphone)) {
+
+	if ($selectedDepartment !== '') {
+		$department = rmt_get_localized_department_name($link, $selectedDepartment, $_SESSION['lang']);
+		$department = mysqli_real_escape_string($link, $department);
 		$nosearch = false;
-		$SQLSV .= " clientphone LIKE '%$clientphone%' AND";
+		$SQLSV .= " EXISTS (SELECT 1 FROM tblcommlog WHERE triageid = tbltriage.id AND status = '1' AND (notes LIKE 'Department/agency: $department%' OR notes LIKE 'Ministère/organisme: $department%')) AND";
 	}
-	
+
 	$datereceived = mysqli_real_escape_string($link, $_GET['datereceived'] ?? '');
 	$datereceived2 = mysqli_real_escape_string($link, $_GET['datereceived2'] ?? '');
 	if ($datereceived!="" && $datereceived2!="") {
@@ -256,6 +251,47 @@ if ($hasSearchParams){
 	//exit();
 }
 
+$searchCriteria = [];
+$addSearchCriterion = static function (string $label, $value) use (&$searchCriteria): void {
+	$label = rtrim(trim($label), ':');
+	$value = trim((string) $value);
+	if ($value !== '') {
+		$searchCriteria[] = $label . ': ' . $value;
+	}
+};
+$addSearchCriterion($langFile['asearch_request_id'], $_GET['requestid'] ?? '');
+$addSearchCriterion($langFile['client_lname'], $_GET['clientlname'] ?? '');
+$addSearchCriterion($langFile['client_fname'], $_GET['clientfname'] ?? '');
+$addSearchCriterion($langFile['client_email'], $_GET['clientemail'] ?? '');
+$addSearchCriterion($langFile['asearch_department_agency'], $selectedDepartment);
+$dateCriteria = [
+	'asearch_date_received_from' => 'datereceived',
+	'asearch_date_received_to' => 'datereceived2',
+	'asearch_date_updated_from' => 'dateupdated',
+	'asearch_date_updated_to' => 'dateupdated2',
+	'asearch_date_required_from' => 'daterequired',
+	'asearch_date_required_to' => 'daterequired2',
+	'asearch_date_resolved_from' => 'dateresolved',
+	'asearch_date_resolved_to' => 'dateresolved2',
+];
+foreach ($dateCriteria as $labelKey => $parameter) {
+	$addSearchCriterion($langFile[$labelKey], $_GET[$parameter] ?? '');
+}
+$lookupSearchName = static function (string $table, $id) use ($link, $nameField): string {
+	$id = mysqli_real_escape_string($link, (string) $id);
+	$result = mysqli_query($link, "SELECT $nameField FROM $table WHERE id = '$id'");
+	$row = $result ? mysqli_fetch_assoc($result) : null;
+	return (string) ($row[$nameField] ?? $id);
+};
+$addSearchCriterion($langFile['status'], !empty($_GET['statusid']) ? $lookupSearchName('tblstatus', $_GET['statusid']) : '');
+$addSearchCriterion($langFile['catalogue_name'], !empty($_GET['catalogueid']) ? $lookupSearchName('tblcatalogue', $_GET['catalogueid']) : '');
+$addSearchCriterion($langFile['service_name'], !empty($_GET['serviceid']) ? $lookupSearchName('tblservices', $_GET['serviceid']) : '');
+$addSearchCriterion($langFile['subservice_name'], !empty($_GET['subserviceid']) ? $lookupSearchName('tblsubservices', $_GET['subserviceid']) : '');
+$searchModifyQuery = $_GET;
+unset($searchModifyQuery['searchsubmitted']);
+$searchModifyQuery['modify'] = '1';
+$searchModifyUrl = '/asearch.php?' . http_build_query($searchModifyQuery);
+
 // =============================================================================
 // PAGE FRONTMATTER - Define page metadata
 // =============================================================================
@@ -302,32 +338,79 @@ include 'includes/template/head.php';
 		
 			<form method="get" action="/asearch.php" onsubmit="removeEmptyFields(event)">
 			<input type="hidden" name="lang" value="<?= $_SESSION['lang'] ?>">
+			<input type="hidden" name="searchsubmitted" value="1">
+			<fieldset class="brdr-0">
+				<legend><?= htmlspecialchars($langFile['asearch_request_info']) ?></legend>
 			<div class="row">
+				<div class="col-xs-6">
+					<div class="form-group">
+						<label for="statusid"><span class="field-name"><?= htmlspecialchars($langFile['status']) ?></span></label>
+						<select class="form-control" id="statusid" name="statusid">
+							<option value=""><?= htmlspecialchars($langFile['select_status']) ?></option>
+							<?php
+							$sql2 = "SELECT * FROM tblstatus WHERE status='1' ORDER BY $nameField ASC";
+							$result2 = mysqli_query($link,$sql2);
+							while($row2 = mysqli_fetch_array($result2)){
+							?>
+								<option value="<?php echo $row2['id']; ?>" <?php echo (string)($_GET['statusid'] ?? '') === (string)$row2['id'] ? 'selected' : ''; ?>><?php echo $row2[$nameField]; ?></option>
+							<?php } ?>
+						</select>
+					</div>
+				</div>
 				<div class="col-xs-6">
 					<div class="form-group">
 						<label for="requestid"><span class="field-name"><?= htmlspecialchars($langFile['asearch_request_id']) ?></span></label>
 						<input type="text" class="form-control" id="requestid" name="requestid" value="<?= htmlspecialchars($_GET['requestid'] ?? '') ?>">
 					</div>
 				</div>
-				<div class="col-xs-6">
+			</div>
+			<div class="row">
+				<div class="col-xs-12">
 					<div class="form-group">
-						<label for="requesttitle"><span class="field-name"><?= htmlspecialchars($langFile['request_title']) ?></span></label>
-						<input type="text" class="form-control" id="requesttitle" name="requesttitle" value="<?= htmlspecialchars($_GET['requesttitle'] ?? '') ?>">
+						<label for="catalogueid"><span class="field-name"><?= htmlspecialchars($langFile['catalogue_name']) ?></span></label>
+						<select class="form-control" id="catalogueid" name="catalogueid" onchange="ajax1(this.value)">
+							<option value=""><?= htmlspecialchars($langFile['select_catalogue']) ?></option>
+							<?php
+							$sql2 = "SELECT * FROM tblcatalogue WHERE status='1' ORDER BY $nameField ASC";
+							$result2 = mysqli_query($link,$sql2);
+							while($row2 = mysqli_fetch_array($result2)){
+							?>
+							<option value="<?php echo $row2['id']; ?>" <?php echo (string)($_GET['catalogueid'] ?? '') === (string)$row2['id'] ? 'selected' : ''; ?>><?php echo $row2[$nameField]; ?></option>
+							<?php } ?>
+						</select>
+					</div>
+					<div class="form-group divservice"></div>
+					<div class="form-group divsubservice"></div>
+				</div>
+			</div>
+			</fieldset>
+			<fieldset class="brdr-0">
+				<legend><?= htmlspecialchars($langFile['asearch_client_info']) ?></legend>
+			<div class="row">
+				<div class="col-xs-12">
+					<div class="form-group">
+						<label for="departmentagency"><span class="field-name"><?= htmlspecialchars($langFile['asearch_department_agency']) ?></span></label>
+						<input type="text" class="form-control" id="departmentagency" name="departmentagency" list="departmentagency-options" value="<?= htmlspecialchars($departmentInputValue, ENT_QUOTES, 'UTF-8') ?>" autocomplete="off" placeholder="<?= htmlspecialchars($langFile['asearch_select_department_agency'], ENT_QUOTES, 'UTF-8') ?>">
+						<datalist id="departmentagency-options">
+							<?php foreach ($departmentOptions as $department): ?>
+							<option value="<?= htmlspecialchars($department['label'], ENT_QUOTES, 'UTF-8') ?>"></option>
+							<?php endforeach; ?>
+						</datalist>
 					</div>
 				</div>
 			</div>
 			<?php if($_SESSION['pid']!=""){ ?>
 			<div class="row">
-				<div class="col-xs-6">				
-					<div class="form-group">
-						<label for="clientlname"><span class="field-name"><?= htmlspecialchars($langFile['client_lname']) ?></span></label>
-						<input type="text" class="form-control" id="clientlname" name="clientlname" value="<?= htmlspecialchars($_GET['clientlname'] ?? '') ?>">
-					</div>
-				</div>
-				<div class="col-xs-6">				
+				<div class="col-xs-6">
 					<div class="form-group">
 						<label for="clientfname"><span class="field-name"><?= htmlspecialchars($langFile['client_fname']) ?></span></label>
 						<input type="text" class="form-control" id="clientfname" name="clientfname" value="<?= htmlspecialchars($_GET['clientfname'] ?? '') ?>">
+					</div>
+				</div>
+				<div class="col-xs-6">
+					<div class="form-group">
+						<label for="clientlname"><span class="field-name"><?= htmlspecialchars($langFile['client_lname']) ?></span></label>
+						<input type="text" class="form-control" id="clientlname" name="clientlname" value="<?= htmlspecialchars($_GET['clientlname'] ?? '') ?>">
 					</div>
 				</div>
 			</div>
@@ -338,14 +421,12 @@ include 'includes/template/head.php';
 						<input type="email" class="form-control" id="clientemail" name="clientemail" value="<?= htmlspecialchars($_GET['clientemail'] ?? '') ?>">
 					</div>
 				</div>
-				<div class="col-xs-6">
-					<div class="form-group">
-						<label for="clientphone"><span class="field-name"><?= htmlspecialchars($langFile['asearch_client_phone']) ?></span></label>
-						<input type="tel" data-rule-phoneUS="true" class="form-control" id="clientphone" name="clientphone" value="<?= htmlspecialchars($_GET['clientphone'] ?? '') ?>">
-					</div>
-				</div>
 			</div>
 			<?php } ?>
+			</fieldset>
+
+			<fieldset class="brdr-0">
+				<legend><?= htmlspecialchars($langFile['asearch_dates']) ?></legend>
 			<div class="row">
 				<div class="col-xs-6">
 					<div class="form-group">
@@ -402,49 +483,7 @@ include 'includes/template/head.php';
 					</div>
 				</div>
 			</div>
-			<div class="row">
-				<div class="col-xs-6">
-					<div class="form-group">
-						<label for="statusid"><span class="field-name"><?= htmlspecialchars($langFile['status']) ?></span></label>
-						<select class="form-control" id="statusid" name="statusid">
-							<option value=""><?= htmlspecialchars($langFile['select_status']) ?></option>
-							<?php 
-							$sql2 = "SELECT * FROM tblstatus WHERE status='1' ORDER BY $nameField ASC";
-							$result2 = mysqli_query($link,$sql2);	
-							while($row2 = mysqli_fetch_array($result2)){
-							?>
-								<option value="<?php echo $row2['id']; ?>"><?php echo $row2[$nameField]; ?></option>
-							<?php
-							}
-							?>
-						</select>
-					</div>
-				</div>
-			</div>
-			
-			<div class="row">
-				<div class="col-xs-6">
-					<div class="form-group">
-						<label for="catalogueid"><span class="field-name"><?= htmlspecialchars($langFile['catalogue_name']) ?></span></label>
-						<select class="form-control" id="catalogueid" name="catalogueid" onchange="ajax1(this.value)">
-							<option value=""><?= htmlspecialchars($langFile['select_catalogue']) ?></option>
-							<?php 
-							$sql2 = "SELECT * FROM tblcatalogue WHERE status='1' ORDER BY $nameField ASC";
-							$result2 = mysqli_query($link,$sql2);	
-							while($row2 = mysqli_fetch_array($result2)){
-							?>
-							<option value="<?php echo $row2['id']; ?>"><?php echo $row2[$nameField]; ?></option>
-							<?php
-							}
-							?>
-						</select>
-					</div>
-					<div class="form-group divservice">
-					</div>
-					<div class="form-group divsubservice">
-					</div>
-				</div>
-			</div>
+			</fieldset>
 			
 			<div class="form-group form-buttons">
 				<?php if ($isTeamLeadAccount) { ?>
@@ -467,12 +506,23 @@ include 'includes/template/head.php';
 			$numEntries = mysqli_num_rows($result);
 			?>
 			<h1 property="name" id="wb-cont"><?= htmlspecialchars($langFile['asearch_results_heading']) ?> - <?= $numEntries ?> <?= htmlspecialchars($langFile['asearch_entries']) ?></h1>
+			<section class="alert alert-info" aria-labelledby="search-criteria-heading">
+				<h2 id="search-criteria-heading"><?= htmlspecialchars($langFile['asearch_search_criteria']) ?></h2>
+				<?php if ($searchCriteria === []): ?>
+				<p><?= htmlspecialchars($langFile['asearch_all_active']) ?></p>
+				<?php else: ?>
+				<ul>
+					<?php foreach ($searchCriteria as $criterion): ?>
+					<li><?= htmlspecialchars($criterion) ?></li>
+					<?php endforeach; ?>
+				</ul>
+				<?php endif; ?>
+				<p><a class="btn btn-default" href="<?= htmlspecialchars($searchModifyUrl, ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($langFile['asearch_modify']) ?></a></p>
+			</section>
 			
 			<div class="row wb-eqht-grd">
 		<?php
 			// Determine database column for name fields based on language
-			$nameField = ($_SESSION['lang'] === 'fr') ? 'namefr' : 'nameen';
-			
 			while($row = mysqli_fetch_array($result)){
 				// Check if clientlname or clientfname is not empty
 				$clientfname = htmlspecialchars ($row['clientfname'] ?? '');
