@@ -343,6 +343,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Regenerate CHANGELOG.md [skip ci] ([74b1199](https://github.com/aaact-aatia/request-management-tool/commit/74b119967fc2006a0545e75494b73e6030149815))
 
+- Regenerate CHANGELOG.md [skip ci] ([cb90d46](https://github.com/aaact-aatia/request-management-tool/commit/cb90d46fe68bdc86478897eab8b8dc71d5212a86))
+
 
 ### Fixed
 
@@ -509,6 +511,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 - Modernize request cloning workflow ([d7eae72](https://github.com/aaact-aatia/request-management-tool/commit/d7eae72aa67005ebb43f512ca461acf87d99a506))
 
 - Hide empty request service separator ([adc2e2a](https://github.com/aaact-aatia/request-management-tool/commit/adc2e2a9220d605358e84e432f9a83e7c8669c21))
+
+- Show department status on request view ([4f08497](https://github.com/aaact-aatia/request-management-tool/commit/4f08497f769f72acac4bb4e91706266ead849493))
 
 
 ### Other
