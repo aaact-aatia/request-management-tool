@@ -53,83 +53,70 @@ else
 
 
 if($_SERVER['REQUEST_METHOD'] == 'POST'){
+	$requestid = filter_var($_POST['requestid'] ?? 0, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'default' => 0]]);
+	$toclose = (int) ($_POST['toclose'] ?? 1);
+	$catalogueid = (int) ($_POST['catalogueid'] ?? 0);
+	$serviceid = (int) ($_POST['serviceid'] ?? 0);
+	$subserviceid = (int) ($_POST['subserviceid'] ?? 0);
 
-
-
-    if (!empty($_POST['requestid']))
-	{
-		$requestid = mysqli_real_escape_string($link,$_POST['requestid']);
-	}
-	else
-	{
-		$requestid = "";
-	}
-    if (!empty($_POST['toclose']) ||  $_POST['toclose'] == "0" || $_POST['toclose'] == 0)
-	{
-		$toclose = mysqli_real_escape_string($link,$_POST['toclose']);
-	}
-	else
-	{
-		$toclose = "1";
-	}
-    if (!empty($_POST['catalogueid']))
-	{
-		$catalogueid = mysqli_real_escape_string($link,$_POST['catalogueid']);
-	}
-	else
-	{
-		$catalogueid = 0;
-	}
-    if (!empty($_POST['serviceid']))
-	{
-		$serviceid = mysqli_real_escape_string($link,$_POST['serviceid']);
-	}
-	else
-	{
-		$serviceid = 0;
-	}
-    if (!empty($_POST['subserviceid']))
-	{
-		$subserviceid = mysqli_real_escape_string($link,$_POST['subserviceid']);
-	}
-	else
-	{
-		$subserviceid = 0;
-	}
-
-    // New query to select the highest id
-    $result_max_id = mysqli_query($link, "SELECT MAX(requestid) AS max_id FROM tbltriage");
-    $row_max_id = mysqli_fetch_array($result_max_id);
-    $max_id = $row_max_id['max_id'];
-
-    // Increment the requestid by 1
-    $new_requestid =  $max_id + 1;
-   
-
-
-
-    // Prepare the SQL statement to insert the new row
-	$sql_insert = "INSERT INTO tbltriage (requestid, title, request_subject, clientlname, clientfname, clientemail, clientphone, requestlang, datereceived, dateupdated, daterequired, dateresolved, slatimer, statusid, bdm, catalogueid, serviceid, subserviceid, attach1, attach2, attach3, creatorid, updaterid, workerid, closesla, pastsla, cssurvey, project_id, audience_id, triage_population, conformance_id, triage_maturity, triage_management, tech_id, priority_score, status, ipaddress, exactTime, firstsprintenddate, firstsprintstartdate, sprintdefects, sprintschedule, navigation_data_id, technology_id, expectedUsers_id, technologySecVal)
-		SELECT $new_requestid, title, request_subject, clientlname, clientfname, clientemail, clientphone, COALESCE(requestlang, 'en'), CURDATE(), dateupdated, daterequired, dateresolved, CURDATE(), 1 , COALESCE(bdm, 0), COALESCE($catalogueid, 0), COALESCE($serviceid, 0), COALESCE($subserviceid, 0), attach1, attach2, attach3, COALESCE(creatorid, 0), COALESCE(updaterid, 0), COALESCE(workerid, 0), COALESCE(closesla, 0), COALESCE(pastsla, 0), COALESCE(cssurvey, 0), COALESCE(project_id, 0), COALESCE(audience_id, 0), COALESCE(triage_population, 0), COALESCE(conformance_id, 0), COALESCE(triage_maturity, 0), COALESCE(triage_management, 0), COALESCE(tech_id, 0), COALESCE(priority_score, 0), status, ipaddress, exactTime, firstsprintenddate, firstsprintstartdate, sprintdefects, sprintschedule, navigation_data_id, technology_id, expectedUsers_id, technologySecVal
-    FROM tbltriage
-    WHERE id = '$requestid';
-    ";
-    if (mysqli_query($link, $sql_insert)) {
-		$newRequestId = mysqli_insert_id($link);
-		rmt_refresh_request_catalogue_snapshot($link, (int) $newRequestId);
-        if($toclose == "1" || $toclose == 1){
-            $sql_update = "UPDATE tbltriage SET statusid = 2 where id = '$requestid'";
-            mysqli_query($link,$sql_update);
-        }     
-		$indexPage = ($_SESSION['lang'] === 'fr') ? 'index-fr.php' : 'index-en.php';
-		header("location:/$indexPage");
+	$selection = rmt_validate_intake_selection($link, $catalogueid, $serviceid, $subserviceid);
+	if ($requestid <= 0 || $selection === null) {
+		header("Location: /clonerequest.php?lang={$_SESSION['lang']}&status=failed");
 		exit();
-    } else {
-		error_log('Request clone failed: ' . mysqli_error($link));
-		$newrequestPage = ($_SESSION['lang'] === 'fr') ? 'newrequest-fr.php' : 'newrequest-en.php';
-		header("location:/$newrequestPage?status=accessdenied");
+	}
+	$sourceRequest = rmt_db_fetch_one($link, 'SELECT requestid FROM tbltriage WHERE id = ?', 'i', [$requestid]);
+	if (!$sourceRequest) {
+		header("Location: /clonerequest.php?lang={$_SESSION['lang']}&status=failed");
 		exit();
-    }
+	}
+
+	$year = date('y');
+	$requestPattern = "REQ-{$year}-%";
+	$sequenceRow = rmt_db_fetch_one(
+		$link,
+		'SELECT MAX(CAST(SUBSTRING(requestid, 8) AS UNSIGNED)) AS max_seq
+		 FROM tbltriage
+		 WHERE requestid LIKE ?',
+		's',
+		[$requestPattern]
+	);
+	$sequence = ((int) ($sequenceRow['max_seq'] ?? 0)) + 1;
+	$newRequestid = sprintf('REQ-%s-%03d', $year, $sequence);
+
+	$sqlInsert = "INSERT INTO tbltriage (requestid, title, request_subject, clientlname, clientfname, clientemail, clientphone, requestlang, datereceived, dateupdated, daterequired, dateresolved, slatimer, statusid, bdm, catalogueid, serviceid, subserviceid, attach1, attach2, attach3, creatorid, updaterid, workerid, closesla, pastsla, cssurvey, project_id, audience_id, triage_population, conformance_id, triage_maturity, triage_management, tech_id, priority_score, status, ipaddress, exactTime, firstsprintenddate, firstsprintstartdate, sprintdefects, sprintschedule)
+		SELECT ?, CASE WHEN INSTR(COALESCE(title, ''), ' - ') > 0 THEN CONCAT(?, SUBSTRING(title, INSTR(title, ' - '))) ELSE ? END, request_subject, clientlname, clientfname, clientemail, clientphone, COALESCE(requestlang, 'en'), CURDATE(), dateupdated, daterequired, NULL, CURDATE(), 1, COALESCE(bdm, 0), ?, ?, ?, attach1, attach2, attach3, COALESCE(creatorid, 0), COALESCE(updaterid, 0), COALESCE(workerid, 0), COALESCE(closesla, 0), COALESCE(pastsla, 0), COALESCE(cssurvey, 0), COALESCE(project_id, 0), COALESCE(audience_id, 0), COALESCE(triage_population, 0), COALESCE(conformance_id, 0), COALESCE(triage_maturity, 0), COALESCE(triage_management, 0), COALESCE(tech_id, 0), COALESCE(priority_score, 0), status, ipaddress, exactTime, firstsprintenddate, firstsprintstartdate, sprintdefects, sprintschedule
+		FROM tbltriage
+		WHERE id = ?";
+	$insertStatement = rmt_db_execute(
+		$link,
+		$sqlInsert,
+		'sssiiii',
+		[$newRequestid, $newRequestid, $newRequestid, $selection['catalogueid'], $selection['serviceid'], $selection['subserviceid'], $requestid]
+	);
+	$newRequestId = mysqli_insert_id($link);
+	mysqli_stmt_close($insertStatement);
+	rmt_refresh_request_catalogue_snapshot($link, (int) $newRequestId);
+
+	$cloneLogNote = ($_SESSION['lang'] === 'fr' ? 'Clonée à partir de la demande ' : 'Cloned from request ')
+		. $sourceRequest['requestid'];
+	$cloneLogStatement = rmt_db_execute(
+		$link,
+		'INSERT INTO tblcommlog (triageid, dateadded, notes, creatorid, status) VALUES (?, CURDATE(), ?, ?, 1)',
+		'isi',
+		[(int) $newRequestId, $cloneLogNote, (int) ($_SESSION['pid'] ?? 0)]
+	);
+	mysqli_stmt_close($cloneLogStatement);
+
+	if ($toclose === 1) {
+		$closeStatement = rmt_db_execute($link, 'UPDATE tbltriage SET statusid = 5 WHERE id = ?', 'i', [$requestid]);
+		mysqli_stmt_close($closeStatement);
+	}
+
+	$editRequestUrl = '/editrequest.php?lang=' . urlencode($_SESSION['lang'])
+		. '&erid=' . urlencode(base64_encode((string) $newRequestId))
+		. '&reqid=' . urlencode('a11y-' . $newRequestid);
+	header("Location: {$editRequestUrl}");
+	exit();
 
 
 
@@ -216,14 +203,20 @@ include 'includes/template/header.php';
                 </select>
             </div>
             <?php 
-			// Check if catalogueid is not empty
-			if ($catalogueid!="") 
+			// Only require a service when the catalogue has active services.
+			$catalogueHasServices = false;
+			if ($catalogueid != "") {
+				$serviceCheck = mysqli_query($link, "SELECT 1 FROM tblservices WHERE catalogueid='$catalogueid' AND status='1' LIMIT 1");
+				$catalogueHasServices = $serviceCheck && mysqli_num_rows($serviceCheck) > 0;
+			}
+
+			if ($catalogueHasServices)
 			{
 				
 				
 			?>
             <div class="form-group divservice">
-                <label for="serviceid"><span class="field-name"><?= htmlspecialchars($langFile['service_name']) ?> <strong>(<?= htmlspecialchars($langFile['required']) ?>)</strong></span></label>
+				<label for="serviceid"><span class="field-name"><?= htmlspecialchars($langFile['service_name']) ?> <strong>(<?= htmlspecialchars($langFile['required']) ?>)</strong></span></label>
                 <select class="form-control" id="serviceid" name="serviceid" onchange="ajax2(this.value)" required>
                     <option value=""><?= htmlspecialchars($langFile['select_service']) ?></option>
                     <?php 
