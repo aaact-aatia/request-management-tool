@@ -38,6 +38,7 @@ $translations = [
 		'language_french' => 'French',
 		'send_email' => 'Send email',
 		'department_agency' => 'Department/agency',
+		'no_department_selected' => 'No department selected',
 		'client_phone' => 'Client phone number',
 		'source' => 'Source',
 		'sprint_start' => 'Sprint Start Date',
@@ -172,6 +173,7 @@ $translations = [
 		'language_french' => 'Francais',
 		'send_email' => 'Envoyer un courriel',
 		'department_agency' => 'Ministère/organisme',
+		'no_department_selected' => 'Aucun ministère ou organisme sélectionné',
 		'client_phone' => 'Numéro de téléphone client',
 		'source' => 'Source',
 		'sprint_start' => 'Date de début du sprint',
@@ -693,6 +695,10 @@ if(mysqli_num_rows($result)>0){
 					<dd><?php echo $audiencename ?></dd>
 				</div>
 				<?php } ?>
+				<div style="break-inside: avoid;">
+					<dt><?= $t['department_agency'] ?></dt>
+					<dd><?php echo $departmentAgency !== '' ? htmlspecialchars($departmentAgency, ENT_QUOTES, 'UTF-8') : htmlspecialchars($t['no_department_selected'], ENT_QUOTES, 'UTF-8'); ?></dd>
+				</div>
 				<?php if ($row['firstsprintstartdate'] != "") { ?>
 				<div style="break-inside: avoid;">
 					<dt><?= $t['sprint_start'] ?></dt>
@@ -770,12 +776,6 @@ if(mysqli_num_rows($result)>0){
 				<div style="break-inside: avoid;">
 					<dt><?= $t['client_phone'] ?></dt>
 					<dd><?php echo htmlspecialchars($row['clientphone']) ?></dd>
-				</div>
-				<?php } ?>
-				<?php if ($departmentAgency != "") { ?>
-				<div style="break-inside: avoid;">
-					<dt><?= $t['department_agency'] ?></dt>
-					<dd><?php echo htmlspecialchars($departmentAgency, ENT_QUOTES, 'UTF-8'); ?></dd>
 				</div>
 				<?php } ?>
 			</dl>
