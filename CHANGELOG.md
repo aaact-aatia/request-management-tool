@@ -335,6 +335,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Regenerate CHANGELOG.md [skip ci] ([603bf94](https://github.com/aaact-aatia/request-management-tool/commit/603bf945ce2535557395250d4f9d297749731eb3))
 
+- Regenerate CHANGELOG.md [skip ci] ([b4069f9](https://github.com/aaact-aatia/request-management-tool/commit/b4069f9da7e4f94dd7c3e384cee4fb48ba024db9))
+
 
 ### Fixed
 
@@ -497,6 +499,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 - Hide resolved dates on active requests ([868d1cf](https://github.com/aaact-aatia/request-management-tool/commit/868d1cf25f5e55651d6faa8b3e09b4973fb7e593))
 
 - Require department on intake form ([ffc5854](https://github.com/aaact-aatia/request-management-tool/commit/ffc585456a387014bddf469d35531fed7ce6f435))
+
+- Modernize request cloning workflow ([d7eae72](https://github.com/aaact-aatia/request-management-tool/commit/d7eae72aa67005ebb43f512ca461acf87d99a506))
 
 
 ### Other
