@@ -102,11 +102,17 @@ else{
 
 $effectiveAtype = (int)($_SESSION['atype'] ?? 0);
 $isTeamLeadAccount = ($effectiveAtype === 4);
-$searchScope = $isTeamLeadAccount ? (($_GET['searchscope'] ?? 'team') === 'all' ? 'all' : 'team') : 'all';
+$isEmployeeAccount = ($effectiveAtype === 5);
+$searchScope = $isTeamLeadAccount ? (($_GET['searchscope'] ?? 'team') === 'all' ? 'all' : 'team') : 'team';
 $userTeamIds = [];
 if ($isTeamLeadAccount) {
 	$userTeamIds = getEffectiveTeamIds($link);
+} elseif ($isEmployeeAccount) {
+	$userTeamIds = getEffectiveEmployeeTeamIds($link);
 }
+$employeeTeamIds = array_values(array_filter(array_map('intval', $userTeamIds), static function ($teamId) {
+	return $teamId > 0;
+}));
 
 // Process search if any parameters are submitted. A request with only the hidden
 // language value is an intentional unfiltered search and shows all active requests.
@@ -227,7 +233,7 @@ if ($hasSearchParams){
 	$SQLSV = substr($SQLSV, 0, $last_space_position);
 
 	$teamScopeClause = "";
-	if ($isTeamLeadAccount && $searchScope !== 'all') {
+	if (($isTeamLeadAccount && $searchScope !== 'all') || $isEmployeeAccount) {
 		if (empty($userTeamIds)) {
 			$teamScopeClause = " AND 1=0";
 		} else {
@@ -371,7 +377,13 @@ include 'includes/template/head.php';
 						<select class="form-control" id="catalogueid" name="catalogueid" onchange="ajax1(this.value)">
 							<option value=""><?= htmlspecialchars($langFile['select_catalogue']) ?></option>
 							<?php
-							$sql2 = "SELECT * FROM tblcatalogue WHERE status='1' ORDER BY $nameField ASC";
+							$catalogueScopeFilter = '';
+							if ($isEmployeeAccount) {
+								$catalogueScopeFilter = empty($employeeTeamIds)
+									? ' AND 1 = 0'
+									: " AND (contactid IN (" . implode(',', $employeeTeamIds) . ") OR EXISTS (SELECT 1 FROM tblservices s LEFT JOIN tblsubservices ss ON ss.serviceid = s.id AND ss.status = 1 WHERE s.catalogueid = tblcatalogue.id AND COALESCE(NULLIF(ss.contactid, 0), NULLIF(s.contactid, 0), tblcatalogue.contactid) IN (" . implode(',', $employeeTeamIds) . ")))";
+							}
+							$sql2 = "SELECT * FROM tblcatalogue WHERE status='1'" . $catalogueScopeFilter . " ORDER BY $nameField ASC";
 							$result2 = mysqli_query($link,$sql2);
 							while($row2 = mysqli_fetch_array($result2)){
 							?>
