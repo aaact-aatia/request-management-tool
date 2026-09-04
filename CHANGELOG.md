@@ -327,6 +327,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Regenerate CHANGELOG.md [skip ci] ([9d0dd4c](https://github.com/aaact-aatia/request-management-tool/commit/9d0dd4cc8b0d5a4aa2c49378a12f204defe328a8))
 
+- Regenerate CHANGELOG.md [skip ci] ([1310a4f](https://github.com/aaact-aatia/request-management-tool/commit/1310a4ffa114bf5a09b3ea89bec295a6b1a0ca26))
+
 
 ### Fixed
 
@@ -483,6 +485,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 - Correct French catalogue apostrophe ([56eb56e](https://github.com/aaact-aatia/request-management-tool/commit/56eb56e8a5a1bfd519e3658b0166a2d1a82b8310))
 
 - Add unassigned request filter ([8d330da](https://github.com/aaact-aatia/request-management-tool/commit/8d330dac096784a61bb1d57a37badc2885892c24))
+
+- Show request logs to authenticated users ([d1427e2](https://github.com/aaact-aatia/request-management-tool/commit/d1427e248f7337499cb80ae751b780002dfa9f9c))
 
 
 ### Other
