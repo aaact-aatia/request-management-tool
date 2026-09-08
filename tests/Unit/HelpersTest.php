@@ -42,8 +42,9 @@ class HelpersTest extends TestCase
         $_SESSION['is_role_test_mode'] = 1;
         $this->assertTrue(isRoleTestMode());
 
-        $_SESSION['atype'] = $_SESSION['primary_atype'];
-        $this->assertFalse(isRoleTestMode());
+        $_SESSION['atype'] = 5;
+        $_SESSION['primary_atype'] = 5;
+        $this->assertTrue(isRoleTestMode());
     }
 
     public function testCanEditRequests()

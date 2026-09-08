@@ -18,9 +18,7 @@ if (isset($_SERVER['SCRIPT_FILENAME']) && realpath(__FILE__) === realpath((strin
 
 function isRoleTestMode() {
     return (isset($_SESSION['is_superuser']) && (int)$_SESSION['is_superuser'] === 1)
-    && !empty($_SESSION['is_role_test_mode'])
-    && isset($_SESSION['atype'], $_SESSION['primary_atype'])
-    && (int)$_SESSION['atype'] !== (int)$_SESSION['primary_atype'];
+        && !empty($_SESSION['is_role_test_mode']);
 }
 
 function isSuperAdmin() {
@@ -133,7 +131,7 @@ function employeeCanAccessTeamRequest($link, array $request): bool {
 }
 
 function isReadOnly() {
-    // If superuser is in test mode (atype != primary_atype), apply readonly based on test atype
+    // If superuser is in explicit test mode, apply readonly based on test atype
     // Otherwise, superusers are never read-only
     $inTestMode = isRoleTestMode();
     
