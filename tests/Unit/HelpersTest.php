@@ -12,7 +12,11 @@ class HelpersTest extends TestCase
         // Reset session state before each test
         $_SESSION = [
             'lang' => 'en',
-            'atype' => 1,
+            'atype' => 3,
+            'primary_atype' => 3,
+            'is_role_test_mode' => 0,
+            'is_superuser' => 0,
+            'is_admin' => 0,
             'pid' => 1
         ];
     }
@@ -23,29 +27,38 @@ class HelpersTest extends TestCase
 
     public function testIsAdmin()
     {
-        $_SESSION['atype'] = 1;
+        $_SESSION['is_superuser'] = 1;
         $this->assertTrue(isAdmin());
-        
-        $_SESSION['atype'] = 2;
+
+        $_SESSION['is_role_test_mode'] = 1;
         $this->assertFalse(isAdmin());
+    }
+
+    public function testRoleTestModeUsesExplicitSessionState()
+    {
+        $_SESSION['is_superuser'] = 1;
+        $this->assertFalse(isRoleTestMode());
+
+        $_SESSION['is_role_test_mode'] = 1;
+        $this->assertTrue(isRoleTestMode());
     }
 
     public function testCanEditRequests()
     {
-        $allowedTypes = [1, 2, 3, 4, 6];
+        $allowedTypes = [3, 4, 5];
         
         foreach ($allowedTypes as $type) {
             $_SESSION['atype'] = $type;
             $this->assertTrue(canEditRequests(), "Account type $type should be able to edit requests");
         }
         
-        $_SESSION['atype'] = 5;
+        $_SESSION['atype'] = 6;
         $this->assertFalse(canEditRequests());
     }
 
     public function testCanManageSLA()
     {
-        $allowedTypes = [1, 2, 3, 4];
+        $allowedTypes = [3];
         
         foreach ($allowedTypes as $type) {
             $_SESSION['atype'] = $type;
@@ -61,7 +74,7 @@ class HelpersTest extends TestCase
         $_SESSION['atype'] = 6;
         $this->assertTrue(isReadOnly());
         
-        $_SESSION['atype'] = 1;
+        $_SESSION['is_superuser'] = 1;
         $this->assertFalse(isReadOnly());
     }
 

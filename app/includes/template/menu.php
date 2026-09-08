@@ -11,8 +11,8 @@ if (isset($_SERVER['SCRIPT_FILENAME']) && realpath(__FILE__) === realpath((strin
  * Renders the main navigation menu for desktop/tablet views.
  * Menu items are conditionally displayed based on authentication and permissions:
  * - $_SESSION['pid']: User is authenticated
- * - $_SESSION['atype'] == 1: Super admin (full access)
- * - $_SESSION['atype'] == 2: Admin (limited admin access)
+ * - $_SESSION['is_superuser'] == 1: Super admin (full access)
+ * - $_SESSION['is_admin'] == 1: Admin access
  */
 
 // Set language from session (already initialized in header.php)
@@ -20,13 +20,11 @@ $lang_code = $_SESSION['lang'] ?? 'en';
 
 // Resolve effective permissions for menu visibility
 // Use permission flags for admin access instead of account type
-$isTestingDifferentType = isset($_SESSION['is_superuser']) && $_SESSION['is_superuser'] == 1 && isset($_SESSION['atype']) && (int)$_SESSION['atype'] !== 1;
+$isTestingDifferentType = !empty($_SESSION['is_superuser']) && !empty($_SESSION['is_role_test_mode']);
 $isSuperAdmin = !$isTestingDifferentType && isset($_SESSION['is_superuser']) && $_SESSION['is_superuser'] == 1;
 $effectiveAtype = (int)($_SESSION['atype'] ?? 0);
 $isAdminAccount = !$isTestingDifferentType && (
-	(isset($_SESSION['is_admin']) && $_SESSION['is_admin'] == 1) ||
-	$effectiveAtype === 2 ||
-	$effectiveAtype === 1
+	isset($_SESSION['is_admin']) && $_SESSION['is_admin'] == 1
 );
 $isDirector = !empty($_SESSION['pid']) && $effectiveAtype === 6;
 $isEmployee = !empty($_SESSION['pid']) && $effectiveAtype === 5;

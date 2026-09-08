@@ -339,8 +339,8 @@ if (!empty($_SESSION['pid'])):
 		<strong><?= $langCode === 'en' ? 'You are logged in as:' : 'Vous êtes connecté en tant que :' ?></strong>
         <?= htmlspecialchars($_SESSION['firstname'] . ' (' . $_SESSION['email'] . ')') ?>
         <?php 
-        // Show testing notice if superuser and atype != 1 (meaning they're testing)
-        if ($_SESSION['is_superuser'] == 1 && $_SESSION['atype'] != 1) {
+		// Show testing notice while a superuser is using an explicit test role.
+		if (!empty($_SESSION['is_superuser']) && !empty($_SESSION['is_role_test_mode'])) {
             // Get the current testing account type name
             $testAtype = $_SESSION['atype'];
 			$nameField = ($langCode === 'fr') ? 'namefr' : 'nameen';
