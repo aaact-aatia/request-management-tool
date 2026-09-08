@@ -47,7 +47,7 @@ $effectiveAtype = (int)($_SESSION['atype'] ?? 0);
 $isEmployeeAccount = $effectiveAtype === 5;
 $isTeamScopedAccount = in_array($effectiveAtype, [3, 4], true);
 $isAdministrativeAccount = !isRoleTestMode() && (
-	!empty($_SESSION['is_superuser']) || !empty($_SESSION['is_admin']) || in_array($effectiveAtype, [1, 2], true)
+	!empty($_SESSION['is_superuser']) || !empty($_SESSION['is_admin'])
 );
 $showOtherTeamRequests = $isTeamScopedAccount && isset($_GET['show_other_team']) && $_GET['show_other_team'] === '1';
 $showTeamRequests = $isEmployeeAccount && isset($_GET['show_team']) && $_GET['show_team'] === '1';

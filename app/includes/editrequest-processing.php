@@ -593,7 +593,7 @@ if (($cserviceid != $serviceid || $csubserviceid != $subserviceid) && $contactid
 $prevWorkerIdInt = (int) ($prevWorkerid ?? 0);
 $workerIdInt = (int) ($workerid ?? 0);
 if ($workerIdInt > 0 && $workerIdInt !== $prevWorkerIdInt) {
-    $workerResult = mysqli_query($link, "SELECT firstname, lastname, email, atype FROM tblusers WHERE id = '$workerIdInt' AND status = '1' LIMIT 1");
+    $workerResult = mysqli_query($link, "SELECT firstname, lastname, email, atype, is_superuser, is_admin FROM tblusers WHERE id = '$workerIdInt' AND status = '1' LIMIT 1");
     $workerRow = $workerResult ? mysqli_fetch_assoc($workerResult) : null;
     $workerEmail = trim((string) ($workerRow['email'] ?? ''));
 
@@ -606,12 +606,13 @@ if ($workerIdInt > 0 && $workerIdInt !== $prevWorkerIdInt) {
 
         $workerRoleKey = 'assignee';
         $workerAtype = (int) ($workerRow['atype'] ?? 0);
-        if ($workerAtype === 3) {
+        $workerHasAdminRole = !empty($workerRow['is_superuser']) || !empty($workerRow['is_admin']);
+        if ($workerHasAdminRole) {
+            $workerRoleKey = 'admin';
+        } elseif ($workerAtype === 3) {
             $workerRoleKey = 'manager';
         } elseif ($workerAtype === 4) {
             $workerRoleKey = 'team_lead';
-        } elseif ($workerAtype === 1) {
-            $workerRoleKey = 'admin';
         }
 
         $reassignedTemplate = app_notify_template_id('notification_generic');
