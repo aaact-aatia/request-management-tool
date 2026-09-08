@@ -70,13 +70,7 @@ function canDeleteRequests() {
 }
 
 function canCloneRequests() {
-    if (isRoleTestMode()) {
-        return isset($_SESSION['atype']) && in_array((int)$_SESSION['atype'], [3, 4, 6], true);
-    }
-
-    return !empty($_SESSION['is_superuser'])
-        || !empty($_SESSION['is_admin'])
-        || (isset($_SESSION['atype']) && in_array((int)$_SESSION['atype'], [1, 3, 4, 6], true));
+    return isSuperAdmin();
 }
 
 function canManageSLA() {
