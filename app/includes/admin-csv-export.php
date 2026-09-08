@@ -95,7 +95,7 @@ fputcsv($output, ['# ID values and their meanings:']);
 // Table-specific legends
 $legends = [
 	'tblusers' => [
-		'# atype: 1=Super Admin, 2=Admin, 3=Manager, 4=Team Lead, 5=Employee, 6=Director',
+		'# atype: 3=Manager, 4=Team Lead, 5=Employee, 6=Director',
 		'# is_superuser: 0=No, 1=Yes',
 		'# is_admin: 0=No, 1=Yes',
 		'# team: Comma-separated Team IDs (e.g., 1,3,5)',

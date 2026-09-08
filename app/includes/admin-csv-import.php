@@ -173,6 +173,22 @@ while (($row = fgetcsv($handle)) !== false) {
 		continue;
 	}
 
+	if ($table === 'tblusers') {
+		$importAtype = trim((string)($assoc['atype'] ?? ''));
+		$importSuperuser = trim((string)($assoc['is_superuser'] ?? ''));
+		$importAdmin = trim((string)($assoc['is_admin'] ?? ''));
+		if (!in_array($importAtype, ['3', '4', '5', '6'], true)) {
+			$failCount++;
+			$errorDetails[] = 'Invalid user account type; expected 3, 4, 5, or 6.';
+			continue;
+		}
+		if (!in_array($importSuperuser, ['0', '1'], true) || !in_array($importAdmin, ['0', '1'], true)) {
+			$failCount++;
+			$errorDetails[] = 'Invalid user privilege flag; expected 0 or 1.';
+			continue;
+		}
+	}
+
 	// Legacy schema compatibility for tblteams.
 	// If old required contact fields exist in DB, derive sensible defaults from team data.
 	if ($table === 'tblteams') {
