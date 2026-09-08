@@ -408,6 +408,14 @@ if (!empty($_SESSION['pid'])):
 					echo htmlspecialchars(!empty($teamNames) ? implode(', ', $teamNames) : ($langCode === 'en' ? 'None selected' : 'Aucune sélectionnée'));
 					echo '</span>';
 				}
+
+				?>
+				<form method="post" action="/includes/switch-account-type.php" style="display: inline; margin-left: .5em;">
+					<button type="submit" name="reset_atype" value="1" class="btn btn-link">
+						<?= $langCode === 'fr' ? 'Réinitialiser au super administrateur' : 'Reset to Super Admin' ?>
+					</button>
+				</form>
+				<?php
             }
         }
         ?>
