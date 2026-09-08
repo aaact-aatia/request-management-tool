@@ -180,8 +180,8 @@ include 'includes/template/head.php';
 						}
 					}
 					$extraRoleLabels = [];
-					$isSuperRole = $hasSuperRoleColumn ? ((int)($row['is_superuser'] ?? 0) === 1) : ((int)$accounttypeid === 1);
-					$isAdminRole = $hasAdminRoleColumn ? ((int)($row['is_admin'] ?? 0) === 1) : in_array((int)$accounttypeid, [1, 2], true);
+					$isSuperRole = $hasSuperRoleColumn && ((int)($row['is_superuser'] ?? 0) === 1);
+					$isAdminRole = $hasAdminRoleColumn && ((int)($row['is_admin'] ?? 0) === 1);
 
 					if ($isSuperRole) {
 						$extraRoleLabels[] = ($_SESSION['lang'] === 'fr') ? 'Super administrateur' : 'Super Admin';
