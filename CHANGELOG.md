@@ -347,6 +347,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Regenerate CHANGELOG.md [skip ci] ([ba100a2](https://github.com/aaact-aatia/request-management-tool/commit/ba100a271588cf8950e7cc1f4c1f6e26faf9e749))
 
+- Regenerate CHANGELOG.md [skip ci] ([4df04da](https://github.com/aaact-aatia/request-management-tool/commit/4df04daebef2ffe92ba857ce7b42422455985249))
+
 
 ### Fixed
 
@@ -517,6 +519,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 - Show department status on request view ([4f08497](https://github.com/aaact-aatia/request-management-tool/commit/4f08497f769f72acac4bb4e91706266ead849493))
 
 - Move super admin reset to account alert ([0dd03f5](https://github.com/aaact-aatia/request-management-tool/commit/0dd03f5a7af4c9c21e67898bfffb473161b31d81))
+
+- Hide language codes in request details ([4dc2ee3](https://github.com/aaact-aatia/request-management-tool/commit/4dc2ee3e0cf77acd2ebcd9abd1755982d8c27a9d))
 
 
 ### Other
