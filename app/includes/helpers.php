@@ -18,7 +18,9 @@ if (isset($_SERVER['SCRIPT_FILENAME']) && realpath(__FILE__) === realpath((strin
 
 function isRoleTestMode() {
     return (isset($_SESSION['is_superuser']) && (int)$_SESSION['is_superuser'] === 1)
-        && !empty($_SESSION['is_role_test_mode']);
+    && !empty($_SESSION['is_role_test_mode'])
+    && isset($_SESSION['atype'], $_SESSION['primary_atype'])
+    && (int)$_SESSION['atype'] !== (int)$_SESSION['primary_atype'];
 }
 
 function isSuperAdmin() {

@@ -27,8 +27,8 @@ $isAdminAccount = !$isTestingDifferentType && (
 	isset($_SESSION['is_admin']) && $_SESSION['is_admin'] == 1
 );
 $isDirector = !empty($_SESSION['pid']) && $effectiveAtype === 6;
-$isEmployee = !empty($_SESSION['pid']) && $effectiveAtype === 5;
-$isTeamScopedAccount = !empty($_SESSION['pid']) && in_array($effectiveAtype, [3, 4], true);
+$isEmployee = !empty($_SESSION['pid']) && !$isAdminAccount && !$isSuperAdmin && $effectiveAtype === 5;
+$isTeamScopedAccount = !empty($_SESSION['pid']) && !$isAdminAccount && !$isSuperAdmin && in_array($effectiveAtype, [3, 4], true);
 $isGlobalOverviewAccount = $isAdminAccount || $isSuperAdmin;
 $canSeeCoreNav = !empty($_SESSION['pid']) && (!isReadOnly() || $isDirector);
 
