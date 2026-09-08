@@ -652,7 +652,7 @@ include 'includes/template/head.php';
 				<!-- Row: Request language and client phone -->
 				<div class="row">
 					<div class="col-md-6">
-						<?php echo renderTextInput('requestlang_display', $t['request_language'], $originalRequestLangLabel . ' (' . $originalRequestLang . ')', false, true, 'text', '', true); ?>
+						<?php echo renderTextInput('requestlang_display', $t['request_language'], $originalRequestLangLabel, false, true, 'text', '', true); ?>
 					</div>
 					<div class="col-md-6">
 						<?php echo renderTextInput('clientphone', $t['client_phone'], $row['clientphone'], false, $readonly, 'tel', 'data-rule-phoneUS="true"', true); ?>
