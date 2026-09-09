@@ -1545,8 +1545,7 @@ function detectLanguage() {
 }
 
 function getIncludePath($file, $lang) {
-    $langSuffix = $lang === 'fr' ? '-fr' : '-en';
-    return str_replace('.php', "$langSuffix.php", $file);
+    return $file;
 }
 
 ?>
