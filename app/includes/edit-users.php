@@ -37,16 +37,6 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 		$isAdminRole = 1;
 	}
 
-	// Legacy compatibility: treat primary atype 1/2 as manager with elevated role flags.
-	if ($accounttype === '1') {
-		$accounttype = '3';
-		$isSuperuserRole = 1;
-		$isAdminRole = 1;
-	} elseif ($accounttype === '2') {
-		$accounttype = '3';
-		$isAdminRole = 1;
-	}
-
 	$selectedTeams = [];
 	if (!empty($_POST['teams']) && is_array($_POST['teams'])) {
 		foreach ($_POST['teams'] as $teamid) {
@@ -78,8 +68,8 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 
 	// Team assignment logic by account type
 	// Note: Superuser role doesn't prevent team assignments; it's an additional privilege
-	if ($accounttype == '1' || $accounttype == '2' || $accounttype == '6') {
-		// Super Admin, Admin, External: no teams
+	if ($accounttype == '6') {
+		// Director: no teams
 		$teamstring = "";
 	} elseif ($accounttype == '5') {
 		// Employee: 0 or 1 team
@@ -114,7 +104,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	
 	// Create SQL statement
 	$managerClause = "";
-	if (in_array($accounttype, ['1', '2', '3', '5', '6'], true)) {
+	if (in_array($accounttype, ['3', '5', '6'], true)) {
 		$managerClause = ", `manager_id` = NULL";
 	}
 	$hasSuperRoleColumn = rmt_db_column_exists($link, 'tblusers', 'is_superuser');
@@ -203,7 +193,7 @@ if(rmt_result_num_rows($result2)>0){
 			<label for="accounttype"><span class="field-name"><?php echo $label_accounttype ?> <strong>(<?php echo $required_label ?>)</strong></span></label>
 			<select class="form-control full-width" id="accounttype" name="accounttype" required>
 				<?php 
-				$sql3 = "SELECT * FROM tblaccounttype WHERE status='1' ORDER BY $sort_field ASC";
+				$sql3 = "SELECT * FROM tblaccounttype WHERE status='1' AND id BETWEEN 3 AND 6 ORDER BY $sort_field ASC";
 				$result3 = rmt_admin_query($link,$sql3);	
 				while($row3 = rmt_result_fetch_array($result3)){
 				?>

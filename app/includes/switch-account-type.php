@@ -24,8 +24,8 @@ $lang_code = $_SESSION['lang'] ?? 'en';
 
 // Handle reset to superadmin's actual role
 if (isset($_POST['reset_atype'])) {
-    // Set atype to 1 (full superadmin permissions), not to their database atype
-    $_SESSION['atype'] = 1;
+    $_SESSION['atype'] = (int)($_SESSION['primary_atype'] ?? 3);
+    $_SESSION['is_role_test_mode'] = 0;
     unset($_SESSION['test_team_ids']);
     unset($_SESSION['test_employee_id']);
     
@@ -46,6 +46,7 @@ if (isset($_POST['test_atype'])) {
     if (mysqli_num_rows($result) > 0) {
         // Valid account type - switch to it
         $_SESSION['atype'] = $newAtype;
+             $_SESSION['is_role_test_mode'] = 1;
 
         if (in_array((int)$newAtype, [3, 4], true) && $testTeamId !== '' && ctype_digit($testTeamId)) {
 			$teamCheck = mysqli_query($link, "SELECT id FROM tblteams WHERE id = '$testTeamId' AND status = 1 LIMIT 1");

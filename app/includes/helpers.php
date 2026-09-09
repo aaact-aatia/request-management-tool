@@ -17,10 +17,8 @@ if (isset($_SERVER['SCRIPT_FILENAME']) && realpath(__FILE__) === realpath((strin
 // ============================================================================
 
 function isRoleTestMode() {
-    // Superadmin test mode is active when they switch to any non-superadmin atype.
     return (isset($_SESSION['is_superuser']) && (int)$_SESSION['is_superuser'] === 1)
-        && isset($_SESSION['atype'])
-        && (int)$_SESSION['atype'] !== 1;
+        && !empty($_SESSION['is_role_test_mode']);
 }
 
 function isSuperAdmin() {
@@ -31,9 +29,7 @@ function isSuperAdmin() {
         return false;
     }
 
-    $isSuperuserFlag = isset($_SESSION['is_superuser']) && $_SESSION['is_superuser'] == 1;
-    $isAtypeSuperadmin = isset($_SESSION['atype']) && (int) $_SESSION['atype'] === 1;
-    return $isSuperuserFlag || $isAtypeSuperadmin;
+    return isset($_SESSION['is_superuser']) && (int) $_SESSION['is_superuser'] === 1;
 }
 
 // Alias for backward compatibility - DO NOT USE, prefer isSuperAdmin()
@@ -46,12 +42,11 @@ function canEditRequests() {
     $inTestMode = isRoleTestMode();
 
     if ($inTestMode) {
-        return isset($_SESSION['atype']) && in_array((int) $_SESSION['atype'], [1, 3, 4, 5], true);
+        return isset($_SESSION['atype']) && in_array((int) $_SESSION['atype'], [3, 4, 5], true);
     }
 
     $isAdminOrSuperuser = (isset($_SESSION['is_superuser']) && $_SESSION['is_superuser']) || 
-                         (isset($_SESSION['is_admin']) && $_SESSION['is_admin']) ||
-                         (isset($_SESSION['atype']) && (int) $_SESSION['atype'] === 1);
+                         (isset($_SESSION['is_admin']) && $_SESSION['is_admin']);
 
     return $isAdminOrSuperuser || (isset($_SESSION['atype']) && in_array($_SESSION['atype'], [3, 4, 5]));
 }
@@ -61,12 +56,11 @@ function canDeleteRequests() {
     $inTestMode = isRoleTestMode();
 
     if ($inTestMode) {
-        return isset($_SESSION['atype']) && (int) $_SESSION['atype'] === 1;
+        return false;
     }
 
         return (isset($_SESSION['is_superuser']) && $_SESSION['is_superuser']) ||
-            (isset($_SESSION['is_admin']) && $_SESSION['is_admin']) ||
-            (isset($_SESSION['atype']) && (int) $_SESSION['atype'] === 1);
+            (isset($_SESSION['is_admin']) && $_SESSION['is_admin']);
 }
 
 function canCloneRequests() {
@@ -137,7 +131,7 @@ function employeeCanAccessTeamRequest($link, array $request): bool {
 }
 
 function isReadOnly() {
-    // If superuser is in test mode (atype != primary_atype), apply readonly based on test atype
+    // If superuser is in explicit test mode, apply readonly based on test atype
     // Otherwise, superusers are never read-only
     $inTestMode = isRoleTestMode();
     

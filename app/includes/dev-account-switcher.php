@@ -9,7 +9,7 @@ if (isset($_SERVER['SCRIPT_FILENAME']) && realpath(__FILE__) === realpath((strin
  * 
  * This component allows superadmin users to switch between different account types
  * for testing purposes. Only visible when:
- * - User is logged in as superadmin (atype == 1)
+ * - User is logged in as superadmin (is_superuser == 1)
  * - User has their actual superadmin credentials
  * 
  * @package RMT
@@ -50,7 +50,7 @@ if (isset($_SESSION['pid']) && ($_SESSION['is_superuser'] == 1)) {
                             </option>
                         <?php endforeach; ?>
                     </select>
-                    <?php if ((int)$currentAtype !== 1): ?>
+                    <?php if (!empty($_SESSION['is_role_test_mode'])): ?>
                         <button type="submit" name="reset_atype" value="1" class="btn btn-sm btn-warning">
                             <?php echo $lang_code == 'fr' ? 'Réinitialiser au super admin' : 'Reset to Super Admin'; ?>
                         </button>

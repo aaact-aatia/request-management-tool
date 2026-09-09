@@ -71,9 +71,8 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 		} else {
 			// Password correct
 			$primaryAtype = (int)$row['atype'];
-			// Preserve legacy account-type permissions when migrated rows have role flags unset.
-			$isSuperuser = ((int)($row['is_superuser'] ?? 0) === 1) || $primaryAtype === 1;
-			$isAdmin = ((int)($row['is_admin'] ?? 0) === 1) || in_array($primaryAtype, [1, 2], true);
+			$isSuperuser = (int)($row['is_superuser'] ?? 0) === 1;
+			$isAdmin = (int)($row['is_admin'] ?? 0) === 1;
 			if ($isSuperuser) {
 				$isAdmin = true;
 			}
@@ -82,9 +81,8 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 			$_SESSION['primary_atype'] = $primaryAtype;
 			$_SESSION['is_superuser'] = $isSuperuser ? 1 : 0;
 			$_SESSION['is_admin'] = $isAdmin ? 1 : 0;
-			// On normal login (not in test mode), superusers get atype=1 for full permissions
-			// Non-superusers get their database atype. Testing mode overrides this in settings.
-			$_SESSION['atype'] = $isSuperuser ? 1 : $primaryAtype;
+			$_SESSION['is_role_test_mode'] = 0;
+			$_SESSION['atype'] = $primaryAtype;
 			$_SESSION['firstname']=$row['firstname'];
 			$_SESSION['email']=$row['email'];
 			$team = trim((string)($row['team'] ?? ''));

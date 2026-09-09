@@ -9,6 +9,7 @@ unset($_SESSION["firstname"]);
 unset($_SESSION["email"]);
 unset($_SESSION["atype"]);
 unset($_SESSION["primary_atype"]);
+unset($_SESSION["is_role_test_mode"]);
 unset($_SESSION["is_superuser"]);
 unset($_SESSION["is_admin"]);
 
