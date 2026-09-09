@@ -326,6 +326,7 @@ require('BlobStorage.php');
 require('includes/httpscheck.php');
 require('includes/sla-calculator.php');
 require('includes/helpers.php');
+require('includes/loggedincheck.php');
 
 $status = getGetValue('status');
 $successDetailMessages = ['messages' => [], 'changed_fields' => []];
@@ -995,10 +996,8 @@ require_once __DIR__ . '/includes/csrf.php';
 				if ($resolvedClientEmail === '') {
 					$resolvedActionStatus = 'missing_email';
 				} else {
-					$requestLanguage = rmt_get_request_language($link, (int) $triageid, $lang);
 					$encodedTriageId = base64_encode((string) $triageid);
 					$encodedRequestPublicId = urlencode('a11y-' . (string) $row['requestid']);
-					$requestViewUrl = app_url('viewrequest.php?lang=' . $requestLanguage . '&erid=' . $encodedTriageId . '&reqid=' . $encodedRequestPublicId);
 					$frSurveyLink = app_url('client-survey.php?lang=fr&erid=' . $encodedTriageId . '&reqid=' . $encodedRequestPublicId);
 					$enSurveyLink = app_url('client-survey.php?lang=en&erid=' . $encodedTriageId . '&reqid=' . $encodedRequestPublicId);
 
@@ -1006,7 +1005,6 @@ require_once __DIR__ . '/includes/csrf.php';
 						'requestid' => (string) $row['requestid'],
 						'client_fname' => (string) ($row['clientfname'] ?? ''),
 						'client_lname' => (string) ($row['clientlname'] ?? ''),
-						'url' => $requestViewUrl,
 					];
 					if ($surveyEnabled) {
 						$resolvedContext['survey_link_en'] = $enSurveyLink;
@@ -1019,7 +1017,6 @@ require_once __DIR__ . '/includes/csrf.php';
 						'requesttitle' => (string) ($row['title'] ?? ''),
 						'client_fname' => (string) ($row['clientfname'] ?? ''),
 						'client_lname' => (string) ($row['clientlname'] ?? ''),
-						'url' => $requestViewUrl,
 						'notification_event' => 'resolved',
 						'template_category_id' => $category['id'],
 						'template_category_name_en' => $category['name_en'],

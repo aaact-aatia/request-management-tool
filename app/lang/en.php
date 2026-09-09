@@ -457,6 +457,8 @@ return [
     'settings_add_request_link' => 'Add request (admin only)',
     'settings_gcnotify_link' => 'GC Notify settings (admin only)',
     'settings_password_heading' => 'Reset password for Request Management Tool',
+    'intake_submitted_heading' => 'Request submitted',
+    'intake_submitted_message' => 'Your accessibility request was submitted successfully. We will contact you if more information is needed.',
 
     // GC Notify settings page (gcnotify-settings.php)
     'gcnotify_settings_heading' => 'GC Notify settings',

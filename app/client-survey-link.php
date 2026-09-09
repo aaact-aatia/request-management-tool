@@ -66,8 +66,6 @@ $isValidReturnTo = preg_match('#^/editrequest\.php\?#', $returnTo) === 1;
 if ($request !== null && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = isset($_POST['email_action']) ? trim((string) $_POST['email_action']) : '';
     $clientEmail = trim((string) ($request['clientemail'] ?? ''));
-    $requestLanguage = rmt_get_request_language($link, (int) $request['id'], $lang);
-    $requestViewUrl = app_url('viewrequest.php?lang=' . $requestLanguage . '&erid=' . base64_encode((string) $request['id']) . '&reqid=' . urlencode('a11y-' . (string) $request['requestid']));
 
     if ($clientEmail === '') {
         $actionStatus = 'missing_email';
@@ -84,7 +82,6 @@ if ($request !== null && $_SERVER['REQUEST_METHOD'] === 'POST') {
             'requestid' => (string) $request['requestid'],
             'client_fname' => (string) ($request['clientfname'] ?? ''),
             'client_lname' => (string) ($request['clientlname'] ?? ''),
-            'url' => $requestViewUrl,
         ];
         if ($surveyEnabled) {
             $resolvedContext['survey_link_en'] = $enLink;
@@ -97,7 +94,6 @@ if ($request !== null && $_SERVER['REQUEST_METHOD'] === 'POST') {
             'requesttitle' => (string) $request['title'],
             'client_fname' => (string) ($request['clientfname'] ?? ''),
             'client_lname' => (string) ($request['clientlname'] ?? ''),
-            'url' => $requestViewUrl,
             'notification_event' => 'resolved',
             'template_category_id' => $category['id'],
             'template_category_name_en' => $category['name_en'],

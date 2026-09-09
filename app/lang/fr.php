@@ -456,6 +456,8 @@ return [
     'settings_gcnotify_link' => 'Parametres GC Notify (admin. uniquement)',
 
     'settings_password_heading' => 'Réinitialisation du mot de passe',
+    'intake_submitted_heading' => 'Demande soumise',
+    'intake_submitted_message' => 'Votre demande d’accessibilité a été soumise avec succès. Nous communiquerons avec vous si des renseignements supplémentaires sont nécessaires.',
 
     // Page des parametres GC Notify (gcnotify-settings.php)
     'gcnotify_settings_heading' => 'Parametres GC Notify',

@@ -389,13 +389,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         
         // Always send to client for new submissions.
         $clientCategory = rmt_notification_template_category('request_created');
-        $clientPersonalisation = $personalisation + [
+        $clientNotificationContext = $personalisation;
+        unset($clientNotificationContext['url']);
+        $clientPersonalisation = $clientNotificationContext + [
             'notification_event' => 'request_created',
             'template_category_id' => $clientCategory['id'],
             'template_category_name_en' => $clientCategory['name_en'],
             'template_category_name_fr' => $clientCategory['name_fr'],
-            'subject' => rmt_notification_subject('request_created', 'client', $requestlang, $personalisation, $link, $contactid, $serviceid, $subserviceid),
-            'message' => rmt_notification_message('request_created', 'client', $requestlang, $personalisation, $link, $contactid, $serviceid, $subserviceid),
+            'subject' => rmt_notification_subject('request_created', 'client', $requestlang, $clientNotificationContext, $link, $contactid, $serviceid, $subserviceid),
+            'message' => rmt_notification_message('request_created', 'client', $requestlang, $clientNotificationContext, $link, $contactid, $serviceid, $subserviceid),
         ];
         if (rmt_notification_should_send($link, (int) $latestid, $contactid, 'client', 'request_created', $clientemail)) {
             sendEmail($clientemail, $template_id, json_encode($clientPersonalisation), ['recipientType' => 'client']);
@@ -428,13 +430,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 		
         // Always send to client for new submissions.
         $clientCategory = rmt_notification_template_category('request_created');
-        $clientPersonalisation = $personalisation + [
+        $clientNotificationContext = $personalisation;
+        unset($clientNotificationContext['url']);
+        $clientPersonalisation = $clientNotificationContext + [
             'notification_event' => 'request_created',
             'template_category_id' => $clientCategory['id'],
             'template_category_name_en' => $clientCategory['name_en'],
             'template_category_name_fr' => $clientCategory['name_fr'],
-            'subject' => rmt_notification_subject('request_created', 'client', $requestlang, $personalisation, $link, $contactid, $serviceid, $subserviceid),
-            'message' => rmt_notification_message('request_created', 'client', $requestlang, $personalisation, $link, $contactid, $serviceid, $subserviceid),
+            'subject' => rmt_notification_subject('request_created', 'client', $requestlang, $clientNotificationContext, $link, $contactid, $serviceid, $subserviceid),
+            'message' => rmt_notification_message('request_created', 'client', $requestlang, $clientNotificationContext, $link, $contactid, $serviceid, $subserviceid),
         ];
         if (rmt_notification_should_send($link, (int) $latestid, $contactid, 'client', 'request_created', $clientemail)) {
             sendEmail($clientemail, $template_id, json_encode($clientPersonalisation), ['recipientType' => 'client']);
@@ -444,7 +448,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     unset($_SESSION['openrequest_draft'], $_SESSION['openrequest_upload_error_message']);
     // Redirect to view request page
-    header("location:/viewrequest.php?lang=" . $lang . "&erid=" . $nrequestemailid . "&reqid=" . urlencode("a11y-" . $nrequestid) . "&status=newrequestcomplete");
+    header("location:/openrequest.php?lang=" . $lang . "&status=submitted");
     exit();
 }
 
