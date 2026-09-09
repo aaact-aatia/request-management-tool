@@ -96,7 +96,7 @@ check(rmt_can_access_request($link, ['workerid' => 20]), 'manager can access req
 $_SESSION = ['pid' => 10, 'atype' => 5];
 check(rmt_can_access_request($link, ['workerid' => 10]), 'assigned employee can access request attachments');
 check(!rmt_can_access_request($link, ['workerid' => 20]), 'unassigned employee cannot access request attachments');
-$_SESSION = ['pid' => 10, 'atype' => 5, 'primary_atype' => 1, 'is_superuser' => 1, 'is_admin' => 1];
+$_SESSION = ['pid' => 10, 'atype' => 5, 'primary_atype' => 3, 'is_role_test_mode' => 1, 'is_superuser' => 1, 'is_admin' => 1];
 check(!rmt_can_access_request($link, ['workerid' => 20]), 'role-test employee cannot inherit administrative attachment access');
 $_SESSION = $originalSession;
 
