@@ -374,7 +374,8 @@ include 'includes/template/head.php';
 		$row = mysqli_fetch_assoc($result);
 
 		$effectiveAtype = (int)($_SESSION['atype'] ?? 0);
-		if ($effectiveAtype === 4) {
+		$isAdministrativeAccess = !isRoleTestMode() && (isSuperAdmin() || isAdmin());
+		if ($effectiveAtype === 4 && !$isAdministrativeAccess) {
 			$teamIds = getEffectiveTeamIds($link);
 			$requestContactId = rmt_resolve_responsible_team_id(
 				$link,
@@ -387,7 +388,7 @@ include 'includes/template/head.php';
 				header("location:/requests.php?lang=$lang&status=accessdenied");
 				exit();
 			}
-		} elseif ($effectiveAtype === 5) {
+		} elseif ($effectiveAtype === 5 && !$isAdministrativeAccess) {
 			$effectiveEmployeeId = getEffectiveEmployeeUserId($link);
 			if ((int)($row['workerid'] ?? 0) !== $effectiveEmployeeId) {
 				header("location:/requests.php?lang=$lang&status=accessdenied");
