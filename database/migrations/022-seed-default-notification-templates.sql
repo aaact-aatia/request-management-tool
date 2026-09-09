@@ -12,22 +12,22 @@ INSERT IGNORE INTO `tblnotificationtemplates`
 VALUES
 (0, 0, 0, 'client', 'request_created', 'en',
  'Your accessibility request {{requestid}} has been received',
- 'Hello {{client_fname}} {{client_lname}},\n\nYour accessibility request {{requestid}} has been received.\n\nWe will review it and contact you if more information is needed.\n\nRequest title: {{requesttitle}}\n\nView request: {{url}}\n\nThank you very much,\n{{teamname}}',
+ 'Hello {{client_fname}} {{client_lname}},\n\nYour accessibility request {{requestid}} has been received.\n\nWe will review it and contact you if more information is needed.\n\nRequest title: {{requesttitle}}\n\nThank you very much,\n{{teamname}}',
  1),
 
 (0, 0, 0, 'client', 'request_created', 'fr',
- 'Votre demande d''accessibilite {{requestid}} a ete recue',
- 'Bonjour {{client_fname}} {{client_lname}},\n\nVotre demande d''accessibilite {{requestid}} a ete recue.\n\nNous l''examinerons et nous communiquerons avec vous si des renseignements supplementaires sont necessaires.\n\nTitre de la demande : {{requesttitle}}\n\nVoir la demande : {{url}}\n\nMerci beaucoup,\n{{teamname}}',
+ 'Votre demande d''accessibilité {{requestid}} a été reçue',
+ 'Bonjour {{client_fname}} {{client_lname}},\n\nVotre demande d''accessibilité {{requestid}} a été reçue.\n\nNous l''examinerons et nous communiquerons avec vous si des renseignements supplémentaires sont nécessaires.\n\nTitre de la demande : {{requesttitle}}\n\nMerci beaucoup,\n{{teamname}}',
  1),
 
 (0, 0, 0, 'client', 'resolved', 'en',
  'Your accessibility request {{requestid}} has been resolved',
- 'Hello {{client_fname}} {{client_lname}},\n\nYour request {{requestid}} has been resolved.\n\nIf you believe more work is required, reply to this message and reference your request number.\n\nWe would love to hear how we did. Please fill out this short survey: {{survey_link_en}}\n\nView request: {{url}}\n\nThank you very much,\n{{teamname}}',
+ 'Hello {{client_fname}} {{client_lname}},\n\nYour request {{requestid}} has been resolved.\n\nIf you believe more work is required, reply to this message and reference your request number.\n\nWe would love to hear how we did. Please fill out this short survey: {{survey_link_en}}\n\nThank you very much,\n{{teamname}}',
  1),
 
 (0, 0, 0, 'client', 'resolved', 'fr',
- 'Votre demande d''accessibilite {{requestid}} a ete resolue',
- 'Bonjour {{client_fname}} {{client_lname}},\n\nVotre demande {{requestid}} a ete resolue.\n\nSi vous croyez que d''autres travaux sont necessaires, repondez a ce message et mentionnez votre numero de demande.\n\nNous aimerions savoir comment s''est deroulee votre experience. Veuillez remplir ce court sondage : {{survey_link_fr}}\n\nVoir la demande : {{url}}\n\nMerci beaucoup,\n{{teamname}}',
+ 'Votre demande d''accessibilité {{requestid}} a été résolue',
+ 'Bonjour {{client_fname}} {{client_lname}},\n\nVotre demande {{requestid}} a été résolue.\n\nSi vous croyez que d''autres travaux sont nécessaires, répondez à ce message et mentionnez votre numéro de demande.\n\nNous aimerions savoir comment s''est déroulée votre expérience. Veuillez remplir ce court sondage : {{survey_link_fr}}\n\nMerci beaucoup,\n{{teamname}}',
  1),
 
 (0, 0, 0, 'employee', 'request_created', 'en',
@@ -36,8 +36,8 @@ VALUES
  1),
 
 (0, 0, 0, 'employee', 'request_created', 'fr',
- 'Nouvelle demande d''accessibilite {{requestid}} assignee a votre equipe',
- 'Bonjour {{teamname}},\n\nUne nouvelle demande d''accessibilite {{requestid}} a ete assignee a votre equipe.\n\nTitre de la demande : {{requesttitle}}\nCatalogue : {{catalogue_name}}\nService : {{service_name}}\n\nVoir la demande : {{url}}\n\nMerci beaucoup,\n{{teamname}}',
+ 'Nouvelle demande d''accessibilité {{requestid}} assignée à votre équipe',
+ 'Bonjour {{teamname}},\n\nUne nouvelle demande d''accessibilité {{requestid}} a été assignée à votre équipe.\n\nTitre de la demande : {{requesttitle}}\nCatalogue : {{catalogue_name}}\nService : {{service_name}}\n\nVoir la demande : {{url}}\n\nMerci beaucoup,\n{{teamname}}',
  1),
 
 (0, 0, 0, 'employee', 'status_changed', 'en',
@@ -46,8 +46,8 @@ VALUES
  1),
 
 (0, 0, 0, 'employee', 'status_changed', 'fr',
- 'Mise a jour du statut de la demande {{requestid}}',
- 'Bonjour {{teamname}},\n\nLe statut de la demande {{requestid}} a change pour {{status_label}}.\n\nVeuillez consulter les derniers details en utilisant le lien ci-dessous.\n\nVoir la demande : {{url}}\n\nMerci beaucoup,\n{{teamname}}',
+ 'Mise à jour du statut de la demande {{requestid}}',
+ 'Bonjour {{teamname}},\n\nLe statut de la demande {{requestid}} a changé pour {{status_label}}.\n\nVeuillez consulter les derniers détails en utilisant le lien ci-dessous.\n\nVoir la demande : {{url}}\n\nMerci beaucoup,\n{{teamname}}',
  1),
 
 (0, 0, 0, 'employee', 'reassigned', 'en',
@@ -56,8 +56,8 @@ VALUES
  1),
 
 (0, 0, 0, 'employee', 'reassigned', 'fr',
- 'Demande d''accessibilite {{requestid}} reattribuee a {{teamname}}',
- 'Bonjour {{teamname}},\n\nLa demande d''accessibilite {{requestid}} a ete reattribuee a {{teamname}}.\n\nExaminez le contexte de la demande et confirmez la prise en charge avec votre equipe.\n\nVoir la demande : {{url}}\n\nMerci beaucoup,\n{{teamname}}',
+ 'Demande d''accessibilité {{requestid}} réattribuée à {{teamname}}',
+ 'Bonjour {{teamname}},\n\nLa demande d''accessibilité {{requestid}} a été réattribuée à {{teamname}}.\n\nExaminez le contexte de la demande et confirmez la prise en charge avec votre équipe.\n\nVoir la demande : {{url}}\n\nMerci beaucoup,\n{{teamname}}',
  1),
 
 (0, 0, 0, 'employee', 'resolved', 'en',
@@ -66,7 +66,7 @@ VALUES
  1),
 
 (0, 0, 0, 'employee', 'resolved', 'fr',
- 'Demande d''accessibilite {{requestid}} marquee comme resolue',
- 'Bonjour {{teamname}},\n\nLa demande d''accessibilite {{requestid}} a ete marquee comme resolue.\n\nAssurez-vous que les dossiers finaux et les actions de suivi sont complets.\n\nVoir la demande : {{url}}\n\nMerci beaucoup,\n{{teamname}}',
+ 'Demande d''accessibilité {{requestid}} marquée comme résolue',
+ 'Bonjour {{teamname}},\n\nLa demande d''accessibilité {{requestid}} a été marquée comme résolue.\n\nAssurez-vous que les dossiers finaux et les actions de suivi sont complets.\n\nVoir la demande : {{url}}\n\nMerci beaucoup,\n{{teamname}}',
  1);
 
