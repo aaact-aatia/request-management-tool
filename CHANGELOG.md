@@ -163,6 +163,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Scope employee search options ([978063e](https://github.com/aaact-aatia/request-management-tool/commit/978063e2a3e2942fd92f9a3031a8ffb1bfcb5a89))
 
+- Retire legacy admin account types ([05a2a4e](https://github.com/aaact-aatia/request-management-tool/commit/05a2a4ec83c95ad554ac0d0e4713488e02068b8d))
+
 
 ### Build
 
@@ -237,6 +239,14 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 - Update edit request buttons ([ccf4561](https://github.com/aaact-aatia/request-management-tool/commit/ccf4561249a914b1229b1de335db3a46cf85ce88))
 
 - Expand form controls to full width ([3311069](https://github.com/aaact-aatia/request-management-tool/commit/331106922d6e1e702fbe94b46f8d55e4e7883c0d))
+
+- Replace legacy superadmin role sentinel ([2799ef8](https://github.com/aaact-aatia/request-management-tool/commit/2799ef84bf1eda396218f3fef351d5a424950925))
+
+- Remove legacy role route fallbacks ([11718b0](https://github.com/aaact-aatia/request-management-tool/commit/11718b040d6c90fcbb767e82d0a8e54b33293e32))
+
+- Remove legacy roles from user management ([c4726cf](https://github.com/aaact-aatia/request-management-tool/commit/c4726cf7f81ed2601abba091f824f3b524ec616e))
+
+- Validate current roles in CSV imports ([32bfe91](https://github.com/aaact-aatia/request-management-tool/commit/32bfe915dce9a51a83406e3eb55ad5d427abcddd))
 
 
 ### Chore
@@ -350,6 +360,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 - Regenerate CHANGELOG.md [skip ci] ([4df04da](https://github.com/aaact-aatia/request-management-tool/commit/4df04daebef2ffe92ba857ce7b42422455985249))
 
 - Regenerate CHANGELOG.md [skip ci] ([6a026e2](https://github.com/aaact-aatia/request-management-tool/commit/6a026e2da687d9c89f57248959bf650240abbcf2))
+
+- Regenerate CHANGELOG.md [skip ci] ([957a349](https://github.com/aaact-aatia/request-management-tool/commit/957a349fe5c6942621edcb61863711c7b5342742))
 
 
 ### Fixed
@@ -525,6 +537,10 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 - Hide language codes in request details ([4dc2ee3](https://github.com/aaact-aatia/request-management-tool/commit/4dc2ee3e0cf77acd2ebcd9abd1755982d8c27a9d))
 
 - Restrict request cloning to super admins ([2d10fdb](https://github.com/aaact-aatia/request-management-tool/commit/2d10fdbe62172df39ba7c7ac6655a7fcdf5e340a))
+
+- Restore privileged request visibility ([f0a9c33](https://github.com/aaact-aatia/request-management-tool/commit/f0a9c33c7fa5a1c2785bea6bec0a450d51563e3b))
+
+- Support employee role testing ([3d70b70](https://github.com/aaact-aatia/request-management-tool/commit/3d70b7077cda11c370532fd9daaa4c00f70302ae))
 
 
 ### Other
