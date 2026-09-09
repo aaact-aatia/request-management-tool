@@ -1,14 +1,18 @@
+ARG PHP_IMAGE=php:8.2-apache
+
 FROM composer:2 AS vendor
 
 WORKDIR /app
-COPY app/composer.json /app/composer.json
+ARG COMPOSER_FILE=app/composer.json
+ARG COMPOSER_INSTALL_FLAGS="--no-dev"
+COPY ${COMPOSER_FILE} /app/composer.json
 RUN composer install \
-	--no-dev \
+	${COMPOSER_INSTALL_FLAGS} \
 	--no-interaction \
 	--prefer-dist \
 	--optimize-autoloader
 
-FROM php:8.2-apache
+FROM ${PHP_IMAGE}
 
 RUN apt-get update && apt-get install -y --no-install-recommends unzip curl git \
 	&& docker-php-ext-install mysqli pdo pdo_mysql \

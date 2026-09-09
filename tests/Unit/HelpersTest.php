@@ -27,8 +27,12 @@ class HelpersTest extends TestCase
 
     public function testIsAdmin()
     {
-        $_SESSION['is_superuser'] = 1;
+        $_SESSION['is_admin'] = 1;
         $this->assertTrue(isAdmin());
+
+        $_SESSION['is_admin'] = 0;
+        $_SESSION['is_superuser'] = 1;
+        $this->assertFalse(isAdmin());
 
         $_SESSION['is_role_test_mode'] = 1;
         $this->assertFalse(isAdmin());

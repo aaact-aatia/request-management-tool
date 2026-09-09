@@ -15,7 +15,6 @@ database
 README.md
 TESTING.md
 phpunit.xml
-composer-test.json
 run-tests.sh
 docker-compose.yml
 

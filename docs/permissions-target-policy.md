@@ -127,7 +127,7 @@ This policy defines edit behavior for request pages such as `app/editrequest.php
 
 ### Superadmin test-mode rule
 
-When superadmin is in role-testing mode (`atype` differs from `primary_atype`), edit permissions must match the selected test role exactly. Superadmin global override is suspended until test mode is exited.
+When superadmin is in explicit role-testing mode (`is_role_test_mode=1`), edit permissions must match the selected test role exactly, including when the selected role matches the superadmin's primary functional type. Superadmin global override is suspended until test mode is exited.
 
 ### Editrequest field inventory and proposed tier mapping
 

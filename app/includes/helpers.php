@@ -32,9 +32,10 @@ function isSuperAdmin() {
     return isset($_SESSION['is_superuser']) && (int) $_SESSION['is_superuser'] === 1;
 }
 
-// Alias for backward compatibility - DO NOT USE, prefer isSuperAdmin()
 function isAdmin() {
-    return isSuperAdmin();
+    return !isRoleTestMode()
+        && isset($_SESSION['is_admin'])
+        && (int) $_SESSION['is_admin'] === 1;
 }
 
 function canEditRequests() {

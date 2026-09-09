@@ -50,7 +50,7 @@ Exclude service IDs (comma-separated): [46        ]
 
 ### 1. New admin page: `app/bulk-anonymize.php`
 
-- Superadmin-only (`$_SESSION['atype'] == 1`)
+- Superadmin-only (`isSuperAdmin()`)
 - Loads all catalogues from `tblcatalogue` for the checkbox list
 - On `GET`: renders the form
 - On `POST` with `action=preview`: runs a `SELECT COUNT(*)` and returns the affected count (no writes)
@@ -80,7 +80,7 @@ Keys needed (approximate):
 
 ### 4. Add menu link in admin section of `appmenu.php` / `template/menu.php`
 
-Visible only to superadmin (`$_SESSION['atype'] == 1`).
+Visible only to superadmin (`isSuperAdmin()`).
 
 ### 5. Deprecate / delete `batch-ace-info.php`
 
