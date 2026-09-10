@@ -1093,13 +1093,13 @@ function rmt_notification_subject_single_language(string $event, string $recipie
         case 'reassigned':
             if ($isClient) {
                 return $subjectPrefix . ($isFrench
-                    ? 'Votre demande d\'accessibilité ' . $requestId . ' a été réattribuée'
-                    : 'Your accessibility request ' . $requestId . ' has been reassigned');
+                    ? 'Votre demande d\'accessibilité ' . $requestId . ' a été assignée'
+                    : 'Your accessibility request ' . $requestId . ' has been assigned');
             }
 
             return $subjectPrefix . ($isFrench
-                ? 'Demande d\'accessibilité ' . $requestId . ' réattribuée à ' . $teamName
-                : 'Accessibility request ' . $requestId . ' reassigned to ' . $teamName);
+                ? 'Demande d\'accessibilité ' . $requestId . ' assignée à ' . $teamName
+                : 'Accessibility request ' . $requestId . ' assigned to ' . $teamName);
     }
 
     return $subjectPrefix . ($isFrench
@@ -1297,12 +1297,12 @@ function rmt_notification_message_single_language(string $event, string $recipie
                 return $withLink($isFrench ? [
                     rmt_notification_salutation($language, $context, $recipientType),
                     '',
-                    $recipientPrefix . 'Votre demande ' . $requestId . ' a été réattribuée à une autre équipe.',
+                    $recipientPrefix . 'Votre demande ' . $requestId . ' a été assignée à une autre équipe.',
                     'La nouvelle équipe poursuivra les travaux et fera un suivi si des renseignements supplémentaires sont nécessaires.',
                 ] : [
                     rmt_notification_salutation($language, $context, $recipientType),
                     '',
-                    $recipientPrefix . 'Your request ' . $requestId . ' has been reassigned to a different team.',
+                    $recipientPrefix . 'Your request ' . $requestId . ' has been assigned to a different team.',
                     'The new team will continue the work and follow up if more information is needed.',
                 ]);
             }
@@ -1310,12 +1310,12 @@ function rmt_notification_message_single_language(string $event, string $recipie
             return $withLink($isFrench ? [
                 rmt_notification_salutation($language, $context, $recipientType),
                 '',
-                $recipientPrefix . 'La demande d\'accessibilité ' . $requestId . ' a été réattribuée à ' . $teamName . '.',
+                $recipientPrefix . 'La demande d\'accessibilité ' . $requestId . ' a été assignée à ' . $teamName . '.',
                 'Examinez le contexte de la demande et confirmez la prise en charge avec votre équipe.',
             ] : [
                 rmt_notification_salutation($language, $context, $recipientType),
                 '',
-                $recipientPrefix . 'Accessibility request ' . $requestId . ' has been reassigned to ' . $teamName . '.',
+                $recipientPrefix . 'Accessibility request ' . $requestId . ' has been assigned to ' . $teamName . '.',
                 'Review the request context and confirm ownership with your team.',
             ]);
     }

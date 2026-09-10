@@ -123,12 +123,20 @@ function sendEmail($emailAddress, $templateId, $personalisation, array $options 
 		return false;
 	}
 
-	$send = static function (string $recipient) use ($templateId, $personalisationPayload, $apiKey): array {
+	$replyToId = trim((string) ($options['replyToId'] ?? ''));
+	if ($replyToId === '') {
+		$replyToId = trim((string) app_setting('GCNOTIFY_EMAIL_REPLY_TO_ID', ''));
+	}
+	$send = static function (string $recipient) use ($templateId, $personalisationPayload, $apiKey, $replyToId): array {
 		$payload = [
 			'email_address' => $recipient,
 			'template_id' => $templateId,
 			'personalisation' => $personalisationPayload,
 		];
+
+		if ($replyToId !== '') {
+			$payload['email_reply_to_id'] = $replyToId;
+		}
 
 		$curlOptions = [
 			CURLOPT_URL => 'https://api.notification.canada.ca/v2/notifications/email',

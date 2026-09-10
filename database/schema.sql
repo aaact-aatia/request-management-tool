@@ -207,6 +207,7 @@ CREATE TABLE IF NOT EXISTS `tblteams` (
   `nameen` varchar(100) NOT NULL,
   `namefr` varchar(100) NOT NULL,
   `email` varchar(255) NOT NULL,
+  `reply_to_id` varchar(64) DEFAULT NULL,
   `team_lead_user_id` int(11) DEFAULT NULL,
   `dateadded` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `dateupdated` timestamp NULL DEFAULT NULL,

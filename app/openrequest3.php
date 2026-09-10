@@ -89,6 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Initialize team variables
     $teamname = "";
     $teamemail = "";
+    $teamReplyToId = "";
     $contactname = "";
     $contactemail = "";
     
@@ -271,6 +272,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if (!empty($row)) {
             $teamname = $isFrench ? $row['namefr'] : $row['nameen'];
             $teamemail = $row['email'];
+            $teamReplyToId = trim((string) ($row['reply_to_id'] ?? ''));
             $contactname = $row['contactname'];
             $contactemail = $row['contactemail'];
         }
@@ -328,6 +330,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         "nrequestid" => $nrequestid,
         "teamname" => $teamname,
         "team_email" => $teamemail,
+        "teamemail" => $teamemail,
         "requesttitle" => $requesttitle,
         "nrequestemailid" => $nrequestemailid,
         "nrequestemail" => $clientemail,
@@ -400,7 +403,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             'message' => rmt_notification_message('request_created', 'client', $requestlang, $clientNotificationContext, $link, $contactid, $serviceid, $subserviceid),
         ];
         if (rmt_notification_should_send($link, (int) $latestid, $contactid, 'client', 'request_created', $clientemail)) {
-            sendEmail($clientemail, $template_id, json_encode($clientPersonalisation), ['recipientType' => 'client']);
+            sendEmail($clientemail, $template_id, json_encode($clientPersonalisation), ['recipientType' => 'client', 'replyToId' => $teamReplyToId]);
         }
         
     } elseif ($notification != "N" || $notification == 1) {
@@ -441,7 +444,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             'message' => rmt_notification_message('request_created', 'client', $requestlang, $clientNotificationContext, $link, $contactid, $serviceid, $subserviceid),
         ];
         if (rmt_notification_should_send($link, (int) $latestid, $contactid, 'client', 'request_created', $clientemail)) {
-            sendEmail($clientemail, $template_id, json_encode($clientPersonalisation), ['recipientType' => 'client']);
+            sendEmail($clientemail, $template_id, json_encode($clientPersonalisation), ['recipientType' => 'client', 'replyToId' => $teamReplyToId]);
         }
     }
     

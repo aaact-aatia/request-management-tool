@@ -602,6 +602,7 @@ if ($workerIdInt > 0 && $workerIdInt !== $prevWorkerIdInt) {
         $workerName = trim(((string) ($workerRow['firstname'] ?? '')) . ' ' . ((string) ($workerRow['lastname'] ?? '')));
         if ($workerName !== '') {
             $personalisation['teamname'] = $workerName;
+            $personalisation['assignee'] = $workerName;
         }
         $personalisation['team_email'] = $workerEmail;
 

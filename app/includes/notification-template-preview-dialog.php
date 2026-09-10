@@ -39,6 +39,7 @@ $recipientType = ($audience === 'client') ? 'client' : 'internal';
 $sampleContext = [
     'requestid' => 'REQ-26-123',
     'requesttitle' => 'Fix inaccessible PDF on service page',
+    'assignee' => 'Ariane Tremblay',
     'catalogue_name' => 'Digital accessibility support',
     'service_name' => 'Document remediation',
     'teamname' => 'AAACT Triage',

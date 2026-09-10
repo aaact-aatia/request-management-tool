@@ -31,6 +31,7 @@ function app_configurable_nonsecret_keys(): array
         'GCNOTIFY_CURL_CA_BUNDLE',
         'GCNOTIFY_CURL_INSECURE',
         'GCNOTIFY_TEMPLATE_ID',
+        'GCNOTIFY_EMAIL_REPLY_TO_ID',
     ];
 }
 
