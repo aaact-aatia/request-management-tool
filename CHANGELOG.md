@@ -363,6 +363,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Regenerate CHANGELOG.md [skip ci] ([957a349](https://github.com/aaact-aatia/request-management-tool/commit/957a349fe5c6942621edcb61863711c7b5342742))
 
+- Regenerate CHANGELOG.md [skip ci] ([0db5887](https://github.com/aaact-aatia/request-management-tool/commit/0db5887f542c6b1a9a169c5b35563babaa9d5052))
+
 
 ### Fixed
 
@@ -542,6 +544,10 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Support employee role testing ([3d70b70](https://github.com/aaact-aatia/request-management-tool/commit/3d70b7077cda11c370532fd9daaa4c00f70302ae))
 
+- Complete flag-based admin authorization follow-up ([c67befe](https://github.com/aaact-aatia/request-management-tool/commit/c67befe765a25820dc6ed643d31967f0c64a2175))
+
+- Restore superadmin request editing ([d104b52](https://github.com/aaact-aatia/request-management-tool/commit/d104b52731a0bd4ce628e843f7ef1b92dbc8d73a))
+
 
 ### Other
 
@@ -612,5 +618,9 @@ changes made to 1f25d2de91afa814dd49160085b2f76a39fa88a5. ([9bfaf79](https://git
 - Expand dev requests with assignment and SLA scenarios ([eb5620e](https://github.com/aaact-aatia/request-management-tool/commit/eb5620e02856c56861816d37c4e8c4994aa1b153))
 
 - Complete file upload coverage ([2013844](https://github.com/aaact-aatia/request-management-tool/commit/2013844583c575e0909c3d615a7ad411b15d8047))
+
+- Align helpers with unified bilingual routes ([c58da19](https://github.com/aaact-aatia/request-management-tool/commit/c58da19ed2d7c0aa692ec452b48a48acb1713eaa))
+
+- Enforce explicit employee role-test access ([3648f06](https://github.com/aaact-aatia/request-management-tool/commit/3648f069a97631fa82f82416faa42abb519ddf34))
 
 
