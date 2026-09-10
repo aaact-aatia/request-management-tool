@@ -32,9 +32,10 @@ function isSuperAdmin() {
     return isset($_SESSION['is_superuser']) && (int) $_SESSION['is_superuser'] === 1;
 }
 
-// Alias for backward compatibility - DO NOT USE, prefer isSuperAdmin()
 function isAdmin() {
-    return isSuperAdmin();
+    return !isRoleTestMode()
+        && isset($_SESSION['is_admin'])
+        && (int) $_SESSION['is_admin'] === 1;
 }
 
 function canEditRequests() {
@@ -166,7 +167,7 @@ function rmt_can_access_request(mysqli $link, array $request): bool {
 
     $accountType = (int) ($_SESSION['atype'] ?? 0);
     $hasAdministrativeAccess = !isRoleTestMode() && (isSuperAdmin() || !empty($_SESSION['is_admin']));
-    if ($hasAdministrativeAccess || in_array($accountType, [1, 2, 3, 6], true)) {
+    if ($hasAdministrativeAccess || in_array($accountType, [3, 6], true)) {
         return true;
     }
 
@@ -1544,8 +1545,7 @@ function detectLanguage() {
 }
 
 function getIncludePath($file, $lang) {
-    $langSuffix = $lang === 'fr' ? '-fr' : '-en';
-    return str_replace('.php', "$langSuffix.php", $file);
+    return $file;
 }
 
 ?>

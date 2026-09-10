@@ -47,7 +47,12 @@ services:
       - ./database:/opt/rmt-seeds:ro
 
   test-runner:
-    build: .
+    build:
+      context: .
+      args:
+        COMPOSER_FILE: composer-test.json
+        COMPOSER_INSTALL_FLAGS: --dev
+        PHP_IMAGE: php:8.3-apache
     depends_on:
       test-db:
         condition: service_healthy
@@ -61,6 +66,6 @@ services:
       TZ: America/New_York
       CORS_ALLOWED_ORIGINS: ""
     volumes:
-      - ./app:/var/www/html:ro
+      - ./app:/var/www/app:ro
       - ./tests:/var/www/tests:ro
     entrypoint: ["php", "/var/www/tests/Integration/RequestWorkflowTest.php"]

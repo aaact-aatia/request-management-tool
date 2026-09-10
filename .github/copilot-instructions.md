@@ -38,7 +38,9 @@ $t = require("lang/{$lang}.php");   // $t['key'] for all UI strings
 Sessions are initialized in [sql.php](../app/sql.php). Key session variables:
 ```php
 $_SESSION['pid']        // User ID
-$_SESSION['atype']      // Account type (1 = admin)
+$_SESSION['atype']      // Functional account type (3 = manager, 4 = team lead, 5 = employee, 6 = director)
+$_SESSION['is_admin']    // Admin privilege flag
+$_SESSION['is_superuser'] // Superadmin privilege flag
 $_SESSION['email']      // User email
 $_SESSION['firstname']  // User first name
 $_SESSION['team']       // User team
@@ -156,7 +158,7 @@ All pages use Government of Canada's **Web Experience Toolkit v4**:
 ### Helper Functions
 [includes/helpers.php](../app/includes/helpers.php) provides shared utilities — use these instead of reinventing:
 - `detectLanguage()` — detects and sets `$_SESSION['lang']`
-- `isAdmin()` — checks `$_SESSION['atype'] == 1`
+- `isAdmin()` — checks the `$_SESSION['is_admin']` privilege flag
 - `canEditRequests()` — checks allowed account types
 - `hasValue($val)` — non-empty, non-zero check
 - `getPostValue($key)` — escaped `$_POST` value
@@ -177,7 +179,7 @@ $var = mysqli_real_escape_string($link, $_GET['param']);
 require('includes/loggedincheck.php');
 
 // Admin-only check
-if ($_SESSION['atype'] != 1) { header("location:/index.php"); exit(); }
+if (empty($_SESSION['is_admin']) && empty($_SESSION['is_superuser'])) { header("location:/index.php"); exit(); }
 ```
 
 ### SLA & Business Days
@@ -205,7 +207,7 @@ Follow pattern in `includes/`:
 - `add-*.php` for create forms
 - `edit-*.php` for update forms
 - `delete-*.php` for lightbox delete confirmations
-- Always check `$_SESSION['atype'] == 1` for admin access
+- Always check `isAdmin()` or `isSuperAdmin()` for privileged access; never use numeric `atype` values for admin authorization
 
 ### Modifying Existing Pages
 1. Read [sql.php](../app/sql.php) usage first to understand session/DB state

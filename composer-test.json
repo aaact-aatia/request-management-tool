@@ -1,11 +1,11 @@
 {
+    "require": {
+        "vlucas/phpdotenv": "^5.5",
+        "sendgrid/sendgrid": "^7.11",
+        "league/commonmark": "^2.7"
+    },
     "require-dev": {
         "phpunit/phpunit": "^9.5"
-    },
-    "autoload": {
-        "files": [
-            "app/includes/helpers.php"
-        ]
     },
     "scripts": {
         "test": "vendor/bin/phpunit tests",

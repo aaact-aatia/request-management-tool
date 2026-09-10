@@ -18,12 +18,13 @@ Out of scope for this phase:
 
 ## Current Runtime Role Model
 
-The current model combines legacy account type values (`atype`) with two role flags:
+The current model combines functional account type values (`atype`) with two privilege flags:
 
-- `atype`: account type (legacy and functional role signal)
+- `atype`: functional role (`3` Manager, `4` Team Lead, `5` Employee, or `6` Director)
 - `is_superuser`: superadmin privilege flag
 - `is_admin`: admin privilege flag
-- `primary_atype`: original account type from login; used for superadmin role testing mode
+- `primary_atype`: functional role loaded at login; retained for role-test reset and context
+- `is_role_test_mode`: explicit session flag that suspends elevated privileges while a superadmin tests a role
 
 Session initialization and login mapping:
 - `app/sql.php` initializes role-related session fields.
@@ -35,8 +36,6 @@ Non-authenticated users (no session `pid`) are not represented by `atype` and sh
 
 The app currently uses these account types:
 
-- `1`: Super Admin (legacy)
-- `2`: Admin (legacy)
 - `3`: Manager
 - `4`: Team Lead
 - `5`: Employee
@@ -109,9 +108,9 @@ The detailed field allowlist/denylist should be captured in `docs/permissions-ro
 
 Decisions confirmed for this workstream:
 
-1. Keep the current 6 account types plus `is_admin` and `is_superuser` flags.
+1. Use the four functional account types plus `is_admin` and `is_superuser` privilege flags. Account type IDs 1 and 2 were retired by migration 028.
 2. Keep Director (`atype=6`) as view-only.
-3. Keep superadmin role-testing (impersonation), but restrict it to approved environments.
+3. Keep superadmin role-testing (impersonation), but restrict it to approved environments and represent it with explicit session state.
 4. Treat non-authenticated users as a distinct access class with explicit deny-by-default policy.
 5. Prioritize documentation first, then implementation hardening.
 

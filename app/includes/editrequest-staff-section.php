@@ -37,7 +37,7 @@ $canEditSlaTimer = $canFullFieldEdit || $isManagerAccount;
             $contactid = 1;
         }
 
-        // Show employees (atype 1-5) filtered by team contact if known, otherwise all
+        // Show employee accounts filtered by team contact if known, otherwise all
         $result2 = mysqli_query($link, "SELECT * FROM tblusers WHERE status='1' AND atype <= 5 ORDER BY firstname ASC, lastname ASC");
         while ($row2 = mysqli_fetch_array($result2)) {
             $tarray = array_filter(explode(",", $row2['team']));

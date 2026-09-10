@@ -10,6 +10,11 @@ Access classes:
 - `AUTH_REQUIRED`: logged-in user required
 - `ROLE_RESTRICTED`: logged-in user plus role permission required
 
+Authorization source of truth:
+- `is_superuser=1` grants superadmin privileges outside explicit role-test mode.
+- `is_admin=1` grants admin privileges outside explicit role-test mode.
+- `atype` identifies functional roles only and must not be used to grant admin or superadmin access.
+
 ## Core request flow
 
 | Route | Access Class | Target Policy | Notes |

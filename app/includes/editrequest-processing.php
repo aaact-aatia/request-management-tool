@@ -19,6 +19,7 @@ $redirectid = base64_encode($requestuid);
 // ============================================================================
 
 $inTestMode = isRoleTestMode();
+$isAdministrativeAccess = !$inTestMode && (isSuperAdmin() || isAdmin());
 $isManagerAccount = ((int)($_SESSION['atype'] ?? 0) === 3);
 $isTeamLeadAccount = ((int)($_SESSION['atype'] ?? 0) === 4);
 $isEmployeeAccount = ((int)($_SESSION['atype'] ?? 0) === 5);
@@ -37,7 +38,7 @@ if (!$currentRequest) {
     exit();
 }
 
-if ($isTeamLeadAccount) {
+if ($isTeamLeadAccount && !$isAdministrativeAccess) {
     $teamIds = getEffectiveTeamIds($link);
     $requestContactId = rmt_resolve_responsible_team_id(
         $link,
@@ -52,7 +53,7 @@ if ($isTeamLeadAccount) {
     }
 }
 
-if ($isEmployeeAccount) {
+if ($isEmployeeAccount && !$isAdministrativeAccess) {
     $effectiveEmployeeId = getEffectiveEmployeeUserId($link);
     if ((int)($currentRequest['workerid'] ?? 0) !== $effectiveEmployeeId) {
         header("location:/requests.php?lang=$lang&status=accessdenied");
