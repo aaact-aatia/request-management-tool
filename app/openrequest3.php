@@ -423,7 +423,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $clientViewToken = bin2hex(random_bytes(32));
     $_SESSION['client_request_view_tokens'][$clientViewToken] = (int) $latestid;
     // The token is never included in notification data.
-    header("location:/viewrequest.php?lang=" . $lang . "&rid=" . (int) $latestid . "&client=1&token=" . urlencode($clientViewToken));
+    header("location:/viewrequest.php?lang=" . $lang . "&rid=" . (int) $latestid . "&client=1&token=" . urlencode($clientViewToken) . "&status=submitted");
     exit();
 }
 

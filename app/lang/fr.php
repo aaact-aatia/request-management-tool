@@ -301,7 +301,7 @@ return [
     'client_survey_sent_confirm' => 'Voulez-vous vraiment marquer le sondage comme envoyée?',
 
     // Client Survey Link helper page (client-survey-link.php)
-    'client_survey_link_page_title' => 'Liens du sondage - Outil de gestion des demandes - Bureau de l\'accessibilité de la TI',
+    'client_survey_link_page_title' => 'Liens du sondage',
     'client_survey_link_heading' => 'Liens du sondage',
     'client_survey_link_intro' => 'Utilisez ces liens pour envoyer le sondage manuellement jusqu\'à la configuration des notifications.',
     'client_survey_link_french' => 'Lien du sondage en français',

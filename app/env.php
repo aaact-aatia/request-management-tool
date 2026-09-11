@@ -344,6 +344,7 @@ function app_dev_notification_preview_add(array $entry): void
 
     $_SESSION['dev_notification_preview'][] = [
         'recipientType' => (string) ($entry['recipientType'] ?? 'general'),
+        'recipientRole' => (string) ($entry['recipientRole'] ?? ''),
         'intendedRecipient' => (string) ($entry['intendedRecipient'] ?? ''),
         'finalRecipient' => (string) ($entry['finalRecipient'] ?? ''),
         'mode' => (string) ($entry['mode'] ?? app_notify_mode()),

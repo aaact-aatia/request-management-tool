@@ -109,7 +109,7 @@ $headerTranslations = [
 
 	$headerLangStrings = $headerTranslations[$langCode];
 	$statusParam = strtolower(trim((string) ($_GET['status'] ?? '')));
-	$showDevNotificationPreview = in_array($statusParam, ['newrequestcomplete'], true);
+	$showDevNotificationPreview = in_array($statusParam, ['newrequestcomplete', 'submitted', 'success', 'resolvedemailsent', 'resolvedemailfailed', 'resolvedemailmissing'], true);
 	$devNotificationPreviewEntries = [];
 	if (function_exists('app_dev_notification_preview_consume')) {
 		if ($showDevNotificationPreview) {
@@ -314,7 +314,9 @@ $headerTranslations = [
 					$recipientLabel = $headerLangStrings['dev_preview_internal'];
 				}
 
-				if ($previewResult === 'disabled') {
+				if ($finalRecipient !== '' && strcasecmp($finalRecipient, $intendedRecipient) !== 0) {
+					$detail = $intendedRecipient . ' (' . $headerLangStrings['dev_preview_intended'] . ')';
+				} elseif ($previewResult === 'disabled') {
 					$detail = $headerLangStrings['dev_preview_disabled'] . ' ' . $intendedRecipient;
 				} elseif ($finalRecipient !== '' && strcasecmp($finalRecipient, $intendedRecipient) !== 0) {
 					$detail = $headerLangStrings['dev_preview_sent'] . ' ' . $finalRecipient . ' (' . $headerLangStrings['dev_preview_intended'] . ': ' . $intendedRecipient . ')';

@@ -563,6 +563,15 @@ function rmt_get_team_internal_recipients(mysqli $link, int $teamId, array $role
         if (!empty($leadRow['email'])) {
             $emails[] = trim((string) $leadRow['email']);
         }
+    } elseif (in_array('lead', $roles, true)) {
+        $statement = rmt_db_execute($link, "SELECT email FROM tblusers WHERE atype = 4 AND status = 1 AND FIND_IN_SET(?, team) > 0", 'i', [$teamId]);
+        $result = mysqli_stmt_get_result($statement);
+        while ($leadRow = mysqli_fetch_assoc($result)) {
+            if (!empty($leadRow['email'])) {
+                $emails[] = trim((string) $leadRow['email']);
+            }
+        }
+        mysqli_stmt_close($statement);
     }
 
     if (in_array('manager', $roles, true)) {
@@ -642,13 +651,52 @@ function rmt_send_internal_notifications(
     $sentEmails = [];
     foreach ($recipients as $recipientEmail) {
         if (rmt_notification_should_send($link, $triageId, $teamId, 'employee', $event, $recipientEmail)) {
-            if (sendEmail($recipientEmail, $templateId, json_encode($teamPersonalisation), ['recipientType' => 'internal'])) {
+            $recipientRole = rmt_internal_recipient_role($link, $teamId, $recipientEmail, $roles, $workerId);
+            $recipientPersonalisation = $teamPersonalisation;
+            if (sendEmail($recipientEmail, $templateId, json_encode($recipientPersonalisation), ['recipientType' => 'internal', 'recipientRole' => $recipientRole])) {
                 $sentEmails[] = $recipientEmail;
             }
         }
     }
 
     return $sentEmails;
+}
+
+function rmt_internal_recipient_role(mysqli $link, int $teamId, string $email, array $roles, int $workerId = 0): string {
+    $email = trim($email);
+    if (in_array('team', $roles, true)) {
+        $teamRow = rmt_db_fetch_one($link, 'SELECT email FROM tblteams WHERE id = ? AND status = 1 LIMIT 1', 'i', [$teamId]);
+        if ($teamRow && strcasecmp(trim((string) $teamRow['email']), $email) === 0) {
+            return 'team';
+        }
+    }
+
+    if (in_array('assignee', $roles, true) && $workerId > 0) {
+        $workerRow = rmt_db_fetch_one($link, 'SELECT email FROM tblusers WHERE id = ? AND status = 1 LIMIT 1', 'i', [$workerId]);
+        if ($workerRow && strcasecmp(trim((string) $workerRow['email']), $email) === 0) {
+            return 'assignee';
+        }
+    }
+
+    if (in_array('lead', $roles, true)) {
+        $leadRow = rmt_db_fetch_one($link, "SELECT u.email FROM tblusers u LEFT JOIN tblteams t ON t.team_lead_user_id = u.id WHERE t.id = ? AND u.status = 1 AND LOWER(u.email) = LOWER(?) LIMIT 1", 'is', [$teamId, $email]);
+        if ($leadRow) {
+            return 'team_lead';
+        }
+        $leadRow = rmt_db_fetch_one($link, "SELECT email FROM tblusers WHERE atype = 4 AND status = 1 AND FIND_IN_SET(?, team) > 0 AND LOWER(email) = LOWER(?) LIMIT 1", 'is', [$teamId, $email]);
+        if ($leadRow) {
+            return 'team_lead';
+        }
+    }
+
+    if (in_array('manager', $roles, true)) {
+        $managerRow = rmt_db_fetch_one($link, "SELECT email FROM tblusers WHERE atype = 3 AND status = 1 AND FIND_IN_SET(?, team) > 0 AND LOWER(email) = LOWER(?) LIMIT 1", 'is', [$teamId, $email]);
+        if ($managerRow) {
+            return 'manager';
+        }
+    }
+
+    return '';
 }
 
 function rmt_request_subject_text(string $type, string $lang): array {

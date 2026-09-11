@@ -303,7 +303,7 @@ return [
     'client_survey_sent_confirm' => 'Are you sure you want to mark this survey as sent?',
 
     // Client Survey Link helper page (client-survey-link.php)
-    'client_survey_link_page_title' => 'Survey links - Request Management Tool - Accessibility, Accommodation and Adaptive Computer Technology (AAACT)',
+    'client_survey_link_page_title' => 'Survey links',
     'client_survey_link_heading' => 'Survey links',
     'client_survey_link_intro' => 'Use these links to send the survey manually until notifications are configured.',
     'client_survey_link_french' => 'French survey link',

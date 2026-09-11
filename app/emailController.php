@@ -116,6 +116,16 @@ function sendEmail($emailAddress, $templateId, $personalisation, array $options 
 		$personalisationPayload = [];
 	}
 
+	if (strtolower(trim((string) app_env('APP_ENV', 'production'))) === 'development') {
+		$developmentRole = strtoupper($recipientRole);
+		$developmentRole = match ($developmentRole) {
+			'TEAM_LEAD' => 'LEAD',
+			'' => strtoupper((string) $recipientType),
+			default => $developmentRole,
+		};
+		$personalisationPayload['subject'] = $developmentRole . ': ' . (string) ($personalisationPayload['subject'] ?? '');
+	}
+
 	$apiKey = app_env('GCNOTIFY_API_KEY', '');
 	if ($apiKey === '') {
 		error_log('GC Notify skipped: GCNOTIFY_API_KEY is missing.');
