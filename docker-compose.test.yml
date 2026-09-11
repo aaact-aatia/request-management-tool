@@ -67,5 +67,6 @@ services:
       CORS_ALLOWED_ORIGINS: ""
     volumes:
       - ./app:/var/www/app:ro
+      - ./scripts:/var/www/scripts:ro
       - ./tests:/var/www/tests:ro
     entrypoint: ["php", "/var/www/tests/Integration/RequestWorkflowTest.php"]
