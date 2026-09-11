@@ -50,7 +50,7 @@ include 'includes/template/header.php';
 			<?php if ($_SESSION['lang'] == 'fr'): ?>
 			<h2>Énoncé de confidentialité pour l'Outil de gestion des demandes d'accessibilité</h2>
 			<p>Évitez d'ajouter des renseignements personnels ou médicaux dans la zone de texte ouverte où il est indiqué « Décrivez votre demande ».</p>
-			<p>Veuillez prendre quelques instants pour lire notre énoncé de confidentialité. Lorsque vous ouvrez et soumettez une nouvelle demande d'accessibilité au Bureau de l'accessibilité des TI (AATIA), vous fournissez des renseignements personnels. Les renseignements que vous fournissez sont protégés et gérés conformément à la <a href="https://laws-lois.justice.gc.ca/fra/lois/p-21/index.html">Loi sur la protection des renseignements personnels </a> et à la <a href="https://laws.justice.gc.ca/fra/lois/h-5.7/index.html">Loi sur le ministère de l'Emploi et du Développement social, partie 4.</a> Cet énoncé explique comment nous recueillons, utilisons et protégeons vos renseignements personnels quand vous soumettez une demande par l'intermédiaire de l'Outil de gestion des demandes d'accessibilité (A11yRMT).</p>
+			<p>Veuillez prendre quelques instants pour lire notre énoncé de confidentialité. Lorsque vous ouvrez et soumettez une nouvelle demande d'accessibilité auprès de l'équipe Accessibilité, adaptation et technologie informatique adaptée (AATIA), vous fournissez des renseignements personnels. Les renseignements que vous fournissez sont protégés et gérés conformément à la <a href="https://laws-lois.justice.gc.ca/fra/lois/p-21/index.html">Loi sur la protection des renseignements personnels </a> et à la <a href="https://laws.justice.gc.ca/fra/lois/h-5.7/index.html">Loi sur le ministère de l'Emploi et du Développement social, partie 4.</a> Cet énoncé explique comment nous recueillons, utilisons et protégeons vos renseignements personnels quand vous soumettez une demande par l'intermédiaire de l'Outil de gestion des demandes d'accessibilité (A11yRMT).</p>
 			
 			<h3>Pourquoi vos renseignements sont-ils recueillis?</h3>
 			<p>Nous recueillons des renseignements personnels afin de traiter et de gérer votre demande, de communiquer avec le client et de conserver les dossiers. La Loi canadienne sur l'accessibilité nous autorise à recueillir des renseignements à cette fin.</p>
@@ -61,7 +61,7 @@ include 'includes/template/header.php';
 			<ul>
 				<li>Traiter et gérer vos demandes d'accessibilité et de mesures d'adaptation liées à la technologie de l'information et des communications (TIC).</li>
 				<li>Communiquer avec vous pour obtenir des renseignements complémentaires ou faire le point sur l'état de votre demande.</li>
-				<li>Confier et trier votre demande au sein du Bureau de l'accessibilité des TI.</li>
+				<li>Confier et trier votre demande au sein de l'équipe Accessibilité, adaptation et technologie informatique adaptée (AATIA).</li>
 				<li>Consigner les progrès et les mesures prises par rapport à votre demande.</li>
 			</ul>
 			<p>Seul le personnel autorisé du AATIA, y compris les directeurs, les gestionnaires, les chefs d'équipe et les conseillers techniques, qui ont besoin de vos renseignements personnels pour exercer leurs fonctions, y a accès. Le personnel du AATIA n'utilisera vos renseignements que pour répondre à votre demande et à des fins de gestion interne.</p>
@@ -77,7 +77,7 @@ include 'includes/template/header.php';
 			<?php else: ?>
 			<h2>Privacy Notice for Accessibility Request Management Tool</h2>
 			<p>Please avoid adding personal or medical information in the open text box where it says "describe your request".</p>
-			<p>Please take a few moments to read our privacy notice. When you open and submit a new request for accessibility to the IT Accessibility Office (AAACT), you are providing personal information. The information you provide is protected under and managed in accordance with the <a href="https://laws-lois.justice.gc.ca/fra/lois/p-21/index.html">Privacy Act</a> and the <a href="https://laws.justice.gc.ca/fra/lois/h-5.7/index.html">Department of Employment and Social Development Act, Part 4.</a> This notice explains how we collect, use, and safeguard your personal information when you submit a request through the Accessibility Request Management Tool (A11yRMT).</p>
+			<p>Please take a few moments to read our privacy notice. When you open and submit a new request for accessibility to the Accessibility, Accommodation and Adaptive Computer Technology (AAACT) team, you are providing personal information. The information you provide is protected under and managed in accordance with the <a href="https://laws-lois.justice.gc.ca/fra/lois/p-21/index.html">Privacy Act</a> and the <a href="https://laws.justice.gc.ca/fra/lois/h-5.7/index.html">Department of Employment and Social Development Act, Part 4.</a> This notice explains how we collect, use, and safeguard your personal information when you submit a request through the Accessibility Request Management Tool (A11yRMT).</p>
 			
 			<h3>Why your information is collected</h3>
 			<p>We collect personal information in order to process and manage your request, communicating with the client and record keeping. Our authority to collect your information for this purpose is stated in Accessible Canada Act.</p>
@@ -88,7 +88,7 @@ include 'includes/template/header.php';
 			<ul>
 				<li>Process and manage your accessibility and accommodation requests related to Information and Communications Technology (ICT)</li>
 				<li>Contact you for additional information or to provide updates on the status of your request</li>
-				<li>Assign and triage your request within the IT Accessibility Office</li>
+				<li>Assign and triage your request within the Accessibility, Accommodation and Adaptive Computer Technology (AAACT) team</li>
 				<li>Record progress and actions taken on your request</li>
 			</ul>
 			<p>Your personal information is only accessible to authorized AAACT staff, including directors, managers, team leads, and technical advisors, who require it to perform their duties. AAACT staff will only use your information to fulfill your request and for internal management purposes.</p>

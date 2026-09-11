@@ -32,7 +32,7 @@ VALUES
 
 (0, 0, 0, 'employee', 'request_created', 'en',
  'New accessibility request {{requestid}} assigned to your team',
- 'A new accessibility request {{requestid}} has been assigned to your team.\n\nRequest title: {{requesttitle}}\nCatalogue: {{catalogue_name}}\nService: {{service_name}}\n\nView request: {{url}}\n\nRequest Management Tool\nIT Accessibility Office',
+ 'A new accessibility request {{requestid}} has been assigned to your team.\n\nRequest title: {{requesttitle}}\nCatalogue: {{catalogue_name}}\nService: {{service_name}}\n\nView request: {{url}}\n\nRequest Management Tool (RMT)',
  1),
 
 (0, 0, 0, 'employee', 'request_created', 'fr',
@@ -42,7 +42,7 @@ VALUES
 
 (0, 0, 0, 'employee', 'status_changed', 'en',
  'Status update for accessibility request {{requestid}}',
- 'The status of request {{requestid}} has changed to {{status_label}}.\n\nPlease review the latest details using the request link below.\n\nView request: {{url}}\n\nRequest Management Tool\nIT Accessibility Office',
+ 'The status of request {{requestid}} has changed to {{status_label}}.\n\nPlease review the latest details using the request link below.\n\nView request: {{url}}\n\nRequest Management Tool (RMT)',
  1),
 
 (0, 0, 0, 'employee', 'status_changed', 'fr',
@@ -52,7 +52,7 @@ VALUES
 
 (0, 0, 0, 'employee', 'reassigned', 'en',
  'Accessibility request {{requestid}} assigned to {{teamname}}',
- 'Accessibility request {{requestid}} has been assigned to {{teamname}}.\n\nReview the request context and confirm ownership with your team.\n\nView request: {{url}}\n\nRequest Management Tool\nIT Accessibility Office',
+ 'Accessibility request {{requestid}} has been assigned to {{teamname}}.\n\nReview the request context and confirm ownership with your team.\n\nView request: {{url}}\n\nRequest Management Tool (RMT)',
  1),
 
 (0, 0, 0, 'employee', 'reassigned', 'fr',
@@ -62,7 +62,7 @@ VALUES
 
 (0, 0, 0, 'employee', 'resolved', 'en',
  'Accessibility request {{requestid}} marked as resolved',
- 'Accessibility request {{requestid}} has been marked as resolved.\n\nEnsure any final records or follow-up actions are complete.\n\nView request: {{url}}\n\nRequest Management Tool\nIT Accessibility Office',
+ 'Accessibility request {{requestid}} has been marked as resolved.\n\nEnsure any final records or follow-up actions are complete.\n\nView request: {{url}}\n\nRequest Management Tool (RMT)',
  1),
 
 (0, 0, 0, 'employee', 'resolved', 'fr',

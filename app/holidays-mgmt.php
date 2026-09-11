@@ -28,7 +28,7 @@ if (!($_SESSION['is_superuser'] OR $_SESSION['is_admin'])) {
 // Translations
 $translations = [
     'en' => [
-        'page_title' => 'Holiday Management - Request Management Tool - IT Accessibility Office',
+        'page_title' => 'Holiday Management - Request Management Tool - Accessibility, Accommodation and Adaptive Computer Technology (AAACT)',
         'heading' => 'Holiday Management',
         'add_holiday' => 'Add New Holiday',
         'holiday_date' => 'Holiday Date',

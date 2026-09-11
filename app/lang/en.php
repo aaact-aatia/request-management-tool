@@ -11,7 +11,7 @@
 
 return [
     // Page metadata
-    'page_title' => 'New request - Request Management Tool - IT Accessibility Office',
+    'page_title' => 'New request - Request Management Tool - Accessibility, Accommodation and Adaptive Computer Technology (AAACT)',
     'page_description' => '',
 
     // 404 page (error-page.php)
@@ -106,7 +106,7 @@ return [
     'status_column' => 'Status',
     
     // Contacts/Teams page (legacy keys)
-    'contacts_page_title' => 'Teams management - Request Management Tool - IT Accessibility Office',
+    'contacts_page_title' => 'Teams management - Request Management Tool - Accessibility, Accommodation and Adaptive Computer Technology (AAACT)',
     'contacts_heading' => 'Teams management',
     'contacts_success_message' => 'You have successfully updated the database, thank you!',
     'contacts_failed_message' => 'The database update you requested did not work, please try again, thank you!',
@@ -122,7 +122,7 @@ return [
     'warning_heading' => 'Warning',
     
     // Password reset page (passwordreset.php)
-    'passwordreset_page_title' => 'Password reset - Request Management Tool - IT Accessibility Office',
+    'passwordreset_page_title' => 'Password reset - Request Management Tool - Accessibility, Accommodation and Adaptive Computer Technology (AAACT)',
     'passwordreset_heading' => 'Reset password for triage application',
     'passwordreset_error_heading' => 'Password could not be updated because of one of the following reasons:',
     'passwordreset_error_1' => '<span class="prefix">Error&nbsp;1: </span>Current password is incorrect OR;',
@@ -139,11 +139,11 @@ return [
     'passwordreset_clear' => 'Clear All',
     
     // Clone request page (clonerequest.php)
-    'clonerequest_page_title' => 'Clone Request - IT Accessibility Office',
+    'clonerequest_page_title' => 'Clone Request - Request Management Tool - Accessibility, Accommodation and Adaptive Computer Technology (AAACT)',
     'clonerequest_submit' => 'Submit',
     
     // Advanced search page (asearch.php)
-    'asearch_page_title' => 'Advanced search - Request Management Tool - IT Accessibility Office',
+    'asearch_page_title' => 'Advanced search - Request Management Tool - Accessibility, Accommodation and Adaptive Computer Technology (AAACT)',
     'asearch_heading' => 'Advanced search - Triage',
     'asearch_no_results_heading' => 'No results available',
     'asearch_no_results_message' => 'There was no results with your search parameters, please try again!',
@@ -192,7 +192,7 @@ return [
     'asearch_na' => 'N/A',
     
     // Requests page (requests.php) - Active requests dashboard
-    'indexonly_page_title' => 'Request Management Tool - IT Accessibility Office',
+    'indexonly_page_title' => 'Request Management Tool - Accessibility, Accommodation and Adaptive Computer Technology (AAACT)',
     'indexonly_heading' => 'Requests overview',
     'indexonly_requests' => 'Requests',
     'indexonly_additional_requests' => 'Also include requests that are:',
@@ -238,7 +238,7 @@ return [
     'indexonly_no_requests' => 'No requests available!',
     
     // Index Resolved page (indexresolved.php) - Resolved requests dashboard
-    'indexresolved_page_title' => 'Request Management Tool - IT Accessibility Office',
+    'indexresolved_page_title' => 'Request Management Tool - Accessibility, Accommodation and Adaptive Computer Technology (AAACT)',
     'indexresolved_heading' => 'Latest closed requests',
     'indexresolved_col_request' => 'Request #',
     'indexresolved_col_title' => 'Title',
@@ -267,16 +267,16 @@ return [
     'indexresolved_no_requests' => 'No requests available!',
     
     // Customer Satisfaction Survey page (client-survey.php)
-    'client_survey_page_title' => 'Client satisfaction survey - Request Management Tool - IT Accessibility Office',
+    'client_survey_page_title' => 'Client satisfaction survey - Request Management Tool - Accessibility, Accommodation and Adaptive Computer Technology (AAACT)',
     'client_survey_heading' => 'Client satisfaction survey',
     'client_survey_failed_heading' => 'Failed',
     'client_survey_complete_heading' => 'Could not submit client satisfaction survey',
     'client_survey_failed_message' => 'The survey did not work, please try the link in the email again, thank you!',
     'client_survey_incomplete_message' => 'The survey is incomplete, please try again, thank you!',
-    'client_survey_complete_message' => 'The survey has already been completed! Please contact the IT Accessibility Office if you think this is a mistake, thank you!',
+    'client_survey_complete_message' => 'The survey has already been completed! Please contact the Request Management Tool - Accessibility, Accommodation and Adaptive Computer Technology (AAACT) if you think this is a mistake, thank you!',
     'client_survey_complete_contact_message' => 'This survey is already complete. If you think this is a mistake, please contact:',
     'client_survey_complete_message_with_team' => 'The survey has already been completed! Please contact the %s if you think this is a mistake, thank you!',
-    'client_survey_intro' => 'You have recently received a service from IT Accessibility Office. We would like to get your feedback to improve our service. We would really appreciate if you could take a few minutes to complete the following short survey.',
+    'client_survey_intro' => 'You have recently received a service from Request Management Tool - Accessibility, Accommodation and Adaptive Computer Technology (AAACT). We would like to get your feedback to improve our service. We would really appreciate if you could take a few minutes to complete the following short survey.',
     'client_survey_legend' => 'On a scale of 1 (very dissatisfied) to 10 (extremely satisfied) please rate:',
     'client_survey_overall' => 'Over-all satisfaction',
     'client_survey_response_time' => 'Response time',
@@ -284,13 +284,13 @@ return [
     'client_survey_submit' => 'Submit',
 
     // Client Survey Thank You page (client-survey-thank-you.php)
-    'client_survey_thank_you_page_title' => 'Thank you - Request Management Tool - IT Accessibility Office',
+    'client_survey_thank_you_page_title' => 'Thank you - Request Management Tool - Accessibility, Accommodation and Adaptive Computer Technology (AAACT)',
     'client_survey_thank_you_heading' => 'Thank you',
     'client_survey_thank_you_message' => 'Your survey has been submitted successfully. We appreciate your feedback.',
     'client_survey_thank_you_new_request_link' => 'Submit a new request',
     
     // Client Survey Pending page (client-survey-pending.php)
-    'client_survey_pending_page_title' => 'Client satisfaction surveys - Request Management Tool - IT Accessibility Office',
+    'client_survey_pending_page_title' => 'Client satisfaction surveys - Request Management Tool - Accessibility, Accommodation and Adaptive Computer Technology (AAACT)',
     'client_survey_pending_heading' => 'Pending surveys to be sent',
     'client_survey_pending_col_request' => 'Request #',
     'client_survey_pending_col_title' => 'Title',
@@ -303,7 +303,7 @@ return [
     'client_survey_sent_confirm' => 'Are you sure you want to mark this survey as sent?',
 
     // Client Survey Link helper page (client-survey-link.php)
-    'client_survey_link_page_title' => 'Survey links - Request Management Tool - IT Accessibility Office',
+    'client_survey_link_page_title' => 'Survey links - Request Management Tool - Accessibility, Accommodation and Adaptive Computer Technology (AAACT)',
     'client_survey_link_heading' => 'Survey links',
     'client_survey_link_intro' => 'Use these links to send the survey manually until notifications are configured.',
     'client_survey_link_french' => 'French survey link',
@@ -324,7 +324,7 @@ return [
     'batch_ace_for_details' => ' for details',
     
     // Change of Domain page (changeofdomain.php)
-    'changeofdomain_page_title' => 'Decommission Notice - IT Accessibility Office',
+    'changeofdomain_page_title' => 'Decommission Notice - Request Management Tool - Accessibility, Accommodation and Adaptive Computer Technology (AAACT)',
     'changeofdomain_heading' => 'Decommission Notice',
     'changeofdomain_intro' => 'This domain has been decommissioned. Please update your bookmarks and start using the new URL:',
     'changeofdomain_link_text' => 'AAACT RMT',
@@ -339,7 +339,7 @@ return [
     'changeofdomain_img_alt' => 'Proxy Settings',
     
     // Client Survey Results page (client-survey-results.php)
-    'client_survey_results_page_title' => 'Client satisfaction surveys - Request Management Tool - IT Accessibility Office',
+    'client_survey_results_page_title' => 'Client satisfaction surveys - Request Management Tool - Accessibility, Accommodation and Adaptive Computer Technology (AAACT)',
     'client_survey_results_heading' => 'Latest survey results',
     'client_survey_results_request_num' => 'Request #',
     'client_survey_results_title' => 'Title',
@@ -350,7 +350,7 @@ return [
     'client_survey_results_no_surveys' => 'No surveys available!',
     
     // Reports page (reports.php)
-    'reports_page_title' => 'Reports - Request Management Tool - IT Accessibility Office',
+    'reports_page_title' => 'Reports - Request Management Tool - Accessibility, Accommodation and Adaptive Computer Technology (AAACT)',
     'reports_heading' => 'Reports overview',
     'reports_incomplete_heading' => 'Incomplete report request:',
     'reports_incomplete_message' => 'There was an issue with the status report request, please try again, thank you!',
@@ -365,7 +365,7 @@ return [
     'reports_client_survey_pending' => 'Pending surveys to be sent',
     
     // Products page (products.php)
-    'products_page_title' => 'Product management - Request Management Tool - IT Accessibility Office',
+    'products_page_title' => 'Product management - Request Management Tool - Accessibility, Accommodation and Adaptive Computer Technology (AAACT)',
     'products_heading' => 'Product management',
     'products_add_button' => 'Add new product',
     'products_name_column' => 'Name of product',
@@ -376,7 +376,7 @@ return [
     'products_no_products' => 'No products available',
     
     // Status management page (status.php)
-    'status_page_title' => 'Status management - Request Management Tool - IT Accessibility Office',
+    'status_page_title' => 'Status management - Request Management Tool - Accessibility, Accommodation and Adaptive Computer Technology (AAACT)',
     'status_heading' => 'Status management',
     'status_add_button' => 'Add new status',
     'status_name_column' => 'Name of status',
@@ -384,7 +384,7 @@ return [
     'status_no_status' => 'No status available',
     
     // Catalogue management page (catalogue.php)
-    'catalogue_page_title' => 'Service catalogue management - Request Management Tool - IT Accessibility Office',
+    'catalogue_page_title' => 'Service catalogue management - Request Management Tool - Accessibility, Accommodation and Adaptive Computer Technology (AAACT)',
     'catalogue_heading' => 'Service catalogue management',
     'catalogue_add_button' => 'Add new catalogue item',
     'catalogue_name_column' => 'Catalogue name',
@@ -400,7 +400,7 @@ return [
     'catalogue_view_services' => 'View services',
     
     // Catalogue services management page (catalogue-mgmt.php)
-    'catalogue_mgmt_title_suffix' => 'Catalogue management - Request Management Tool - IT Accessibility Office',
+    'catalogue_mgmt_title_suffix' => 'Catalogue management - Request Management Tool - Accessibility, Accommodation and Adaptive Computer Technology (AAACT)',
     'catalogue_mgmt_heading_suffix' => 'Catalogue management',
     'catalogue_mgmt_add_button' => 'Add new catalogue service',
     'catalogue_mgmt_service_name_column' => 'Service name',
@@ -413,7 +413,7 @@ return [
     'service_sla_managed_by_subservices' => 'The service delivery standard is defined by its sub-services.',
     
     // Catalogue sub-services management page (catalogue-sub-mgmt.php)
-    'catalogue_sub_mgmt_title_suffix' => 'Catalogue management - Request Management Tool - IT Accessibility Office',
+    'catalogue_sub_mgmt_title_suffix' => 'Catalogue management - Request Management Tool - Accessibility, Accommodation and Adaptive Computer Technology (AAACT)',
     'catalogue_sub_mgmt_heading_suffix' => 'Catalogue management',
     'catalogue_sub_mgmt_add_button' => 'Add new sub-service',
     'catalogue_sub_mgmt_subservice_name_column' => 'Sub-service name',
@@ -451,7 +451,7 @@ return [
     'attachment_close_image_preview' => 'Close image preview',
     
     // Settings page (settings.php)
-    'settings_page_title' => 'Account settings - Request Management Tool - IT Accessibility Office',
+    'settings_page_title' => 'Account settings - Request Management Tool - Accessibility, Accommodation and Adaptive Computer Technology (AAACT)',
     'settings_heading' => 'Account settings',
     'settings_add_request_heading' => 'Manually add a new request',
     'settings_add_request_link' => 'Add request (admin only)',
@@ -533,7 +533,7 @@ return [
     'priority_update_failed' => 'The recalculation could not be completed. No priority scores were changed.',
     
     // Users management page (users.php)
-    'users_page_title' => 'User management - Request Management Tool - IT Accessibility Office',
+    'users_page_title' => 'User management - Request Management Tool - Accessibility, Accommodation and Adaptive Computer Technology (AAACT)',
     'users_heading' => 'User management',
     'users_add_button' => 'Add new user',
     'users_col_name' => 'Full name',
@@ -578,7 +578,7 @@ return [
     'admin_csv_table_users' => 'Users',
 
     // Teams management page (teams.php)
-    'teams_page_title' => 'Teams management - Request Management Tool - IT Accessibility Office',
+    'teams_page_title' => 'Teams management - Request Management Tool - Accessibility, Accommodation and Adaptive Computer Technology (AAACT)',
     'teams_heading' => 'Teams management',
     'teams_success_message' => 'You have successfully updated the database, thank you!',
     'teams_failed_message' => 'The database update you requested did not work, please try again, thank you!',
@@ -609,7 +609,7 @@ return [
     'teams_details_not_found' => 'Team not found.',
     
     // Sign in page (signin.php)
-    'signin_page_title' => 'Sign in to the Request Management Tool - IT Accessibility Office',
+    'signin_page_title' => 'Sign in to the Request Management Tool - Accessibility, Accommodation and Adaptive Computer Technology (AAACT)',
     'signin_heading' => 'Sign in',
     'signin_error_heading' => 'Login could not be completed because of one of the following errors:',
     'signin_error_1' => '<span class="prefix">Error&nbsp;1: </span>Fields are incomplete.',
@@ -624,7 +624,7 @@ return [
     'signin_button' => 'Sign in',
     
     // Report status page (report-status.php)
-    'report_status_page_title' => 'Status report - Tool for Managment Requests - Request Management Tool - IT Accessibility Office',
+    'report_status_page_title' => 'Status report - Tool for Managment Requests - Request Management Tool - Accessibility, Accommodation and Adaptive Computer Technology (AAACT)',
     'report_status_heading' => 'Status report -',
     'report_status_date_separator' => 'to',
     'report_status_current_open' => 'Current number of tickets open',

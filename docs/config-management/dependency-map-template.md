@@ -13,7 +13,7 @@ Provide a standard way to document service-to-CI relationships for impact analys
 ## Service Profile
 
 - Service name: RMT Request Intake and Triage
-- Business owner: IT Accessibility Office
+- Business owner: Request Management Tool - Accessibility, Accommodation and Adaptive Computer Technology (AAACT)
 - Technical owner: RMT Application Team
 - Service description: Public and internal workflow for submitting, triaging, assigning, and tracking accessibility requests.
 - Criticality: critical

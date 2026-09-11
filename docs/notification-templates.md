@@ -148,8 +148,7 @@ Service: `{{service_name}}`
 
 View request: `{{url}}`
 
-Request Management Tool
-IT Accessibility Office
+Request Management Tool (RMT)
 
 #### French
 
@@ -167,8 +166,7 @@ Service : `{{service_name}}`
 
 Voir la demande : `{{url}}`
 
-Outil de gestion des demandes
-Bureau de l'accessibilité de la TI
+Outil de gestion des demandes (OGD)
 
 ### Assigned
 
@@ -186,8 +184,7 @@ Review the request context and confirm ownership with your team.
 
 View request: `{{url}}`
 
-Request Management Tool
-IT Accessibility Office
+Request Management Tool (RMT)
 
 #### French
 
@@ -203,8 +200,7 @@ Examinez le contexte de la demande et confirmez la prise en charge avec votre é
 
 Voir la demande : `{{url}}`
 
-Outil de gestion des demandes
-Bureau de l'accessibilité de la TI
+Outil de gestion des demandes (OGD)
 
 ### Resolved / Closed
 
@@ -222,8 +218,7 @@ Ensure any final records or follow-up actions are complete.
 
 View request: `{{url}}`
 
-Request Management Tool
-IT Accessibility Office
+Request Management Tool (RMT)
 
 #### French
 
@@ -239,8 +234,7 @@ Assurez-vous que les dossiers finaux et les actions de suivi sont complets.
 
 Voir la demande : `{{url}}`
 
-Outil de gestion des demandes
-Bureau de l'accessibilité de la TI
+Outil de gestion des demandes (OGD)
 
 ### Status / Details Updated
 
@@ -258,8 +252,7 @@ Please review the latest details using the request link below.
 
 View request: `{{url}}`
 
-Request Management Tool
-IT Accessibility Office
+Request Management Tool (RMT)
 
 #### French
 
@@ -275,8 +268,7 @@ Veuillez consulter les derniers détails en utilisant le lien ci-dessous.
 
 Voir la demande : `{{url}}`
 
-Outil de gestion des demandes
-Bureau de l'accessibilité de la TI
+Outil de gestion des demandes (OGD)
 
 ## Special Internal Routing Messages
 
@@ -302,8 +294,7 @@ Service: `{{service_name}}`
 
 View request: `{{url}}`
 
-Request Management Tool
-IT Accessibility Office
+Request Management Tool (RMT)
 
 #### French
 
@@ -321,8 +312,7 @@ Service : `{{service_name}}`
 
 Voir la demande : `{{url}}`
 
-Outil de gestion des demandes
-Bureau de l'accessibilité de la TI
+Outil de gestion des demandes (OGD)
 
 ### AAACT Triage Required
 
@@ -344,8 +334,7 @@ Request title: `{{requesttitle}}`
 
 View request: `{{url}}`
 
-Request Management Tool
-IT Accessibility Office
+Request Management Tool (RMT)
 
 #### French
 
@@ -363,8 +352,7 @@ Titre de la demande : `{{requesttitle}}`
 
 Voir la demande : `{{url}}`
 
-Outil de gestion des demandes
-Bureau de l'accessibilité de la TI
+Outil de gestion des demandes (OGD)
 
 ## Available Placeholders
 

@@ -45,7 +45,7 @@ if (empty($requestuid)) {
 $translations = [
 	'en' => [
 		'page_title' => 'Edit request',
-		'tool_name' => 'Request Management Tool - IT Accessibility Office',
+		'tool_name' => 'Request Management Tool - Accessibility, Accommodation and Adaptive Computer Technology (AAACT)',
 		'success_heading' => 'Success',
 		'success_message' => 'You have successfully updated the database, thank you!',
 		'updated_fields_label' => 'Updated fields',

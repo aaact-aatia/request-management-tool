@@ -1091,8 +1091,8 @@ function rmt_notification_signature_single_language(string $language, array $con
 
     if (!$isClient) {
         return $isFrench
-            ? "Outil de gestion des demandes\nBureau de l'accessibilité de la TI"
-            : "Request Management Tool\nIT Accessibility Office";
+            ? "Outil de gestion des demandes (OGD)"
+            : "Request Management Tool (RMT)";
     }
 
     $teamName = rmt_notification_escape((string) ($context['teamname'] ?? ''));

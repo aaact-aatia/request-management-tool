@@ -7,7 +7,7 @@ Document configuration-item dependencies for client survey and feedback capabili
 ## Service Profile
 
 - Service name: RMT Client Survey Lifecycle
-- Business owner: IT Accessibility Office
+- Business owner: Request Management Tool - Accessibility, Accommodation and Adaptive Computer Technology (AAACT)
 - Technical owner: RMT Application Team
 - Service description: Survey link generation, client survey submission, pending survey tracking, and survey results reporting.
 - Criticality: medium

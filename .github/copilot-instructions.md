@@ -3,7 +3,7 @@
 ## Project Overview
 
 **Tech Stack**: PHP 8.2, MySQL 5.7, WET4 (Web Experience Toolkit), jQuery, Docker  
-**Purpose**: Multi-page accessibility request management system for the IT Accessibility Office
+**Purpose**: Multi-page accessibility request management system for the Request Management Tool - Accessibility, Accommodation and Adaptive Computer Technology (AAACT)
 
 This is a bilingual (English/French) government web application managing the lifecycle of accessibility service requests. Language is handled via a session variable and a language file system — pages are single files, not bilingual pairs.
 

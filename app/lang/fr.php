@@ -137,7 +137,7 @@ return [
     'passwordreset_clear' => 'Tout effacer',
     
     // Clone request page (clonerequest.php)
-    'clonerequest_page_title' => 'Clone Request - IT Accessibility Office',
+    'clonerequest_page_title' => 'Clone Request - Outil de gestion des demandes - Accessibilité, adaptation et technologie informatique adaptée (AATIA)',
     'clonerequest_submit' => 'Submit',
     
     // Advanced search page (asearch.php)
@@ -288,7 +288,7 @@ return [
     'client_survey_thank_you_new_request_link' => 'Soumettre une nouvelle demande',
     
     // Client Survey Pending page (client-survey-pending.php)
-    'client_survey_pending_page_title' => 'Sondage sur la satisfaction de la clientèle - Request Management Tool - IT Accessibility Office',
+    'client_survey_pending_page_title' => 'Sondage sur la satisfaction de la clientèle - Outil de gestion des demandes - Accessibilité, adaptation et technologie informatique adaptée (AATIA)',
     'client_survey_pending_heading' => 'Sondages en attente à envoyer',
     'client_survey_pending_col_request' => '# de la demande',
     'client_survey_pending_col_title' => 'Titre',
@@ -322,7 +322,7 @@ return [
     'batch_ace_for_details' => ' pour les détails',
     
     // Change of Domain page (changeofdomain.php)
-    'changeofdomain_page_title' => 'Avis de désactivation - IT Accessibility Office',
+    'changeofdomain_page_title' => 'Avis de désactivation - Outil de gestion des demandes - Accessibilité, adaptation et technologie informatique adaptée (AATIA)',
     'changeofdomain_heading' => 'Avis de désactivation',
     'changeofdomain_intro' => 'Ce domaine a été désactivé. Veuillez mettre à jour vos favoris et commencer à utiliser la nouvelle URL :',
     'changeofdomain_link_text' => 'AAACT RMT',
@@ -337,7 +337,7 @@ return [
     'changeofdomain_img_alt' => 'Paramètres du proxy',
     
     // Client Survey Results page (client-survey-results.php)
-    'client_survey_results_page_title' => 'Sondage sur la satisfaction de la clientèle - Request Management Tool - IT Accessibility Office',
+    'client_survey_results_page_title' => 'Sondage sur la satisfaction de la clientèle - Outil de gestion des demandes - Accessibilité, adaptation et technologie informatique adaptée (AATIA)',
     'client_survey_results_heading' => 'Derniers résultats du sondage',
     'client_survey_results_request_num' => '# de la demande',
     'client_survey_results_title' => 'Titre',

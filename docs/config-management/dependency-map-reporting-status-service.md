@@ -7,7 +7,7 @@ Document configuration-item dependencies for reporting and status capabilities t
 ## Service Profile
 
 - Service name: RMT Reporting and Status
-- Business owner: IT Accessibility Office
+- Business owner: Request Management Tool - Accessibility, Accommodation and Adaptive Computer Technology (AAACT)
 - Technical owner: RMT Application Team
 - Service description: Internal reporting, request status views, and resolved-request visibility for operational planning.
 - Criticality: high

@@ -9,7 +9,7 @@ $nameField = $lang == 'fr' ? 'namefr' : 'nameen';
 $translations = [
 	'en' => [
 		'page_title' => 'Request details - a11y-',
-		'title_suffix' => ' - Request Management Tool - IT Accessibility Office',
+		'title_suffix' => ' - Request Management Tool - Accessibility, Accommodation and Adaptive Computer Technology (AAACT)',
 		'success' => 'Success',
 		'success_updated' => 'You have successfully updated the request, thank you!',
 		'success_status_updated' => 'Status updated from %s to %s.',
