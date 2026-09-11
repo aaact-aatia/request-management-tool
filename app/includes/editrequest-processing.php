@@ -579,7 +579,7 @@ $contactidold = rmt_resolve_responsible_team_id(
     (int) $cserviceid,
     (int) $csubserviceid
 );
-if (($cserviceid != $serviceid || $csubserviceid != $subserviceid) && $contactid > 0 && $contactid !== $contactidold) {
+if (($ccatalogueid != $catalogueid || $cserviceid != $serviceid || $csubserviceid != $subserviceid) && $contactid > 0 && $contactid !== $contactidold) {
     $result = mysqli_query($link, "SELECT * FROM tblteams WHERE id = '$contactid'");
     $row = mysqli_fetch_assoc($result);
     if ($row) {
