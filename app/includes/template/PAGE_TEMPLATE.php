@@ -31,7 +31,7 @@ if (!isset($_SESSION['lang']) || !in_array($_SESSION['lang'], ['en', 'fr'])) {
 // =============================================================================
 $page = [
 	'title' => [
-		'en' => 'Page Title - Request Management Tool - IT Accessibility Office',
+		'en' => 'Page Title - Request Management Tool - Accessibility, Accommodation and Adaptive Computer Technology (AAACT)',
 		'fr' => 'Titre de la page - Outil de gestion des demandes - Bureau de l\'accessibilité de la TI'
 	],
 	'description' => [

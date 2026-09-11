@@ -531,11 +531,20 @@ $statusFr = $row ? $row['namefr'] : "";
 $domain = app_base_url();
 $nrequestemailid = base64_encode($requestuid);
 
+$assignedByName = '';
+if (!empty($updaterid)) {
+    $updaterRes = mysqli_query($link, "SELECT firstname, lastname FROM tblusers WHERE id = '" . (int)$updaterid . "' LIMIT 1");
+    if ($updaterRes && $updaterRow = mysqli_fetch_assoc($updaterRes)) {
+        $assignedByName = trim(($updaterRow['firstname'] ?? '') . ' ' . ($updaterRow['lastname'] ?? ''));
+    }
+}
+
 $personalisation = [
     "requestid" => $requestid,
     "nrequestid" => $requestid,
     "teamname" => $teamname,
     "team_email" => $teamemail,
+    "assigned_by" => $assignedByName,
     "requesttitle" => $requesttitle,
     "nrequestemailid" => $nrequestemailid,
     "nrequestemail" => $clientemail,
@@ -551,84 +560,49 @@ $personalisation = [
     "url" => app_url("viewrequest.php?lang=" . $requestlang . "&erid=" . $nrequestemailid . "&reqid=" . urlencode("a11y-" . $requestid))
 ];
 
-// Send emails based on status changes
+// Send emails based on status changes and updates
 if (!$isCurrentResolved && $isTargetResolved) {
     // Queue one survey send for newly resolved requests only.
     mysqli_query($link, "UPDATE tbltriage SET cssurvey = 0 WHERE id = '$requestuid' AND (cssurvey IS NULL)");
+
+    // Send internal resolved notification to Lead and Manager
+    rmt_send_internal_notifications($link, $requestuidInt, $contactid, (int) $serviceid, (int) $subserviceid, 'resolved', ['lead', 'manager'], $personalisation);
 } elseif ($cstatusid != $statusid) {
-    // Status changed (not to resolved) - client notifications are manual only.
+    // Status changed (not to resolved) - send internal notification to Lead and Manager
+    rmt_send_internal_notifications($link, $requestuidInt, $contactid, (int) $serviceid, (int) $subserviceid, 'status_changed', ['lead', 'manager'], $personalisation);
 }
 
-// Notify the newly responsible team when a hierarchy edit changes ownership.
+// Notify responsible team, lead, and manager when a hierarchy edit changes ownership.
 $contactidold = rmt_resolve_responsible_team_id(
     $link,
     (int) $ccatalogueid,
     (int) $cserviceid,
     (int) $csubserviceid
 );
-if (($cserviceid != $serviceid || $csubserviceid != $subserviceid) && $contactid > 0 && $contactid !== $contactidold) {
+if (($ccatalogueid != $catalogueid || $cserviceid != $serviceid || $csubserviceid != $subserviceid) && $contactid > 0 && $contactid !== $contactidold) {
     $result = mysqli_query($link, "SELECT * FROM tblteams WHERE id = '$contactid'");
     $row = mysqli_fetch_assoc($result);
     if ($row) {
         $personalisation['teamname'] = $row['nameen'];
         $personalisation['team_email'] = $row['email'];
-        $newTeamEmail = $row['email'];
 
-        $reassignedTemplate = app_notify_template_id('notification_generic');
-        $reassignedCategory = rmt_notification_template_category('reassigned');
-        $reassignedTeamPersonalisation = $personalisation + [
-            'notification_event' => 'reassigned',
-            'template_category_id' => $reassignedCategory['id'],
-            'template_category_name_en' => $reassignedCategory['name_en'],
-            'template_category_name_fr' => $reassignedCategory['name_fr'],
-            'subject' => rmt_notification_subject('reassigned', 'internal', 'en', $personalisation, $link, $contactid, (int) $serviceid, (int) $subserviceid),
-            'message' => rmt_notification_message('reassigned', 'internal', 'en', $personalisation, $link, $contactid, (int) $serviceid, (int) $subserviceid),
-        ];
-        if (rmt_notification_should_send($link, $requestuidInt, $contactid, 'employee', 'reassigned', $newTeamEmail)) {
-            sendEmail($newTeamEmail, $reassignedTemplate, json_encode($reassignedTeamPersonalisation), ['recipientType' => 'internal']);
-        }
+        rmt_send_internal_notifications($link, $requestuidInt, $contactid, (int) $serviceid, (int) $subserviceid, 'reassigned', ['team', 'lead', 'manager'], $personalisation);
     }
 }
 
-// Send notification when assigned worker changes.
+// Send notification when assigned worker changes (to Assignee, Lead, Manager).
 $prevWorkerIdInt = (int) ($prevWorkerid ?? 0);
 $workerIdInt = (int) ($workerid ?? 0);
 if ($workerIdInt > 0 && $workerIdInt !== $prevWorkerIdInt) {
-    $workerResult = mysqli_query($link, "SELECT firstname, lastname, email, atype, is_superuser, is_admin FROM tblusers WHERE id = '$workerIdInt' AND status = '1' LIMIT 1");
+    $workerResult = mysqli_query($link, "SELECT firstname, lastname, email FROM tblusers WHERE id = '$workerIdInt' AND status = '1' LIMIT 1");
     $workerRow = $workerResult ? mysqli_fetch_assoc($workerResult) : null;
-    $workerEmail = trim((string) ($workerRow['email'] ?? ''));
-
-    if ($workerEmail !== '') {
+    if (!empty($workerRow)) {
         $workerName = trim(((string) ($workerRow['firstname'] ?? '')) . ' ' . ((string) ($workerRow['lastname'] ?? '')));
         if ($workerName !== '') {
-            $personalisation['teamname'] = $workerName;
-        }
-        $personalisation['team_email'] = $workerEmail;
-
-        $workerRoleKey = 'assignee';
-        $workerAtype = (int) ($workerRow['atype'] ?? 0);
-        $workerHasAdminRole = !empty($workerRow['is_superuser']) || !empty($workerRow['is_admin']);
-        if ($workerHasAdminRole) {
-            $workerRoleKey = 'admin';
-        } elseif ($workerAtype === 3) {
-            $workerRoleKey = 'manager';
-        } elseif ($workerAtype === 4) {
-            $workerRoleKey = 'team_lead';
+            $personalisation['assignee'] = $workerName;
         }
 
-        $reassignedTemplate = app_notify_template_id('notification_generic');
-        $reassignedCategory = rmt_notification_template_category('reassigned');
-        $reassignedWorkerPersonalisation = $personalisation + [
-            'notification_event' => 'reassigned',
-            'template_category_id' => $reassignedCategory['id'],
-            'template_category_name_en' => $reassignedCategory['name_en'],
-            'template_category_name_fr' => $reassignedCategory['name_fr'],
-            'subject' => rmt_notification_subject('reassigned', 'internal', 'en', $personalisation, $link, $contactid, (int) $serviceid, (int) $subserviceid),
-            'message' => rmt_notification_message('reassigned', 'internal', 'en', $personalisation, $link, $contactid, (int) $serviceid, (int) $subserviceid),
-        ];
-        if (rmt_notification_should_send($link, $requestuidInt, $contactid, 'employee', 'reassigned', $workerEmail)) {
-            sendEmail($workerEmail, $reassignedTemplate, json_encode($reassignedWorkerPersonalisation), ['recipientType' => 'internal', 'recipientRole' => $workerRoleKey]);
-        }
+        rmt_send_internal_notifications($link, $requestuidInt, $contactid, (int) $serviceid, (int) $subserviceid, 'reassigned', ['assignee', 'lead', 'manager'], $personalisation, $workerIdInt);
     }
 }
 

@@ -19,4 +19,6 @@ docker compose -p "$project_name" -f docker-compose.test.yml run --rm --no-deps 
 docker compose -p "$project_name" -f docker-compose.test.yml run --rm --no-deps \
 	--entrypoint php test-runner /var/www/tests/Unit/RequestCardTest.php
 docker compose -p "$project_name" -f docker-compose.test.yml run --rm --no-deps \
+	--entrypoint php test-runner /var/www/tests/Unit/NotificationTemplateSyncTest.php
+docker compose -p "$project_name" -f docker-compose.test.yml run --rm --no-deps \
 	--entrypoint php test-runner /var/www/tests/Integration/OrganizationDirectoryTest.php

@@ -5,7 +5,7 @@ require_once __DIR__ . '/includes/session_start.php';
 // Translations
 $translations = [
 	'en' => [
-		'page_title' => 'Release Version History - Request Management Tool - IT Accessibility Office',
+		'page_title' => 'Release Version History - Request Management Tool - Accessibility, Accommodation and Adaptive Computer Technology (AAACT)',
 		'heading' => 'RMT Release Version History',
 		'v1_3_title' => 'Version 1.3 - Release Date: 2025-05-05',
 		'v1_3_intro' => 'This release introduces advanced features for files management, reporting, email automation, and a new "Version History" page to consolidate release information.',

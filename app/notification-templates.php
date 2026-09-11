@@ -95,14 +95,24 @@ $page = [
         'fr' => 'Gerer les modeles de messages de notification par equipe',
     ],
 ];
-$pageTitle = $page['title'][$lang];
+$selectedTeamLabel = $selectedTeamId === RMT_NOTIFICATION_GLOBAL_TEAM_ID
+    ? ($isFrench ? 'Modele par defaut de l\'application' : 'App-wide default')
+    : (static function () use ($manageableTeams, $selectedTeamId, $nameField): string {
+        foreach ($manageableTeams as $team) {
+            if ((int) $team['id'] === $selectedTeamId) {
+                return (string) $team[$nameField];
+            }
+        }
+        return '';
+    })();
+$pageTitle = $page['title'][$lang] . ' - ' . $selectedTeamLabel;
 $pageDescription = $page['description'][$lang];
 
 include 'includes/template/head.php';
 ?>
     <?php include 'includes/template/header.php'; ?>
         <main role="main" property="mainContentOfPage" class="container">
-            <h1 property="name" id="wb-cont"><?= htmlspecialchars($t['notification_templates_heading']) ?></h1>
+            <h1 property="name" id="wb-cont"><?= htmlspecialchars($pageTitle) ?></h1>
             <p><?= htmlspecialchars($t['notification_templates_intro']) ?></p>
 
             <?php if ($status === 'saved') { ?>
@@ -195,17 +205,7 @@ include 'includes/template/head.php';
                     : $t['notification_templates_audience_employee'];
             ?>
             <h2><?= htmlspecialchars($audienceLabel) ?></h2>
-            <table class="wb-tables table table-striped table-hover">
-                <caption class="wb-inv"><?= htmlspecialchars($audienceLabel . ' - ' . $t['notification_templates_heading']) ?></caption>
-                <thead>
-                    <tr>
-                        <th scope="col"><?= htmlspecialchars($t['notification_templates_col_event']) ?></th>
-                        <th scope="col"><?= htmlspecialchars($t['notification_templates_lang_en']) ?></th>
-                        <th scope="col"><?= htmlspecialchars($t['notification_templates_lang_fr']) ?></th>
-                        <th scope="col"><?= htmlspecialchars($t['notification_templates_col_actions']) ?></th>
-                    </tr>
-                </thead>
-                <tbody>
+            <div class="row wb-eqht-grd">
                 <?php
                 foreach (rmt_notification_events_for_audience($audience) as $event) {
                     $eventLabel = $t['notification_templates_event_' . $event] ?? $event;
@@ -214,7 +214,9 @@ include 'includes/template/head.php';
                         $ownRow = rmt_notification_template_fetch($link, $selectedTeamId, $audience, $event, $templateLanguage, $scopeServiceId, $scopeSubserviceId);
 
                         if ($ownRow !== null) {
-                            $sourceLabel = $t['notification_templates_source_custom'];
+                            $sourceLabel = $selectedTeamId === RMT_NOTIFICATION_GLOBAL_TEAM_ID
+                                ? $t['notification_templates_source_app_default']
+                                : $t['notification_templates_source_custom'];
                             $updated = trim((string) ($ownRow['dateupdated'] ?? ''));
                         } else {
                             $fallback = rmt_notification_template_resolve($link, $selectedTeamId, $audience, $event, $templateLanguage, $scopeServiceId, $scopeSubserviceId);
@@ -228,27 +230,32 @@ include 'includes/template/head.php';
                             $updated = '';
                         }
 
-                        $languageSummaries[$templateLanguage] = $sourceLabel . ($updated !== '' ? ' (' . $updated . ')' : '');
+                        $languageSummaries[$templateLanguage] = $sourceLabel;
                     }
                 ?>
-                    <tr>
-                        <th scope="row"><?= htmlspecialchars($eventLabel) ?></th>
-                        <td><?= htmlspecialchars($languageSummaries['en']) ?></td>
-                        <td><?= htmlspecialchars($languageSummaries['fr']) ?></td>
-                        <td>
+                    <div class="col-sm-6 col-md-4 mrgn-bttm-md">
+                        <section class="panel panel-default hght-inhrt">
+                            <header class="panel-heading">
+                                <h3 class="h5 mrgn-tp-sm"><?= htmlspecialchars($eventLabel) ?></h3>
+                            </header>
+                            <div class="panel-body">
+                                <p><strong><?= htmlspecialchars($t['notification_templates_lang_en']) ?></strong><br><?= htmlspecialchars($languageSummaries['en']) ?></p>
+                                <p><strong><?= htmlspecialchars($t['notification_templates_lang_fr']) ?></strong><br><?= htmlspecialchars($languageSummaries['fr']) ?></p>
+                            </div>
+                            <footer class="panel-footer">
                             <a class="btn btn-primary btn-block" href="/notification-template-edit.php?team_id=<?= $selectedTeamId ?>&service_id=<?= $scopeServiceId ?>&subservice_id=<?= $scopeSubserviceId ?>&audience=<?= urlencode($audience) ?>&event=<?= urlencode($event) ?>&lang=<?= htmlspecialchars($lang) ?>">
                                 <?= htmlspecialchars($t['notification_templates_edit']) ?><span class="wb-inv"> <?= htmlspecialchars($eventLabel) ?></span>
                             </a>
                             <a class="wb-lbx lbx-modal btn btn-default btn-block" href="includes/notification-template-preview-dialog.php?team_id=<?= $selectedTeamId ?>&service_id=<?= $scopeServiceId ?>&subservice_id=<?= $scopeSubserviceId ?>&audience=<?= urlencode($audience) ?>&event=<?= urlencode($event) ?>&lang=<?= htmlspecialchars($lang) ?>">
                                 <?= htmlspecialchars($t['notification_templates_preview']) ?><span class="wb-inv"> <?= htmlspecialchars($eventLabel) ?></span>
                             </a>
-                        </td>
-                    </tr>
+                            </footer>
+                        </section>
+                    </div>
                 <?php
                 }
                 ?>
-                </tbody>
-            </table>
+            </div>
             <?php } ?>
 
             <?php include 'includes/template/page-details.php'; ?>

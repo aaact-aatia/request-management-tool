@@ -25,6 +25,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	$teamnameen = mysqli_real_escape_string($link,$_POST['nameen']);
 	$teamnamefr = mysqli_real_escape_string($link,$_POST['namefr']);
 	$teamemail = mysqli_real_escape_string($link,$_POST['email']);
+	$replyToId = mysqli_real_escape_string($link, trim((string) ($_POST['reply_to_id'] ?? '')));
 	$teamLeadUserId = !empty($_POST['team_lead_user_id']) ? (int)$_POST['team_lead_user_id'] : 0;
 	$date_now = date("Y-m-d H:i:s");
 	$updatedby = $_SESSION['pid'];
@@ -53,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	
 	// Create SQL statement
 	$teamLeadSqlValue = ($teamLeadUserId > 0) ? (string)$teamLeadUserId : "NULL";
-	$sql = "INSERT INTO tblteams(`nameen`, `namefr`, `email`, `team_lead_user_id`, `dateadded`, `dateupdated`, `updatedby`, `status`) VALUES ('$teamnameen', '$teamnamefr', '$teamemail', $teamLeadSqlValue, '$date_now', '$date_now', '$updatedby', '$status')";
+	$sql = "INSERT INTO tblteams(`nameen`, `namefr`, `email`, `reply_to_id`, `team_lead_user_id`, `dateadded`, `dateupdated`, `updatedby`, `status`) VALUES ('$teamnameen', '$teamnamefr', '$teamemail', NULLIF('$replyToId', ''), $teamLeadSqlValue, '$date_now', '$date_now', '$updatedby', '$status')";
 	rmt_admin_query($link,$sql);
 	
 	// Now redirect
@@ -68,6 +69,8 @@ $translations = [
 		'team_name_en' => 'Team name (english):',
 		'team_name_fr' => 'Team name (french):',
 		'team_email' => 'Team email:',
+		'reply_to_id' => 'GC Notify reply-to ID:',
+		'reply_to_id_hint' => 'Optional. Use the ID from GC Notify Settings. Blank uses the global default.',
 		'team_lead' => 'Team Lead:',
 		'team_lead_hint' => 'Optional: The person responsible for day-to-day team operations.',
 		'none_assigned' => 'None assigned',
@@ -79,6 +82,8 @@ $translations = [
 		'team_name_en' => 'Nom de l\'équipe (anglais):',
 		'team_name_fr' => 'Nom de l\'équipe (français):',
 		'team_email' => 'Courriel de l\'équipe:',
+		'reply_to_id' => 'ID de réponse GC Notify :',
+		'reply_to_id_hint' => 'Facultatif. Utilisez l\'ID des paramètres GC Notify. Vide utilise la valeur globale.',
 		'team_lead' => 'Chef d\'équipe:',
 		'team_lead_hint' => 'Optionnel: La personne responsable des opérations quotidiennes de l\'équipe.',
 		'none_assigned' => 'Aucun assigné',
@@ -106,6 +111,11 @@ $t = $translations[$lang_code];
 		<div class="form-group">
 			<label for="email"><span class="field-name"><?= htmlspecialchars($t['team_email']) ?> <strong><?= htmlspecialchars($t['required']) ?></strong></span></label>
 				<input type="email" class="form-control" id="email" name="email" value="" required>
+		</div>
+		<div class="form-group">
+			<label for="reply_to_id"><span class="field-name"><?= htmlspecialchars($t['reply_to_id']) ?></span></label>
+			<input type="text" class="form-control" id="reply_to_id" name="reply_to_id" value="">
+			<p class="small"><?= htmlspecialchars($t['reply_to_id_hint']) ?></p>
 		</div>
 		<div class="form-group">
 			<label for="team_lead_user_id"><span class="field-name"><?= htmlspecialchars($t['team_lead']) ?></span></label>

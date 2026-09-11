@@ -28,6 +28,7 @@ All credentials are loaded from `.env` and runtime environment variables. Notifi
 GCNOTIFY_API_KEY=your_gc_notify_api_key
 GCNOTIFY_TEMPLATE_ID=your_notification_template_id
 GCNOTIFY_TEST_EMAIL=your_test_email@example.com
+GCNOTIFY_EMAIL_REPLY_TO_ID=
 GCNOTIFY_CURL_CA_BUNDLE=
 GCNOTIFY_CURL_INSECURE=false
 APP_BASE_URL=https://your-dev-or-prod-base-url

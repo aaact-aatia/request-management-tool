@@ -25,9 +25,9 @@
       "en": "Request Management Tool (RMT)",
       "fr": "Outil de gestion des demandes (OGD)"
     },
-    "organization": {
-      "en": "IT Accessibility Office",
-      "fr": "Bureau de l'accessibilité de la TI"
+      "organization": {
+         "en": "Accessibility, Accommodation and Adaptive Computer Technology (AAACT)",
+         "fr": "Accessibilité, adaptation et technologie informatique adaptée (AATIA)"
     },
     "organization_url": {
       "en": "http://iservice.prv/accessibility",

@@ -101,7 +101,10 @@ function rmt_notification_placeholder_catalog(): array {
     return [
         ['token' => 'requestid', 'en' => 'Request ID', 'fr' => 'Numero de demande'],
         ['token' => 'requesttitle', 'en' => 'Request title', 'fr' => 'Titre de la demande'],
+        ['token' => 'assignee', 'en' => 'Assigned employee name', 'fr' => 'Nom de la personne assignee'],
+        ['token' => 'assigned_by', 'en' => 'Assigned by (person who made assignment)', 'fr' => 'Assignee par (personne ayant fait l\'assignation)'],
         ['token' => 'teamname', 'en' => 'Team name', 'fr' => 'Nom de l\'equipe'],
+        ['token' => 'teamemail', 'en' => 'Team email address', 'fr' => 'Adresse courriel de l\'equipe'],
         ['token' => 'catalogue_name', 'en' => 'Catalogue/topic name', 'fr' => 'Nom du catalogue'],
         ['token' => 'service_name', 'en' => 'Service name', 'fr' => 'Nom du service'],
         ['token' => 'status_label', 'en' => 'Status label', 'fr' => 'Libelle du statut'],

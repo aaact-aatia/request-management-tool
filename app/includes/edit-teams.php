@@ -29,6 +29,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	$teamnameen = mysqli_real_escape_string($link,$_POST['nameen']);
 	$teamnamefr = mysqli_real_escape_string($link,$_POST['namefr']);
 	$teamemail = mysqli_real_escape_string($link,$_POST['email']);
+	$replyToId = mysqli_real_escape_string($link, trim((string) ($_POST['reply_to_id'] ?? '')));
 	$teamLeadUserId = !empty($_POST['team_lead_user_id']) ? (int)$_POST['team_lead_user_id'] : 0;
 	$date_now = date("Y-m-d H:i:s");
 	$updatedby = $_SESSION['pid'];
@@ -56,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	
 	// Create SQL statement
 	$teamLeadSqlValue = ($teamLeadUserId > 0) ? (string)$teamLeadUserId : "NULL";
-	$sql = "UPDATE `tblteams` SET `nameen` = '$teamnameen', `namefr` = '$teamnamefr', `email` = '$teamemail', `team_lead_user_id` = $teamLeadSqlValue, `dateupdated` = '$date_now', `updatedby` = '$updatedby' WHERE id='$contactid'";
+	$sql = "UPDATE `tblteams` SET `nameen` = '$teamnameen', `namefr` = '$teamnamefr', `email` = '$teamemail', `reply_to_id` = NULLIF('$replyToId', ''), `team_lead_user_id` = $teamLeadSqlValue, `dateupdated` = '$date_now', `updatedby` = '$updatedby' WHERE id='$contactid'";
 	rmt_admin_query($link,$sql);
 	
 	// Now redirect
@@ -90,6 +91,11 @@ if(rmt_result_num_rows($result2)>0){
 		<div class="form-group">
 			<label for="email"><span class="field-name"><?php echo $lang_code === 'en' ? 'Team email' : 'Courriel de l\'équipe'; ?>: <strong>(<?php echo $lang_code === 'en' ? 'required' : 'requis'; ?>)</strong></span></label>
 				<input type="email" class="form-control full-width" id="email" name="email" value="<?php echo htmlspecialchars($row2['email']); ?>" required>
+		</div>
+		<div class="form-group">
+			<label for="reply_to_id"><span class="field-name"><?php echo $lang_code === 'en' ? 'GC Notify reply-to ID' : 'ID de réponse GC Notify'; ?>:</span></label>
+			<input type="text" class="form-control full-width" id="reply_to_id" name="reply_to_id" value="<?php echo htmlspecialchars($row2['reply_to_id'] ?? ''); ?>">
+			<p class="small"><?php echo $lang_code === 'en' ? 'Optional. Use the ID from GC Notify Settings. Blank uses the global default.' : 'Facultatif. Utilisez l\'ID des paramètres GC Notify. Vide utilise la valeur globale.'; ?></p>
 		</div>
 		<div class="form-group">
 			<label for="team_lead_user_id"><span class="field-name"><?php echo $lang_code === 'en' ? 'Team Lead' : 'Chef d\'équipe'; ?>:</span></label>

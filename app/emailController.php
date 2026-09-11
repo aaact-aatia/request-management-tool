@@ -116,6 +116,16 @@ function sendEmail($emailAddress, $templateId, $personalisation, array $options 
 		$personalisationPayload = [];
 	}
 
+	if (strtolower(trim((string) app_env('APP_ENV', 'production'))) === 'development') {
+		$developmentRole = strtoupper($recipientRole);
+		$developmentRole = match ($developmentRole) {
+			'TEAM_LEAD' => 'LEAD',
+			'' => strtoupper((string) $recipientType),
+			default => $developmentRole,
+		};
+		$personalisationPayload['subject'] = $developmentRole . ': ' . (string) ($personalisationPayload['subject'] ?? '');
+	}
+
 	$apiKey = app_env('GCNOTIFY_API_KEY', '');
 	if ($apiKey === '') {
 		error_log('GC Notify skipped: GCNOTIFY_API_KEY is missing.');
@@ -123,12 +133,20 @@ function sendEmail($emailAddress, $templateId, $personalisation, array $options 
 		return false;
 	}
 
-	$send = static function (string $recipient) use ($templateId, $personalisationPayload, $apiKey): array {
+	$replyToId = trim((string) ($options['replyToId'] ?? ''));
+	if ($replyToId === '') {
+		$replyToId = trim((string) app_setting('GCNOTIFY_EMAIL_REPLY_TO_ID', ''));
+	}
+	$send = static function (string $recipient) use ($templateId, $personalisationPayload, $apiKey, $replyToId): array {
 		$payload = [
 			'email_address' => $recipient,
 			'template_id' => $templateId,
 			'personalisation' => $personalisationPayload,
 		];
+
+		if ($replyToId !== '') {
+			$payload['email_reply_to_id'] = $replyToId;
+		}
 
 		$curlOptions = [
 			CURLOPT_URL => 'https://api.notification.canada.ca/v2/notifications/email',

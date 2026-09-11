@@ -9,17 +9,19 @@ $nameField = $lang == 'fr' ? 'namefr' : 'nameen';
 $translations = [
 	'en' => [
 		'page_title' => 'Request details - a11y-',
-		'title_suffix' => ' - Request Management Tool - IT Accessibility Office',
+		'title_suffix' => ' - Request Management Tool - Accessibility, Accommodation and Adaptive Computer Technology (AAACT)',
 		'success' => 'Success',
 		'success_updated' => 'You have successfully updated the request, thank you!',
 		'success_status_updated' => 'Status updated from %s to %s.',
 		'success_fields_updated' => 'Request details updated:',
 		'success_submitted' => 'You have successfully submitted a new request, details are below. Thank you!',
+		'success_submitted_with_request' => 'Request %s has been successfully submitted, details are below. Thank you!',
 		'success_css' => 'You have successfully submitted the client satisfaction survey. Thank you!',
 		'success_css_sent' => 'You have successfully marked the survey as sent. Thank you!',
 		'edit' => 'Edit',
 		'delete' => 'Delete',
 		'request' => 'request',
+		'request_number' => 'Request number',
 		'escalation_required' => 'Request is now past SLA, escalation required!',
 		'past_sla' => 'Request is now past SLA!',
 		'close_to_sla' => 'Request is close to SLA!',
@@ -150,11 +152,13 @@ $translations = [
 		'success_status_updated' => 'Le statut a ete mis a jour de %s a %s.',
 		'success_fields_updated' => 'Details de la demande mis a jour :',
 		'success_submitted' => 'Vous avez soumis une nouvelle demande avec succès, les détails sont ci-dessous. Merci!',
+		'success_submitted_with_request' => 'Demande %s soumise avec succès, les détails sont ci-dessous. Merci!',
 		'success_css' => 'Vous avez soumis le sondage de satisfaction de la clientèle avec succès. Merci!',
 		'success_css_sent' => 'Vous avez marqué le sondage comme envoyé avec succès. Merci!',
 		'edit' => 'Modifier',
 		'delete' => 'Supprimer',
 		'request' => 'demande',
+		'request_number' => 'Numéro de demande',
 		'escalation_required' => 'La demande a dépassé le NdS, escalade requise!',
 		'past_sla' => 'La demande a dépassé le NdS!',
 		'close_to_sla' => 'La demande est proche de la NPS!',
@@ -327,6 +331,25 @@ require('includes/httpscheck.php');
 require('includes/sla-calculator.php');
 require('includes/helpers.php');
 
+$isClientSubmissionView = false;
+if (($_GET['client'] ?? '') === '1') {
+	$clientToken = (string) ($_GET['token'] ?? '');
+	$clientRequestId = filter_var($_GET['rid'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'default' => 0]]);
+	$clientTokenRequests = $_SESSION['client_request_view_tokens'] ?? [];
+	if ($clientToken !== '' && isset($clientTokenRequests[$clientToken])
+		&& (int) $clientTokenRequests[$clientToken] === $clientRequestId) {
+		$isClientSubmissionView = true;
+		$triageid = $clientRequestId;
+	} else {
+		header("Location: /openrequest.php?lang={$lang}&status=failed");
+		exit();
+	}
+}
+
+if (!$isClientSubmissionView) {
+	require('includes/loggedincheck.php');
+}
+
 $status = getGetValue('status');
 $successDetailMessages = ['messages' => [], 'changed_fields' => []];
 if ($status === 'success') {
@@ -351,7 +374,7 @@ require('sql.php');
 $_SESSION['lang'] = $lang;
 
 // Now first get the request ID
-$triageid = null;
+$triageid = $isClientSubmissionView ? $triageid : null;
 if (!empty($_GET['rid']))
 {
 	$triageid = $_GET['rid'];
@@ -362,6 +385,14 @@ if (!empty($_GET['erid']))
 {
 	// There is a request email id so grab it
 	$triageid = base64_decode($_GET['erid']);
+}
+
+if ($isClientSubmissionView) {
+	$triageid = filter_var($triageid, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'default' => 0]]);
+	if ($triageid !== $clientRequestId) {
+		header("Location: /openrequest.php?lang={$lang}&status=failed");
+		exit();
+	}
 }
 
 // Create encoded request ID
@@ -379,6 +410,10 @@ else{
 $sql = "SELECT * FROM tbltriage WHERE id='$triageid'";
 
 $result = mysqli_query($link,$sql);
+if ($isClientSubmissionView && (!$result || mysqli_num_rows($result) === 0)) {
+	header("Location: /openrequest.php?lang={$lang}&status=failed");
+	exit();
+}
 //List it
 if(mysqli_num_rows($result)>0){
 	while($row = mysqli_fetch_array($result)){
@@ -513,6 +548,80 @@ if(mysqli_num_rows($result)>0){
 			if ($cBdays >= $sla2) {
 				$closedue = true;
 			}
+		}
+
+		if ($isClientSubmissionView) {
+			$clientSubmissionMessage = sprintf($t['success_submitted_with_request'], (string) $row['requestid']);
+			$pageTitle = $clientSubmissionMessage;
+			$pageDescription = '';
+			include 'includes/template/head.php';
+			include 'includes/template/header.php';
+			?>
+			<main role="main" property="mainContentOfPage" class="container">
+				<h1 property="name" id="wb-cont"><?= htmlspecialchars($clientSubmissionMessage, ENT_QUOTES, 'UTF-8') ?></h1>
+				<h2><?= htmlspecialchars($t['fieldset_request_details'], ENT_QUOTES, 'UTF-8') ?></h2>
+				<dl class="colcount-sm-2">
+					<div style="break-inside: avoid;">
+						<dt><?= htmlspecialchars($t['request_number'], ENT_QUOTES, 'UTF-8') ?></dt>
+						<dd><?= htmlspecialchars((string) $row['requestid'], ENT_QUOTES, 'UTF-8') ?></dd>
+					</div>
+					<div style="break-inside: avoid;">
+						<dt><?= htmlspecialchars($t['title'], ENT_QUOTES, 'UTF-8') ?></dt>
+						<dd><?= htmlspecialchars((string) ($row['title'] ?? ''), ENT_QUOTES, 'UTF-8') ?></dd>
+					</div>
+					<?php if (!empty($row['request_subject'])): ?>
+					<div style="break-inside: avoid;">
+						<dt><?= htmlspecialchars($t['request_subject'], ENT_QUOTES, 'UTF-8') ?></dt>
+						<dd><?= htmlspecialchars((string) $row['request_subject'], ENT_QUOTES, 'UTF-8') ?></dd>
+					</div>
+					<?php endif; ?>
+					<?php if (!empty($row['additionalinfo'])): ?>
+					<div style="break-inside: avoid;">
+						<dt><?= htmlspecialchars($t['additional_info'], ENT_QUOTES, 'UTF-8') ?></dt>
+						<dd><?= nl2br(htmlspecialchars((string) $row['additionalinfo'], ENT_QUOTES, 'UTF-8')) ?></dd>
+					</div>
+					<?php endif; ?>
+					<?php if ($catalogueid != 0): ?>
+					<div style="break-inside: avoid;"><dt><?= htmlspecialchars($t['catalogue_name'], ENT_QUOTES, 'UTF-8') ?></dt><dd><?= htmlspecialchars($cataloguename, ENT_QUOTES, 'UTF-8') ?></dd></div>
+					<?php endif; ?>
+					<?php if ($serviceid != 0): ?>
+					<div style="break-inside: avoid;"><dt><?= htmlspecialchars($t['service_name'], ENT_QUOTES, 'UTF-8') ?></dt><dd><?= htmlspecialchars($servicename, ENT_QUOTES, 'UTF-8') ?></dd></div>
+					<?php endif; ?>
+					<?php if ($subserviceid != 0 && $subservicename !== ''): ?>
+					<div style="break-inside: avoid;"><dt><?= htmlspecialchars($t['subservice_name'], ENT_QUOTES, 'UTF-8') ?></dt><dd><?= htmlspecialchars($subservicename, ENT_QUOTES, 'UTF-8') ?></dd></div>
+					<?php endif; ?>
+					<div style="break-inside: avoid;"><dt><?= htmlspecialchars($t['department_agency'], ENT_QUOTES, 'UTF-8') ?></dt><dd><?= htmlspecialchars($departmentAgency !== '' ? $departmentAgency : $t['no_department_selected'], ENT_QUOTES, 'UTF-8') ?></dd></div>
+					<?php if (!empty($row['daterequired'])): ?>
+					<div style="break-inside: avoid;"><dt><?= htmlspecialchars($t['date_required'], ENT_QUOTES, 'UTF-8') ?></dt><dd><?= htmlspecialchars((string) $row['daterequired'], ENT_QUOTES, 'UTF-8') ?></dd></div>
+					<?php endif; ?>
+					<?php if (!empty($row['firstsprintstartdate'])): ?>
+					<div style="break-inside: avoid;"><dt><?= htmlspecialchars($t['sprint_start'], ENT_QUOTES, 'UTF-8') ?></dt><dd><?= htmlspecialchars((string) $row['firstsprintstartdate'], ENT_QUOTES, 'UTF-8') ?></dd></div>
+					<?php endif; ?>
+					<?php if (!empty($row['firstsprintenddate'])): ?>
+					<div style="break-inside: avoid;"><dt><?= htmlspecialchars($t['sprint_end'], ENT_QUOTES, 'UTF-8') ?></dt><dd><?= htmlspecialchars((string) $row['firstsprintenddate'], ENT_QUOTES, 'UTF-8') ?></dd></div>
+					<?php endif; ?>
+					<?php if (!empty($row['sprintschedule'])): ?>
+					<div style="break-inside: avoid;"><dt><?= htmlspecialchars($t['sprint_schedule'], ENT_QUOTES, 'UTF-8') ?></dt><dd><a href="<?= htmlspecialchars((string) $row['sprintschedule'], ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($t['view_sprint_schedule'], ENT_QUOTES, 'UTF-8') ?></a></dd></div>
+					<?php endif; ?>
+					<?php if (!empty($row['sprintdefects'])): ?>
+					<div style="break-inside: avoid;"><dt><?= htmlspecialchars($t['sprint_defect'], ENT_QUOTES, 'UTF-8') ?></dt><dd><a href="<?= htmlspecialchars((string) $row['sprintdefects'], ENT_QUOTES, 'UTF-8') ?>"><?= htmlspecialchars($t['view_sprint_defect'], ENT_QUOTES, 'UTF-8') ?></a></dd></div>
+					<?php endif; ?>
+				</dl>
+				<h2><?= htmlspecialchars($t['fieldset_client_info'], ENT_QUOTES, 'UTF-8') ?></h2>
+				<dl class="colcount-sm-2">
+					<div style="break-inside: avoid;"><dt><?= htmlspecialchars($t['first_name'], ENT_QUOTES, 'UTF-8') ?></dt><dd><?= htmlspecialchars((string) ($row['clientfname'] ?? ''), ENT_QUOTES, 'UTF-8') ?></dd></div>
+					<div style="break-inside: avoid;"><dt><?= htmlspecialchars($t['last_name'], ENT_QUOTES, 'UTF-8') ?></dt><dd><?= htmlspecialchars((string) ($row['clientlname'] ?? ''), ENT_QUOTES, 'UTF-8') ?></dd></div>
+					<div style="break-inside: avoid;"><dt><?= htmlspecialchars($t['client_email'], ENT_QUOTES, 'UTF-8') ?></dt><dd><?= htmlspecialchars((string) ($row['clientemail'] ?? ''), ENT_QUOTES, 'UTF-8') ?></dd></div>
+				</dl>
+				<?php include 'includes/template/page-details.php'; ?>
+			</main>
+			<?php include 'includes/template/footer.php'; ?>
+			<?php include 'includes/template/scripts.php'; ?>
+			</body>
+			</html>
+			<?php
+			mysqli_close($link);
+			exit();
 		}
 ?>
 	<?php
@@ -995,18 +1104,25 @@ require_once __DIR__ . '/includes/csrf.php';
 				if ($resolvedClientEmail === '') {
 					$resolvedActionStatus = 'missing_email';
 				} else {
-					$requestLanguage = rmt_get_request_language($link, (int) $triageid, $lang);
 					$encodedTriageId = base64_encode((string) $triageid);
 					$encodedRequestPublicId = urlencode('a11y-' . (string) $row['requestid']);
-					$requestViewUrl = app_url('viewrequest.php?lang=' . $requestLanguage . '&erid=' . $encodedTriageId . '&reqid=' . $encodedRequestPublicId);
 					$frSurveyLink = app_url('client-survey.php?lang=fr&erid=' . $encodedTriageId . '&reqid=' . $encodedRequestPublicId);
 					$enSurveyLink = app_url('client-survey.php?lang=en&erid=' . $encodedTriageId . '&reqid=' . $encodedRequestPublicId);
+
+					$senderId = isset($_SESSION['pid']) ? (int) $_SESSION['pid'] : 0;
+					$senderName = '';
+					if ($senderId > 0) {
+						$senderRes = mysqli_query($link, "SELECT firstname, lastname FROM tblusers WHERE id = '$senderId' LIMIT 1");
+						if ($senderRes && $senderRow = mysqli_fetch_assoc($senderRes)) {
+							$senderName = trim(($senderRow['firstname'] ?? '') . ' ' . ($senderRow['lastname'] ?? ''));
+						}
+					}
 
 					$resolvedContext = [
 						'requestid' => (string) $row['requestid'],
 						'client_fname' => (string) ($row['clientfname'] ?? ''),
 						'client_lname' => (string) ($row['clientlname'] ?? ''),
-						'url' => $requestViewUrl,
+						'assigned_by' => $senderName,
 					];
 					if ($surveyEnabled) {
 						$resolvedContext['survey_link_en'] = $enSurveyLink;
@@ -1019,7 +1135,6 @@ require_once __DIR__ . '/includes/csrf.php';
 						'requesttitle' => (string) ($row['title'] ?? ''),
 						'client_fname' => (string) ($row['clientfname'] ?? ''),
 						'client_lname' => (string) ($row['clientlname'] ?? ''),
-						'url' => $requestViewUrl,
 						'notification_event' => 'resolved',
 						'template_category_id' => $category['id'],
 						'template_category_name_en' => $category['name_en'],
@@ -1033,6 +1148,8 @@ require_once __DIR__ . '/includes/csrf.php';
 					if (rmt_notification_should_send($link, (int) $triageid, (int) $tarraycontactid, 'client', 'resolved', $resolvedClientEmail)) {
 						$sent = sendEmail($resolvedClientEmail, $templateId, json_encode($personalisation), ['recipientType' => 'client']);
 					}
+					// Internal notification to Lead and Manager
+					rmt_send_internal_notifications($link, (int) $triageid, (int) $tarraycontactid, (int) $serviceid, (int) $subserviceid, 'resolved', ['lead', 'manager'], $personalisation);
 					if ($sent) {
 						if ($surveyEnabled) {
 							$currentSurveySentCount = (int) ($row['cssurvey'] ?? 0);

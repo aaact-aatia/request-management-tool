@@ -101,6 +101,11 @@ include 'includes/template/head.php';
         <h2><?= htmlspecialchars($t['alert_access_denied_heading']) ?></h2>
         <p><?= htmlspecialchars($t['alert_access_denied_message']) ?></p>
     </section>
+    <?php elseif ($status === 'submitted'): ?>
+    <section class="alert alert-success" role="status">
+        <h2><?= htmlspecialchars($t['intake_submitted_heading']) ?></h2>
+        <p><?= htmlspecialchars($t['intake_submitted_message']) ?></p>
+    </section>
     <?php endif; ?>
 
     <?php if ($basicMode): ?>

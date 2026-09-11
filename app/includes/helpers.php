@@ -526,6 +526,179 @@ function rmt_get_active_teams(mysqli $link): array {
     return $teams;
 }
 
+/**
+ * Resolve internal recipient email addresses for a team based on roles.
+ *
+ * @param mysqli $link
+ * @param int $teamId
+ * @param array $roles Supported roles: 'team', 'lead', 'manager', 'assignee'
+ * @param int $workerId Optional worker/assignee user ID
+ * @return array Array of unique, valid email addresses
+ */
+function rmt_get_team_internal_recipients(mysqli $link, int $teamId, array $roles = ['team', 'lead', 'manager'], int $workerId = 0): array {
+    $emails = [];
+
+    if ($teamId <= 0) {
+        $emails[] = 'daiu-anci@ssc-spc.gc.ca';
+        if (in_array('assignee', $roles, true) && $workerId > 0) {
+            $workerRow = rmt_db_fetch_one($link, "SELECT email FROM tblusers WHERE id = ? AND status = 1 LIMIT 1", 'i', [$workerId]);
+            if (!empty($workerRow['email'])) {
+                $emails[] = trim((string) $workerRow['email']);
+            }
+        }
+        return array_values(array_unique(array_filter($emails, static function ($e) {
+            return filter_var($e, FILTER_VALIDATE_EMAIL) !== false;
+        })));
+    }
+
+    $teamRow = rmt_db_fetch_one($link, "SELECT email, team_lead_user_id FROM tblteams WHERE id = ? AND status = 1 LIMIT 1", 'i', [$teamId]);
+
+    if ($teamRow && in_array('team', $roles, true) && !empty($teamRow['email'])) {
+        $emails[] = trim((string) $teamRow['email']);
+    }
+
+    $leadId = (int) ($teamRow['team_lead_user_id'] ?? 0);
+    if (in_array('lead', $roles, true) && $leadId > 0) {
+        $leadRow = rmt_db_fetch_one($link, "SELECT email FROM tblusers WHERE id = ? AND status = 1 LIMIT 1", 'i', [$leadId]);
+        if (!empty($leadRow['email'])) {
+            $emails[] = trim((string) $leadRow['email']);
+        }
+    } elseif (in_array('lead', $roles, true)) {
+        $statement = rmt_db_execute($link, "SELECT email FROM tblusers WHERE atype = 4 AND status = 1 AND FIND_IN_SET(?, team) > 0", 'i', [$teamId]);
+        $result = mysqli_stmt_get_result($statement);
+        while ($leadRow = mysqli_fetch_assoc($result)) {
+            if (!empty($leadRow['email'])) {
+                $emails[] = trim((string) $leadRow['email']);
+            }
+        }
+        mysqli_stmt_close($statement);
+    }
+
+    if (in_array('manager', $roles, true)) {
+        $statement = rmt_db_execute($link, "SELECT email FROM tblusers WHERE atype = 3 AND status = 1 AND FIND_IN_SET(?, team) > 0", 'i', [$teamId]);
+        $result = mysqli_stmt_get_result($statement);
+        while ($mgrRow = mysqli_fetch_assoc($result)) {
+            if (!empty($mgrRow['email'])) {
+                $emails[] = trim((string) $mgrRow['email']);
+            }
+        }
+        mysqli_stmt_close($statement);
+
+        $targetUserIds = array_filter([$leadId, $workerId]);
+        foreach ($targetUserIds as $uId) {
+            if ($uId > 0) {
+                $uRow = rmt_db_fetch_one($link, "SELECT manager_id FROM tblusers WHERE id = ? AND status = 1 LIMIT 1", 'i', [$uId]);
+                $mgrId = (int) ($uRow['manager_id'] ?? 0);
+                if ($mgrId > 0) {
+                    $mgrUserRow = rmt_db_fetch_one($link, "SELECT email FROM tblusers WHERE id = ? AND status = 1 LIMIT 1", 'i', [$mgrId]);
+                    if (!empty($mgrUserRow['email'])) {
+                        $emails[] = trim((string) $mgrUserRow['email']);
+                    }
+                }
+            }
+        }
+    }
+
+    if (in_array('assignee', $roles, true) && $workerId > 0) {
+        $workerRow = rmt_db_fetch_one($link, "SELECT email FROM tblusers WHERE id = ? AND status = 1 LIMIT 1", 'i', [$workerId]);
+        if (!empty($workerRow['email'])) {
+            $emails[] = trim((string) $workerRow['email']);
+        }
+    }
+
+    $validEmails = [];
+    foreach ($emails as $email) {
+        $email = trim((string) $email);
+        if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL) !== false && !in_array($email, $validEmails, true)) {
+            $validEmails[] = $email;
+        }
+    }
+
+    return $validEmails;
+}
+
+/**
+ * Dispatch internal (employee) notifications for a given event to recipient roles.
+ */
+function rmt_send_internal_notifications(
+    mysqli $link,
+    int $triageId,
+    int $teamId,
+    int $serviceId,
+    int $subserviceId,
+    string $event,
+    array $roles,
+    array $personalisation,
+    int $workerId = 0
+): array {
+    $recipients = rmt_get_team_internal_recipients($link, $teamId, $roles, $workerId);
+    if (empty($recipients)) {
+        return [];
+    }
+
+    $templateId = app_notify_template_id('notification_generic');
+    $category = rmt_notification_template_category($event);
+
+    $teamPersonalisation = $personalisation + [
+        'notification_event' => $event,
+        'template_category_id' => $category['id'],
+        'template_category_name_en' => $category['name_en'],
+        'template_category_name_fr' => $category['name_fr'],
+        'subject' => rmt_notification_subject($event, 'internal', 'en', $personalisation, $link, $teamId, $serviceId, $subserviceId),
+        'message' => rmt_notification_message($event, 'internal', 'en', $personalisation, $link, $teamId, $serviceId, $subserviceId),
+    ];
+
+    $sentEmails = [];
+    foreach ($recipients as $recipientEmail) {
+        if (rmt_notification_should_send($link, $triageId, $teamId, 'employee', $event, $recipientEmail)) {
+            $recipientRole = rmt_internal_recipient_role($link, $teamId, $recipientEmail, $roles, $workerId);
+            $recipientPersonalisation = $teamPersonalisation;
+            if (sendEmail($recipientEmail, $templateId, json_encode($recipientPersonalisation), ['recipientType' => 'internal', 'recipientRole' => $recipientRole])) {
+                $sentEmails[] = $recipientEmail;
+            }
+        }
+    }
+
+    return $sentEmails;
+}
+
+function rmt_internal_recipient_role(mysqli $link, int $teamId, string $email, array $roles, int $workerId = 0): string {
+    $email = trim($email);
+    if (in_array('team', $roles, true)) {
+        $teamRow = rmt_db_fetch_one($link, 'SELECT email FROM tblteams WHERE id = ? AND status = 1 LIMIT 1', 'i', [$teamId]);
+        if ($teamRow && strcasecmp(trim((string) $teamRow['email']), $email) === 0) {
+            return 'team';
+        }
+    }
+
+    if (in_array('assignee', $roles, true) && $workerId > 0) {
+        $workerRow = rmt_db_fetch_one($link, 'SELECT email FROM tblusers WHERE id = ? AND status = 1 LIMIT 1', 'i', [$workerId]);
+        if ($workerRow && strcasecmp(trim((string) $workerRow['email']), $email) === 0) {
+            return 'assignee';
+        }
+    }
+
+    if (in_array('lead', $roles, true)) {
+        $leadRow = rmt_db_fetch_one($link, "SELECT u.email FROM tblusers u LEFT JOIN tblteams t ON t.team_lead_user_id = u.id WHERE t.id = ? AND u.status = 1 AND LOWER(u.email) = LOWER(?) LIMIT 1", 'is', [$teamId, $email]);
+        if ($leadRow) {
+            return 'team_lead';
+        }
+        $leadRow = rmt_db_fetch_one($link, "SELECT email FROM tblusers WHERE atype = 4 AND status = 1 AND FIND_IN_SET(?, team) > 0 AND LOWER(email) = LOWER(?) LIMIT 1", 'is', [$teamId, $email]);
+        if ($leadRow) {
+            return 'team_lead';
+        }
+    }
+
+    if (in_array('manager', $roles, true)) {
+        $managerRow = rmt_db_fetch_one($link, "SELECT email FROM tblusers WHERE atype = 3 AND status = 1 AND FIND_IN_SET(?, team) > 0 AND LOWER(email) = LOWER(?) LIMIT 1", 'is', [$teamId, $email]);
+        if ($managerRow) {
+            return 'manager';
+        }
+    }
+
+    return '';
+}
+
 function rmt_request_subject_text(string $type, string $lang): array {
     $type = rmt_normalize_request_subject_type($type) ?? 'subject';
     $translations = [
@@ -960,31 +1133,41 @@ function rmt_notification_salutation(string $language, array $context = [], stri
     return $isFrench ? 'Bonjour,' : 'Hello,';
 }
 
-function rmt_notification_signature_single_language(string $language, array $context = []): string {
+function rmt_notification_signature_single_language(string $language, array $context = [], string $recipientType = 'general'): string {
     $isFrench = (app_normalize_language($language) === 'fr');
+    $isClient = ($recipientType === 'client');
+
+    if (!$isClient) {
+        return $isFrench
+            ? "Outil de gestion des demandes (OGD)"
+            : "Request Management Tool (RMT)";
+    }
+
     $teamName = rmt_notification_escape((string) ($context['teamname'] ?? ''));
-    $teamEmail = rmt_notification_escape((string) ($context['team_email'] ?? 'aaact-aatia@ssc-spc.gc.ca'));
+    $teamEmail = rmt_notification_escape((string) ($context['team_email'] ?? ($context['teamemail'] ?? 'aaact-aatia@ssc-spc.gc.ca')));
     if ($teamEmail === '') {
         $teamEmail = 'aaact-aatia@ssc-spc.gc.ca';
     }
 
     if ($isFrench) {
-        $lines = [];
+        $lines = ['Merci beaucoup,'];
         if ($teamName !== '') {
             $lines[] = $teamName;
         }
-        $lines[] = 'Accessibilite, adaptation et technologie informatique adaptee (AATIA)';
         $lines[] = $teamEmail;
+        $lines[] = 'Accessibilité, adaptation et technologie informatique adaptée (AATIA)';
+        $lines[] = 'Transformation numérique Canada';
 
         return implode("\n", $lines);
     }
 
-    $lines = [];
+    $lines = ['Thank you very much,'];
     if ($teamName !== '') {
         $lines[] = $teamName;
     }
-    $lines[] = 'Accessibility, Accommodation and Adaptive Computer Technology (AAACT)';
     $lines[] = $teamEmail;
+    $lines[] = 'Accessibility, Accommodation and Adaptive Computer Technology (AAACT)';
+    $lines[] = 'Digital Transformation Canada';
 
     return implode("\n", $lines);
 }
@@ -1093,13 +1276,13 @@ function rmt_notification_subject_single_language(string $event, string $recipie
         case 'reassigned':
             if ($isClient) {
                 return $subjectPrefix . ($isFrench
-                    ? 'Votre demande d\'accessibilité ' . $requestId . ' a été réattribuée'
-                    : 'Your accessibility request ' . $requestId . ' has been reassigned');
+                    ? 'Votre demande d\'accessibilité ' . $requestId . ' a été assignée'
+                    : 'Your accessibility request ' . $requestId . ' has been assigned');
             }
 
             return $subjectPrefix . ($isFrench
-                ? 'Demande d\'accessibilité ' . $requestId . ' réattribuée à ' . $teamName
-                : 'Accessibility request ' . $requestId . ' reassigned to ' . $teamName);
+                ? 'Demande d\'accessibilité ' . $requestId . ' assignée à ' . $teamName
+                : 'Accessibility request ' . $requestId . ' assigned to ' . $teamName);
     }
 
     return $subjectPrefix . ($isFrench
@@ -1163,9 +1346,14 @@ function rmt_notification_message_single_language(string $event, string $recipie
             : 'View request: [' . $requestId . '](' . $requestUrl . ')';
     }
 
-    $signatureBlock = rmt_notification_signature_single_language($language, $context);
+    $salutationBlock = $isClient ? rmt_notification_salutation($language, $context, $recipientType) : '';
+    $signatureBlock = rmt_notification_signature_single_language($language, $context, $recipientType);
 
-    $withLink = static function (array $paragraphs) use ($format, $linkLine, $signatureBlock): string {
+    $withLink = static function (array $paragraphs) use ($format, $linkLine, $salutationBlock, $signatureBlock): string {
+        if ($salutationBlock !== '') {
+            array_unshift($paragraphs, $salutationBlock, '');
+        }
+
         if ($linkLine !== '') {
             $paragraphs[] = $linkLine;
         }
@@ -1181,14 +1369,10 @@ function rmt_notification_message_single_language(string $event, string $recipie
         case 'request_created':
             if ($isClient) {
                 return $withLink($isFrench ? [
-                    rmt_notification_salutation($language, $context, $recipientType),
-                    '',
                     $recipientPrefix . 'Votre demande d\'accessibilité ' . $requestId . ' a été reçue.',
                     'Nous l\'examinerons et nous communiquerons avec vous si des renseignements supplémentaires sont nécessaires.',
                     'Titre de la demande : ' . $requestTitle,
                 ] : [
-                    rmt_notification_salutation($language, $context, $recipientType),
-                    '',
                     $recipientPrefix . 'Your accessibility request ' . $requestId . ' has been received.',
                     'We will review it and contact you if more information is needed.',
                     'Request title: ' . $requestTitle,
@@ -1196,15 +1380,11 @@ function rmt_notification_message_single_language(string $event, string $recipie
             }
 
             return $withLink($isFrench ? [
-                rmt_notification_salutation($language, $context, $recipientType),
-                '',
                 $recipientPrefix . 'Une nouvelle demande d\'accessibilité ' . $requestId . ' a été assignée à votre équipe.',
                 'Titre de la demande : ' . $requestTitle,
                 'Catalogue : ' . $catalogueName,
                 'Service : ' . $serviceName,
             ] : [
-                rmt_notification_salutation($language, $context, $recipientType),
-                '',
                 $recipientPrefix . 'A new accessibility request ' . $requestId . ' has been assigned to your team.',
                 'Request title: ' . $requestTitle,
                 'Catalogue: ' . $catalogueName,
@@ -1213,15 +1393,11 @@ function rmt_notification_message_single_language(string $event, string $recipie
 
         case 'request_afterfact':
             return $withLink($isFrench ? [
-                rmt_notification_salutation($language, $context, $recipientType),
-                '',
                 $recipientPrefix . 'Une nouvelle demande d\'accessibilité ' . $requestId . ' a été soumise après la réalisation des travaux et a été assignée à votre équipe.',
                 'Titre de la demande : ' . $requestTitle,
                 'Catalogue : ' . $catalogueName,
                 'Service : ' . $serviceName,
             ] : [
-                rmt_notification_salutation($language, $context, $recipientType),
-                '',
                 $recipientPrefix . 'A new accessibility request ' . $requestId . ' was submitted after the work already happened and has been assigned to your team.',
                 'Request title: ' . $requestTitle,
                 'Catalogue: ' . $catalogueName,
@@ -1230,14 +1406,10 @@ function rmt_notification_message_single_language(string $event, string $recipie
 
         case 'request_aaact':
             return $withLink($isFrench ? [
-                rmt_notification_salutation($language, $context, $recipientType),
-                '',
                 $recipientPrefix . 'Une nouvelle demande d\'accessibilité ' . $requestId . ' requiert un triage AATIA.',
                 'Consultez les détails de la demande et acheminez-la à l\'équipe appropriée.',
                 'Titre de la demande : ' . $requestTitle,
             ] : [
-                rmt_notification_salutation($language, $context, $recipientType),
-                '',
                 $recipientPrefix . 'A new accessibility request ' . $requestId . ' needs AAACT triage.',
                 'Review the request details and route it to the appropriate team.',
                 'Request title: ' . $requestTitle,
@@ -1253,14 +1425,10 @@ function rmt_notification_message_single_language(string $event, string $recipie
                 }
 
                 return $withLink($isFrench ? [
-                    rmt_notification_salutation($language, $context, $recipientType),
-                    '',
                     $recipientPrefix . 'Votre demande ' . $requestId . ' a été résolue.',
                     'Si vous croyez que d\'autres travaux sont nécessaires, répondez à ce message et mentionnez votre numéro de demande.',
                     $surveyCta,
                 ] : [
-                    rmt_notification_salutation($language, $context, $recipientType),
-                    '',
                     $recipientPrefix . 'Your request ' . $requestId . ' has been resolved.',
                     'If you believe more work is required, reply to this message and reference your request number.',
                     $surveyCta,
@@ -1268,54 +1436,38 @@ function rmt_notification_message_single_language(string $event, string $recipie
             }
 
             return $withLink($isFrench ? [
-                rmt_notification_salutation($language, $context, $recipientType),
-                '',
                 $recipientPrefix . 'La demande d\'accessibilité ' . $requestId . ' a été marquée comme résolue.',
                 'Assurez-vous que les dossiers finaux et les actions de suivi sont complets.',
             ] : [
-                rmt_notification_salutation($language, $context, $recipientType),
-                '',
                 $recipientPrefix . 'Accessibility request ' . $requestId . ' has been marked as resolved.',
                 'Ensure any final records or follow-up actions are complete.',
             ]);
 
         case 'status_changed':
             return $withLink($isFrench ? [
-                rmt_notification_salutation($language, $context, $recipientType),
-                '',
-                $recipientPrefix . 'Le statut de votre demande ' . $requestId . ' a changé pour ' . $statusLabel . '.',
-                'Veuillez consulter les derniers détails de statut en utilisant le lien de demande ci-dessous.',
+                $recipientPrefix . 'Le statut de la demande ' . $requestId . ' a changé pour ' . $statusLabel . '.',
+                'Veuillez consulter les derniers détails en utilisant le lien ci-dessous.',
             ] : [
-                rmt_notification_salutation($language, $context, $recipientType),
-                '',
-                $recipientPrefix . 'The status of your request ' . $requestId . ' has changed to ' . $statusLabel . '.',
-                'Please review the latest status details using the request link below.',
+                $recipientPrefix . 'The status of request ' . $requestId . ' has changed to ' . $statusLabel . '.',
+                'Please review the latest details using the request link below.',
             ]);
 
         case 'reassigned':
             if ($isClient) {
                 return $withLink($isFrench ? [
-                    rmt_notification_salutation($language, $context, $recipientType),
-                    '',
-                    $recipientPrefix . 'Votre demande ' . $requestId . ' a été réattribuée à une autre équipe.',
+                    $recipientPrefix . 'Votre demande ' . $requestId . ' a été assignée à une autre équipe.',
                     'La nouvelle équipe poursuivra les travaux et fera un suivi si des renseignements supplémentaires sont nécessaires.',
                 ] : [
-                    rmt_notification_salutation($language, $context, $recipientType),
-                    '',
-                    $recipientPrefix . 'Your request ' . $requestId . ' has been reassigned to a different team.',
+                    $recipientPrefix . 'Your request ' . $requestId . ' has been assigned to a different team.',
                     'The new team will continue the work and follow up if more information is needed.',
                 ]);
             }
 
             return $withLink($isFrench ? [
-                rmt_notification_salutation($language, $context, $recipientType),
-                '',
-                $recipientPrefix . 'La demande d\'accessibilité ' . $requestId . ' a été réattribuée à ' . $teamName . '.',
+                $recipientPrefix . 'La demande d\'accessibilité ' . $requestId . ' a été assignée à ' . $teamName . '.',
                 'Examinez le contexte de la demande et confirmez la prise en charge avec votre équipe.',
             ] : [
-                rmt_notification_salutation($language, $context, $recipientType),
-                '',
-                $recipientPrefix . 'Accessibility request ' . $requestId . ' has been reassigned to ' . $teamName . '.',
+                $recipientPrefix . 'Accessibility request ' . $requestId . ' has been assigned to ' . $teamName . '.',
                 'Review the request context and confirm ownership with your team.',
             ]);
     }

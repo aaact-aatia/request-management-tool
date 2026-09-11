@@ -34,7 +34,7 @@ INSERT INTO `tblsubservices` (`id`, `serviceid`, `nameen`, `namefr`, `status`) V
 (110, 34, 'Emails', 'Courriels', 1);
 
 INSERT INTO `tblteams` (`id`, `nameen`, `namefr`, `email`, `team_lead_user_id`, `status`) VALUES
-(1, 'IT Accessibility Office', 'Bureau de l''accessibilité des TI', 'accessibility@example.com', NULL, 1),
+(1, 'Accessibility, Accommodation and Adaptive Computer Technology (AAACT)', 'Accessibilité, adaptation et technologie informatique adaptée (AATIA)', 'accessibility@example.com', NULL, 1),
 (2, 'Development Team', 'Équipe de développement', 'dev.team@example.com', NULL, 1);
 
 UPDATE `tblservices` SET `contactid` = 2 WHERE `id` IN (27, 28);

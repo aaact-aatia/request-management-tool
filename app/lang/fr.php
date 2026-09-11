@@ -137,7 +137,7 @@ return [
     'passwordreset_clear' => 'Tout effacer',
     
     // Clone request page (clonerequest.php)
-    'clonerequest_page_title' => 'Clone Request - IT Accessibility Office',
+    'clonerequest_page_title' => 'Clone Request - Outil de gestion des demandes - Accessibilité, adaptation et technologie informatique adaptée (AATIA)',
     'clonerequest_submit' => 'Submit',
     
     // Advanced search page (asearch.php)
@@ -288,7 +288,7 @@ return [
     'client_survey_thank_you_new_request_link' => 'Soumettre une nouvelle demande',
     
     // Client Survey Pending page (client-survey-pending.php)
-    'client_survey_pending_page_title' => 'Sondage sur la satisfaction de la clientèle - Request Management Tool - IT Accessibility Office',
+    'client_survey_pending_page_title' => 'Sondage sur la satisfaction de la clientèle - Outil de gestion des demandes - Accessibilité, adaptation et technologie informatique adaptée (AATIA)',
     'client_survey_pending_heading' => 'Sondages en attente à envoyer',
     'client_survey_pending_col_request' => '# de la demande',
     'client_survey_pending_col_title' => 'Titre',
@@ -301,7 +301,7 @@ return [
     'client_survey_sent_confirm' => 'Voulez-vous vraiment marquer le sondage comme envoyée?',
 
     // Client Survey Link helper page (client-survey-link.php)
-    'client_survey_link_page_title' => 'Liens du sondage - Outil de gestion des demandes - Bureau de l\'accessibilité de la TI',
+    'client_survey_link_page_title' => 'Liens du sondage',
     'client_survey_link_heading' => 'Liens du sondage',
     'client_survey_link_intro' => 'Utilisez ces liens pour envoyer le sondage manuellement jusqu\'à la configuration des notifications.',
     'client_survey_link_french' => 'Lien du sondage en français',
@@ -322,7 +322,7 @@ return [
     'batch_ace_for_details' => ' pour les détails',
     
     // Change of Domain page (changeofdomain.php)
-    'changeofdomain_page_title' => 'Avis de désactivation - IT Accessibility Office',
+    'changeofdomain_page_title' => 'Avis de désactivation - Outil de gestion des demandes - Accessibilité, adaptation et technologie informatique adaptée (AATIA)',
     'changeofdomain_heading' => 'Avis de désactivation',
     'changeofdomain_intro' => 'Ce domaine a été désactivé. Veuillez mettre à jour vos favoris et commencer à utiliser la nouvelle URL :',
     'changeofdomain_link_text' => 'AAACT RMT',
@@ -337,7 +337,7 @@ return [
     'changeofdomain_img_alt' => 'Paramètres du proxy',
     
     // Client Survey Results page (client-survey-results.php)
-    'client_survey_results_page_title' => 'Sondage sur la satisfaction de la clientèle - Request Management Tool - IT Accessibility Office',
+    'client_survey_results_page_title' => 'Sondage sur la satisfaction de la clientèle - Outil de gestion des demandes - Accessibilité, adaptation et technologie informatique adaptée (AATIA)',
     'client_survey_results_heading' => 'Derniers résultats du sondage',
     'client_survey_results_request_num' => '# de la demande',
     'client_survey_results_title' => 'Titre',
@@ -456,6 +456,8 @@ return [
     'settings_gcnotify_link' => 'Parametres GC Notify (admin. uniquement)',
 
     'settings_password_heading' => 'Réinitialisation du mot de passe',
+    'intake_submitted_heading' => 'Demande soumise',
+    'intake_submitted_message' => 'Votre demande d’accessibilité a été soumise avec succès. Nous communiquerons avec vous si des renseignements supplémentaires sont nécessaires.',
 
     // Page des parametres GC Notify (gcnotify-settings.php)
     'gcnotify_settings_heading' => 'Parametres GC Notify',
@@ -489,6 +491,7 @@ return [
     'notification_templates_lang_en' => 'Anglais',
     'notification_templates_lang_fr' => 'Francais',
     'notification_templates_source_custom' => 'Personnalise pour cette equipe',
+    'notification_templates_source_app_default' => 'Modele par defaut de l application',
     'notification_templates_source_team' => 'Modele de l\'equipe utilise',
     'notification_templates_source_global' => 'Modele global par defaut utilise',
     'notification_templates_source_builtin' => 'Modele integre par defaut utilise',
@@ -498,7 +501,7 @@ return [
     'notification_templates_event_request_afterfact' => 'Demande creee (apres les faits)',
     'notification_templates_event_request_aaact' => 'Triage AATIA requis',
     'notification_templates_event_status_changed' => 'Statut/details mis a jour',
-    'notification_templates_event_reassigned' => 'Reattribuee',
+    'notification_templates_event_reassigned' => 'Assignee',
     'notification_templates_event_resolved' => 'Resolue / fermee',
     'notification_templates_edit_heading' => 'Modifier le modele de notification',
     'notification_templates_prefill_global_note' => 'Cette equipe n\'a pas encore de modele personnalise - le modele global par defaut est affiche comme point de depart. L\'enregistrement creera un modele propre a cette equipe.',

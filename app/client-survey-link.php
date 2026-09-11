@@ -17,6 +17,7 @@ if (!isset($_SESSION['lang']) || !in_array($_SESSION['lang'], ['en', 'fr'], true
 }
 
 $lang = $_SESSION['lang'];
+$requestLanguage = $lang;
 $langFile = require("lang/{$lang}.php");
 
 require('includes/httpscheck.php');
@@ -66,8 +67,6 @@ $isValidReturnTo = preg_match('#^/editrequest\.php\?#', $returnTo) === 1;
 if ($request !== null && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = isset($_POST['email_action']) ? trim((string) $_POST['email_action']) : '';
     $clientEmail = trim((string) ($request['clientemail'] ?? ''));
-    $requestLanguage = rmt_get_request_language($link, (int) $request['id'], $lang);
-    $requestViewUrl = app_url('viewrequest.php?lang=' . $requestLanguage . '&erid=' . base64_encode((string) $request['id']) . '&reqid=' . urlencode('a11y-' . (string) $request['requestid']));
 
     if ($clientEmail === '') {
         $actionStatus = 'missing_email';
@@ -80,11 +79,20 @@ if ($request !== null && $_SERVER['REQUEST_METHOD'] === 'POST') {
         );
         $templateId = app_notify_template_id('notification_generic');
         $category = rmt_notification_template_category('resolved');
+        $senderId = isset($_SESSION['pid']) ? (int) $_SESSION['pid'] : 0;
+        $senderName = '';
+        if ($senderId > 0) {
+            $senderRes = mysqli_query($link, "SELECT firstname, lastname FROM tblusers WHERE id = '$senderId' LIMIT 1");
+            if ($senderRes && $senderRow = mysqli_fetch_assoc($senderRes)) {
+                $senderName = trim(($senderRow['firstname'] ?? '') . ' ' . ($senderRow['lastname'] ?? ''));
+            }
+        }
+
         $resolvedContext = [
             'requestid' => (string) $request['requestid'],
             'client_fname' => (string) ($request['clientfname'] ?? ''),
             'client_lname' => (string) ($request['clientlname'] ?? ''),
-            'url' => $requestViewUrl,
+            'assigned_by' => $senderName,
         ];
         if ($surveyEnabled) {
             $resolvedContext['survey_link_en'] = $enLink;
@@ -97,7 +105,6 @@ if ($request !== null && $_SERVER['REQUEST_METHOD'] === 'POST') {
             'requesttitle' => (string) $request['title'],
             'client_fname' => (string) ($request['clientfname'] ?? ''),
             'client_lname' => (string) ($request['clientlname'] ?? ''),
-            'url' => $requestViewUrl,
             'notification_event' => 'resolved',
             'template_category_id' => $category['id'],
             'template_category_name_en' => $category['name_en'],

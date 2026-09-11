@@ -28,6 +28,7 @@ $configKeys = [
     'GCNOTIFY_CURL_CA_BUNDLE',
     'GCNOTIFY_CURL_INSECURE',
     'GCNOTIFY_TEMPLATE_ID',
+    'GCNOTIFY_EMAIL_REPLY_TO_ID',
 ];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -192,6 +193,16 @@ include 'includes/template/head.php';
                 'description' => [
                     'en' => 'When true, disables certificate verification. Use only for short-term troubleshooting.',
                     'fr' => 'Quand vrai, desactive la verification de certificat. Utiliser seulement pour le depannage a court terme.',
+                ],
+            ],
+            'GCNOTIFY_EMAIL_REPLY_TO_ID' => [
+                'label' => [
+                    'en' => 'GC Notify reply-to email ID',
+                    'fr' => 'ID du courriel de reponse GC Notify',
+                ],
+                'description' => [
+                    'en' => 'Optional reply-to address ID created in GC Notify Settings. This is an ID, not an email address.',
+                    'fr' => 'ID optionnel de l adresse de reponse creee dans les parametres GC Notify. Il s agit d un ID, pas d une adresse courriel.',
                 ],
             ],
         ];

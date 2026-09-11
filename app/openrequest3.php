@@ -89,6 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Initialize team variables
     $teamname = "";
     $teamemail = "";
+    $teamReplyToId = "";
     $contactname = "";
     $contactemail = "";
     
@@ -271,6 +272,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if (!empty($row)) {
             $teamname = $isFrench ? $row['namefr'] : $row['nameen'];
             $teamemail = $row['email'];
+            $teamReplyToId = trim((string) ($row['reply_to_id'] ?? ''));
             $contactname = $row['contactname'];
             $contactemail = $row['contactemail'];
         }
@@ -322,12 +324,25 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     
     $domain = app_base_url();
     
+    $assignedByName = '';
+    if (!empty($_SESSION['pid'])) {
+        $creatorRes = mysqli_query($link, "SELECT firstname, lastname FROM tblusers WHERE id = '" . (int)$_SESSION['pid'] . "' LIMIT 1");
+        if ($creatorRes && $creatorRow = mysqli_fetch_assoc($creatorRes)) {
+            $assignedByName = trim(($creatorRow['firstname'] ?? '') . ' ' . ($creatorRow['lastname'] ?? ''));
+        }
+    }
+    if ($assignedByName === '') {
+        $assignedByName = trim($clientfname . ' ' . $clientlname);
+    }
+
     // Email personalization data
     $personalisation = [
         "requestid" => $nrequestid,
         "nrequestid" => $nrequestid,
         "teamname" => $teamname,
         "team_email" => $teamemail,
+        "teamemail" => $teamemail,
+        "assigned_by" => $assignedByName,
         "requesttitle" => $requesttitle,
         "nrequestemailid" => $nrequestemailid,
         "nrequestemail" => $clientemail,
@@ -357,94 +372,58 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $contactname = $clientfname . " " . $clientlname;
         }
         
-        // Send to team
-        if (!empty($teamemail)) {
-            $teamMessageEvent = ($afterfact == "Y") ? 'request_afterfact' : 'request_created';
-            $teamCategory = rmt_notification_template_category($teamMessageEvent);
-            $teamPersonalisation = $personalisation + [
-                'notification_event' => $teamMessageEvent,
-                'template_category_id' => $teamCategory['id'],
-                'template_category_name_en' => $teamCategory['name_en'],
-                'template_category_name_fr' => $teamCategory['name_fr'],
-                'subject' => rmt_notification_subject($teamMessageEvent, 'internal', 'en', $personalisation, $link, $contactid, $serviceid, $subserviceid),
-                'message' => rmt_notification_message($teamMessageEvent, 'internal', 'en', $personalisation, $link, $contactid, $serviceid, $subserviceid),
-            ];
-            if ($teamemail == "daiu-anci@ssc-spc.gc.ca") {
-                $aaactCategory = rmt_notification_template_category('request_aaact');
-                $teamPersonalisation['message'] = rmt_notification_message('request_aaact', 'internal', 'en', $personalisation, $link, $contactid, $serviceid, $subserviceid);
-                $teamPersonalisation['subject'] = rmt_notification_subject('request_aaact', 'internal', 'en', $personalisation, $link, $contactid, $serviceid, $subserviceid);
-                $teamPersonalisation['notification_event'] = 'request_aaact';
-                $teamPersonalisation['template_category_id'] = $aaactCategory['id'];
-                $teamPersonalisation['template_category_name_en'] = $aaactCategory['name_en'];
-                $teamPersonalisation['template_category_name_fr'] = $aaactCategory['name_fr'];
-                if (rmt_notification_should_send($link, (int) $latestid, $contactid, 'employee', $teamMessageEvent, $teamemail)) {
-                    sendEmail($teamemail, $template_id, json_encode($teamPersonalisation), ['recipientType' => 'internal']);
-                }
-            } else {
-                if (rmt_notification_should_send($link, (int) $latestid, $contactid, 'employee', $teamMessageEvent, $teamemail)) {
-                    sendEmail($teamemail, $template_id, json_encode($teamPersonalisation), ['recipientType' => 'internal']);
-                }
-            }
-        }
+        // Send to internal team (team email, lead, manager)
+        $teamMessageEvent = ($afterfact == "Y") ? 'request_afterfact' : (($catalogueid == 9 || $catalogueid == 8) ? 'request_aaact' : 'request_created');
+        rmt_send_internal_notifications($link, (int) $latestid, $contactid, $serviceid, $subserviceid, $teamMessageEvent, ['team', 'lead', 'manager'], $personalisation);
         
         // Always send to client for new submissions.
         $clientCategory = rmt_notification_template_category('request_created');
-        $clientPersonalisation = $personalisation + [
+        $clientNotificationContext = $personalisation;
+        unset($clientNotificationContext['url']);
+        $clientPersonalisation = $clientNotificationContext + [
             'notification_event' => 'request_created',
             'template_category_id' => $clientCategory['id'],
             'template_category_name_en' => $clientCategory['name_en'],
             'template_category_name_fr' => $clientCategory['name_fr'],
-            'subject' => rmt_notification_subject('request_created', 'client', $requestlang, $personalisation, $link, $contactid, $serviceid, $subserviceid),
-            'message' => rmt_notification_message('request_created', 'client', $requestlang, $personalisation, $link, $contactid, $serviceid, $subserviceid),
+            'subject' => rmt_notification_subject('request_created', 'client', $requestlang, $clientNotificationContext, $link, $contactid, $serviceid, $subserviceid),
+            'message' => rmt_notification_message('request_created', 'client', $requestlang, $clientNotificationContext, $link, $contactid, $serviceid, $subserviceid),
         ];
         if (rmt_notification_should_send($link, (int) $latestid, $contactid, 'client', 'request_created', $clientemail)) {
-            sendEmail($clientemail, $template_id, json_encode($clientPersonalisation), ['recipientType' => 'client']);
+            sendEmail($clientemail, $template_id, json_encode($clientPersonalisation), ['recipientType' => 'client', 'replyToId' => $teamReplyToId]);
         }
         
     } elseif ($notification != "N" || $notification == 1) {
         // Default notification behavior.
         $template_id = app_notify_template_id('notification_generic');
 		
-        if ($catalogueid == 9 || $catalogueid == 8) {
-            $template_id = app_notify_template_id('notification_generic');
-        }
-		
-        // Team notification
-        if (!empty($teamemail)) {
-            $teamMessageEvent = ($catalogueid == 9 || $catalogueid == 8) ? 'request_aaact' : 'request_created';
-            $teamCategory = rmt_notification_template_category($teamMessageEvent);
-            $teamPersonalisation = $personalisation + [
-                'notification_event' => $teamMessageEvent,
-                'template_category_id' => $teamCategory['id'],
-                'template_category_name_en' => $teamCategory['name_en'],
-                'template_category_name_fr' => $teamCategory['name_fr'],
-                'subject' => rmt_notification_subject($teamMessageEvent, 'internal', 'en', $personalisation, $link, $contactid, $serviceid, $subserviceid),
-                'message' => rmt_notification_message($teamMessageEvent, 'internal', 'en', $personalisation, $link, $contactid, $serviceid, $subserviceid),
-            ];
-            if (rmt_notification_should_send($link, (int) $latestid, $contactid, 'employee', $teamMessageEvent, $teamemail)) {
-                sendEmail($teamemail, $template_id, json_encode($teamPersonalisation), ['recipientType' => 'internal']);
-            }
-        }
+        // Internal team notification (team email, lead, manager)
+        $teamMessageEvent = ($catalogueid == 9 || $catalogueid == 8) ? 'request_aaact' : 'request_created';
+        rmt_send_internal_notifications($link, (int) $latestid, $contactid, $serviceid, $subserviceid, $teamMessageEvent, ['team', 'lead', 'manager'], $personalisation);
 		
         // Always send to client for new submissions.
         $clientCategory = rmt_notification_template_category('request_created');
-        $clientPersonalisation = $personalisation + [
+        $clientNotificationContext = $personalisation;
+        unset($clientNotificationContext['url']);
+        $clientPersonalisation = $clientNotificationContext + [
             'notification_event' => 'request_created',
             'template_category_id' => $clientCategory['id'],
             'template_category_name_en' => $clientCategory['name_en'],
             'template_category_name_fr' => $clientCategory['name_fr'],
-            'subject' => rmt_notification_subject('request_created', 'client', $requestlang, $personalisation, $link, $contactid, $serviceid, $subserviceid),
-            'message' => rmt_notification_message('request_created', 'client', $requestlang, $personalisation, $link, $contactid, $serviceid, $subserviceid),
+            'subject' => rmt_notification_subject('request_created', 'client', $requestlang, $clientNotificationContext, $link, $contactid, $serviceid, $subserviceid),
+            'message' => rmt_notification_message('request_created', 'client', $requestlang, $clientNotificationContext, $link, $contactid, $serviceid, $subserviceid),
         ];
         if (rmt_notification_should_send($link, (int) $latestid, $contactid, 'client', 'request_created', $clientemail)) {
-            sendEmail($clientemail, $template_id, json_encode($clientPersonalisation), ['recipientType' => 'client']);
+            sendEmail($clientemail, $template_id, json_encode($clientPersonalisation), ['recipientType' => 'client', 'replyToId' => $teamReplyToId]);
         }
     }
     
 
     unset($_SESSION['openrequest_draft'], $_SESSION['openrequest_upload_error_message']);
-    // Redirect to view request page
-    header("location:/viewrequest.php?lang=" . $lang . "&erid=" . $nrequestemailid . "&reqid=" . urlencode("a11y-" . $nrequestid) . "&status=newrequestcomplete");
+    // Keep the client details page private to this submission session.
+    $clientViewToken = bin2hex(random_bytes(32));
+    $_SESSION['client_request_view_tokens'][$clientViewToken] = (int) $latestid;
+    // The token is never included in notification data.
+    header("location:/viewrequest.php?lang=" . $lang . "&rid=" . (int) $latestid . "&client=1&token=" . urlencode($clientViewToken) . "&status=submitted");
     exit();
 }
 

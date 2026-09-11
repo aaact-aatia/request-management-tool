@@ -125,6 +125,11 @@ $eventLabel = $t['notification_templates_event_' . $event] ?? $event;
 $audienceLabel = $audience === 'client'
     ? $t['notification_templates_audience_client']
     : $t['notification_templates_audience_employee'];
+$editTeamLabel = $teamId === RMT_NOTIFICATION_GLOBAL_TEAM_ID
+    ? ($lang === 'fr' ? 'Modele par defaut de l\'application' : 'App-wide default')
+    : (($teamRow = rmt_db_fetch_one($link, 'SELECT nameen, namefr FROM tblteams WHERE id = ? LIMIT 1', 'i', [$teamId]))
+        ? (string) ($lang === 'fr' ? $teamRow['namefr'] : $teamRow['nameen'])
+        : '');
 
 $page = [
     'title' => [
@@ -136,14 +141,14 @@ $page = [
         'fr' => 'Modifier un modele de message de notification client ou employe',
     ],
 ];
-$pageTitle = $page['title'][$lang];
+$pageTitle = $page['title'][$lang] . ' - ' . $editTeamLabel;
 $pageDescription = $page['description'][$lang];
 
 include 'includes/template/head.php';
 ?>
     <?php include 'includes/template/header.php'; ?>
         <main role="main" property="mainContentOfPage" class="container">
-            <h1 property="name" id="wb-cont"><?= htmlspecialchars($t['notification_templates_edit_heading']) ?></h1>
+            <h1 property="name" id="wb-cont"><?= htmlspecialchars($lang === 'fr' ? 'Modifier les ' . strtolower($audienceLabel) . ' / ' . strtolower($eventLabel) . ' - ' . $editTeamLabel : 'Edit the ' . strtolower($audienceLabel) . ' / ' . strtolower($eventLabel) . ' notification template - ' . $editTeamLabel) ?></h1>
             <p><?= htmlspecialchars($audienceLabel) ?> / <?= htmlspecialchars($eventLabel) ?></p>
 
             <?php if ($status === 'failed') { ?>
