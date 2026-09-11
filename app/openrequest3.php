@@ -419,8 +419,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     
 
     unset($_SESSION['openrequest_draft'], $_SESSION['openrequest_upload_error_message']);
-    // Redirect to view request page
-    header("location:/openrequest.php?lang=" . $lang . "&status=submitted");
+    // Keep the client details page private to this submission session.
+    $clientViewToken = bin2hex(random_bytes(32));
+    $_SESSION['client_request_view_tokens'][$clientViewToken] = (int) $latestid;
+    // The token is never included in notification data.
+    header("location:/viewrequest.php?lang=" . $lang . "&rid=" . (int) $latestid . "&client=1&token=" . urlencode($clientViewToken));
     exit();
 }
 
