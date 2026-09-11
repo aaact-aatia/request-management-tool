@@ -505,4 +505,6 @@ function indent_text(string $text, string $indent): string {
     return $indent . str_replace("\n", "\n" . $indent, $text);
 }
 
-exit(main($argv));
+if (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__) {
+    exit(main($argv));
+}

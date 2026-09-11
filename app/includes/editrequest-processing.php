@@ -565,11 +565,7 @@ if (!$isCurrentResolved && $isTargetResolved) {
     // Queue one survey send for newly resolved requests only.
     mysqli_query($link, "UPDATE tbltriage SET cssurvey = 0 WHERE id = '$requestuid' AND (cssurvey IS NULL)");
 
-    // Send internal resolved notification to Lead and Manager
-    rmt_send_internal_notifications($link, $requestuidInt, $contactid, (int) $serviceid, (int) $subserviceid, 'resolved', ['lead', 'manager'], $personalisation);
 } elseif ($cstatusid != $statusid) {
-    // Status changed (not to resolved) - send internal notification to Lead and Manager
-    rmt_send_internal_notifications($link, $requestuidInt, $contactid, (int) $serviceid, (int) $subserviceid, 'status_changed', ['lead', 'manager'], $personalisation);
 }
 
 // Notify responsible team, lead, and manager when a hierarchy edit changes ownership.
@@ -579,14 +575,16 @@ $contactidold = rmt_resolve_responsible_team_id(
     (int) $cserviceid,
     (int) $csubserviceid
 );
-if (($ccatalogueid != $catalogueid || $cserviceid != $serviceid || $csubserviceid != $subserviceid) && $contactid > 0 && $contactid !== $contactidold) {
+$ownershipChanged = ($ccatalogueid != $catalogueid || $cserviceid != $serviceid || $csubserviceid != $subserviceid)
+    && $contactid > 0
+    && $contactid !== $contactidold;
+if ($ownershipChanged) {
     $result = mysqli_query($link, "SELECT * FROM tblteams WHERE id = '$contactid'");
     $row = mysqli_fetch_assoc($result);
     if ($row) {
         $personalisation['teamname'] = $row['nameen'];
         $personalisation['team_email'] = $row['email'];
 
-        rmt_send_internal_notifications($link, $requestuidInt, $contactid, (int) $serviceid, (int) $subserviceid, 'reassigned', ['team', 'lead', 'manager'], $personalisation);
     }
 }
 
@@ -602,7 +600,6 @@ if ($workerIdInt > 0 && $workerIdInt !== $prevWorkerIdInt) {
             $personalisation['assignee'] = $workerName;
         }
 
-        rmt_send_internal_notifications($link, $requestuidInt, $contactid, (int) $serviceid, (int) $subserviceid, 'reassigned', ['assignee', 'lead', 'manager'], $personalisation, $workerIdInt);
     }
 }
 
@@ -830,7 +827,31 @@ if (!empty($firstsprintenddate)) {
 }
 
 $sql .= " WHERE id='$requestuid'";
-mysqli_query($link, $sql);
+$updateSucceeded = mysqli_query($link, $sql);
+if (!$updateSucceeded) {
+    header("location: /editrequest.php?lang=$lang&id=$requestuid&status=failed&focus=update");
+    exit();
+}
+
+$leadManagerNotificationSent = false;
+if ($ownershipChanged) {
+    rmt_send_internal_notifications($link, $requestuidInt, $contactid, (int) $serviceid, (int) $subserviceid, 'status_changed', ['lead', 'manager'], $personalisation);
+    $leadManagerNotificationSent = true;
+} elseif (!$isCurrentResolved && $isTargetResolved) {
+    rmt_send_internal_notifications($link, $requestuidInt, $contactid, (int) $serviceid, (int) $subserviceid, 'resolved', ['lead', 'manager'], $personalisation);
+    $leadManagerNotificationSent = true;
+} elseif ($cstatusid != $statusid) {
+    rmt_send_internal_notifications($link, $requestuidInt, $contactid, (int) $serviceid, (int) $subserviceid, 'status_changed', ['lead', 'manager'], $personalisation);
+    $leadManagerNotificationSent = true;
+}
+
+if ($workerIdInt > 0 && $workerIdInt !== $prevWorkerIdInt && !empty($workerRow)) {
+    rmt_send_internal_notifications($link, $requestuidInt, $contactid, (int) $serviceid, (int) $subserviceid, 'reassigned', ['assignee'], $personalisation, $workerIdInt);
+    if (!$leadManagerNotificationSent) {
+        rmt_send_internal_notifications($link, $requestuidInt, $contactid, (int) $serviceid, (int) $subserviceid, 'status_changed', ['lead', 'manager'], $personalisation);
+    }
+}
+
 rmt_refresh_request_catalogue_snapshot($link, (int) $requestuid);
 
 if ($canFullFieldEdit) {

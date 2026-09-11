@@ -24,7 +24,7 @@ docker compose exec -T web php /var/www/scripts/sync-notification-templates.php 
 docker compose exec -T web php /var/www/scripts/sync-notification-templates.php --diff
 
 # Generate a migration file
-docker compose exec -T web php /var/www/scripts/sync-notification-templates.php --generate-sql=/var/www/database/migrations/030-sync-default-notification-templates.sql
+docker compose exec -T web php /var/www/scripts/sync-notification-templates.php --generate-sql=/var/www/database/migrations/032-sync-notification-template-updates.sql
 
 # Apply directly to database
 docker compose exec -T web php /var/www/scripts/sync-notification-templates.php --apply
@@ -32,7 +32,7 @@ docker compose exec -T web php /var/www/scripts/sync-notification-templates.php 
 
 ## Client Messages
 
-Clients receive only new-request and resolved or closed notifications. Client messages do not include a link to the request.
+Clients receive a new-request notification and a resolved notification when staff use the manual resolved/survey email action. Client messages do not include a link to the request.
 
 ### Request Created
 
@@ -94,7 +94,7 @@ Hello `{{client_fname}} {{client_lname}}`,
 
 Your request `{{requestid}}` has been resolved.
 
-If you believe more work is required, reply to this message and reference your request number.
+If you believe more work is required, reply to this message.
 
 We would love to hear how we did. Please fill out this short survey: `{{survey_link_en}}`
 
@@ -116,7 +116,7 @@ Bonjour `{{client_fname}} {{client_lname}}`,
 
 Votre demande `{{requestid}}` a été résolue.
 
-Si vous croyez que d'autres travaux sont nécessaires, répondez à ce message et mentionnez votre numéro de demande.
+Si vous croyez que d'autres travaux sont nécessaires, répondez à ce message.
 
 Nous aimerions savoir comment s'est déroulée votre expérience. Veuillez remplir ce court sondage : `{{survey_link_fr}}`
 
@@ -129,6 +129,8 @@ Transformation numérique Canada
 ## Employee Messages
 
 Employee messages include the request link so internal recipients can open the request after signing in.
+
+Assignment notifications are sent to the assigned employee and also produce a status/details update for the responsible team lead and manager. Status, details, resolved, closed, and cancelled updates are sent to the responsible team lead and manager.
 
 ### Request Created
 
@@ -174,11 +176,11 @@ Outil de gestion des demandes (OGD)
 
 ##### Subject
 
-Accessibility request `{{requestid}}` assigned to `{{teamname}}`
+Accessibility request `{{requestid}}` assigned to you
 
 ##### Message
 
-Accessibility request `{{requestid}}` has been assigned to `{{teamname}}`.
+Accessibility request `{{requestid}}` has been assigned to you by `{{assigned_by}}`.
 
 Review the request context and confirm ownership with your team.
 
@@ -190,11 +192,11 @@ Request Management Tool (RMT)
 
 ##### Subject
 
-Demande d'accessibilité `{{requestid}}` assignée à `{{teamname}}`
+Demande d'accessibilité `{{requestid}}` vous a été attribuée
 
 ##### Message
 
-La demande d'accessibilité `{{requestid}}` a été assignée à `{{teamname}}`.
+La demande d'accessibilité `{{requestid}}` vous a été attribuée par `{{assigned_by}}`.
 
 Examinez le contexte de la demande et confirmez la prise en charge avec votre équipe.
 
@@ -214,8 +216,6 @@ Accessibility request `{{requestid}}` marked as resolved
 
 Accessibility request `{{requestid}}` has been marked as resolved.
 
-Ensure any final records or follow-up actions are complete.
-
 View request: `{{url}}`
 
 Request Management Tool (RMT)
@@ -229,8 +229,6 @@ Demande d'accessibilité `{{requestid}}` marquée comme résolue
 ##### Message
 
 La demande d'accessibilité `{{requestid}}` a été marquée comme résolue.
-
-Assurez-vous que les dossiers finaux et les actions de suivi sont complets.
 
 Voir la demande : `{{url}}`
 

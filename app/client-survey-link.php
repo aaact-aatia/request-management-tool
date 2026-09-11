@@ -48,6 +48,7 @@ if ($triageId <= 0) {
 
 $surveyEnabled = false;
 if ($request !== null) {
+    $requestLanguage = rmt_get_request_language($link, (int) $request['id'], $lang);
     $catalogueId = (int)$request['catalogueid'];
     $surveyResult = mysqli_query($link, "SELECT survey FROM tblcatalogue WHERE id = '$catalogueId' LIMIT 1");
     if ($surveyResult && mysqli_num_rows($surveyResult) > 0) {
@@ -115,9 +116,11 @@ if ($request !== null && $_SERVER['REQUEST_METHOD'] === 'POST') {
             'message' => $resolvedMessage,
         ];
 
+        $teamRow = rmt_db_fetch_one($link, 'SELECT reply_to_id FROM tblteams WHERE id = ? AND status = 1 LIMIT 1', 'i', [$requestTeamId]);
+        $replyToId = trim((string) ($teamRow['reply_to_id'] ?? ''));
         $sent = false;
         if (rmt_notification_should_send($link, (int) $request['id'], $requestTeamId, 'client', 'resolved', $clientEmail)) {
-            $sent = sendEmail($clientEmail, $templateId, json_encode($personalisation), ['recipientType' => 'client']);
+            $sent = sendEmail($clientEmail, $templateId, json_encode($personalisation), ['recipientType' => 'client', 'replyToId' => $replyToId]);
         }
         if ($sent) {
             if ($surveyEnabled) {
