@@ -12,6 +12,24 @@ Teams, services, and sub-services can override these defaults. The resolution or
 
 The app-wide defaults are editable by superadmins. Team, service, and sub-service templates can be maintained by users with the appropriate team permissions.
 
+## Syncing Markdown to Database
+
+When updates are made to this document, use `scripts/sync-notification-templates.php` to validate formatting, preview diffs, generate SQL migrations, or apply updates to the database:
+
+```bash
+# Validate Markdown formatting and placeholders
+docker compose exec -T web php /var/www/scripts/sync-notification-templates.php --validate
+
+# View diff against current DB defaults
+docker compose exec -T web php /var/www/scripts/sync-notification-templates.php --diff
+
+# Generate a migration file
+docker compose exec -T web php /var/www/scripts/sync-notification-templates.php --generate-sql=/var/www/database/migrations/030-sync-default-notification-templates.sql
+
+# Apply directly to database
+docker compose exec -T web php /var/www/scripts/sync-notification-templates.php --apply
+```
+
 ## Client Messages
 
 Clients receive only new-request and resolved or closed notifications. Client messages do not include a link to the request.
@@ -133,8 +151,6 @@ Service: `{{service_name}}`
 View request: `{{url}}`
 
 Thank you very much,
-`{{teamname}}`
-`{{teamemail}}`
 Accessibility, Accommodation and Adaptive Computer Technology (AAACT)
 Digital Transformation Canada
 
@@ -157,8 +173,6 @@ Service : `{{service_name}}`
 Voir la demande : `{{url}}`
 
 Merci beaucoup,
-`{{teamname}}`
-`{{teamemail}}`
 Accessibilité, adaptation et technologie informatique adaptée (AATIA)
 Transformation numérique Canada
 

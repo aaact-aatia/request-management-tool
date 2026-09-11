@@ -9,7 +9,9 @@ services:
         condition: service_healthy
     volumes:
       - ./app:/var/www/html
+      - ./database:/var/www/database
       - ./docs:/var/www/docs:ro
+      - ./scripts:/var/www/scripts
       - ./tests:/var/www/tests:ro
       - vendor_data:/var/www/html/vendor
       - rmt_uploads:/var/uploads/rmt
