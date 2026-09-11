@@ -165,6 +165,16 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Retire legacy admin account types ([05a2a4e](https://github.com/aaact-aatia/request-management-tool/commit/05a2a4ec83c95ad554ac0d0e4713488e02068b8d))
 
+- Add team notification reply-to settings ([0269585](https://github.com/aaact-aatia/request-management-tool/commit/0269585e918d47d0e3e12eda7d34af077e18f257))
+
+- Add sync script for notification templates ([219146d](https://github.com/aaact-aatia/request-management-tool/commit/219146d2fe4c5d358f5459aa2d88a4a001bb957e))
+
+- Add assigned_by placeholder for notification templates ([3d23aa7](https://github.com/aaact-aatia/request-management-tool/commit/3d23aa7697996623a25dae63a0944a52ec8aa29c))
+
+- Update staff notification routing and employee template signatures ([a5dbb03](https://github.com/aaact-aatia/request-management-tool/commit/a5dbb03e805834450290252d98834765a0f22dc8))
+
+- Show client request details after submission ([2a92dec](https://github.com/aaact-aatia/request-management-tool/commit/2a92decb73c257686ef9a9cf8fbb383ad1231372))
+
 
 ### Build
 
@@ -365,6 +375,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Regenerate CHANGELOG.md [skip ci] ([0db5887](https://github.com/aaact-aatia/request-management-tool/commit/0db5887f542c6b1a9a169c5b35563babaa9d5052))
 
+- Regenerate CHANGELOG.md [skip ci] ([004acb3](https://github.com/aaact-aatia/request-management-tool/commit/004acb371c0582fb186f2682c1df553595a6d318))
+
 
 ### Fixed
 
@@ -547,6 +559,18 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 - Complete flag-based admin authorization follow-up ([c67befe](https://github.com/aaact-aatia/request-management-tool/commit/c67befe765a25820dc6ed643d31967f0c64a2175))
 
 - Restore superadmin request editing ([d104b52](https://github.com/aaact-aatia/request-management-tool/commit/d104b52731a0bd4ce628e843f7ef1b92dbc8d73a))
+
+- Protect request details and remove client links ([773ed7e](https://github.com/aaact-aatia/request-management-tool/commit/773ed7e4424f6b949bc6ed03f3d5130f05077f32))
+
+- Restore French accents in notification defaults ([0643d22](https://github.com/aaact-aatia/request-management-tool/commit/0643d2296c087bc5bbde9a247ecf15058352e152))
+
+- Migrate client notifications away from request links ([92247a5](https://github.com/aaact-aatia/request-management-tool/commit/92247a5560c4a21f2b53c1de498e414633d24adc))
+
+- Distinguish AAACT team from RMT application name ([cef15d4](https://github.com/aaact-aatia/request-management-tool/commit/cef15d48e6819b27e298670033857d71e3fa6706))
+
+- Improve development notification previews ([5e417f9](https://github.com/aaact-aatia/request-management-tool/commit/5e417f95251bce1683b6bcfccf2607fd12d4eb53))
+
+- Notify new team after catalogue reassignment ([d80d42c](https://github.com/aaact-aatia/request-management-tool/commit/d80d42c17a3d7fccd3c4817e14abd026d344d2b3))
 
 
 ### Other
