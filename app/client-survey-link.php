@@ -118,6 +118,8 @@ if ($request !== null && $_SERVER['REQUEST_METHOD'] === 'POST') {
         if (rmt_notification_should_send($link, (int) $request['id'], $requestTeamId, 'client', 'resolved', $clientEmail)) {
             $sent = sendEmail($clientEmail, $templateId, json_encode($personalisation), ['recipientType' => 'client']);
         }
+        // Internal notification to Lead and Manager
+        rmt_send_internal_notifications($link, (int) $request['id'], $requestTeamId, (int) ($request['serviceid'] ?? 0), (int) ($request['subserviceid'] ?? 0), 'resolved', ['lead', 'manager'], $personalisation);
         if ($sent) {
             if ($surveyEnabled) {
                 $result3 = mysqli_query($link, "SELECT cssurvey FROM tbltriage WHERE id = '$triageId'");

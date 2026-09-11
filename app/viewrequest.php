@@ -1040,6 +1040,8 @@ require_once __DIR__ . '/includes/csrf.php';
 					if (rmt_notification_should_send($link, (int) $triageid, (int) $tarraycontactid, 'client', 'resolved', $resolvedClientEmail)) {
 						$sent = sendEmail($resolvedClientEmail, $templateId, json_encode($personalisation), ['recipientType' => 'client']);
 					}
+					// Internal notification to Lead and Manager
+					rmt_send_internal_notifications($link, (int) $triageid, (int) $tarraycontactid, (int) $serviceid, (int) $subserviceid, 'resolved', ['lead', 'manager'], $personalisation);
 					if ($sent) {
 						if ($surveyEnabled) {
 							$currentSurveySentCount = (int) ($row['cssurvey'] ?? 0);

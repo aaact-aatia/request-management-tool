@@ -372,35 +372,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $contactname = $clientfname . " " . $clientlname;
         }
         
-        // Send to team
-        if (!empty($teamemail)) {
-            $teamMessageEvent = ($afterfact == "Y") ? 'request_afterfact' : 'request_created';
-            $teamCategory = rmt_notification_template_category($teamMessageEvent);
-            $teamPersonalisation = $personalisation + [
-                'notification_event' => $teamMessageEvent,
-                'template_category_id' => $teamCategory['id'],
-                'template_category_name_en' => $teamCategory['name_en'],
-                'template_category_name_fr' => $teamCategory['name_fr'],
-                'subject' => rmt_notification_subject($teamMessageEvent, 'internal', 'en', $personalisation, $link, $contactid, $serviceid, $subserviceid),
-                'message' => rmt_notification_message($teamMessageEvent, 'internal', 'en', $personalisation, $link, $contactid, $serviceid, $subserviceid),
-            ];
-            if ($teamemail == "daiu-anci@ssc-spc.gc.ca") {
-                $aaactCategory = rmt_notification_template_category('request_aaact');
-                $teamPersonalisation['message'] = rmt_notification_message('request_aaact', 'internal', 'en', $personalisation, $link, $contactid, $serviceid, $subserviceid);
-                $teamPersonalisation['subject'] = rmt_notification_subject('request_aaact', 'internal', 'en', $personalisation, $link, $contactid, $serviceid, $subserviceid);
-                $teamPersonalisation['notification_event'] = 'request_aaact';
-                $teamPersonalisation['template_category_id'] = $aaactCategory['id'];
-                $teamPersonalisation['template_category_name_en'] = $aaactCategory['name_en'];
-                $teamPersonalisation['template_category_name_fr'] = $aaactCategory['name_fr'];
-                if (rmt_notification_should_send($link, (int) $latestid, $contactid, 'employee', $teamMessageEvent, $teamemail)) {
-                    sendEmail($teamemail, $template_id, json_encode($teamPersonalisation), ['recipientType' => 'internal']);
-                }
-            } else {
-                if (rmt_notification_should_send($link, (int) $latestid, $contactid, 'employee', $teamMessageEvent, $teamemail)) {
-                    sendEmail($teamemail, $template_id, json_encode($teamPersonalisation), ['recipientType' => 'internal']);
-                }
-            }
-        }
+        // Send to internal team (team email, lead, manager)
+        $teamMessageEvent = ($afterfact == "Y") ? 'request_afterfact' : (($catalogueid == 9 || $catalogueid == 8) ? 'request_aaact' : 'request_created');
+        rmt_send_internal_notifications($link, (int) $latestid, $contactid, $serviceid, $subserviceid, $teamMessageEvent, ['team', 'lead', 'manager'], $personalisation);
         
         // Always send to client for new submissions.
         $clientCategory = rmt_notification_template_category('request_created');
@@ -422,26 +396,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // Default notification behavior.
         $template_id = app_notify_template_id('notification_generic');
 		
-        if ($catalogueid == 9 || $catalogueid == 8) {
-            $template_id = app_notify_template_id('notification_generic');
-        }
-		
-        // Team notification
-        if (!empty($teamemail)) {
-            $teamMessageEvent = ($catalogueid == 9 || $catalogueid == 8) ? 'request_aaact' : 'request_created';
-            $teamCategory = rmt_notification_template_category($teamMessageEvent);
-            $teamPersonalisation = $personalisation + [
-                'notification_event' => $teamMessageEvent,
-                'template_category_id' => $teamCategory['id'],
-                'template_category_name_en' => $teamCategory['name_en'],
-                'template_category_name_fr' => $teamCategory['name_fr'],
-                'subject' => rmt_notification_subject($teamMessageEvent, 'internal', 'en', $personalisation, $link, $contactid, $serviceid, $subserviceid),
-                'message' => rmt_notification_message($teamMessageEvent, 'internal', 'en', $personalisation, $link, $contactid, $serviceid, $subserviceid),
-            ];
-            if (rmt_notification_should_send($link, (int) $latestid, $contactid, 'employee', $teamMessageEvent, $teamemail)) {
-                sendEmail($teamemail, $template_id, json_encode($teamPersonalisation), ['recipientType' => 'internal']);
-            }
-        }
+        // Internal team notification (team email, lead, manager)
+        $teamMessageEvent = ($catalogueid == 9 || $catalogueid == 8) ? 'request_aaact' : 'request_created';
+        rmt_send_internal_notifications($link, (int) $latestid, $contactid, $serviceid, $subserviceid, $teamMessageEvent, ['team', 'lead', 'manager'], $personalisation);
 		
         // Always send to client for new submissions.
         $clientCategory = rmt_notification_template_category('request_created');

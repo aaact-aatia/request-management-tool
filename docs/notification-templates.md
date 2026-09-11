@@ -140,8 +140,6 @@ New accessibility request `{{requestid}}` assigned to your team
 
 ##### Message
 
-Hello `{{teamname}}`,
-
 A new accessibility request `{{requestid}}` has been assigned to your team.
 
 Request title: `{{requesttitle}}`
@@ -150,9 +148,8 @@ Service: `{{service_name}}`
 
 View request: `{{url}}`
 
-Thank you very much,
-Accessibility, Accommodation and Adaptive Computer Technology (AAACT)
-Digital Transformation Canada
+Request Management Tool
+IT Accessibility Office
 
 #### French
 
@@ -162,8 +159,6 @@ Nouvelle demande d'accessibilité `{{requestid}}` assignée à votre équipe
 
 ##### Message
 
-Bonjour `{{teamname}}`,
-
 Une nouvelle demande d'accessibilité `{{requestid}}` a été assignée à votre équipe.
 
 Titre de la demande : `{{requesttitle}}`
@@ -172,9 +167,8 @@ Service : `{{service_name}}`
 
 Voir la demande : `{{url}}`
 
-Merci beaucoup,
-Accessibilité, adaptation et technologie informatique adaptée (AATIA)
-Transformation numérique Canada
+Outil de gestion des demandes
+Bureau de l'accessibilité de la TI
 
 ### Assigned
 
@@ -186,19 +180,14 @@ Accessibility request `{{requestid}}` assigned to `{{teamname}}`
 
 ##### Message
 
-Hello `{{teamname}}`,
-
 Accessibility request `{{requestid}}` has been assigned to `{{teamname}}`.
 
 Review the request context and confirm ownership with your team.
 
 View request: `{{url}}`
 
-Thank you very much,
-`{{teamname}}`
-`{{teamemail}}`
-Accessibility, Accommodation and Adaptive Computer Technology (AAACT)
-Digital Transformation Canada
+Request Management Tool
+IT Accessibility Office
 
 #### French
 
@@ -208,19 +197,14 @@ Demande d'accessibilité `{{requestid}}` assignée à `{{teamname}}`
 
 ##### Message
 
-Bonjour `{{teamname}}`,
-
 La demande d'accessibilité `{{requestid}}` a été assignée à `{{teamname}}`.
 
 Examinez le contexte de la demande et confirmez la prise en charge avec votre équipe.
 
 Voir la demande : `{{url}}`
 
-Merci beaucoup,
-`{{teamname}}`
-`{{teamemail}}`
-Accessibilité, adaptation et technologie informatique adaptée (AATIA)
-Transformation numérique Canada
+Outil de gestion des demandes
+Bureau de l'accessibilité de la TI
 
 ### Resolved / Closed
 
@@ -232,19 +216,14 @@ Accessibility request `{{requestid}}` marked as resolved
 
 ##### Message
 
-Hello `{{teamname}}`,
-
 Accessibility request `{{requestid}}` has been marked as resolved.
 
 Ensure any final records or follow-up actions are complete.
 
 View request: `{{url}}`
 
-Thank you very much,
-`{{teamname}}`
-`{{teamemail}}`
-Accessibility, Accommodation and Adaptive Computer Technology (AAACT)
-Digital Transformation Canada
+Request Management Tool
+IT Accessibility Office
 
 #### French
 
@@ -254,19 +233,14 @@ Demande d'accessibilité `{{requestid}}` marquée comme résolue
 
 ##### Message
 
-Bonjour `{{teamname}}`,
-
 La demande d'accessibilité `{{requestid}}` a été marquée comme résolue.
 
 Assurez-vous que les dossiers finaux et les actions de suivi sont complets.
 
 Voir la demande : `{{url}}`
 
-Merci beaucoup,
-`{{teamname}}`
-`{{teamemail}}`
-Accessibilité, adaptation et technologie informatique adaptée (AATIA)
-Transformation numérique Canada
+Outil de gestion des demandes
+Bureau de l'accessibilité de la TI
 
 ### Status / Details Updated
 
@@ -278,19 +252,14 @@ Status update for accessibility request `{{requestid}}`
 
 ##### Message
 
-Hello `{{teamname}}`,
-
 The status of request `{{requestid}}` has changed to `{{status_label}}`.
 
 Please review the latest details using the request link below.
 
 View request: `{{url}}`
 
-Thank you very much,
-`{{teamname}}`
-`{{teamemail}}`
-Accessibility, Accommodation and Adaptive Computer Technology (AAACT)
-Digital Transformation Canada
+Request Management Tool
+IT Accessibility Office
 
 #### French
 
@@ -300,19 +269,14 @@ Mise à jour du statut de la demande `{{requestid}}`
 
 ##### Message
 
-Bonjour `{{teamname}}`,
-
 Le statut de la demande `{{requestid}}` a changé pour `{{status_label}}`.
 
 Veuillez consulter les derniers détails en utilisant le lien ci-dessous.
 
 Voir la demande : `{{url}}`
 
-Merci beaucoup,
-`{{teamname}}`
-`{{teamemail}}`
-Accessibilité, adaptation et technologie informatique adaptée (AATIA)
-Transformation numérique Canada
+Outil de gestion des demandes
+Bureau de l'accessibilité de la TI
 
 ## Special Internal Routing Messages
 
@@ -330,8 +294,6 @@ After-fact accessibility request `{{requestid}}` assigned to your team
 
 ##### Message
 
-Hello `{{teamname}}`,
-
 A new accessibility request `{{requestid}}` was submitted after the work already happened and has been assigned to your team.
 
 Request title: `{{requesttitle}}`
@@ -339,6 +301,9 @@ Catalogue: `{{catalogue_name}}`
 Service: `{{service_name}}`
 
 View request: `{{url}}`
+
+Request Management Tool
+IT Accessibility Office
 
 #### French
 
@@ -348,8 +313,6 @@ Demande d'accessibilité après-fact `{{requestid}}` assignée à votre équipe
 
 ##### Message
 
-Bonjour `{{teamname}}`,
-
 Une nouvelle demande d'accessibilité `{{requestid}}` a été soumise après la réalisation des travaux et a été assignée à votre équipe.
 
 Titre de la demande : `{{requesttitle}}`
@@ -357,6 +320,9 @@ Catalogue : `{{catalogue_name}}`
 Service : `{{service_name}}`
 
 Voir la demande : `{{url}}`
+
+Outil de gestion des demandes
+Bureau de l'accessibilité de la TI
 
 ### AAACT Triage Required
 
@@ -370,8 +336,6 @@ Accessibility request `{{requestid}}` needs AAACT triage
 
 ##### Message
 
-Hello `{{teamname}}`,
-
 A new accessibility request `{{requestid}}` needs AAACT triage.
 
 Review the request details and route it to the appropriate team.
@@ -379,6 +343,9 @@ Review the request details and route it to the appropriate team.
 Request title: `{{requesttitle}}`
 
 View request: `{{url}}`
+
+Request Management Tool
+IT Accessibility Office
 
 #### French
 
@@ -388,8 +355,6 @@ Demande d'accessibilité `{{requestid}}` à faire trier par AATIA
 
 ##### Message
 
-Bonjour `{{teamname}}`,
-
 Une nouvelle demande d'accessibilité `{{requestid}}` requiert un triage AATIA.
 
 Consultez les détails de la demande et acheminez-la à l'équipe appropriée.
@@ -397,6 +362,9 @@ Consultez les détails de la demande et acheminez-la à l'équipe appropriée.
 Titre de la demande : `{{requesttitle}}`
 
 Voir la demande : `{{url}}`
+
+Outil de gestion des demandes
+Bureau de l'accessibilité de la TI
 
 ## Available Placeholders
 

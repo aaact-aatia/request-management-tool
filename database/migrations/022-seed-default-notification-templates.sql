@@ -32,41 +32,41 @@ VALUES
 
 (0, 0, 0, 'employee', 'request_created', 'en',
  'New accessibility request {{requestid}} assigned to your team',
- 'Hello {{teamname}},\n\nA new accessibility request {{requestid}} has been assigned to your team.\n\nRequest title: {{requesttitle}}\nCatalogue: {{catalogue_name}}\nService: {{service_name}}\n\nView request: {{url}}\n\nThank you very much,\n{{teamname}}\n{{teamemail}}\nAccessibility, Accommodation and Adaptive Computer Technology (AAACT)\nDigital Transformation Canada',
+ 'A new accessibility request {{requestid}} has been assigned to your team.\n\nRequest title: {{requesttitle}}\nCatalogue: {{catalogue_name}}\nService: {{service_name}}\n\nView request: {{url}}\n\nRequest Management Tool\nIT Accessibility Office',
  1),
 
 (0, 0, 0, 'employee', 'request_created', 'fr',
  'Nouvelle demande d''accessibilité {{requestid}} assignée à votre équipe',
- 'Bonjour {{teamname}},\n\nUne nouvelle demande d''accessibilité {{requestid}} a été assignée à votre équipe.\n\nTitre de la demande : {{requesttitle}}\nCatalogue : {{catalogue_name}}\nService : {{service_name}}\n\nVoir la demande : {{url}}\n\nMerci beaucoup,\n{{teamname}}\n{{teamemail}}\nAccessibilité, adaptation et technologie informatique adaptée (AATIA)\nTransformation numérique Canada',
+ 'Une nouvelle demande d''accessibilité {{requestid}} a été assignée à votre équipe.\n\nTitre de la demande : {{requesttitle}}\nCatalogue : {{catalogue_name}}\nService : {{service_name}}\n\nVoir la demande : {{url}}\n\nOutil de gestion des demandes\nBureau de l''accessibilité de la TI',
  1),
 
 (0, 0, 0, 'employee', 'status_changed', 'en',
  'Status update for accessibility request {{requestid}}',
- 'Hello {{teamname}},\n\nThe status of request {{requestid}} has changed to {{status_label}}.\n\nPlease review the latest details using the request link below.\n\nView request: {{url}}\n\nThank you very much,\n{{teamname}}\n{{teamemail}}\nAccessibility, Accommodation and Adaptive Computer Technology (AAACT)\nDigital Transformation Canada',
+ 'The status of request {{requestid}} has changed to {{status_label}}.\n\nPlease review the latest details using the request link below.\n\nView request: {{url}}\n\nRequest Management Tool\nIT Accessibility Office',
  1),
 
 (0, 0, 0, 'employee', 'status_changed', 'fr',
  'Mise à jour du statut de la demande {{requestid}}',
- 'Bonjour {{teamname}},\n\nLe statut de la demande {{requestid}} a changé pour {{status_label}}.\n\nVeuillez consulter les derniers détails en utilisant le lien ci-dessous.\n\nVoir la demande : {{url}}\n\nMerci beaucoup,\n{{teamname}}\n{{teamemail}}\nAccessibilité, adaptation et technologie informatique adaptée (AATIA)\nTransformation numérique Canada',
+ 'Le statut de la demande {{requestid}} a changé pour {{status_label}}.\n\nVeuillez consulter les derniers détails en utilisant le lien ci-dessous.\n\nVoir la demande : {{url}}\n\nOutil de gestion des demandes\nBureau de l''accessibilité de la TI',
  1),
 
 (0, 0, 0, 'employee', 'reassigned', 'en',
  'Accessibility request {{requestid}} assigned to {{teamname}}',
- 'Hello {{teamname}},\n\nAccessibility request {{requestid}} has been assigned to {{teamname}}.\n\nReview the request context and confirm ownership with your team.\n\nView request: {{url}}\n\nThank you very much,\n{{teamname}}\n{{teamemail}}\nAccessibility, Accommodation and Adaptive Computer Technology (AAACT)\nDigital Transformation Canada',
+ 'Accessibility request {{requestid}} has been assigned to {{teamname}}.\n\nReview the request context and confirm ownership with your team.\n\nView request: {{url}}\n\nRequest Management Tool\nIT Accessibility Office',
  1),
 
 (0, 0, 0, 'employee', 'reassigned', 'fr',
  'Demande d''accessibilité {{requestid}} assignée à {{teamname}}',
- 'Bonjour {{teamname}},\n\nLa demande d''accessibilité {{requestid}} a été assignée à {{teamname}}.\n\nExaminez le contexte de la demande et confirmez la prise en charge avec votre équipe.\n\nVoir la demande : {{url}}\n\nMerci beaucoup,\n{{teamname}}\n{{teamemail}}\nAccessibilité, adaptation et technologie informatique adaptée (AATIA)\nTransformation numérique Canada',
+ 'La demande d''accessibilité {{requestid}} a été assignée à {{teamname}}.\n\nExaminez le contexte de la demande et confirmez la prise en charge avec votre équipe.\n\nVoir la demande : {{url}}\n\nOutil de gestion des demandes\nBureau de l''accessibilité de la TI',
  1),
 
 (0, 0, 0, 'employee', 'resolved', 'en',
  'Accessibility request {{requestid}} marked as resolved',
- 'Hello {{teamname}},\n\nAccessibility request {{requestid}} has been marked as resolved.\n\nEnsure any final records or follow-up actions are complete.\n\nView request: {{url}}\n\nThank you very much,\n{{teamname}}\n{{teamemail}}\nAccessibility, Accommodation and Adaptive Computer Technology (AAACT)\nDigital Transformation Canada',
+ 'Accessibility request {{requestid}} has been marked as resolved.\n\nEnsure any final records or follow-up actions are complete.\n\nView request: {{url}}\n\nRequest Management Tool\nIT Accessibility Office',
  1),
 
 (0, 0, 0, 'employee', 'resolved', 'fr',
  'Demande d''accessibilité {{requestid}} marquée comme résolue',
- 'Bonjour {{teamname}},\n\nLa demande d''accessibilité {{requestid}} a été marquée comme résolue.\n\nAssurez-vous que les dossiers finaux et les actions de suivi sont complets.\n\nVoir la demande : {{url}}\n\nMerci beaucoup,\n{{teamname}}\n{{teamemail}}\nAccessibilité, adaptation et technologie informatique adaptée (AATIA)\nTransformation numérique Canada',
+ 'La demande d''accessibilité {{requestid}} a été marquée comme résolue.\n\nAssurez-vous que les dossiers finaux et les actions de suivi sont complets.\n\nVoir la demande : {{url}}\n\nOutil de gestion des demandes\nBureau de l''accessibilité de la TI',
  1);
 
