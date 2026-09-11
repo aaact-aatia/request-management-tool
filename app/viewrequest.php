@@ -1001,10 +1001,20 @@ require_once __DIR__ . '/includes/csrf.php';
 					$frSurveyLink = app_url('client-survey.php?lang=fr&erid=' . $encodedTriageId . '&reqid=' . $encodedRequestPublicId);
 					$enSurveyLink = app_url('client-survey.php?lang=en&erid=' . $encodedTriageId . '&reqid=' . $encodedRequestPublicId);
 
+					$senderId = isset($_SESSION['pid']) ? (int) $_SESSION['pid'] : 0;
+					$senderName = '';
+					if ($senderId > 0) {
+						$senderRes = mysqli_query($link, "SELECT firstname, lastname FROM tblusers WHERE id = '$senderId' LIMIT 1");
+						if ($senderRes && $senderRow = mysqli_fetch_assoc($senderRes)) {
+							$senderName = trim(($senderRow['firstname'] ?? '') . ' ' . ($senderRow['lastname'] ?? ''));
+						}
+					}
+
 					$resolvedContext = [
 						'requestid' => (string) $row['requestid'],
 						'client_fname' => (string) ($row['clientfname'] ?? ''),
 						'client_lname' => (string) ($row['clientlname'] ?? ''),
+						'assigned_by' => $senderName,
 					];
 					if ($surveyEnabled) {
 						$resolvedContext['survey_link_en'] = $enSurveyLink;

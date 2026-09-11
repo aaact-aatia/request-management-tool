@@ -324,6 +324,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     
     $domain = app_base_url();
     
+    $assignedByName = '';
+    if (!empty($_SESSION['pid'])) {
+        $creatorRes = mysqli_query($link, "SELECT firstname, lastname FROM tblusers WHERE id = '" . (int)$_SESSION['pid'] . "' LIMIT 1");
+        if ($creatorRes && $creatorRow = mysqli_fetch_assoc($creatorRes)) {
+            $assignedByName = trim(($creatorRow['firstname'] ?? '') . ' ' . ($creatorRow['lastname'] ?? ''));
+        }
+    }
+    if ($assignedByName === '') {
+        $assignedByName = trim($clientfname . ' ' . $clientlname);
+    }
+
     // Email personalization data
     $personalisation = [
         "requestid" => $nrequestid,
@@ -331,6 +342,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         "teamname" => $teamname,
         "team_email" => $teamemail,
         "teamemail" => $teamemail,
+        "assigned_by" => $assignedByName,
         "requesttitle" => $requesttitle,
         "nrequestemailid" => $nrequestemailid,
         "nrequestemail" => $clientemail,

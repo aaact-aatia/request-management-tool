@@ -34,6 +34,7 @@ const ALLOWED_PLACEHOLDERS = [
     'requestid',
     'requesttitle',
     'assignee',
+    'assigned_by',
     'teamname',
     'teamemail',
     'catalogue_name',

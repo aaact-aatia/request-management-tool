@@ -78,10 +78,20 @@ if ($request !== null && $_SERVER['REQUEST_METHOD'] === 'POST') {
         );
         $templateId = app_notify_template_id('notification_generic');
         $category = rmt_notification_template_category('resolved');
+        $senderId = isset($_SESSION['pid']) ? (int) $_SESSION['pid'] : 0;
+        $senderName = '';
+        if ($senderId > 0) {
+            $senderRes = mysqli_query($link, "SELECT firstname, lastname FROM tblusers WHERE id = '$senderId' LIMIT 1");
+            if ($senderRes && $senderRow = mysqli_fetch_assoc($senderRes)) {
+                $senderName = trim(($senderRow['firstname'] ?? '') . ' ' . ($senderRow['lastname'] ?? ''));
+            }
+        }
+
         $resolvedContext = [
             'requestid' => (string) $request['requestid'],
             'client_fname' => (string) ($request['clientfname'] ?? ''),
             'client_lname' => (string) ($request['clientlname'] ?? ''),
+            'assigned_by' => $senderName,
         ];
         if ($surveyEnabled) {
             $resolvedContext['survey_link_en'] = $enLink;

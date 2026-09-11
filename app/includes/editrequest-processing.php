@@ -531,11 +531,20 @@ $statusFr = $row ? $row['namefr'] : "";
 $domain = app_base_url();
 $nrequestemailid = base64_encode($requestuid);
 
+$assignedByName = '';
+if (!empty($updaterid)) {
+    $updaterRes = mysqli_query($link, "SELECT firstname, lastname FROM tblusers WHERE id = '" . (int)$updaterid . "' LIMIT 1");
+    if ($updaterRes && $updaterRow = mysqli_fetch_assoc($updaterRes)) {
+        $assignedByName = trim(($updaterRow['firstname'] ?? '') . ' ' . ($updaterRow['lastname'] ?? ''));
+    }
+}
+
 $personalisation = [
     "requestid" => $requestid,
     "nrequestid" => $requestid,
     "teamname" => $teamname,
     "team_email" => $teamemail,
+    "assigned_by" => $assignedByName,
     "requesttitle" => $requesttitle,
     "nrequestemailid" => $nrequestemailid,
     "nrequestemail" => $clientemail,

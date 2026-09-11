@@ -403,6 +403,7 @@ Voir la demande : `{{url}}`
 - `{{requestid}}`: Request ID
 - `{{requesttitle}}`: Request title
 - `{{assignee}}`: Assigned employee name, available in assignment notifications
+- `{{assigned_by}}`: Person who made the assignment or update
 - `{{teamname}}`: Responsible team name
 - `{{teamemail}}`: Responsible team email address
 - `{{catalogue_name}}`: Catalogue or topic name
