@@ -39,6 +39,7 @@ class NotificationTemplateSyncTest extends TestCase
 
         $this->assertArrayHasKey('request_created', $templates['employee']);
         $this->assertArrayHasKey('reassigned', $templates['employee']);
+        $this->assertArrayHasKey('details_updated', $templates['employee']);
         $this->assertArrayHasKey('resolved', $templates['employee']);
         $this->assertArrayHasKey('status_changed', $templates['employee']);
 
@@ -57,7 +58,7 @@ class NotificationTemplateSyncTest extends TestCase
         $validation = validate_templates($templates);
 
         $this->assertTrue($validation['valid'], 'Validation failed with errors: ' . implode(', ', $validation['errors']));
-        $this->assertEquals(12, $validation['total']);
+        $this->assertEquals(14, $validation['total']);
         $this->assertEmpty($validation['errors']);
     }
 

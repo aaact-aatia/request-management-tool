@@ -834,11 +834,11 @@ if (!$updateSucceeded) {
 }
 
 $leadManagerNotificationSent = false;
-if ($ownershipChanged) {
-    rmt_send_internal_notifications($link, $requestuidInt, $contactid, (int) $serviceid, (int) $subserviceid, 'status_changed', ['lead', 'manager'], $personalisation);
-    $leadManagerNotificationSent = true;
-} elseif (!$isCurrentResolved && $isTargetResolved) {
+if (!$isCurrentResolved && $isTargetResolved) {
     rmt_send_internal_notifications($link, $requestuidInt, $contactid, (int) $serviceid, (int) $subserviceid, 'resolved', ['lead', 'manager'], $personalisation);
+    $leadManagerNotificationSent = true;
+} elseif ($ownershipChanged) {
+    rmt_send_internal_notifications($link, $requestuidInt, $contactid, (int) $serviceid, (int) $subserviceid, 'details_updated', ['lead', 'manager'], $personalisation, $workerIdInt);
     $leadManagerNotificationSent = true;
 } elseif ($cstatusid != $statusid) {
     rmt_send_internal_notifications($link, $requestuidInt, $contactid, (int) $serviceid, (int) $subserviceid, 'status_changed', ['lead', 'manager'], $personalisation);
@@ -848,7 +848,7 @@ if ($ownershipChanged) {
 if ($workerIdInt > 0 && $workerIdInt !== $prevWorkerIdInt && !empty($workerRow)) {
     rmt_send_internal_notifications($link, $requestuidInt, $contactid, (int) $serviceid, (int) $subserviceid, 'reassigned', ['assignee'], $personalisation, $workerIdInt);
     if (!$leadManagerNotificationSent) {
-        rmt_send_internal_notifications($link, $requestuidInt, $contactid, (int) $serviceid, (int) $subserviceid, 'status_changed', ['lead', 'manager'], $personalisation);
+        rmt_send_internal_notifications($link, $requestuidInt, $contactid, (int) $serviceid, (int) $subserviceid, 'details_updated', ['lead', 'manager'], $personalisation, $workerIdInt);
     }
 }
 

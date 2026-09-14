@@ -130,7 +130,7 @@ Transformation numérique Canada
 
 Employee messages include the request link so internal recipients can open the request after signing in.
 
-Assignment notifications are sent to the assigned employee and also produce a status/details update for the responsible team lead and manager. Status, details, resolved, closed, and cancelled updates are sent to the responsible team lead and manager.
+Assignment notifications are sent to the assigned employee and also produce a details-updated notification for the responsible team lead and manager. Status, resolved, closed, and cancelled updates are sent to the responsible team lead and manager.
 
 ### Request Created
 
@@ -199,6 +199,40 @@ Demande d'accessibilité `{{requestid}}` vous a été attribuée
 La demande d'accessibilité `{{requestid}}` vous a été attribuée par `{{assigned_by}}`.
 
 Examinez le contexte de la demande et confirmez la prise en charge avec votre équipe.
+
+Voir la demande : `{{url}}`
+
+Outil de gestion des demandes (OGD)
+
+### Details Updated
+
+#### English
+
+##### Subject
+
+Accessibility request `{{requestid}}` details updated
+
+##### Message
+
+Details for accessibility request `{{requestid}}` have been updated.
+
+Please review the latest request details using the request link below.
+
+View request: `{{url}}`
+
+Request Management Tool (RMT)
+
+#### French
+
+##### Subject
+
+Détails de la demande d'accessibilité `{{requestid}}` mis à jour
+
+##### Message
+
+Les détails de la demande d'accessibilité `{{requestid}}` ont été mis à jour.
+
+Veuillez consulter les derniers détails de la demande en utilisant le lien ci-dessous.
 
 Voir la demande : `{{url}}`
 
