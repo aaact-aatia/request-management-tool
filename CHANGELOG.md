@@ -377,6 +377,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Regenerate CHANGELOG.md [skip ci] ([004acb3](https://github.com/aaact-aatia/request-management-tool/commit/004acb371c0582fb186f2682c1df553595a6d318))
 
+- Regenerate CHANGELOG.md [skip ci] ([9db3774](https://github.com/aaact-aatia/request-management-tool/commit/9db377469679ebc19d66b3909e945f434994542c))
+
 
 ### Fixed
 
@@ -571,6 +573,10 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 - Improve development notification previews ([5e417f9](https://github.com/aaact-aatia/request-management-tool/commit/5e417f95251bce1683b6bcfccf2607fd12d4eb53))
 
 - Notify new team after catalogue reassignment ([d80d42c](https://github.com/aaact-aatia/request-management-tool/commit/d80d42c17a3d7fccd3c4817e14abd026d344d2b3))
+
+- Route assignment and status notifications ([3839996](https://github.com/aaact-aatia/request-management-tool/commit/3839996509330ec12426cc77f2aed187983d6641))
+
+- Add details update notification routing ([c94bbb1](https://github.com/aaact-aatia/request-management-tool/commit/c94bbb177aba255f030361c12345848bffb44896))
 
 
 ### Other
