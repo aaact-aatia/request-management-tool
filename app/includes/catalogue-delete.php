@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/helpers.php';
+require_once __DIR__ . '/csrf.php';
 
 function rmt_catalogue_delete_config(string $level): array {
     $configs = [
@@ -276,6 +277,7 @@ function rmt_render_catalogue_delete_dialog(
     </header>
     <div class="modal-body">
         <form method="post" action="<?= htmlspecialchars($formAction) ?>">
+            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(rmt_csrf_token('catalogue'), ENT_QUOTES, 'UTF-8') ?>">
             <p id="open-request-count"><?= htmlspecialchars($countMessage) ?></p>
             <p><?= htmlspecialchars($translations['delete_catalogue_archive_message']) ?></p>
             <p><strong><?= htmlspecialchars($translations['delete_catalogue_warning']) ?></strong></p>
