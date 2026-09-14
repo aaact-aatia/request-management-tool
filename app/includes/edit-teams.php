@@ -18,33 +18,35 @@ if (!$canEditTeams) {
 // Grab MySQL connection
 require('../sql.php');
 /** @var mysqli $link */
+require_once('helpers.php');
+require_once('csrf.php');
 
 // Now first get the ID
-$contactid = $_GET['id'];
+$contactid = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0;
+$csrfToken = rmt_csrf_token('teams');
+$existingTeam = $contactid > 0
+	? rmt_db_fetch_one($link, 'SELECT * FROM tblteams WHERE id = ?', 'i', [$contactid])
+	: null;
 
 // Process the edit team form
 if ($_SERVER['REQUEST_METHOD']=='POST'){
-	
-	// Grab form elements
-	$teamnameen = mysqli_real_escape_string($link,$_POST['nameen']);
-	$teamnamefr = mysqli_real_escape_string($link,$_POST['namefr']);
-	$teamemail = mysqli_real_escape_string($link,$_POST['email']);
-	$replyToId = mysqli_real_escape_string($link, trim((string) ($_POST['reply_to_id'] ?? '')));
-	$teamLeadUserId = !empty($_POST['team_lead_user_id']) ? (int)$_POST['team_lead_user_id'] : 0;
-	$date_now = date("Y-m-d H:i:s");
-	$updatedby = $_SESSION['pid'];
-	$noerror = false;
-	
-	// Custom form validation - require team name and email
-	if (empty($teamnameen) || empty($teamnamefr) || empty($teamemail)) {
-		$noerror = true;
+	if (!rmt_csrf_token_is_valid('teams', (string) ($_POST['csrf_token'] ?? ''))) {
+		header("location:/teams.php?lang={$lang_code}&status=failed");
+		exit();
 	}
+
+	$teamnameen = trim((string) ($_POST['nameen'] ?? ''));
+	$teamnamefr = trim((string) ($_POST['namefr'] ?? ''));
+	$teamemail = strtolower(trim((string) ($_POST['email'] ?? '')));
+	$replyToId = trim((string) ($_POST['reply_to_id'] ?? ''));
+	$teamLeadUserId = filter_var($_POST['team_lead_user_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0;
+	$date_now = date("Y-m-d H:i:s");
+	$updatedby = filter_var($_SESSION['pid'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0;
+	$noerror = $existingTeam === null || $contactid <= 0 || $teamnameen === '' || $teamnamefr === '' || !filter_var($teamemail, FILTER_VALIDATE_EMAIL) || $updatedby <= 0;
 
 	// Validate team lead if provided
 	if (!$noerror && $teamLeadUserId > 0) {
-		$leadCheckSql = "SELECT id FROM tblusers WHERE id='" . $teamLeadUserId . "' AND atype='4' AND status='1' LIMIT 1";
-		$leadCheckResult = rmt_admin_query($link, $leadCheckSql);
-		if (!rmt_result_num_rows($leadCheckResult)) {
+		if (!rmt_db_fetch_one($link, 'SELECT id FROM tblusers WHERE id = ? AND atype = 4 AND status = 1 LIMIT 1', 'i', [$teamLeadUserId])) {
 			$noerror = true;
 		}
 	}
@@ -55,23 +57,22 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 		exit();
 	}
 	
-	// Create SQL statement
-	$teamLeadSqlValue = ($teamLeadUserId > 0) ? (string)$teamLeadUserId : "NULL";
-	$sql = "UPDATE `tblteams` SET `nameen` = '$teamnameen', `namefr` = '$teamnamefr', `email` = '$teamemail', `reply_to_id` = NULLIF('$replyToId', ''), `team_lead_user_id` = $teamLeadSqlValue, `dateupdated` = '$date_now', `updatedby` = '$updatedby' WHERE id='$contactid'";
-	rmt_admin_query($link,$sql);
+	$statement = rmt_db_execute(
+		$link,
+		"UPDATE tblteams SET nameen = ?, namefr = ?, email = ?, reply_to_id = NULLIF(?, ''), team_lead_user_id = NULLIF(?, 0), dateupdated = ?, updatedby = ? WHERE id = ?",
+		'ssss isii',
+		[$teamnameen, $teamnamefr, $teamemail, $replyToId, $teamLeadUserId, $date_now, $updatedby, $contactid]
+	);
+	mysqli_stmt_close($statement);
 	
 	// Now redirect
 	header("location:/teams.php?lang={$lang_code}&status=success"); 
 	exit();
 }
 
-// Construct SQL statement
-$sql2 = "SELECT * FROM tblteams WHERE id='$contactid'";
 
-$result2 = rmt_admin_query($link,$sql2);
-//List it
-if(rmt_result_num_rows($result2)>0){
-	while($row2 = rmt_result_fetch_array($result2)){
+if ($existingTeam) {
+	$row2 = $existingTeam;
 		$display_name = $lang_code === 'fr' ? $row2['namefr'] : $row2['nameen'];
 ?>
 <section id="filter-id" class="modal-dialog modal-content overlay-def">
@@ -80,6 +81,7 @@ if(rmt_result_num_rows($result2)>0){
 	</header>
 	<div class="modal-body">
 		<form method="post" action="/includes/edit-teams.php?id=<?php echo $row2['id']; ?>">
+		<input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
 		<div class="form-group">
 			<label for="nameen"><span class="field-name"><?php echo $lang_code === 'en' ? 'Team name (english)' : 'Nom de l\'équipe (anglais)'; ?>: <strong>(<?php echo $lang_code === 'en' ? 'required' : 'requis'; ?>)</strong></span></label>
 				<input type="text" class="form-control full-width" id="nameen" name="nameen" value="<?php echo htmlspecialchars($row2['nameen']); ?>" required>
@@ -123,8 +125,7 @@ if(rmt_result_num_rows($result2)>0){
 	</div>
 </section>
 <?php
-	}
-} else { 
+} else {
 // Wrong ID so display an error message
 ?>
 <section id="filter-id" class="modal-dialog modal-content overlay-def">
