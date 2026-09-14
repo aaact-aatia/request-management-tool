@@ -379,6 +379,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Regenerate CHANGELOG.md [skip ci] ([9db3774](https://github.com/aaact-aatia/request-management-tool/commit/9db377469679ebc19d66b3909e945f434994542c))
 
+- Regenerate CHANGELOG.md [skip ci] ([5431bff](https://github.com/aaact-aatia/request-management-tool/commit/5431bff5a74d4c170e6bfffcbb6fda14e17a5eec))
+
 
 ### Fixed
 
@@ -577,6 +579,28 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 - Route assignment and status notifications ([3839996](https://github.com/aaact-aatia/request-management-tool/commit/3839996509330ec12426cc77f2aed187983d6641))
 
 - Add details update notification routing ([c94bbb1](https://github.com/aaact-aatia/request-management-tool/commit/c94bbb177aba255f030361c12345848bffb44896))
+
+- Harden product administration CRUD ([4638344](https://github.com/aaact-aatia/request-management-tool/commit/463834416c106ac241c076848a582fe18c2d0e91))
+
+- Harden catalogue administration CRUD ([7e56d9d](https://github.com/aaact-aatia/request-management-tool/commit/7e56d9d1f165999940375cd0ed791a0909c25fcc))
+
+- Harden service hierarchy administration ([b347495](https://github.com/aaact-aatia/request-management-tool/commit/b347495b5c1cf933f1607dbcfd15bbebc925991b))
+
+- Harden user administration CRUD ([878f8a8](https://github.com/aaact-aatia/request-management-tool/commit/878f8a89f89adbdc4d28174e186177f0039aed57))
+
+- Harden team administration CRUD ([541c0ec](https://github.com/aaact-aatia/request-management-tool/commit/541c0ec8bc17322884d61311032ad3f7973347c7))
+
+- Harden holiday administration CRUD ([7aa235d](https://github.com/aaact-aatia/request-management-tool/commit/7aa235d05e3590afb4b53c70897b84374550c7f0))
+
+- Harden status administration CRUD ([4fa0278](https://github.com/aaact-aatia/request-management-tool/commit/4fa0278b75ad41148148b7e3fec21022b412ac9d))
+
+- Harden request deletion CRUD ([2f22d35](https://github.com/aaact-aatia/request-management-tool/commit/2f22d35314c3f8375edd0a391d07e20001afedb3))
+
+- Correct team edit parameter types ([f95cb14](https://github.com/aaact-aatia/request-management-tool/commit/f95cb142dc803068f280efba0b4ec0a049d29ca2))
+
+- Add CSRF protection to notification templates ([69a72b5](https://github.com/aaact-aatia/request-management-tool/commit/69a72b5e5bb3ad4f0453cccd5250272df51d58ab))
+
+- Keep notification previews off CRUD success ([97a12d5](https://github.com/aaact-aatia/request-management-tool/commit/97a12d56c4c2d92ee016b2ba0ca61b4baad9668d))
 
 
 ### Other
