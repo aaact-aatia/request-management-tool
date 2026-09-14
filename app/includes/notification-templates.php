@@ -22,7 +22,7 @@ function rmt_notification_events_for_audience(string $audience): array {
     }
 
     if ($audience === 'employee') {
-        return ['request_created', 'status_changed', 'reassigned', 'resolved'];
+        return ['request_created', 'details_updated', 'status_changed', 'reassigned', 'resolved'];
     }
 
     return [];

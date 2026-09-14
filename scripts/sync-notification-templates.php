@@ -23,11 +23,22 @@ if (php_sapi_name() !== 'cli') {
 }
 
 // Environment bootstrap
-$envPath = file_exists('/var/www/html/env.php')
-    ? '/var/www/html/env.php'
-    : dirname(__DIR__) . '/app/env.php';
+$envCandidates = [
+    '/var/www/app/env.php',
+    '/var/www/html/env.php',
+    dirname(__DIR__) . '/app/env.php',
+];
+$envPath = null;
+foreach ($envCandidates as $candidate) {
+    if (file_exists($candidate)) {
+        $envPath = $candidate;
+        break;
+    }
+}
 
-require_once $envPath;
+if ($envPath !== null) {
+    require_once $envPath;
+}
 
 // Allowed placeholder tokens from app/includes/notification-templates.php
 const ALLOWED_PLACEHOLDERS = [
@@ -47,7 +58,7 @@ const ALLOWED_PLACEHOLDERS = [
     'survey_link_fr',
 ];
 
-// Expected 12 template combinations (Audience -> Event -> Languages)
+// Expected 14 template combinations (Audience -> Event -> Languages)
 const EXPECTED_TEMPLATES = [
     'client' => [
         'request_created' => ['en', 'fr'],
@@ -55,6 +66,7 @@ const EXPECTED_TEMPLATES = [
     ],
     'employee' => [
         'request_created' => ['en', 'fr'],
+        'details_updated' => ['en', 'fr'],
         'reassigned' => ['en', 'fr'],
         'resolved' => ['en', 'fr'],
         'status_changed' => ['en', 'fr'],
@@ -67,6 +79,7 @@ const EVENT_MAP = [
     'resolved / closed' => 'resolved',
     'assigned' => 'reassigned',
     'reassigned' => 'reassigned',
+    'details updated' => 'details_updated',
     'status / details updated' => 'status_changed',
 ];
 
@@ -505,4 +518,6 @@ function indent_text(string $text, string $indent): string {
     return $indent . str_replace("\n", "\n" . $indent, $text);
 }
 
-exit(main($argv));
+if (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__) {
+    exit(main($argv));
+}
