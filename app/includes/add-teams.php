@@ -17,31 +17,30 @@ if (!($_SESSION['is_superuser'] OR $_SESSION['is_admin'])) {
 // Grab MySQL connection
 require('../sql.php');
 /** @var mysqli $link */
+require_once('helpers.php');
+require_once('csrf.php');
+$csrfToken = rmt_csrf_token('teams');
 
 // Process the add team form
 if ($_SERVER['REQUEST_METHOD']=='POST'){
-	
-	// Grab form elements
-	$teamnameen = mysqli_real_escape_string($link,$_POST['nameen']);
-	$teamnamefr = mysqli_real_escape_string($link,$_POST['namefr']);
-	$teamemail = mysqli_real_escape_string($link,$_POST['email']);
-	$replyToId = mysqli_real_escape_string($link, trim((string) ($_POST['reply_to_id'] ?? '')));
-	$teamLeadUserId = !empty($_POST['team_lead_user_id']) ? (int)$_POST['team_lead_user_id'] : 0;
-	$date_now = date("Y-m-d H:i:s");
-	$updatedby = $_SESSION['pid'];
-	$status = 1;
-	$noerror = false;
-	
-	// Custom form validation - require team name and email
-	if (empty($teamnameen) || empty($teamnamefr) || empty($teamemail)) {
-		$noerror = true;
+	if (!rmt_csrf_token_is_valid('teams', (string) ($_POST['csrf_token'] ?? ''))) {
+		header("location:/teams.php?lang={$lang_code}&status=failed");
+		exit();
 	}
 
+	$teamnameen = trim((string) ($_POST['nameen'] ?? ''));
+	$teamnamefr = trim((string) ($_POST['namefr'] ?? ''));
+	$teamemail = strtolower(trim((string) ($_POST['email'] ?? '')));
+	$replyToId = trim((string) ($_POST['reply_to_id'] ?? ''));
+	$teamLeadUserId = filter_var($_POST['team_lead_user_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0;
+	$date_now = date("Y-m-d H:i:s");
+	$updatedby = filter_var($_SESSION['pid'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0;
+	$status = 1;
+	$noerror = $teamnameen === '' || $teamnamefr === '' || !filter_var($teamemail, FILTER_VALIDATE_EMAIL) || $updatedby <= 0;
+	
 	// Validate team lead if provided
 	if (!$noerror && $teamLeadUserId > 0) {
-		$leadCheckSql = "SELECT id FROM tblusers WHERE id='" . $teamLeadUserId . "' AND atype='4' AND status='1' LIMIT 1";
-		$leadCheckResult = rmt_admin_query($link, $leadCheckSql);
-		if (!rmt_result_num_rows($leadCheckResult)) {
+		if (!rmt_db_fetch_one($link, 'SELECT id FROM tblusers WHERE id = ? AND atype = 4 AND status = 1 LIMIT 1', 'i', [$teamLeadUserId])) {
 			$noerror = true;
 		}
 	}
@@ -52,10 +51,13 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 		exit();
 	}
 	
-	// Create SQL statement
-	$teamLeadSqlValue = ($teamLeadUserId > 0) ? (string)$teamLeadUserId : "NULL";
-	$sql = "INSERT INTO tblteams(`nameen`, `namefr`, `email`, `reply_to_id`, `team_lead_user_id`, `dateadded`, `dateupdated`, `updatedby`, `status`) VALUES ('$teamnameen', '$teamnamefr', '$teamemail', NULLIF('$replyToId', ''), $teamLeadSqlValue, '$date_now', '$date_now', '$updatedby', '$status')";
-	rmt_admin_query($link,$sql);
+	$statement = rmt_db_execute(
+		$link,
+		"INSERT INTO tblteams (nameen, namefr, email, reply_to_id, team_lead_user_id, dateadded, dateupdated, updatedby, status) VALUES (?, ?, ?, NULLIF(?, ''), NULLIF(?, 0), ?, ?, ?, ?)",
+		'ssssissii',
+		[$teamnameen, $teamnamefr, $teamemail, $replyToId, $teamLeadUserId, $date_now, $date_now, $updatedby, $status]
+	);
+	mysqli_stmt_close($statement);
 	
 	// Now redirect
 	header("location:/teams.php?lang={$lang_code}&status=success"); 
@@ -100,6 +102,7 @@ $t = $translations[$lang_code];
 	</header>
 	<div class="modal-body">
 		<form method="post" action="/includes/add-teams.php">
+		<input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
 		<div class="form-group">
 			<label for="nameen"><span class="field-name"><?= htmlspecialchars($t['team_name_en']) ?> <strong><?= htmlspecialchars($t['required']) ?></strong></span></label>
 				<input type="text" class="form-control" id="nameen" name="nameen" value="" required>

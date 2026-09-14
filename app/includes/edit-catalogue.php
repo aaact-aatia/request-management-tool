@@ -18,29 +18,27 @@ if (!($_SESSION['is_superuser'] OR $_SESSION['is_admin'])) {
 require('../sql.php');
 /** @var mysqli $link */
 require_once('helpers.php');
+require_once('csrf.php');
 
 // Now first get the ID
-$catalogueid = $_GET['id'];
+$catalogueid = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0;
+$csrfToken = rmt_csrf_token('catalogue');
 
 // Process the edit product form
 if ($_SERVER['REQUEST_METHOD']=='POST'){
-	
-	// Grab form elements
-	$nameen = mysqli_real_escape_string($link,$_POST['nameen']);
-	$namefr = mysqli_real_escape_string($link,$_POST['namefr']);
-	$contactid = mysqli_real_escape_string($link,$_POST['contactid']);
-	$survey = mysqli_real_escape_string($link,$_POST['survey']);
+	if (!rmt_csrf_token_is_valid('catalogue', (string) ($_POST['csrf_token'] ?? ''))) {
+		header("location:/catalogue.php?lang={$lang_code}&status=failed");
+		exit();
+	}
+
+	$nameen = trim((string) ($_POST['nameen'] ?? ''));
+	$namefr = trim((string) ($_POST['namefr'] ?? ''));
+	$contactid = filter_var($_POST['contactid'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0;
+	$survey = filter_var($_POST['survey'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0, 'max_range' => 1]]);
 	$requestSubjectType = rmt_normalize_request_subject_type($_POST['request_subject_type'] ?? '', true);
 	$status = isset($_POST['status']) ? 1 : 0;
-	$noerror = false;
 	
-	// Custom form validation
-	if ($nameen=="" OR $namefr=="" OR $contactid=="") {
-		$noerror = true;
-	}
-	
-	// If error detected send user back to modal dialog
-	if ($noerror) {
+	if ($catalogueid <= 0 || $nameen === '' || $namefr === '' || $contactid <= 0 || $survey === false) {
 		header("location:/catalogue.php?lang={$lang_code}&status=failed"); 
 		exit();
 	}
@@ -58,13 +56,12 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	exit();
 }
 
-// Construct SQL statement
-$sql2 = "SELECT * FROM tblcatalogue WHERE id='$catalogueid'";
 
-$result2 = rmt_admin_query($link,$sql2);
-//List it
-if(rmt_result_num_rows($result2)>0){
-	while($row2 = rmt_result_fetch_array($result2)){
+$row2 = $catalogueid > 0
+	? rmt_db_fetch_one($link, 'SELECT * FROM tblcatalogue WHERE id = ?', 'i', [$catalogueid])
+	: null;
+
+if ($row2) {
 		$display_name = $lang_code === 'fr' ? $row2['namefr'] : $row2['nameen'];
 ?>
 <section id="filter-id" class="modal-dialog modal-content overlay-def">
@@ -73,6 +70,7 @@ if(rmt_result_num_rows($result2)>0){
 	</header>
 	<div class="modal-body">
 		<form method="post" action="/includes/edit-catalogue.php?id=<?php echo $row2['id']; ?>">
+		<input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
 		<div class="form-group">
 			<label for="nameen"><span class="field-name"><?php echo $lang_code === 'en' ? 'Name (english)' : 'Nom (anglais)'; ?>: <strong>(<?php echo $lang_code === 'en' ? 'required' : 'requis'; ?>)</strong></span></label>
 			<input type="text" class="form-control full-width" id="nameen" name="nameen" value="<?php echo htmlspecialchars($row2['nameen']); ?>" required>
@@ -123,8 +121,7 @@ if(rmt_result_num_rows($result2)>0){
 	</div>
 </section>
 <?php
-	}
-} else { 
+} else {
 // Wrong ID so display an error message
 ?>
 <section id="filter-id" class="modal-dialog modal-content overlay-def">

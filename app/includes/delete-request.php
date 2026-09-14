@@ -7,6 +7,8 @@
 
 // Database connection
 require_once '../sql.php';
+require_once 'helpers.php';
+require_once 'csrf.php';
 
 // Language detection
 $lang = $_SESSION['lang'] ?? 'en';
@@ -24,7 +26,8 @@ if (!isset($_GET['id']) || empty($_GET['id'])) {
 }
 
 // Get the ID
-$requestuid = mysqli_real_escape_string($link, $_GET['id']);
+$requestuid = filter_var($_GET['id'], FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0;
+$csrfToken = rmt_csrf_token('request-delete');
 
 // Translations
 $translations = [
@@ -48,9 +51,13 @@ $t = $translations[$lang];
 
 // Process the delete form
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-	// Create SQL statement
-	$sql = "UPDATE `tbltriage` SET `status` = '0' WHERE id='$requestuid'";
-	rmt_admin_query($link, $sql);
+	if (!rmt_csrf_token_is_valid('request-delete', (string) ($_POST['csrf_token'] ?? '')) || $requestuid <= 0) {
+		header("location:/requests.php?lang=$lang&status=error");
+		exit();
+	}
+
+	$statement = rmt_db_execute($link, 'UPDATE tbltriage SET status = 0 WHERE id = ?', 'i', [$requestuid]);
+	mysqli_stmt_close($statement);
 	
 	// Now redirect
 	header("location:/requests.php?lang=$lang&status=dsuccess");
@@ -58,20 +65,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 }
 
 // Construct SQL statement
-$sql2 = "SELECT * FROM tbltriage WHERE id='$requestuid'";
-$result2 = rmt_admin_query($link, $sql2);
+$request = $requestuid > 0
+	? rmt_db_fetch_one($link, 'SELECT id, requestid FROM tbltriage WHERE id = ?', 'i', [$requestuid])
+	: null;
 
 // List it
-if (rmt_result_num_rows($result2) > 0) {
-	while ($row2 = rmt_result_fetch_array($result2)) {
-		$requestid = $row2['requestid'];
+if ($request) {
+		$requestid = $request['requestid'];
 ?>
 <section id="filter-id" class="modal-dialog modal-content overlay-def">
 	<header class="modal-header">
 		<h2 class="modal-title"><?php echo htmlspecialchars($t['delete_title']); ?> - a11y-<?php echo htmlspecialchars($requestid); ?></h2>
 	</header>
 	<div class="modal-body">
-		<form method="post" action="/includes/delete-request.php?id=<?php echo htmlspecialchars($row2['id']); ?>">
+		<form method="post" action="/includes/delete-request.php?id=<?php echo (int) $request['id']; ?>">
+		<input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
 		<p tabindex="0"><?php echo htmlspecialchars($t['confirm_message']); ?></p>
 		<div class="form-group form-buttons">
 			<button type="submit" class="btn btn-default"><?php echo htmlspecialchars($t['yes']); ?></button>
@@ -81,8 +89,7 @@ if (rmt_result_num_rows($result2) > 0) {
 	</div>
 </section>
 <?php
-	}
-} else { 
+} else {
 	// Wrong ID so display an error message
 ?>
 <section id="filter-id" class="modal-dialog modal-content overlay-def">

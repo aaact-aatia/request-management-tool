@@ -16,56 +16,59 @@ if (!($_SESSION['is_superuser'] OR $_SESSION['is_admin'])) {
 
 // Grab MySQL connection
 require('../sql.php');
+require_once('csrf.php');
+require_once('helpers.php');
 
 // Now first get the ID
-$productid = $_GET['id'];
+$productid = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0;
+$csrfToken = rmt_csrf_token('products');
 
 // Process the edit product form
 if ($_SERVER['REQUEST_METHOD']=='POST'){
-	
-	// Grab form elements
-	$pnameen = mysqli_real_escape_string($link,$_POST['pnameen']);
-	$pnamefr = mysqli_real_escape_string($link,$_POST['pnamefr']);
-	$date_now = date("Y-m-d H:i:s");
-	$updatedby = $_SESSION['pid'];
-	$noerror = false;
-	
-	// Custom form validation
-	if ($pnameen=="" OR $pnamefr=="") {
-		$noerror = true;
+	if (!rmt_csrf_token_is_valid('products', (string) ($_POST['csrf_token'] ?? ''))) {
+		header("location:/products.php?lang={$lang_code}&status=failed");
+		exit();
 	}
+
+	$pnameen = trim((string) ($_POST['pnameen'] ?? ''));
+	$pnamefr = trim((string) ($_POST['pnamefr'] ?? ''));
+	$date_now = date("Y-m-d H:i:s");
+	$updatedby = filter_var($_SESSION['pid'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0;
 	
-	// If error detected send user back to modal dialog
-	if ($noerror) {
+	if ($productid <= 0 || $pnameen === '' || $pnamefr === '' || $updatedby <= 0) {
 		header("location:/products.php?lang={$lang_code}&status=failed"); 
 		exit();
 	}
 	
-	// Create SQL statement
-	$sql = "UPDATE `tblproducts` SET `nameen` = '$pnameen', `namefr` = '$pnamefr', `dateupdated` = '$date_now', `updatedby` = '$updatedby' WHERE id='$productid'";
-	//echo $sql;
-	rmt_admin_query($link,$sql);
+	$statement = rmt_db_execute(
+		$link,
+		'UPDATE tblproducts SET nameen = ?, namefr = ?, dateupdated = ?, updatedby = ? WHERE id = ?',
+		'sssii',
+		[$pnameen, $pnamefr, $date_now, $updatedby, $productid]
+	);
+	mysqli_stmt_close($statement);
 	
 	// Now redirect
 	header("location:/products.php?lang={$lang_code}&status=success"); 
 	exit();
 }
 
-// Construct SQL statement
-$sql2 = "SELECT * FROM tblproducts WHERE id='$productid'";
+// Load the selected product for the modal.
+$product = $productid > 0
+	? rmt_db_fetch_one($link, 'SELECT id, nameen, namefr FROM tblproducts WHERE id = ?', 'i', [$productid])
+	: null;
 
-$result2 = rmt_admin_query($link,$sql2);
-//List it
-if(rmt_result_num_rows($result2)>0){
-	while($row2 = rmt_result_fetch_array($result2)){
-		$display_name = $lang_code === 'fr' ? $row2['namefr'] : $row2['nameen'];
+if ($product) {
+	$row2 = $product;
+	$display_name = $lang_code === 'fr' ? $row2['namefr'] : $row2['nameen'];
 ?>
 <section id="filter-id" class="modal-dialog modal-content overlay-def">
 	<header class="modal-header">
 		<h2 class="modal-title"><?php echo $lang_code === 'en' ? 'Edit' : 'Modifier le produit'; ?> <?php echo htmlspecialchars($display_name); ?><?php echo $lang_code === 'en' ? ' product' : ''; ?></h2>
 	</header>
 	<div class="modal-body">
-		<form method="post" action="/includes/edit-product.php?id=<?php echo $row2['id']; ?>">
+		<form method="post" action="/includes/edit-product.php?id=<?php echo (int) $row2['id']; ?>">
+		<input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
 		<div class="form-group">
 			<label for="pnameen"><span class="field-name"><?php echo $lang_code === 'en' ? 'Name of product (english)' : 'Nom du produit (anglais)'; ?>: <strong>(<?php echo $lang_code === 'en' ? 'required' : 'requis'; ?>)</strong></span></label>
 			<input type="text" class="form-control full-width" id="pnameen" name="pnameen" value="<?php echo htmlspecialchars($row2['nameen']); ?>" required>
@@ -82,8 +85,7 @@ if(rmt_result_num_rows($result2)>0){
 	</div>
 </section>
 <?php
-	}
-} else { 
+} else {
 // Wrong ID so display an error message
 ?>
 <section id="filter-id" class="modal-dialog modal-content overlay-def">

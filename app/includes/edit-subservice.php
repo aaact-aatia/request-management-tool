@@ -18,32 +18,32 @@ if (!($_SESSION['is_superuser'] OR $_SESSION['is_admin'])) {
 require('../sql.php');
 /** @var mysqli $link */
 require_once('helpers.php');
+require_once('csrf.php');
 
 // Now first get the ID
-$subserviceid = $_GET['id'];
-$serviceid = $_GET['sid'];
-$catalogueid = $_GET['cid'];
+$subserviceid = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0;
+$serviceid = filter_var($_GET['sid'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0;
+$catalogueid = filter_var($_GET['cid'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0;
+$csrfToken = rmt_csrf_token('catalogue');
 
 // Process the edit product form
 if ($_SERVER['REQUEST_METHOD']=='POST'){
-	
-	// Grab form elements
-	$nameen = mysqli_real_escape_string($link,$_POST['nameen']);
-	$namefr = mysqli_real_escape_string($link,$_POST['namefr']);
-	$sds = mysqli_real_escape_string($link,$_POST['sds']);
-	$contactId = (int) ($_POST['contactid'] ?? 0);
+	if (!rmt_csrf_token_is_valid('catalogue', (string) ($_POST['csrf_token'] ?? ''))) {
+		header("location:/catalogue-sub-mgmt.php?lang={$lang}&id={$serviceid}&cid={$catalogueid}&status=failed");
+		exit();
+	}
+
+	$nameen = trim((string) ($_POST['nameen'] ?? ''));
+	$namefr = trim((string) ($_POST['namefr'] ?? ''));
+	$sds = filter_var($_POST['sds'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 30]]);
+	$contactId = filter_var($_POST['contactid'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0;
 	$requestSubjectType = rmt_normalize_request_subject_type($_POST['request_subject_type'] ?? '', true);
 	$status = isset($_POST['status']) ? 1 : 0;
-	$noerror = false;
-	
-	// Custom form validation
-	if ($nameen=="" OR $namefr=="" OR $sds=="" OR $subserviceid=="" || ($contactId > 0 && !rmt_db_fetch_one($link, 'SELECT id FROM tblteams WHERE id = ? AND status = 1', 'i', [$contactId]))) {
-		$noerror = true;
-	}
 	$contactId = $contactId > 0 ? $contactId : null;
 	
-	// If error detected send user back to modal dialog
-	if ($noerror) {
+	$validHierarchy = $subserviceid > 0 && $serviceid > 0 && $catalogueid > 0
+		&& rmt_db_fetch_one($link, 'SELECT ss.id FROM tblsubservices ss INNER JOIN tblservices s ON s.id = ss.serviceid WHERE ss.id = ? AND ss.serviceid = ? AND s.catalogueid = ?', 'iii', [$subserviceid, $serviceid, $catalogueid]);
+	if (!$validHierarchy || $nameen === '' || $namefr === '' || $sds === false || ($contactId !== null && !rmt_db_fetch_one($link, 'SELECT id FROM tblteams WHERE id = ? AND status = 1', 'i', [$contactId]))) {
 		header("location:/catalogue-sub-mgmt.php?lang=" . $lang . "&id=$serviceid&cid=$catalogueid&status=failed");
 		exit();
 	}
@@ -62,12 +62,10 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 }
 
 // Construct SQL statement
-$sql2 = "SELECT * FROM tblsubservices WHERE id='$subserviceid'";
-
-$result2 = rmt_admin_query($link,$sql2);
-//List it
-if(rmt_result_num_rows($result2)>0){
-	while($row2 = rmt_result_fetch_array($result2)){
+$row2 = $subserviceid > 0
+	? rmt_db_fetch_one($link, 'SELECT * FROM tblsubservices WHERE id = ? AND serviceid = ?', 'ii', [$subserviceid, $serviceid])
+	: null;
+if ($row2) {
 		$parentRow = rmt_db_fetch_one(
 			$link,
 			'SELECT COALESCE(s.request_subject_type, c.request_subject_type, \'subject\') AS resolved_type FROM tblservices s INNER JOIN tblcatalogue c ON c.id = s.catalogueid WHERE s.id = ?',
@@ -96,6 +94,7 @@ if(rmt_result_num_rows($result2)>0){
 	</header>
 	<div class="modal-body">
 		<form method="post" action="/includes/edit-subservice.php?id=<?php echo $subserviceid ?>&sid=<?php echo $serviceid ?>&cid=<?php echo $catalogueid ?>&lang=<?php echo $lang ?>">
+		<input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
 		<div class="form-group">
 			<label for="nameen"><span class="field-name"><?php echo $label_en ?> <strong>(<?php echo $required_label ?>)</strong></span></label>
 			<input type="text" class="form-control full-width" id="nameen" name="nameen" value="<?php echo $row2['nameen'] ?>" required>
@@ -147,8 +146,7 @@ if(rmt_result_num_rows($result2)>0){
 	</div>
 </section>
 <?php
-	}
-} else { 
+} else {
 // Wrong ID so display an error message
 	$error_title = $is_french ? 'Oups, quelque chose s\'est mal passé!' : 'Oops something went wrong!';
 	$error_message = $is_french ? 'Désolé, une erreur s\'est produite avec votre demande, veuillez réessayer!' : 'Sorry something went wrong with your request, please try again!';

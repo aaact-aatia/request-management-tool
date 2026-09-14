@@ -16,33 +16,35 @@ if (!($_SESSION['is_superuser'] OR $_SESSION['is_admin'])) {
 
 // Grab MySQL connection
 require('../sql.php');
+require_once('csrf.php');
+require_once('helpers.php');
+
+$csrfToken = rmt_csrf_token('catalogue');
 
 // Process the add product form
 if ($_SERVER['REQUEST_METHOD']=='POST'){
-	
-	// Grab form elements
-	$nameen = mysqli_real_escape_string($link,$_POST['nameen']);
-	$namefr = mysqli_real_escape_string($link,$_POST['namefr']);
-	$contactid = mysqli_real_escape_string($link,$_POST['contactid']);
-	$status = isset($_POST['status']) ? 1 : 0;
-	$noerror = false;
-	
-	// Custom form validation
-	if ($nameen=="" OR $namefr=="" OR $contactid=="") {
-		$noerror = true;
+	if (!rmt_csrf_token_is_valid('catalogue', (string) ($_POST['csrf_token'] ?? ''))) {
+		header("location:/catalogue.php?lang={$lang_code}&status=failed");
+		exit();
 	}
 
-	// If error detected send user back to modal dialog
-	if ($noerror) {
+	$nameen = trim((string) ($_POST['nameen'] ?? ''));
+	$namefr = trim((string) ($_POST['namefr'] ?? ''));
+	$contactid = filter_var($_POST['contactid'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0;
+	$status = isset($_POST['status']) ? 1 : 0;
+
+	if ($nameen === '' || $namefr === '' || $contactid <= 0) {
 		header("location:/catalogue.php?lang={$lang_code}&status=failed"); 
 		exit();
 	}
 	
-	// Create SQL statement
-	$sql = "INSERT INTO tblcatalogue(`nameen`, `namefr`, `contactid`, `status`) VALUES ('$nameen', '$namefr', '$contactid', '$status')";
-	//echo $sql;
-	//exit();
-	rmt_admin_query($link,$sql);
+	$statement = rmt_db_execute(
+		$link,
+		'INSERT INTO tblcatalogue (nameen, namefr, contactid, status) VALUES (?, ?, ?, ?)',
+		'ssii',
+		[$nameen, $namefr, $contactid, $status]
+	);
+	mysqli_stmt_close($statement);
 	
 	// Now redirect
 	header("location:/catalogue.php?lang={$lang_code}&status=success"); 
@@ -55,6 +57,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	</header>
 	<div class="modal-body">
 		<form method="post" action="/includes/add-catalogue.php">
+		<input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
 		<div class="form-group">
 			<label for="nameen"><span class="field-name"><?= htmlspecialchars($lang['add_catalogue_name_en'] ?? 'Name (english)') ?>: <strong>(<?= htmlspecialchars($lang['required'] ?? 'required') ?>)</strong></span></label>
 			<input type="text" class="form-control" id="nameen" name="nameen" value="" required>

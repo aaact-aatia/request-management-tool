@@ -16,47 +16,41 @@ if (!($_SESSION['is_superuser'] OR $_SESSION['is_admin'])) {
 
 // Grab MySQL connection
 require('../sql.php');
+require_once('helpers.php');
+require_once('csrf.php');
 
 // Now first get the ID
-$productid = $_GET['id'];
+$productid = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0;
+$csrfToken = rmt_csrf_token('status');
 
 // Process the edit product form
 if ($_SERVER['REQUEST_METHOD']=='POST'){
-	
-	// Grab form elements
-	$snameen = mysqli_real_escape_string($link,$_POST['snameen']);
-	$snamefr = mysqli_real_escape_string($link,$_POST['snamefr']);
-	$isResolved = isset($_POST['is_resolved']) ? (int)$_POST['is_resolved'] : 0;
-	$noerror = false;
-	
-	// Custom form validation
-	if ($snameen=="" OR $snamefr=="") {
-		$noerror = true;
+	if (!rmt_csrf_token_is_valid('status', (string) ($_POST['csrf_token'] ?? ''))) {
+		header("location:/status.php?lang={$lang}&status=failed");
+		exit();
 	}
+
+	$snameen = trim((string) ($_POST['snameen'] ?? ''));
+	$snamefr = trim((string) ($_POST['snamefr'] ?? ''));
+	$isResolved = filter_var($_POST['is_resolved'] ?? 0, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0, 'max_range' => 1]]);
 	
-	// If error detected send user back to modal dialog
-	if ($noerror) {
-		header("location:/status.php?lang=" . $lang . "?status=failed"); 
+	if ($productid <= 0 || $snameen === '' || $snamefr === '' || $isResolved === false) {
+		header("location:/status.php?lang={$lang}&status=failed");
 		exit();
 	}
 	
-	// Create SQL statement
-	$sql = "UPDATE `tblstatus` SET `nameen` = '$snameen', `namefr` = '$snamefr', `is_resolved` = '$isResolved' WHERE id='$productid'";
-	//echo $sql;
-	rmt_admin_query($link,$sql);
+	$statement = rmt_db_execute($link, 'UPDATE tblstatus SET nameen = ?, namefr = ?, is_resolved = ? WHERE id = ?', 'ssii', [$snameen, $snamefr, $isResolved, $productid]);
+	mysqli_stmt_close($statement);
 	
 	// Now redirect
-	header("location:/status.php?lang=" . $lang . "?status=success"); 
+	header("location:/status.php?lang={$lang}&status=success");
 	exit();
 }
 
-// Construct SQL statement
-$sql2 = "SELECT * FROM tblstatus WHERE id='$productid'";
-
-$result2 = rmt_admin_query($link,$sql2);
-//List it
-if(rmt_result_num_rows($result2)>0){
-	while($row2 = rmt_result_fetch_array($result2)){
+$row2 = $productid > 0
+	? rmt_db_fetch_one($link, 'SELECT * FROM tblstatus WHERE id = ?', 'i', [$productid])
+	: null;
+if ($row2) {
 		$title = $is_french ? ('Modifier le statut ' . $row2['namefr']) : ('Edit ' . $row2['nameen'] . ' status');
 		$label_en = $is_french ? 'Nom du statut (anglais):' : 'Name of status (english):';
 		$label_fr = $is_french ? 'Nom du statut (français):' : 'Name of status (french):';
@@ -73,6 +67,7 @@ if(rmt_result_num_rows($result2)>0){
 	</header>
 	<div class="modal-body">
 		<form method="post" action="/includes/edit-status.php?id=<?php echo $row2['id'] ?>&lang=<?php echo $lang ?>">
+		<input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
 		<div class="form-group">
 			<label for="pnameen"><span class="field-name"><?php echo $label_en ?> <strong>(<?php echo $required_label ?>)</strong></span></label>
 			<input type="text" class="form-control full-width" id="snameen" name="snameen" value="<?php echo $row2['nameen'] ?>" required>
@@ -96,8 +91,7 @@ if(rmt_result_num_rows($result2)>0){
 	</div>
 </section>
 <?php
-	}
-} else { 
+} else {
 // Wrong ID so display an error message
 	$error_title = $is_french ? 'Oups, quelque chose s\'est mal passé!' : 'Oops something went wrong!';
 	$error_message = $is_french ? 'Désolé, une erreur s\'est produite avec votre demande, veuillez réessayer!' : 'Sorry something went wrong with your request, please try again!';

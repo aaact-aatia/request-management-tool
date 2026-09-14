@@ -16,36 +16,32 @@ if (!($_SESSION['is_superuser'] OR $_SESSION['is_admin'])) {
 
 // Grab MySQL connection
 require('../sql.php');
+require_once('helpers.php');
+require_once('csrf.php');
+$csrfToken = rmt_csrf_token('status');
 
 // Process the add product form
 if ($_SERVER['REQUEST_METHOD']=='POST'){
-	
-	// Grab form elements
-	$snameen = mysqli_real_escape_string($link,$_POST['snameen']);
-	$snamefr = mysqli_real_escape_string($link,$_POST['snamefr']);
-	$isResolved = isset($_POST['is_resolved']) ? (int)$_POST['is_resolved'] : 0;
-	$status = 1;
-	$noerror = false;
-	
-	// Custom form validation
-	if ($snameen=="" OR $snamefr=="") {
-		$noerror = true;
+	if (!rmt_csrf_token_is_valid('status', (string) ($_POST['csrf_token'] ?? ''))) {
+		header("location:/status.php?lang={$lang_code}&status=failed");
+		exit();
 	}
+
+	$snameen = trim((string) ($_POST['snameen'] ?? ''));
+	$snamefr = trim((string) ($_POST['snamefr'] ?? ''));
+	$isResolved = filter_var($_POST['is_resolved'] ?? 0, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0, 'max_range' => 1]]);
+	$status = 1;
 	
-	// If error detected send user back to modal dialog
-	if ($noerror) {
-		header("location:/status.php?lang={$lang_code}?status=failed"); 
+	if ($snameen === '' || $snamefr === '' || $isResolved === false) {
+		header("location:/status.php?lang={$lang_code}&status=failed");
 		exit();
 	}
 	
-	// Create SQL statement
-	$sql = "INSERT INTO tblstatus(`nameen`, `namefr`, `is_resolved`, `status`) VALUES ('$snameen', '$snamefr', '$isResolved', '$status')";
-	//echo $sql;
-	//exit();
-	rmt_admin_query($link,$sql);
+	$statement = rmt_db_execute($link, 'INSERT INTO tblstatus (nameen, namefr, is_resolved, status) VALUES (?, ?, ?, ?)', 'ssii', [$snameen, $snamefr, $isResolved, $status]);
+	mysqli_stmt_close($statement);
 	
 	// Now redirect
-	header("location:/status.php?lang={$lang_code}?status=success"); 
+	header("location:/status.php?lang={$lang_code}&status=success");
 	exit();
 }
 
@@ -81,6 +77,7 @@ $t = $translations[$lang_code];
 	</header>
 	<div class="modal-body">
 		<form method="post" action="/includes/add-status.php">
+		<input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
 		<div class="form-group">
 			<label for="snameen"><span class="field-name"><?= htmlspecialchars($t['name_en']) ?> <strong><?= htmlspecialchars($t['required']) ?></strong></span></label>
 			<input type="text" class="form-control" id="snameen" name="snameen" value="" required>

@@ -17,16 +17,22 @@ if (!($_SESSION['is_superuser'] OR $_SESSION['is_admin'])) {
 // Grab MySQL connection
 require('../sql.php');
 /** @var mysqli $link */
+require_once('helpers.php');
+require_once('csrf.php');
+$csrfToken = rmt_csrf_token('users');
 
 // Process the add product form
 if ($_SERVER['REQUEST_METHOD']=='POST'){
-	
-	// Grab form elements
-	$firstname = mysqli_real_escape_string($link,$_POST['firstname']);
-	$lastname = mysqli_real_escape_string($link,$_POST['lastname']);
-	$email = strtolower(mysqli_real_escape_string($link,$_POST['email']));
-	$password = mysqli_real_escape_string($link,$_POST['password']);
-	$accounttype = mysqli_real_escape_string($link,$_POST['accounttype']);
+	if (!rmt_csrf_token_is_valid('users', (string) ($_POST['csrf_token'] ?? ''))) {
+		header("location:/users.php?lang={$lang_code}&status=failed");
+		exit();
+	}
+
+	$firstname = trim((string) ($_POST['firstname'] ?? ''));
+	$lastname = trim((string) ($_POST['lastname'] ?? ''));
+	$email = strtolower(trim((string) ($_POST['email'] ?? '')));
+	$password = (string) ($_POST['password'] ?? '');
+	$accounttype = filter_var($_POST['accounttype'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 3, 'max_range' => 6]]);
 	$isSuperuserRole = !empty($_POST['is_superuser_role']) ? 1 : 0;
 	$isAdminRole = !empty($_POST['is_admin_role']) ? 1 : 0;
 	if ($isSuperuserRole === 1) {
@@ -46,12 +52,9 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	$teamstring = "";
 	//exit();
 	$date_now = date("Y-m-d H:i:s");
-	$updatedby = $_SESSION['pid'];
 	$status = 1;
-	$noerror = false;
-	
-	// Custom form validation
-	if ($firstname=="" OR $lastname=="" OR $email=="" OR $password=="" OR $accounttype=="") {
+	$noerror = !filter_var($email, FILTER_VALIDATE_EMAIL) || $firstname === '' || $lastname === '' || $password === '' || $accounttype === false;
+	if (!isSuperAdmin() && ($isSuperuserRole === 1 || $isAdminRole === 1)) {
 		$noerror = true;
 	}
 
@@ -85,9 +88,8 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	}
 
 	// Prevent fatal database errors on duplicate user email.
-	$existingEmailSql = "SELECT id FROM tblusers WHERE email='$email' LIMIT 1";
-	$existingEmailResult = rmt_admin_query($link, $existingEmailSql);
-	if (rmt_result_num_rows($existingEmailResult) > 0) {
+	$existingEmail = rmt_db_fetch_one($link, 'SELECT id FROM tblusers WHERE email = ? LIMIT 1', 's', [$email]);
+	if ($existingEmail !== null) {
 		header("location:/users.php?lang={$lang_code}&status=duplicate_email");
 		exit();
 	}
@@ -98,22 +100,27 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	$hasSuperRoleColumn = rmt_db_column_exists($link, 'tblusers', 'is_superuser');
 	$hasAdminRoleColumn = rmt_db_column_exists($link, 'tblusers', 'is_admin');
 
-	$insertColumns = "`firstname`, `lastname`, `email`, `password`, `atype`, `manager_id`, `team`, `status`";
-	$insertValues = "'$firstname', '$lastname', '$email', '$npassword', '$accounttype', NULL, '$teamstring', '$status'";
+	$insertColumns = "firstname, lastname, email, password, atype, manager_id, team, status";
+	$placeholders = '?, ?, ?, ?, ?, NULL, ?, ?';
+	$types = 'ssssisi';
+	$params = [$firstname, $lastname, $email, $npassword, $accounttype, $teamstring, $status];
 	if ($hasSuperRoleColumn) {
-		$insertColumns .= ", `is_superuser`";
-		$insertValues .= ", '$isSuperuserRole'";
+		$insertColumns .= ', is_superuser';
+		$placeholders .= ', ?';
+		$types .= 'i';
+		$params[] = $isSuperuserRole;
 	}
 	if ($hasAdminRoleColumn) {
-		$insertColumns .= ", `is_admin`";
-		$insertValues .= ", '$isAdminRole'";
+		$insertColumns .= ', is_admin';
+		$placeholders .= ', ?';
+		$types .= 'i';
+		$params[] = $isAdminRole;
 	}
 
-	$sql = "INSERT INTO tblusers($insertColumns) VALUES ($insertValues)";
-	//echo $sql;
-	//exit();
+	$sql = "INSERT INTO tblusers ($insertColumns) VALUES ($placeholders)";
 	try {
-		rmt_admin_query($link,$sql);
+		$statement = rmt_db_execute($link, $sql, $types, $params);
+		mysqli_stmt_close($statement);
 	} catch (mysqli_sql_exception $e) {
 		if ((int)$e->getCode() === 1062) {
 			header("location:/users.php?lang={$lang_code}&status=duplicate_email");
@@ -182,6 +189,7 @@ $t = $translations[$lang_code];
 	</header>
 	<div class="modal-body">
 		<form method="post" action="/includes/add-users.php" data-busy-label="<?= htmlspecialchars($t['add_in_progress_label']) ?>" data-busy-status="<?= htmlspecialchars($t['add_in_progress_status']) ?>">
+		<input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
 		<div class="form-group">
 			<label for="firstname"><span class="field-name"><?= htmlspecialchars($t['first_name']) ?> <strong><?= htmlspecialchars($t['required']) ?></strong></span></label>
 			<input type="text" class="form-control" id="firstname" name="firstname" value="" required>

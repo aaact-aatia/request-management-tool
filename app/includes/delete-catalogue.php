@@ -16,6 +16,11 @@ $catalogueId = (int) ($_GET['id'] ?? 0);
 $formAction = "/includes/delete-catalogue.php?lang={$lang}&id={$catalogueId}";
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!rmt_csrf_token_is_valid('catalogue', (string) ($_POST['csrf_token'] ?? '')) || $catalogueId <= 0) {
+        header("location:/catalogue.php?lang={$lang}&status=failed");
+        exit();
+    }
+
     try {
         rmt_delete_catalogue_hierarchy($link, 'catalogue', $catalogueId, (int) ($_POST['replacement_id'] ?? 0), 0);
         header("location:/catalogue.php?lang={$lang}&status=success");

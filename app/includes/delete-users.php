@@ -16,30 +16,33 @@ if (!($_SESSION['is_superuser'] OR $_SESSION['is_admin'])) {
 
 // Grab MySQL connection
 require('../sql.php');
+require_once('helpers.php');
+require_once('csrf.php');
 
 // Now first get the ID
-$userid = $_GET['id'];
+$userid = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0;
+$csrfToken = rmt_csrf_token('users');
 
 // Process the delete product form
 if ($_SERVER['REQUEST_METHOD']=='POST'){
-	
-	// Hard-delete the user record
-	$sql = "DELETE FROM `tblusers` WHERE id='$userid'";
-	//echo $sql;
-	rmt_admin_query($link,$sql);
+	if (!rmt_csrf_token_is_valid('users', (string) ($_POST['csrf_token'] ?? '')) || $userid <= 0 || $userid === (int) ($_SESSION['pid'] ?? 0)) {
+		header("location:/users.php?lang={$lang}&status=failed");
+		exit();
+	}
+
+	$statement = rmt_db_execute($link, 'DELETE FROM tblusers WHERE id = ?', 'i', [$userid]);
+	mysqli_stmt_close($statement);
 	
 	// Now redirect
-	header("location:/users.php?lang=$lang?status=success"); 
+	header("location:/users.php?lang=$lang&status=success");
 	exit();
 }
 
-// Construct SQL statement
-$sql2 = "SELECT * FROM tblusers WHERE id='$userid'";
 
-$result2 = rmt_admin_query($link,$sql2);
-//List it
-if(rmt_result_num_rows($result2)>0){
-	while($row2 = rmt_result_fetch_array($result2)){
+$row2 = $userid > 0
+	? rmt_db_fetch_one($link, 'SELECT id, firstname, lastname FROM tblusers WHERE id = ?', 'i', [$userid])
+	: null;
+if ($row2) {
 		$title = ($lang == 'fr') 
 			? "Supprimer l'utilisateur {$row2['firstname']} {$row2['lastname']}" 
 			: "Delete user {$row2['firstname']} {$row2['lastname']}";
@@ -52,6 +55,7 @@ if(rmt_result_num_rows($result2)>0){
 	</header>
 	<div class="modal-body">
 		<form method="post" action="/includes/delete-users.php?lang=<?php echo $lang ?>&id=<?php echo $row2['id'] ?>">
+		<input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
 		<p tabindex="0"><?php echo $question ?></p>
 		<div class="form-group form-buttons">
 			<button type="submit" class="btn btn-default"><?php echo $buttonText ?></button>
@@ -61,8 +65,7 @@ if(rmt_result_num_rows($result2)>0){
 	</div>
 </section>
 <?php
-	}
-} else { 
+} else {
 // Wrong ID so display an error message
 	$errorTitle = ($lang == 'fr') ? "Oups, quelque chose s'est mal passé!" : "Oops something went wrong!";
 	$errorMsg = ($lang == 'fr') ? "Désolé, une erreur s'est produite avec votre demande, veuillez réessayer!" : "Sorry something went wrong with your request, please try again!";

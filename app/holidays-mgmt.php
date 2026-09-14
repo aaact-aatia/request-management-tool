@@ -18,6 +18,8 @@ require('includes/httpscheck.php');
 
 // Check if logged in
 require('includes/loggedincheck.php');
+require_once('includes/csrf.php');
+$csrfToken = rmt_csrf_token('holidays');
 
 // Check if Super Admin
 if (!($_SESSION['is_superuser'] OR $_SESSION['is_admin'])) {
@@ -220,6 +222,7 @@ include 'includes/template/head.php';
             </header>
             <div class="modal-body">
                 <form method="post" action="includes/add-holiday.php">
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
                     <input type="hidden" name="lang" value="<?= $lang ?>">
                     <div class="form-group">
                         <label for="holiday_date"><?= $t['holiday_date'] ?> <strong class="required">(<?= $t['required'] ?>)</strong></label>

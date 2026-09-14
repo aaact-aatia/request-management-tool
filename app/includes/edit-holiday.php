@@ -13,6 +13,8 @@ require('../includes/httpscheck.php');
 
 // Database connection
 require('../sql.php');
+require_once('../includes/helpers.php');
+require_once('../includes/csrf.php');
 
 // Get language
 $lang = isset($_GET['lang']) && $_GET['lang'] === 'fr' ? 'fr' : 'en';
@@ -50,7 +52,8 @@ $translations = [
 $t = $translations[$lang];
 
 // Get holiday ID
-$id = isset($_GET['id']) ? mysqli_real_escape_string($link, $_GET['id']) : '';
+$id = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0;
+$csrfToken = rmt_csrf_token('holidays');
 
 if (empty($id)) {
 	header("Location: ../holidays-mgmt.php?lang=$lang");
@@ -58,43 +61,39 @@ if (empty($id)) {
 }
 
 // Fetch holiday
-$sql = "SELECT * FROM tblholidays WHERE id = '$id'";
-$result = rmt_admin_query($link, $sql);
-
-if (rmt_result_num_rows($result) == 0) {
+$holiday = $id > 0 ? rmt_db_fetch_one($link, 'SELECT * FROM tblholidays WHERE id = ?', 'i', [$id]) : null;
+if ($holiday === null) {
 	header("Location: ../holidays-mgmt.php?lang=$lang");
 	exit();
 }
 
-$holiday = mysqli_fetch_assoc($result);
-
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-	$holiday_date = mysqli_real_escape_string($link, $_POST['holiday_date']);
-	$name_en = mysqli_real_escape_string($link, $_POST['name_en']);
-	$name_fr = mysqli_real_escape_string($link, $_POST['name_fr']);
-	$recurring = isset($_POST['recurring']) ? 1 : 0;
-	$status = isset($_POST['status']) ? 1 : 0;
-
-$updateSql = "UPDATE tblholidays
-	                  SET holiday_date = '$holiday_date',
-	                      name_en = '$name_en',
-	                      name_fr = '$name_fr',
-	                      recurring = $recurring,
-	                      status = $status
-                  WHERE id = '$id'";
-
-	if (rmt_admin_query($link, $updateSql)) {
-		// Log admin action
-		$adminNote = ($lang == 'fr' ? "Mis à jour le jour férié : " : "Updated holiday: ") . "$name_en / $name_fr " . ($lang == 'fr' ? "le " : "on ") . "$holiday_date";
-		$userId = $_SESSION['pid'];
-		$logSql = "INSERT INTO tbladminlog (triageid, dateadded, notes, creatorid, status)
-                   VALUES (0, NOW(), '$adminNote', $userId, 1)";
-		rmt_admin_query($link, $logSql);
-
-		echo '<script>window.parent.location.href = "../holidays-mgmt.php?lang=' . $lang . '&status=updated";</script>';
+	if (!rmt_csrf_token_is_valid('holidays', (string) ($_POST['csrf_token'] ?? ''))) {
+		header("Location: ../holidays-mgmt.php?lang=$lang&status=error");
 		exit();
 	}
+	$holiday_date = trim((string) ($_POST['holiday_date'] ?? ''));
+	$name_en = trim((string) ($_POST['name_en'] ?? ''));
+	$name_fr = trim((string) ($_POST['name_fr'] ?? ''));
+	$recurring = isset($_POST['recurring']) ? 1 : 0;
+	$status = isset($_POST['status']) ? 1 : 0;
+	$dateObject = DateTime::createFromFormat('!Y-m-d', $holiday_date);
+	if ($dateObject === false || $dateObject->format('Y-m-d') !== $holiday_date || $name_en === '' || $name_fr === '') {
+		header("Location: ../holidays-mgmt.php?lang=$lang&status=error");
+		exit();
+	}
+
+	$statement = rmt_db_execute($link, 'UPDATE tblholidays SET holiday_date = ?, name_en = ?, name_fr = ?, recurring = ?, status = ? WHERE id = ?', 'sssiii', [$holiday_date, $name_en, $name_fr, $recurring, $status, $id]);
+	mysqli_stmt_close($statement);
+	// Log admin action
+	$adminNote = ($lang == 'fr' ? "Mis à jour le jour férié : " : "Updated holiday: ") . "$name_en / $name_fr " . ($lang == 'fr' ? "le " : "on ") . "$holiday_date";
+	$userId = (int) ($_SESSION['pid'] ?? 0);
+	$logStatement = rmt_db_execute($link, 'INSERT INTO tbladminlog (triageid, dateadded, notes, creatorid, status) VALUES (0, NOW(), ?, ?, 1)', 'si', [$adminNote, $userId]);
+	mysqli_stmt_close($logStatement);
+
+	echo '<script>window.parent.location.href = "../holidays-mgmt.php?lang=' . $lang . '&status=updated";</script>';
+	exit();
 }
 ?>
 <section id="edit-holiday-modal" class="modal-dialog modal-content overlay-def">
@@ -103,6 +102,7 @@ $updateSql = "UPDATE tblholidays
 	</header>
 	<div class="modal-body">
 		<form method="post" action="/includes/edit-holiday.php?id=<?= $id ?>&lang=<?= $lang ?>">
+			<input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
 			<div class="form-group">
 				<label for="holiday_date"><?= $t['holiday_date'] ?> <strong class="required">(<?= $t['required'] ?>)</strong></label>
 				<input type="date" class="form-control" id="holiday_date" name="holiday_date"

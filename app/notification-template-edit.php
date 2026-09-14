@@ -10,7 +10,10 @@ require('includes/httpscheck.php');
 require('sql.php');
 /** @var mysqli $link */
 require_once('includes/helpers.php');
+require_once('includes/csrf.php');
 require('includes/loggedincheck.php');
+
+$csrfToken = rmt_csrf_token('notification-templates');
 
 if (isset($_GET['lang']) && in_array($_GET['lang'], ['en', 'fr'], true)) {
     $_SESSION['lang'] = $_GET['lang'];
@@ -50,6 +53,11 @@ $isGlobalRow = ($rowTeamId === RMT_NOTIFICATION_GLOBAL_TEAM_ID && $rowServiceId 
 $scopeQueryString = "team_id={$teamId}&service_id={$serviceId}&subservice_id={$subserviceId}";
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!rmt_csrf_token_is_valid('notification-templates', (string) ($_POST['csrf_token'] ?? ''))) {
+        header("location:/notification-template-edit.php?lang={$lang}&{$scopeQueryString}&audience=" . urlencode($audience) . "&event=" . urlencode($event) . "&status=failed");
+        exit();
+    }
+
     $action = trim((string) ($_POST['form_action'] ?? 'save'));
     $updatedBy = (int) ($_SESSION['pid'] ?? 0);
 
@@ -171,6 +179,7 @@ include 'includes/template/head.php';
             </ul>
 
             <form method="post" action="/notification-template-edit.php">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
                 <input type="hidden" name="team_id" value="<?= $teamId ?>">
                 <input type="hidden" name="service_id" value="<?= $serviceId ?>">
                 <input type="hidden" name="subservice_id" value="<?= $subserviceId ?>">
@@ -214,6 +223,7 @@ include 'includes/template/head.php';
                     }
                 ?>
                 <form method="post" action="/notification-template-edit.php" class="mrgn-bttm-sm" onsubmit="return confirm('<?= htmlspecialchars($t['notification_templates_reset_confirm'], ENT_QUOTES) ?>');">
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
                     <input type="hidden" name="team_id" value="<?= $teamId ?>">
                     <input type="hidden" name="service_id" value="<?= $serviceId ?>">
                     <input type="hidden" name="subservice_id" value="<?= $subserviceId ?>">

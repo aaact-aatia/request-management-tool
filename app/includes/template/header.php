@@ -109,7 +109,7 @@ $headerTranslations = [
 
 	$headerLangStrings = $headerTranslations[$langCode];
 	$statusParam = strtolower(trim((string) ($_GET['status'] ?? '')));
-	$showDevNotificationPreview = in_array($statusParam, ['newrequestcomplete', 'submitted', 'success', 'resolvedemailsent', 'resolvedemailfailed', 'resolvedemailmissing'], true);
+	$showDevNotificationPreview = in_array($statusParam, ['newrequestcomplete', 'submitted', 'resolvedemailsent', 'resolvedemailfailed', 'resolvedemailmissing'], true);
 	$devNotificationPreviewEntries = [];
 	if (function_exists('app_dev_notification_preview_consume')) {
 		if ($showDevNotificationPreview) {

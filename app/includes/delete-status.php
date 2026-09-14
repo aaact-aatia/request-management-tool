@@ -15,30 +15,32 @@ if (!($_SESSION['is_superuser'] OR $_SESSION['is_admin'])) {
 
 // Grab MySQL connection
 require('../sql.php');
+require_once('helpers.php');
+require_once('csrf.php');
 
 // Now first get the ID
-$statusid = $_GET['id'];
+$statusid = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0;
+$csrfToken = rmt_csrf_token('status');
 
 // Process the delete product form
 if ($_SERVER['REQUEST_METHOD']=='POST'){
-	
-	// Create SQL statement
-	$sql = "UPDATE `tblstatus` SET `status` = '0' WHERE id='$statusid'";
-	//echo $sql;
-	rmt_admin_query($link,$sql);
+	if (!rmt_csrf_token_is_valid('status', (string) ($_POST['csrf_token'] ?? '')) || $statusid <= 0) {
+		header("location:/status.php?lang={$lang}&status=failed");
+		exit();
+	}
+
+	$statement = rmt_db_execute($link, 'UPDATE tblstatus SET status = 0 WHERE id = ?', 'i', [$statusid]);
+	mysqli_stmt_close($statement);
 	
 	// Now redirect
-	header("location:/status.php?lang=$lang?status=success"); 
+	header("location:/status.php?lang=$lang&status=success");
 	exit();
 }
 
-// Construct SQL statement
-$sql2 = "SELECT * FROM tblstatus WHERE id='$statusid'";
-
-$result2 = rmt_admin_query($link,$sql2);
-//List it
-if(rmt_result_num_rows($result2)>0){
-	while($row2 = rmt_result_fetch_array($result2)){
+$row2 = $statusid > 0
+	? rmt_db_fetch_one($link, 'SELECT id, nameen, namefr FROM tblstatus WHERE id = ?', 'i', [$statusid])
+	: null;
+if ($row2) {
 		$name = ($lang == 'fr') ? $row2['namefr'] : $row2['nameen'];
 		$title = ($lang == 'fr') ? "Supprimer le statut $name" : "Delete $name status";
 		$question = ($lang == 'fr') ? "Voulez-vous vraiment supprimer ce statut?" : "Are you sure you wish to delete this status?";
@@ -50,6 +52,7 @@ if(rmt_result_num_rows($result2)>0){
 	</header>
 	<div class="modal-body">
 		<form method="post" action="/includes/delete-status.php?lang=<?php echo $lang ?>&id=<?php echo $row2['id'] ?>">
+		<input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
 		<p tabindex="0"><?php echo $question ?></p>
 		<div class="form-group form-buttons">
 			<button type="submit" class="btn btn-default"><?php echo $buttonText ?></button>
@@ -59,8 +62,7 @@ if(rmt_result_num_rows($result2)>0){
 	</div>
 </section>
 <?php
-	}
-} else { 
+} else {
 // Wrong ID so display an error message
 	$errorTitle = ($lang == 'fr') ? "Oups, quelque chose s'est mal passé!" : "Oops something went wrong!";
 	$errorMsg = ($lang == 'fr') ? "Désolé, une erreur s'est produite avec votre demande, veuillez réessayer!" : "Sorry something went wrong with your request, please try again!";

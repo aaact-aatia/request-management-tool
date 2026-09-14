@@ -18,32 +18,30 @@ if (!($_SESSION['is_superuser'] OR $_SESSION['is_admin'])) {
 require('../sql.php');
 /** @var mysqli $link */
 require_once('helpers.php');
+require_once('csrf.php');
 
 // Now first get the ID
-$serviceid = $_GET['id'];
-$catalogueid = $_GET['cid'];
+$serviceid = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0;
+$catalogueid = filter_var($_GET['cid'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0;
+$csrfToken = rmt_csrf_token('catalogue');
 
 // Process the edit product form
 if ($_SERVER['REQUEST_METHOD']=='POST'){
-	
-	// Grab form elements
-	$nameen = mysqli_real_escape_string($link,$_POST['nameen']);
-	$namefr = mysqli_real_escape_string($link,$_POST['namefr']);
+	if (!rmt_csrf_token_is_valid('catalogue', (string) ($_POST['csrf_token'] ?? ''))) {
+		header("location:/catalogue-mgmt.php?lang={$lang_code}&id={$catalogueid}&status=failed");
+		exit();
+	}
+
+	$nameen = trim((string) ($_POST['nameen'] ?? ''));
+	$namefr = trim((string) ($_POST['namefr'] ?? ''));
 	$hasActiveSubservices = rmt_service_has_active_subservices($link, (int) $serviceid);
-	$sds = $hasActiveSubservices ? null : mysqli_real_escape_string($link, $_POST['sds'] ?? '');
-	$contactId = (int) ($_POST['contactid'] ?? 0);
+	$sds = $hasActiveSubservices ? null : filter_var($_POST['sds'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 30]]);
+	$contactId = filter_var($_POST['contactid'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0;
 	$requestSubjectType = rmt_normalize_request_subject_type($_POST['request_subject_type'] ?? '', true);
 	$status = isset($_POST['status']) ? 1 : 0;
-	$noerror = false;
-	
-	// Custom form validation
-	if ($nameen=="" OR $namefr=="" OR (!$hasActiveSubservices && $sds === "") OR $catalogueid=="" || ($contactId > 0 && !rmt_db_fetch_one($link, 'SELECT id FROM tblteams WHERE id = ? AND status = 1', 'i', [$contactId]))) {
-		$noerror = true;
-	}
 	$contactId = $contactId > 0 ? $contactId : null;
 	
-	// If error detected send user back to modal dialog
-	if ($noerror) {
+	if ($serviceid <= 0 || $catalogueid <= 0 || $nameen === '' || $namefr === '' || (!$hasActiveSubservices && $sds === false) || ($contactId !== null && !rmt_db_fetch_one($link, 'SELECT id FROM tblteams WHERE id = ? AND status = 1', 'i', [$contactId]))) {
 		header("location:/catalogue-mgmt.php?lang={$lang_code}&id=$catalogueid&status=failed"); 
 		exit();
 	}
@@ -61,13 +59,11 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	exit();
 }
 
-// Construct SQL statement
-$sql2 = "SELECT * FROM tblservices WHERE id='$serviceid'";
 
-$result2 = rmt_admin_query($link,$sql2);
-//List it
-if(rmt_result_num_rows($result2)>0){
-	while($row2 = rmt_result_fetch_array($result2)){
+$row2 = $serviceid > 0
+	? rmt_db_fetch_one($link, 'SELECT * FROM tblservices WHERE id = ?', 'i', [$serviceid])
+	: null;
+if ($row2) {
 		$display_name = $lang_code === 'fr' ? $row2['namefr'] : $row2['nameen'];
 		$parentRow = rmt_db_fetch_one($link, 'SELECT request_subject_type FROM tblcatalogue WHERE id = ?', 'i', [(int) $row2['catalogueid']]);
 		$parentType = rmt_normalize_request_subject_type($parentRow['request_subject_type'] ?? 'subject') ?? 'subject';
@@ -86,6 +82,7 @@ if(rmt_result_num_rows($result2)>0){
 	</header>
 	<div class="modal-body">
 		<form method="post" action="/includes/edit-service.php?id=<?php echo $serviceid; ?>&cid=<?php echo $catalogueid; ?>">
+		<input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
 		<div class="form-group">
 			<label for="nameen"><span class="field-name"><?php echo $lang_code === 'en' ? 'Name (english)' : 'Nom (anglais)'; ?>: <strong>(<?php echo $lang_code === 'en' ? 'required' : 'requis'; ?>)</strong></span></label>
 			<input type="text" class="form-control full-width" id="nameen" name="nameen" value="<?php echo htmlspecialchars($row2['nameen']); ?>" required>
@@ -142,8 +139,7 @@ if(rmt_result_num_rows($result2)>0){
 	</div>
 </section>
 <?php
-	}
-} else { 
+} else {
 // Wrong ID so display an error message
 ?>
 <section id="filter-id" class="modal-dialog modal-content overlay-def">
