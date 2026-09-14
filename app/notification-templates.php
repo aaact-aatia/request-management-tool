@@ -14,7 +14,10 @@ require('includes/httpscheck.php');
 require('sql.php');
 /** @var mysqli $link */
 require_once('includes/helpers.php');
+require_once('includes/csrf.php');
 require('includes/loggedincheck.php');
+
+$csrfToken = rmt_csrf_token('notification-templates');
 
 if (isset($_GET['lang']) && in_array($_GET['lang'], ['en', 'fr'], true)) {
     $_SESSION['lang'] = $_GET['lang'];
@@ -40,6 +43,11 @@ if (!in_array($selectedTeamId, $manageableTeamIds, true)) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form_action'] ?? '') === 'save_notification_settings') {
+    if (!rmt_csrf_token_is_valid('notification-templates', (string) ($_POST['csrf_token'] ?? ''))) {
+        header("location:/notification-templates.php?lang={$lang}&status=failed");
+        exit();
+    }
+
     $postedTeamId = (int) ($_POST['team_id'] ?? 0);
     if ($postedTeamId <= RMT_NOTIFICATION_GLOBAL_TEAM_ID || !in_array($postedTeamId, $manageableTeamIds, true) || !rmt_notification_user_can_manage_team($link, $postedTeamId)) {
         header("location:/notification-templates.php?lang={$lang}&status=failed");
@@ -170,6 +178,7 @@ include 'includes/template/head.php';
                 <h2 id="notification-settings-heading"><?= htmlspecialchars($t['notification_settings_heading']) ?></h2>
                 <p><?= htmlspecialchars($t['notification_settings_intro']) ?></p>
                 <form method="post" action="/notification-templates.php">
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
                     <input type="hidden" name="form_action" value="save_notification_settings">
                     <input type="hidden" name="team_id" value="<?= $selectedTeamId ?>">
                     <?php foreach (rmt_notification_audiences() as $settingsAudience) {
