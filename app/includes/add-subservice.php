@@ -17,30 +17,29 @@ if (!($_SESSION['is_superuser'] OR $_SESSION['is_admin'])) {
 // Grab MySQL connection
 require('../sql.php');
 require_once('helpers.php');
+require_once('csrf.php');
 
 // Now first get the ID
-$serviceid = $_GET['id'];
-$catalogueid = $_GET['cid'];
+$serviceid = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0;
+$catalogueid = filter_var($_GET['cid'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0;
+$csrfToken = rmt_csrf_token('catalogue');
 
 // Process the add product form
 if ($_SERVER['REQUEST_METHOD']=='POST'){
-	
-	// Grab form elements
-	$nameen = mysqli_real_escape_string($link,$_POST['nameen']);
-	$namefr = mysqli_real_escape_string($link,$_POST['namefr']);
-	$sds = mysqli_real_escape_string($link,$_POST['sds']);
-	$contactId = (int) ($_POST['contactid'] ?? 0);
-	$status = isset($_POST['status']) ? 1 : 0;
-	$noerror = false;
-	
-	// Custom form validation
-	if ($nameen=="" OR $namefr=="" OR $sds=="" OR $serviceid=="" || ($contactId > 0 && !rmt_db_fetch_one($link, 'SELECT id FROM tblteams WHERE id = ? AND status = 1', 'i', [$contactId]))) {
-		$noerror = true;
+	if (!rmt_csrf_token_is_valid('catalogue', (string) ($_POST['csrf_token'] ?? ''))) {
+		header("location:/catalogue-sub-mgmt.php?lang={$lang_code}&id={$serviceid}&cid={$catalogueid}&status=failed");
+		exit();
 	}
+
+	$nameen = trim((string) ($_POST['nameen'] ?? ''));
+	$namefr = trim((string) ($_POST['namefr'] ?? ''));
+	$sds = filter_var($_POST['sds'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 30]]);
+	$contactId = filter_var($_POST['contactid'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0;
+	$status = isset($_POST['status']) ? 1 : 0;
 	$contactId = $contactId > 0 ? $contactId : null;
 
-	// If error detected send user back to modal dialog
-	if ($noerror) {
+	$validService = $serviceid > 0 && rmt_db_fetch_one($link, 'SELECT id FROM tblservices WHERE id = ? AND catalogueid = ?', 'ii', [$serviceid, $catalogueid]);
+	if ($serviceid <= 0 || $catalogueid <= 0 || !$validService || $nameen === '' || $namefr === '' || $sds === false || ($contactId !== null && !rmt_db_fetch_one($link, 'SELECT id FROM tblteams WHERE id = ? AND status = 1', 'i', [$contactId]))) {
 		header("location:/catalogue-sub-mgmt.php?lang={$lang_code}&id=$serviceid&cid=$catalogueid&status=failed");
 		exit();
 	}
@@ -67,21 +66,15 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 }
 
 // Grab the catalogue name
-$sql = "SELECT * FROM tblcatalogue WHERE id='$catalogueid'";
-$result = rmt_admin_query($link,$sql);
-if(rmt_result_num_rows($result)>0) {
-	while($row = rmt_result_fetch_array($result)) {
+$row = rmt_db_fetch_one($link, 'SELECT id, nameen, namefr FROM tblcatalogue WHERE id = ?', 'i', [$catalogueid]);
+if ($row) {
 		$cataloguename = ($lang_code === 'fr') ? $row['namefr'] : $row['nameen'];
-	}
 }
 
 // Grab the service name
-$sql = "SELECT * FROM tblservices WHERE id='$serviceid'";
-$result = rmt_admin_query($link,$sql);
-if(rmt_result_num_rows($result)>0) {
-	while($row = rmt_result_fetch_array($result)) {
+$row = rmt_db_fetch_one($link, 'SELECT id, nameen, namefr FROM tblservices WHERE id = ? AND catalogueid = ?', 'ii', [$serviceid, $catalogueid]);
+if ($row) {
 		$servicename = ($lang_code === 'fr') ? $row['namefr'] : $row['nameen'];
-	}
 }
 $parentTeamId = rmt_resolve_responsible_team_id($link, (int) $catalogueid, (int) $serviceid);
 $parentTeam = $parentTeamId > 0 ? rmt_db_fetch_one($link, 'SELECT nameen, namefr FROM tblteams WHERE id = ?', 'i', [$parentTeamId]) : null;
@@ -124,6 +117,7 @@ $t = $translations[$lang_code];
 	</header>
 	<div class="modal-body">
 		<form method="post" action="/includes/add-subservice.php?id=<?= htmlspecialchars($serviceid) ?>&cid=<?= htmlspecialchars($catalogueid) ?>">
+		<input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
 		<div class="form-group">
 			<label for="nameen"><span class="field-name"><?= htmlspecialchars($t['name_en']) ?> <strong><?= htmlspecialchars($t['required']) ?></strong></span></label>
 			<input type="text" class="form-control" id="nameen" name="nameen" value="" required>
