@@ -15,23 +15,30 @@ if (!($_SESSION['is_superuser'] OR $_SESSION['is_admin'])) {
 
 // Grab MySQL connection
 require('../sql.php');
+require_once('helpers.php');
+require_once('csrf.php');
 
 // Now first get the ID
-$triageid = $_GET['rid'];
-$commentid = $_GET['id'];
-$type = $_GET['t'];
+$triageid = filter_var($_GET['rid'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0;
+$commentid = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0;
+$type = (string) ($_GET['t'] ?? '');
+$csrfToken = rmt_csrf_token('communications');
 
 // Process the delete product form
 if ($_SERVER['REQUEST_METHOD']=='POST'){
-	
-	// Create SQL statement
-	if ($type=="c") {
-		$sql = "UPDATE `tblcommlog` SET `status` = '0' WHERE id='$commentid'";
-	} elseif ($type=="a") {
-		$sql = "UPDATE `tbladminlog` SET `status` = '0' WHERE id='$commentid'";
+	if (!rmt_csrf_token_is_valid('communications', (string) ($_POST['csrf_token'] ?? '')) || $triageid <= 0 || $commentid <= 0 || !in_array($type, ['a', 'c'], true)) {
+		header("location:/viewrequest.php?lang=$lang&rid=$triageid");
+		exit();
 	}
-	//echo $sql;
-	rmt_admin_query($link,$sql);
+
+	$table = $type === 'c' ? 'tblcommlog' : 'tbladminlog';
+	$log = rmt_db_fetch_one($link, "SELECT id FROM {$table} WHERE id = ? AND triageid = ? AND status = 1", 'ii', [$commentid, $triageid]);
+	if ($log === null) {
+		header("location:/viewrequest.php?lang=$lang&rid=$triageid");
+		exit();
+	}
+	$statement = rmt_db_execute($link, "UPDATE {$table} SET status = 0 WHERE id = ? AND triageid = ?", 'ii', [$commentid, $triageid]);
+	mysqli_stmt_close($statement);
 	
 	// Now redirect
 	header("location:/viewrequest.php?lang=$lang&rid=$triageid"); 
@@ -39,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 }
 
 // Check if there is an ID
-if ($commentid!="") {
+if ($commentid > 0 && $triageid > 0 && in_array($type, ['a', 'c'], true)) {
 	$title = ($lang == 'fr') ? "Supprimer le commentaire" : "Delete comment";
 	$question = ($lang == 'fr') ? "Êtes-vous sûr de vouloir supprimer ce commentaire?" : "Are you sure you wish to delete this comment?";
 	$buttonText = ($lang == 'fr') ? "Oui" : "Yes";
@@ -50,6 +57,7 @@ if ($commentid!="") {
 	</header>
 	<div class="modal-body">
 		<form method="post" action="/includes/delete-comms.php?lang=<?php echo $lang ?>&t=<?php echo $type ?>&id=<?php echo $commentid ?>&rid=<?php echo $triageid ?>">
+		<input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
 		<p tabindex="0"><?php echo $question ?></p>
 		<div class="form-group form-buttons">
 			<button type="submit" class="btn btn-default"><?php echo $buttonText ?></button>
