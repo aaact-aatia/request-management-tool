@@ -17,24 +17,37 @@ if (!($_SESSION['is_superuser'] OR $_SESSION['is_admin'])) {
 // Grab MySQL connection
 require('../sql.php');
 /** @var mysqli $link */
+require_once('helpers.php');
+require_once('csrf.php');
 
 // Now first get the ID
-$userid = $_GET['id'];
+$userid = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0;
+$csrfToken = rmt_csrf_token('users');
+$existingUser = $userid > 0
+	? rmt_db_fetch_one($link, 'SELECT * FROM tblusers WHERE id = ?', 'i', [$userid])
+	: null;
 
 // Process the edit product form
 if ($_SERVER['REQUEST_METHOD']=='POST'){
-	
-	// Grab form elements
-	$firstname = mysqli_real_escape_string($link,$_POST['firstname']);
-	$lastname = mysqli_real_escape_string($link,$_POST['lastname']);
-	$email = strtolower(mysqli_real_escape_string($link,$_POST['email']));
-	$password = mysqli_real_escape_string($link,$_POST['password']);
-	$password2 = mysqli_real_escape_string($link,$_POST['password2']);
-	$accounttype = mysqli_real_escape_string($link,$_POST['accounttype']);
+	if (!rmt_csrf_token_is_valid('users', (string) ($_POST['csrf_token'] ?? ''))) {
+		header("location:/users.php?lang=" . $lang . "&status=failed");
+		exit();
+	}
+
+	$firstname = trim((string) ($_POST['firstname'] ?? ''));
+	$lastname = trim((string) ($_POST['lastname'] ?? ''));
+	$email = strtolower(trim((string) ($_POST['email'] ?? '')));
+	$password = (string) ($_POST['password'] ?? '');
+	$password2 = (string) ($_POST['password2'] ?? '');
+	$accounttype = filter_var($_POST['accounttype'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 3, 'max_range' => 6]]);
 	$isSuperuserRole = !empty($_POST['is_superuser_role']) ? 1 : 0;
 	$isAdminRole = !empty($_POST['is_admin_role']) ? 1 : 0;
 	if ($isSuperuserRole === 1) {
 		$isAdminRole = 1;
+	}
+	if (!isSuperAdmin()) {
+		$isSuperuserRole = (int) ($existingUser['is_superuser'] ?? 0);
+		$isAdminRole = (int) ($existingUser['is_admin'] ?? 0);
 	}
 
 	$selectedTeams = [];
@@ -51,14 +64,10 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	//exit();
 	
 	$date_now = date("Y-m-d H:i:s");
-	$updatedby = $_SESSION['pid'];
-	$noerror = false;
+	$updatedby = filter_var($_SESSION['pid'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 0;
 	$npassword = '';
 	
-	// Custom form validation
-	if ($firstname=="" OR $lastname=="" OR $email=="" OR $accounttype=="") {
-		$noerror = true;
-	}
+	$noerror = $existingUser === null || $userid <= 0 || $updatedby <= 0 || $firstname === '' || $lastname === '' || !filter_var($email, FILTER_VALIDATE_EMAIL) || $accounttype === false;
 	
 	if ($password!="") {
 		if ($password!=$password2) {
@@ -104,39 +113,50 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	
 	// Create SQL statement
 	$managerClause = "";
-	if (in_array($accounttype, ['3', '5', '6'], true)) {
+	if (in_array($accounttype, [3, 5, 6], true)) {
 		$managerClause = ", `manager_id` = NULL";
 	}
 	$hasSuperRoleColumn = rmt_db_column_exists($link, 'tblusers', 'is_superuser');
 	$hasAdminRoleColumn = rmt_db_column_exists($link, 'tblusers', 'is_admin');
-	$extraRoleClause = "";
+	$setClauses = ['firstname = ?', 'lastname = ?', 'email = ?', 'atype = ?', 'team = ?'];
+	$types = 'sss is';
+	$params = [$firstname, $lastname, $email, $accounttype, $teamstring];
+	if ($managerClause !== '') {
+		$setClauses[] = 'manager_id = NULL';
+	}
+	if ($password !== '') {
+		$setClauses[] = 'password = ?';
+		$types .= 's';
+		$params[] = $npassword;
+	}
 	if ($hasSuperRoleColumn) {
-		$extraRoleClause .= ", `is_superuser` = '$isSuperuserRole'";
+		$setClauses[] = 'is_superuser = ?';
+		$types .= 'i';
+		$params[] = $isSuperuserRole;
 	}
 	if ($hasAdminRoleColumn) {
-		$extraRoleClause .= ", `is_admin` = '$isAdminRole'";
+		$setClauses[] = 'is_admin = ?';
+		$types .= 'i';
+		$params[] = $isAdminRole;
 	}
-
-	if ($password!="") {
-		$sql = "UPDATE `tblusers` SET `firstname` = '$firstname', `lastname` = '$lastname', `email` = '$email', `password` = '$npassword', `atype` = '$accounttype'" . $managerClause . ", `team` = '$teamstring'" . $extraRoleClause . " WHERE id='$userid'";
-	} else {
-		$sql = "UPDATE `tblusers` SET `firstname` = '$firstname', `lastname` = '$lastname', `email` = '$email', `atype` = '$accounttype'" . $managerClause . ", `team` = '$teamstring'" . $extraRoleClause . " WHERE id='$userid'";
-	}
-	//echo $sql;
-	rmt_admin_query($link,$sql);
+	$types .= 'i';
+	$params[] = $userid;
+	$statement = rmt_db_execute(
+		$link,
+		'UPDATE tblusers SET ' . implode(', ', $setClauses) . ' WHERE id = ?',
+		str_replace(' ', '', $types),
+		$params
+	);
+	mysqli_stmt_close($statement);
 	
 	// Now redirect
 	header("location:/users.php?lang=" . $lang . "&status=success"); 
 	exit();
 }
 
-// Construct SQL statement
-$sql2 = "SELECT * FROM tblusers WHERE id='$userid'";
 
-$result2 = rmt_admin_query($link,$sql2);
-//List it
-if(rmt_result_num_rows($result2)>0){
-	while($row2 = rmt_result_fetch_array($result2)){
+if ($existingUser) {
+	$row2 = $existingUser;
 		$title = $is_french ? ('Modifier l\'utilisateur ' . $row2['firstname'] . ' ' . $row2['lastname']) : ('Edit user ' . $row2['firstname'] . ' ' . $row2['lastname']);
 		$label_firstname = $is_french ? 'Prénom:' : 'First name:';
 		$label_lastname = $is_french ? 'Nom:' : 'Last name:';
@@ -169,6 +189,7 @@ if(rmt_result_num_rows($result2)>0){
 	</header>
 	<div class="modal-body">
 		<form method="post" action="/includes/edit-users.php?id=<?php echo $row2['id'] ?>&lang=<?php echo $lang ?>">
+		<input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
 		<div class="form-group">
 			<label for="firstname"><span class="field-name"><?php echo $label_firstname ?> <strong>(<?php echo $required_label ?>)</strong></span></label>
 			<input type="text" class="form-control full-width" id="firstname" name="firstname" value="<?php echo $row2['firstname'] ?>" required>
@@ -252,8 +273,7 @@ if(rmt_result_num_rows($result2)>0){
 	</div>
 </section>
 <?php
-	}
-} else { 
+} else {
 // Wrong ID so display an error message
 	$error_title = $is_french ? 'Oups, quelque chose s\'est mal passé!' : 'Oops something went wrong!';
 	$error_message = $is_french ? 'Désolé, une erreur s\'est produite avec votre demande, veuillez réessayer!' : 'Sorry something went wrong with your request, please try again!';
