@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	$statement = rmt_db_execute(
 		$link,
 		"UPDATE tblteams SET nameen = ?, namefr = ?, email = ?, reply_to_id = NULLIF(?, ''), team_lead_user_id = NULLIF(?, 0), dateupdated = ?, updatedby = ? WHERE id = ?",
-		'ssss isii',
+		'ssssisii',
 		[$teamnameen, $teamnamefr, $teamemail, $replyToId, $teamLeadUserId, $date_now, $updatedby, $contactid]
 	);
 	mysqli_stmt_close($statement);
