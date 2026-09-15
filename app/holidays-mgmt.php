@@ -22,7 +22,7 @@ require_once('includes/csrf.php');
 $csrfToken = rmt_csrf_token('holidays');
 
 // Check if Super Admin
-if (!($_SESSION['is_superuser'] OR $_SESSION['is_admin'])) {
+if (!rmt_has_admin_access()) {
     header("Location: requests.php");
     exit();
 }

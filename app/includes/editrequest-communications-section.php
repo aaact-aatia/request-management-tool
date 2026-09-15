@@ -20,8 +20,8 @@
 <?php endif; ?>
 
 <?php
-$canEditCommunicationLogs = in_array((int)($_SESSION['atype'] ?? 0), [3, 4, 5], true) || !empty($_SESSION['is_superuser']) || !empty($_SESSION['is_admin']);
-$canViewExistingComms = !empty($_SESSION['is_superuser']) || !empty($_SESSION['is_admin']) || in_array((int)($_SESSION['atype'] ?? 0), [3, 4, 6], true);
+$canEditCommunicationLogs = in_array((int)($_SESSION['atype'] ?? 0), [3, 4, 5], true) || rmt_has_admin_access();
+$canViewExistingComms = rmt_has_admin_access() || in_array((int)($_SESSION['atype'] ?? 0), [3, 4, 6], true);
 $existingCommsCount = 0;
 if ($canViewExistingComms) {
     $existingCommsCountResult = mysqli_query($link, "SELECT COUNT(*) AS total FROM tbladminlog WHERE triageid = '$requestuid' AND status = '1'");

@@ -19,7 +19,7 @@ if (!isset($tableName)) {
 }
 
 // Only show CSV buttons to super admin
-if (!($_SESSION['is_superuser'] OR $_SESSION['is_admin'])) {
+if (!rmt_has_admin_access()) {
 	return;
 }
 

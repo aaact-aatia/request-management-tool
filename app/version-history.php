@@ -165,7 +165,7 @@ include 'includes/template/head.php';
     <li><b><?= $t['file_upload'] ?></b>
       <p><?= $t['file_upload_desc'] ?></p>
       <?php
-        if ($_SESSION['atype'] >= 1) { // Connected users only
+		if (!empty($_SESSION['pid'])) { // Connected users only
           echo '<ul>
                   <li><b>' . $t['view_request'] . '</b> ' . $t['view_request_desc'] . '</li>
                   <li><b>' . $t['edit_request'] . '</b> ' . $t['edit_request_desc'] . '</li>
@@ -176,7 +176,7 @@ include 'includes/template/head.php';
     <li><b><?= $t['reporting_updates'] ?></b>
     <p><?= $t['reporting_desc'] ?></p>
       <?php
-        if ($_SESSION['atype'] >= 1) {
+		if (!empty($_SESSION['pid'])) {
           echo '<ul>
                   <li><b>' . $t['status_timing'] . '</b> ' . $t['status_timing_desc'] . '</li>
                   <li><b>' . $t['detailed_stats'] . '</b> ' . $t['detailed_stats_desc'] . '</li>

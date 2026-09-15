@@ -14,7 +14,7 @@ require_once 'csrf.php';
 $lang = $_SESSION['lang'] ?? 'en';
 
 // Check if the user has the right privileges
-if (!isset($_SESSION['is_superuser']) || (!$_SESSION['is_superuser'] && !$_SESSION['is_admin'])) {
+if (!rmt_has_admin_access()) {
 	header("location:/openrequest.php?lang=$lang&status=accessdenied"); 
 	exit();
 }

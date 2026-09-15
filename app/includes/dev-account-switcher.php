@@ -17,7 +17,7 @@ if (isset($_SERVER['SCRIPT_FILENAME']) && realpath(__FILE__) === realpath((strin
  */
 
 // Only show if user is logged in and is superadmin
-if (isset($_SESSION['pid']) && ($_SESSION['is_superuser'] == 1)) {
+if (isset($_SESSION['pid']) && rmt_is_superadmin_identity()) {
     // Get account types from database
     $accountTypes = [];
     $result = mysqli_query($link, "SELECT id, nameen, namefr FROM tblaccounttype WHERE status = 1 ORDER BY id ASC");

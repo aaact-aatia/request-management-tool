@@ -3,7 +3,7 @@
 require_once __DIR__ . '/session_start.php';
 
 $lang = (isset($_GET['lang']) && $_GET['lang'] === 'fr') ? 'fr' : 'en';
-if (!($_SESSION['is_superuser'] || $_SESSION['is_admin'])) {
+if (!rmt_has_admin_access()) {
     header("location:/openrequest.php?lang={$lang}&status=accessdenied");
     exit();
 }

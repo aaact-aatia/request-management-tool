@@ -27,7 +27,7 @@ if ($_SESSION['lang'] === 'fr') {
 }
 
 // Check if the user has the right priv's
-if (!($_SESSION['is_superuser'] OR $_SESSION['is_admin'])) {
+if (!rmt_has_admin_access()) {
 	header("location:/openrequest.php?lang={$_SESSION['lang']}&status=accessdenied"); 
 	exit();
 }

@@ -642,7 +642,7 @@ include 'includes/template/head.php';
 				// Determine action availability for this request.
 				$canEditThisRequest = false;
 				if (canEditRequests()) {
-					if (isSuperAdmin() || (isset($_SESSION['is_admin']) && $_SESSION['is_admin']) || (int)($_SESSION['atype'] ?? 0) === 3) {
+					if (rmt_has_admin_access() || (int)($_SESSION['atype'] ?? 0) === 3) {
 						$canEditThisRequest = true;
 					} else {
 						$userid = $_SESSION['pid'];

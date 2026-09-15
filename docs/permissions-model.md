@@ -125,9 +125,14 @@ Most role-hardening work is now implemented for Director, Manager, Team Lead, an
 
 1. Non-authenticated/public route hardening is still incomplete for all endpoints (especially AJAX/public dependencies).
 2. Guest linked-view field allowlist/denylist enforcement still needs explicit verification against implementation.
-3. Some pages still use direct session conditionals instead of helper-only checks.
-4. Employee report access is not fully assignment-scoped when reached directly by URL (menu is scoped, route guard remains broad).
-5. Automated permission tests are still missing; validation is currently lint + manual smoke testing.
+3. Employee report access is not fully assignment-scoped when reached directly by URL (menu is scoped, route guard remains broad).
+4. Broader end-to-end permission coverage is still needed for every protected route and AJAX endpoint.
+
+Admin and superadmin guard hardening completed for this phase:
+- Admin and superadmin authorization uses `is_admin` and `is_superuser` privilege flags, never numeric `atype` 1 or 2 values.
+- Administrative guards use centralized role-test-aware access predicates.
+- Superadmin role testing retains a separate identity check so the test mode can be exited without restoring administrative capabilities during the test.
+- Fresh reference and development seed data use functional account type 3 for privileged users and keep privilege flags as the authority.
 
 ## Rollout Plan
 
@@ -138,18 +143,19 @@ Most role-hardening work is now implemented for Director, Manager, Team Lead, an
 
 ### Phase 2: Helper Consolidation
 
-- Completed in large part: helper-based role checks and scoped test-mode helpers are in place.
-- Remaining: remove residual inline conditionals and normalize all account-type checks to strict integer comparisons.
+- Completed for admin and superadmin access: helper-based role checks and scoped test-mode helpers are in place.
+- Functional `atype` checks remain only for manager, team lead, employee, and director behavior.
 
 ### Phase 3: Guard Enforcement
 
-- Completed in large part for internal list/detail/edit/report scope behavior.
+- Completed for administrative pages, CRUD handlers, exports, templates, request actions, and role-test visibility.
 - Remaining: finish explicit auth and public-data boundary checks for AJAX/public routes.
 
 ### Phase 4: Verification
 
-- Completed repeatedly: Docker PHP lint for changed files and role-based manual smoke checks.
-- Remaining: add and run automated permission tests to match this matrix.
+- Completed: focused helper authorization tests pass with 21 tests and 69 assertions.
+- Completed: no legacy `atype` 1/2 authorization fallback remains in application code.
+- Remaining: complete end-to-end verification of public guest routes and client-linked field boundaries.
 
 ## Test and Validation Strategy
 

@@ -11,7 +11,9 @@ if (session_status() != PHP_SESSION_ACTIVE) {
 
 // Mock $_SESSION for tests
 $_SESSION['lang'] = 'en';
-$_SESSION['atype'] = 1; // Admin
+$_SESSION['atype'] = 3;
+$_SESSION['is_superuser'] = 0;
+$_SESSION['is_admin'] = 1;
 $_SESSION['pid'] = 1;
 
 // Mock $_SERVER for tests

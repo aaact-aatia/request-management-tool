@@ -44,9 +44,7 @@ require('includes/calculate-bdays.php');
 // Determine database column for name fields
 $nameColumn = ($_SESSION['lang'] === 'fr') ? 'namefr' : 'nameen';
 $effectiveAtype = (int)($_SESSION['atype'] ?? 0);
-$isAdministrativeAccount = !isRoleTestMode() && (
-	!empty($_SESSION['is_superuser']) || !empty($_SESSION['is_admin'])
-);
+$isAdministrativeAccount = rmt_has_admin_access();
 $isEmployeeAccount = !$isAdministrativeAccount && $effectiveAtype === 5;
 $isTeamScopedAccount = !$isAdministrativeAccount && in_array($effectiveAtype, [3, 4], true);
 $showOtherTeamRequests = $isTeamScopedAccount && isset($_GET['show_other_team']) && $_GET['show_other_team'] === '1';

@@ -40,7 +40,7 @@ if ($_SESSION['lang'] === 'fr') {
 }
 
 // Check if the user has the right priv's
-if ($_SESSION['is_superuser'] OR $_SESSION['is_admin']) {
+if (rmt_has_admin_access()) {
 } else {
 	header("location:/openrequest.php?lang={$_SESSION['lang']}&status=accessdenied"); 
 	exit();
@@ -151,7 +151,7 @@ include 'includes/template/head.php';
 			<?php
 			// Determine which field to use for team name based on language
 			$teamNameField = ($_SESSION['lang'] === 'fr') ? 'namefr' : 'nameen';
-			$canEditTeams = ($_SESSION['is_superuser'] || $_SESSION['is_admin']) || in_array((int)($_SESSION['atype'] ?? 0), [3, 4], true);
+			$canEditTeams = rmt_has_admin_access() || in_array((int)($_SESSION['atype'] ?? 0), [3, 4], true);
 			
 			// Construct SQL statement
 			$sql = "SELECT * FROM tblteams ORDER BY $teamNameField ASC";
@@ -195,7 +195,7 @@ include 'includes/template/head.php';
 						</td>
 						<?php if ($canEditTeams) { ?>
 						<td>
-									<a class="wb-lbx lbx-modal btn btn-primary btn-block" href="includes/edit-teams.php?id=<?php echo $row['id'];?>&lang=<?php echo $lang;?>"><?= htmlspecialchars($langFile['teams_edit']) ?><span class="wb-inv"> <?php echo $row[$teamNameField] ?></span> <?= htmlspecialchars($langFile['teams_team_label']) ?></a><?php if ($_SESSION['is_superuser'] || $_SESSION['is_admin']) {?> <a class="wb-lbx lbx-modal btn btn-primary btn-block" href="includes/delete-teams.php?id=<?php echo $row['id'];?>&lang=<?php echo $lang;?>"><?= htmlspecialchars($langFile['teams_delete']) ?><span class="wb-inv"> <?php echo $row[$teamNameField] ?></span> <?= htmlspecialchars($langFile['teams_team_label']) ?></a><?php } ?>
+									<a class="wb-lbx lbx-modal btn btn-primary btn-block" href="includes/edit-teams.php?id=<?php echo $row['id'];?>&lang=<?php echo $lang;?>"><?= htmlspecialchars($langFile['teams_edit']) ?><span class="wb-inv"> <?php echo $row[$teamNameField] ?></span> <?= htmlspecialchars($langFile['teams_team_label']) ?></a><?php if (rmt_has_admin_access()) {?> <a class="wb-lbx lbx-modal btn btn-primary btn-block" href="includes/delete-teams.php?id=<?php echo $row['id'];?>&lang=<?php echo $lang;?>"><?= htmlspecialchars($langFile['teams_delete']) ?><span class="wb-inv"> <?php echo $row[$teamNameField] ?></span> <?= htmlspecialchars($langFile['teams_team_label']) ?></a><?php } ?>
 						</td>
 						<?php } ?>
 					</tr>

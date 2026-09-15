@@ -11,6 +11,7 @@
 - **20+ test methods** covering all helper functions
 - Tests for:
   - Permission checks (isAdmin, canEditRequests, canManageSLA, isReadOnly)
+  - Administrative access matrix (privilege flags, legacy account types, and role-test mode)
   - Value validation (hasValue, getPostValue, getGetValue)
   - Date helpers (getDateRange, getTodayDate)
   - Language detection (detectLanguage, getIncludePath)
@@ -67,6 +68,19 @@ docker-compose up -d
 # Run tests inside container
 docker-compose exec app ./run-tests.sh
 ```
+
+### Option 4: HTTP Authorization Regression Checks
+```bash
+# Start the web and database containers
+docker compose up -d
+
+# Test real route guards with admin, role-test, and legacy-role sessions
+./tests/Integration/IntakeHttpTest.sh
+```
+
+The HTTP harness verifies that flagged admins can access administrative routes,
+role-tested superadmins are denied elevated routes, and `atype=1` without
+privilege flags cannot grant administrative access.
 
 ## Benefits
 

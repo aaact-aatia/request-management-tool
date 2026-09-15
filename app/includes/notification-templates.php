@@ -286,7 +286,7 @@ function rmt_notification_user_can_manage_team(mysqli $link, int $teamId): bool 
         return $row !== null;
     }
 
-    if (isSuperAdmin() || (isset($_SESSION['is_admin']) && $_SESSION['is_admin'] == 1)) {
+    if (rmt_has_admin_access()) {
         return true;
     }
 
@@ -318,7 +318,7 @@ function rmt_notification_user_can_manage_scope(mysqli $link, int $teamId, int $
 function rmt_notification_manageable_teams(mysqli $link): array {
     $atype = (int) ($_SESSION['atype'] ?? 0);
     $isTeamScopedRole = in_array($atype, [3, 4], true);
-    $isAdminUser = !$isTeamScopedRole && (isSuperAdmin() || (isset($_SESSION['is_admin']) && $_SESSION['is_admin'] == 1));
+    $isAdminUser = !$isTeamScopedRole && rmt_has_admin_access();
 
     if ($isAdminUser) {
         $teams = [];

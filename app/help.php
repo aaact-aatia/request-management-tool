@@ -53,9 +53,7 @@ $page = [
 $pageTitle = $page['title'][$_SESSION['lang']];
 $pageDescription = $page['description'][$_SESSION['lang']];
 
-$isAdminUser = !empty($_SESSION['pid'])
-	&& empty($_SESSION['is_role_test_mode'])
-	&& (!empty($_SESSION['is_superuser']) || !empty($_SESSION['is_admin']));
+$isAdminUser = !empty($_SESSION['pid']) && rmt_has_admin_access();
 $isEnglishHelp = $_SESSION['lang'] === 'en';
 $maxMarkdownBytes = 262144;
 $maxMarkdownReadSeconds = 0.25;

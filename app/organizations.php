@@ -6,7 +6,7 @@ require('includes/loggedincheck.php');
 require_once('includes/helpers.php');
 require_once('includes/csrf.php');
 
-if (!($_SESSION['is_superuser'] || $_SESSION['is_admin'])) {
+if (!rmt_has_admin_access()) {
     $lang = $_SESSION['lang'] ?? 'en';
     header("Location: /openrequest.php?lang={$lang}&status=accessdenied");
     exit;

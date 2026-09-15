@@ -16,6 +16,28 @@ if (isset($_SERVER['SCRIPT_FILENAME']) && realpath(__FILE__) === realpath((strin
 // PERMISSION HELPERS
 // ============================================================================
 
+if (!function_exists('rmt_is_superadmin_identity')) {
+    function rmt_is_superadmin_identity(): bool
+    {
+        return (int) ($_SESSION['is_superuser'] ?? 0) === 1;
+    }
+}
+
+if (!function_exists('rmt_has_superadmin_access')) {
+    function rmt_has_superadmin_access(): bool
+    {
+        return empty($_SESSION['is_role_test_mode']) && rmt_is_superadmin_identity();
+    }
+}
+
+if (!function_exists('rmt_has_admin_access')) {
+    function rmt_has_admin_access(): bool
+    {
+        return empty($_SESSION['is_role_test_mode'])
+            && (rmt_is_superadmin_identity() || (int) ($_SESSION['is_admin'] ?? 0) === 1);
+    }
+}
+
 function isRoleTestMode() {
     return (isset($_SESSION['is_superuser']) && (int)$_SESSION['is_superuser'] === 1)
         && !empty($_SESSION['is_role_test_mode']);
@@ -46,10 +68,8 @@ function canEditRequests() {
         return isset($_SESSION['atype']) && in_array((int) $_SESSION['atype'], [3, 4, 5], true);
     }
 
-    $isAdminOrSuperuser = (isset($_SESSION['is_superuser']) && $_SESSION['is_superuser']) || 
-                         (isset($_SESSION['is_admin']) && $_SESSION['is_admin']);
-
-    return $isAdminOrSuperuser || (isset($_SESSION['atype']) && in_array($_SESSION['atype'], [3, 4, 5]));
+    return rmt_has_admin_access()
+        || (isset($_SESSION['atype']) && in_array($_SESSION['atype'], [3, 4, 5]));
 }
 
 function canDeleteRequests() {
@@ -60,8 +80,7 @@ function canDeleteRequests() {
         return false;
     }
 
-        return (isset($_SESSION['is_superuser']) && $_SESSION['is_superuser']) ||
-            (isset($_SESSION['is_admin']) && $_SESSION['is_admin']);
+    return rmt_has_admin_access();
 }
 
 function canCloneRequests() {
@@ -76,9 +95,8 @@ function canManageSLA() {
         return isset($_SESSION['atype']) && (int)$_SESSION['atype'] === 3;
     }
 
-    $isAdminOrSuperuser = (isset($_SESSION['is_superuser']) && $_SESSION['is_superuser']) || 
-                         (isset($_SESSION['is_admin']) && $_SESSION['is_admin']);
-    return $isAdminOrSuperuser || (isset($_SESSION['atype']) && (int)$_SESSION['atype'] === 3);
+    return rmt_has_admin_access()
+        || (isset($_SESSION['atype']) && (int)$_SESSION['atype'] === 3);
 }
 
 function getEffectiveTeamIds($link): array {
@@ -144,8 +162,7 @@ function isReadOnly() {
 }
 
 function canViewAllRequests() {
-    $isAdminOrSuperuser = (isset($_SESSION['is_superuser']) && $_SESSION['is_superuser']) || 
-                         (isset($_SESSION['is_admin']) && $_SESSION['is_admin']);
+    $isAdminOrSuperuser = rmt_has_admin_access();
     // If in test mode, use tested atype permissions only
     $inTestMode = isRoleTestMode();
 
@@ -166,7 +183,7 @@ function rmt_can_access_request(mysqli $link, array $request): bool {
     }
 
     $accountType = (int) ($_SESSION['atype'] ?? 0);
-    $hasAdministrativeAccess = !isRoleTestMode() && (isSuperAdmin() || !empty($_SESSION['is_admin']));
+    $hasAdministrativeAccess = rmt_has_admin_access();
     if ($hasAdministrativeAccess || in_array($accountType, [3, 6], true)) {
         return true;
     }
@@ -197,7 +214,7 @@ function rmt_can_delete_file(mysqli $link, array $file): bool {
     }
 
     $accountType = (int) ($_SESSION['atype'] ?? 0);
-    if (!isRoleTestMode() && (isSuperAdmin() || !empty($_SESSION['is_admin']))) {
+    if (rmt_has_admin_access()) {
         return true;
     }
 

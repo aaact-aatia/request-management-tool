@@ -3,7 +3,7 @@
 require_once __DIR__ . '/session_start.php';
 
 // Check if Super Admin
-if (!($_SESSION['is_superuser'] OR $_SESSION['is_admin'])) {
+if (!rmt_has_admin_access()) {
     header("Location: ../requests.php");
     exit();
 }

@@ -25,6 +25,57 @@ class HelpersTest extends TestCase
     // PERMISSION TESTS
     // ========================================================================
 
+    /**
+     * @dataProvider administrativeAccessCases
+     */
+    public function testAdministrativeAccessUsesPrivilegeFlagsOnly(
+        int $accountType,
+        int $isSuperuser,
+        int $isAdmin,
+        int $isRoleTestMode,
+        bool $expectedAccess
+    ): void {
+        $_SESSION['atype'] = $accountType;
+        $_SESSION['is_superuser'] = $isSuperuser;
+        $_SESSION['is_admin'] = $isAdmin;
+        $_SESSION['is_role_test_mode'] = $isRoleTestMode;
+
+        $this->assertSame($expectedAccess, rmt_has_admin_access());
+    }
+
+    public static function administrativeAccessCases(): array
+    {
+        return [
+            'legacy superadmin type without flag' => [1, 0, 0, 0, false],
+            'legacy admin type without flag' => [2, 0, 0, 0, false],
+            'manager without flag' => [3, 0, 0, 0, false],
+            'team lead without flag' => [4, 0, 0, 0, false],
+            'employee without flag' => [5, 0, 0, 0, false],
+            'director without flag' => [6, 0, 0, 0, false],
+            'admin privilege on manager' => [3, 0, 1, 0, true],
+            'admin privilege on director' => [6, 0, 1, 0, true],
+            'superadmin privilege' => [3, 1, 1, 0, true],
+            'admin privilege suspended during role test' => [3, 0, 1, 1, false],
+            'superadmin privilege suspended during role test' => [5, 1, 1, 1, false],
+        ];
+    }
+
+    public function testRoleTestModePreservesSuperadminIdentityWithoutAccess(): void
+    {
+        $_SESSION['is_superuser'] = 1;
+        $_SESSION['is_admin'] = 1;
+        $_SESSION['is_role_test_mode'] = 1;
+
+        $this->assertTrue(rmt_is_superadmin_identity());
+        $this->assertFalse(rmt_has_superadmin_access());
+        $this->assertFalse(rmt_has_admin_access());
+
+        $_SESSION['is_role_test_mode'] = 0;
+
+        $this->assertTrue(rmt_has_superadmin_access());
+        $this->assertTrue(rmt_has_admin_access());
+    }
+
     public function testIsAdmin()
     {
         $_SESSION['is_admin'] = 1;
@@ -36,6 +87,17 @@ class HelpersTest extends TestCase
 
         $_SESSION['is_role_test_mode'] = 1;
         $this->assertFalse(isAdmin());
+
+        $_SESSION['is_superuser'] = 0;
+        $_SESSION['atype'] = 1;
+        $this->assertFalse(isAdmin());
+        $this->assertFalse(isSuperAdmin());
+
+        $_SESSION['is_role_test_mode'] = 0;
+        $_SESSION['is_admin'] = 1;
+        $this->assertTrue(rmt_has_admin_access());
+        $_SESSION['is_role_test_mode'] = 1;
+        $this->assertFalse(rmt_has_admin_access());
     }
 
     public function testRoleTestModeUsesExplicitSessionState()

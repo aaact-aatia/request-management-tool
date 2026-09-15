@@ -834,7 +834,7 @@ if(mysqli_num_rows($result)>0){
 				<?php } ?>
 				<?php
 				// Check if the account is admin level to show the assigned member.
-			if ($_SESSION['is_superuser'] || $_SESSION['is_admin'] || $_SESSION['atype'] == '3' || $_SESSION['atype'] == '4' || $_SESSION['atype'] == '5') {
+			if (rmt_has_admin_access() || $_SESSION['atype'] == '3' || $_SESSION['atype'] == '4' || $_SESSION['atype'] == '5') {
 					$workerid = $row['workerid'];
 					if ($workerid != 0 AND $workerid != "") {
 						$result2 = mysqli_query($link, "SELECT firstname, lastname FROM tblusers WHERE id = '$workerid'");
@@ -939,7 +939,7 @@ if(mysqli_num_rows($result)>0){
 			</dl>
 
 			<?php
-        if ($_SESSION['is_superuser'] || $_SESSION['is_admin'] || $_SESSION['atype'] == 5 || $_SESSION['atype'] == 3 || $_SESSION['atype'] == 4 || $_SESSION['atype'] == 6)
+		if (rmt_has_admin_access() || $_SESSION['atype'] == 5 || $_SESSION['atype'] == 3 || $_SESSION['atype'] == 4 || $_SESSION['atype'] == 6)
 			{
 			?>
 			
@@ -1572,7 +1572,7 @@ require_once __DIR__ . '/includes/csrf.php';
 			
 			<?php
 			// Check if the account is admin level to show this option 
-		if ($_SESSION['is_superuser'] OR $_SESSION['is_admin'] OR $_SESSION['atype']=='3' OR $_SESSION['atype']=='4' OR $_SESSION['atype'] == '6') {
+		if (rmt_has_admin_access() OR $_SESSION['atype']=='3' OR $_SESSION['atype']=='4' OR $_SESSION['atype'] == '6') {
 			?>			
 			<h2><?= htmlspecialchars($t['staff_comms']) ?></h2>
 			

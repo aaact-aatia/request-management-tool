@@ -20,7 +20,7 @@ if (!empty($triageid)) {
 	<div class="modal-body">		
 		<?php
 		// Check if the account is admin level to show this option 
-	if ($_SESSION['is_superuser'] || $_SESSION['is_admin'] || $_SESSION['atype']==3 || $_SESSION['atype']==4 || $_SESSION['atype'] == '6') {
+	if (rmt_has_admin_access() || $_SESSION['atype']==3 || $_SESSION['atype']==4 || $_SESSION['atype'] == '6') {
 		$sql2 = "SELECT * FROM tbladminlog WHERE triageid = '$triageid' AND status = '1' ORDER BY id DESC";
 		//echo $sql;
 		
