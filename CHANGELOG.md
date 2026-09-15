@@ -381,6 +381,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Regenerate CHANGELOG.md [skip ci] ([5431bff](https://github.com/aaact-aatia/request-management-tool/commit/5431bff5a74d4c170e6bfffcbb6fda14e17a5eec))
 
+- Regenerate CHANGELOG.md [skip ci] ([cc9bd89](https://github.com/aaact-aatia/request-management-tool/commit/cc9bd893fea70e1a2420ae0be4a8253ee8123bc2))
+
 
 ### Fixed
 
@@ -601,6 +603,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 - Add CSRF protection to notification templates ([69a72b5](https://github.com/aaact-aatia/request-management-tool/commit/69a72b5e5bb3ad4f0453cccd5250272df51d58ab))
 
 - Keep notification previews off CRUD success ([97a12d5](https://github.com/aaact-aatia/request-management-tool/commit/97a12d56c4c2d92ee016b2ba0ca61b4baad9668d))
+
+- Centralize privilege-based authorization ([fd9c488](https://github.com/aaact-aatia/request-management-tool/commit/fd9c48880efafae0189608569a177e457ee1b6f6))
 
 
 ### Other
