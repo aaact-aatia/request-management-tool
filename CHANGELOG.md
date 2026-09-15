@@ -383,6 +383,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Regenerate CHANGELOG.md [skip ci] ([cc9bd89](https://github.com/aaact-aatia/request-management-tool/commit/cc9bd893fea70e1a2420ae0be4a8253ee8123bc2))
 
+- Regenerate CHANGELOG.md [skip ci] ([024b5b5](https://github.com/aaact-aatia/request-management-tool/commit/024b5b521be12895507929af01a32ecda48377de))
+
 
 ### Fixed
 
@@ -680,5 +682,9 @@ changes made to 1f25d2de91afa814dd49160085b2f76a39fa88a5. ([9bfaf79](https://git
 - Align helpers with unified bilingual routes ([c58da19](https://github.com/aaact-aatia/request-management-tool/commit/c58da19ed2d7c0aa692ec452b48a48acb1713eaa))
 
 - Enforce explicit employee role-test access ([3648f06](https://github.com/aaact-aatia/request-management-tool/commit/3648f069a97631fa82f82416faa42abb519ddf34))
+
+- Cover unrecognized intake departments ([46dc2b3](https://github.com/aaact-aatia/request-management-tool/commit/46dc2b3b44c7cd2eef1cff09962b0b4130a0d05d))
+
+- Assert intake review warning association ([418b026](https://github.com/aaact-aatia/request-management-tool/commit/418b026d206428bec4aa909e402c28f0e6da790d))
 
 
