@@ -23,7 +23,7 @@ $isAdministrativeAccess = !$inTestMode && (isSuperAdmin() || isAdmin());
 $isManagerAccount = ((int)($_SESSION['atype'] ?? 0) === 3);
 $isTeamLeadAccount = ((int)($_SESSION['atype'] ?? 0) === 4);
 $isEmployeeAccount = ((int)($_SESSION['atype'] ?? 0) === 5);
-$canFullFieldEdit = !$inTestMode && (!empty($_SESSION['is_superuser']) || !empty($_SESSION['is_admin']));
+$canFullFieldEdit = rmt_has_admin_access();
 $canEditStatusAndWorker = in_array((int)($_SESSION['atype'] ?? 0), [3, 4, 5], true) || $canFullFieldEdit;
 $canEditRequestSubject = $canFullFieldEdit || $isManagerAccount || $isTeamLeadAccount;
 $canEditSlaTimer = $canFullFieldEdit || $isManagerAccount;

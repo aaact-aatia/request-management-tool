@@ -10,7 +10,7 @@ $lang = detectLanguage();
 $t = require("lang/{$lang}.php");
 $isFrench = ($lang === 'fr');
 
-if (!(($_SESSION['is_superuser'] ?? 0) || ($_SESSION['is_admin'] ?? 0))) {
+if (!rmt_has_admin_access()) {
     header("location:/settings.php?lang={$lang}&status=forbidden");
     exit();
 }

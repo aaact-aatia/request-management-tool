@@ -42,7 +42,7 @@ if (!rmt_can_access_request($link, $file)) {
         empty($_SESSION['pid']) ? 0 : 1,
         (int) ($_SESSION['atype'] ?? 0),
         isSuperAdmin() ? 1 : 0,
-        empty($_SESSION['is_admin']) ? 0 : 1,
+        rmt_has_admin_access() ? 1 : 0,
         isRoleTestMode() ? 1 : 0,
         (int) ($file['workerid'] ?? 0),
         getEffectiveEmployeeUserId($link),

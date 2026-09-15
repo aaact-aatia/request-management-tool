@@ -25,7 +25,7 @@ if ($_SESSION['lang'] === 'fr') {
 }
 
 // Check if the user has the right priv's
-if ($_SESSION['is_superuser'] OR $_SESSION['is_admin']) {
+if (rmt_has_admin_access()) {
 } else {
 	$redirectPage = ($_SESSION['lang'] === 'fr') ? 'openrequest-fr.php' : 'openrequest-en.php';
 	header("location:/{$redirectPage}?status=accessdenied"); 
@@ -150,7 +150,7 @@ include 'includes/template/head.php';
 				<thead>
 					<tr>
 						<th><?= htmlspecialchars($langFile['status_name_column']) ?></th>
-								<?php if ($_SESSION['is_superuser'] OR $_SESSION['is_admin']) { ?>
+								<?php if (rmt_has_admin_access()) { ?>
 						<th><?= htmlspecialchars($langFile['actions_column']) ?></th>
 						<?php } ?>
 					</tr>
@@ -161,7 +161,7 @@ include 'includes/template/head.php';
 					?>
 					<tr>
 						<td><?php echo htmlspecialchars($row[$nameColumn]);?></td>		
-					<?php if ($_SESSION['is_superuser'] OR $_SESSION['is_admin']) { ?>		
+					<?php if (rmt_has_admin_access()) { ?>
 						<td>
 							<a class="wb-lbx lbx-modal btn btn-primary btn-block" href="includes/edit-status.php?id=<?php echo $row['id'];?>"><?= htmlspecialchars($langFile['edit_button']) ?><span class="wb-inv"> <?php echo htmlspecialchars($row[$nameColumn]) ?></span> <?= htmlspecialchars($langFile['status_status_label']) ?></a> <a class="wb-lbx lbx-modal btn btn-primary btn-block" href="includes/delete-status.php?id=<?php echo $row['id'];?>"><?= htmlspecialchars($langFile['delete_button']) ?><span class="wb-inv"> <?php echo htmlspecialchars($row[$nameColumn]) ?></span> <?= htmlspecialchars($langFile['status_status_label']) ?></a>
 						</td>

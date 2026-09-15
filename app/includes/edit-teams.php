@@ -9,7 +9,7 @@ $lang_code = $_SESSION['lang'] ?? 'en';
 require("../lang/{$lang_code}.php");
 
 // Check if the user has the right priv's
-$canEditTeams = ($_SESSION['is_superuser'] || $_SESSION['is_admin']) || in_array((int)($_SESSION['atype'] ?? 0), [3, 4], true);
+$canEditTeams = rmt_has_admin_access() || in_array((int)($_SESSION['atype'] ?? 0), [3, 4], true);
 if (!$canEditTeams) {
 	header("location:/openrequest.php?lang={$lang_code}&status=accessdenied"); 
 	exit();

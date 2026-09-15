@@ -13,7 +13,7 @@
 require('../sql.php');
 
 // Verify user is logged in and has superuser permissions
-if (!isset($_SESSION['pid']) || !isset($_SESSION['is_superuser']) || $_SESSION['is_superuser'] != 1) {
+if (!isset($_SESSION['pid']) || !rmt_is_superadmin_identity()) {
     // Not authorized - redirect
     header("Location: /openrequest.php?lang=" . ($_SESSION['lang'] ?? 'en'));
     exit();

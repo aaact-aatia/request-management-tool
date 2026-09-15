@@ -64,7 +64,7 @@ include 'includes/template/head.php';
 			
 			<?php 
 			// Check if the account is Super admin / admin to show this option
-			if ($_SESSION['is_superuser'] OR $_SESSION['is_admin']) {
+			if (rmt_has_admin_access()) {
 			?>
 			<h2><?= htmlspecialchars($langFile['settings_add_request_heading']) ?></h2>
 			
@@ -77,7 +77,7 @@ include 'includes/template/head.php';
 			
 			<?php
 			// Show account type switcher only for superadmin
-			if (isset($_SESSION['is_superuser']) && $_SESSION['is_superuser'] == 1) {
+			if (rmt_is_superadmin_identity()) {
 				// Get account types from database
 				$accountTypes = [];
 				$result = mysqli_query($link, "SELECT id, nameen, namefr FROM tblaccounttype WHERE status = 1 ORDER BY id ASC");

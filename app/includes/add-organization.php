@@ -10,7 +10,7 @@ $lang = isset($_GET['lang']) && in_array($_GET['lang'], ['en', 'fr'], true)
 $_SESSION['lang'] = $lang;
 $langFile = require("../lang/{$lang}.php");
 
-if (!($_SESSION['is_superuser'] || $_SESSION['is_admin'])) {
+if (!rmt_has_admin_access()) {
     http_response_code(403);
     exit;
 }

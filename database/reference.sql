@@ -9,8 +9,6 @@ SOURCE /opt/rmt-seeds/migrations/016-create-organizations.sql;
 
 -- Account types
 INSERT INTO `tblaccounttype` (`id`, `nameen`, `namefr`, `status`) VALUES
-(1, 'Super Administrator', 'Super administrateur', 1),
-(2, 'Administrator', 'Administrateur', 1),
 (3, 'Manager', 'Gestionnaire', 1),
 (4, 'Team Lead', 'Chef d''équipe', 1),
 (5, 'Employee', 'Employé', 1),

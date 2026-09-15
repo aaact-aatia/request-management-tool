@@ -8,7 +8,7 @@ require_once('admin-csv-tables.php');
 $lang = (isset($_GET['lang']) && in_array($_GET['lang'], ['en', 'fr'], true)) ? $_GET['lang'] : ($_SESSION['lang'] ?? 'en');
 $_SESSION['lang'] = $lang;
 
-if (!($_SESSION['is_superuser'] OR $_SESSION['is_admin'])) {
+if (!rmt_has_admin_access()) {
 	header("location:/openrequest.php?lang=$lang&status=accessdenied");
 	exit();
 }

@@ -73,8 +73,9 @@ echo "-------------------------\n";
 require_once __DIR__ . '/../app/includes/helpers.php';
 
 // Test permission helpers
-$_SESSION['atype'] = 1;
-echo "isAdmin() with atype=1... ";
+$_SESSION['atype'] = 3;
+$_SESSION['is_admin'] = 1;
+echo "isAdmin() with is_admin=1... ";
 echo (isAdmin() === true ? "✅ PASSED\n" : "❌ FAILED\n");
 ($passed += (isAdmin() === true ? 1 : 0));
 ($failed += (isAdmin() === true ? 0 : 1));

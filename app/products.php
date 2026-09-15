@@ -25,7 +25,7 @@ if ($_SESSION['lang'] === 'fr') {
 }
 
 // Check if the user has the right priv's
-if ($_SESSION['is_superuser'] OR $_SESSION['is_admin']) {
+if (rmt_has_admin_access()) {
 } else {
 	$redirectPage = ($_SESSION['lang'] === 'fr') ? '/openrequest.php?status=accessdenied&lang=fr' : '/openrequest.php?status=accessdenied&lang=en';
 	header("location:$redirectPage"); 

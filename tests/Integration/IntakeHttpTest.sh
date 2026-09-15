@@ -8,6 +8,9 @@ organization_created_id=""
 organization_session_id=""
 edit_session_id=""
 employee_edit_session_id=""
+admin_session_id=""
+role_test_session_id=""
+legacy_session_id=""
 terminal_subject_type=""
 conditional_leaf_service_id=""
 conditional_branch_service_id=""
@@ -35,6 +38,15 @@ cleanup() {
     if [[ -n "$employee_edit_session_id" ]]; then
         db_query "DELETE FROM tblphp_sessions WHERE id = '${employee_edit_session_id}';" >/dev/null || true
     fi
+    if [[ -n "$admin_session_id" ]]; then
+        db_query "DELETE FROM tblphp_sessions WHERE id = '${admin_session_id}';" >/dev/null || true
+    fi
+    if [[ -n "$role_test_session_id" ]]; then
+        db_query "DELETE FROM tblphp_sessions WHERE id = '${role_test_session_id}';" >/dev/null || true
+    fi
+    if [[ -n "$legacy_session_id" ]]; then
+        db_query "DELETE FROM tblphp_sessions WHERE id = '${legacy_session_id}';" >/dev/null || true
+    fi
     if [[ -n "$terminal_subject_type" ]]; then
         if [[ "$terminal_subject_type" == '__NULL__' ]]; then
             db_query "UPDATE tblcatalogue SET request_subject_type = NULL WHERE id = ${terminal_catalogue_id};" >/dev/null || true
@@ -54,6 +66,32 @@ db_query() {
 
 request() {
     curl -sS -H 'X-Forwarded-Proto: https' "$@"
+}
+
+create_test_session() {
+    local session_id=$1
+    local account_type=$2
+    local is_superuser=$3
+    local is_admin=$4
+    local is_role_test_mode=$5
+
+    docker compose exec -T web php -r '
+        session_id($argv[1]);
+        require "/var/www/html/includes/session_start.php";
+        $_SESSION = [
+            "pid" => 1,
+            "atype" => (int) $argv[2],
+            "primary_atype" => (int) $argv[2],
+            "is_superuser" => (int) $argv[3],
+            "is_admin" => (int) $argv[4],
+            "is_role_test_mode" => (int) $argv[5],
+            "email" => "authorization-http@example.invalid",
+            "firstname" => "Authorization",
+            "team" => "1",
+            "lang" => "en",
+        ];
+        session_write_close();
+    ' "$session_id" "$account_type" "$is_superuser" "$is_admin" "$is_role_test_mode"
 }
 
 assert_contains() {
@@ -108,6 +146,39 @@ assert_appears_before() {
     fi
     printf 'PASS: %s\n' "$message"
 }
+
+admin_session_id="rmt-admin-route-$$"
+create_test_session "$admin_session_id" 3 0 1 0
+admin_users_status=$(request -o /dev/null -w '%{http_code}' \
+    -H "Cookie: PHPSESSID=${admin_session_id}" \
+    "${base_url}/users.php?lang=en")
+if [[ "$admin_users_status" != "200" ]]; then
+    printf 'FAIL: flagged admin could not access users route (HTTP %s)\n' "$admin_users_status" >&2
+    exit 1
+fi
+printf 'PASS: flagged admin can access users route\n'
+
+role_test_session_id="rmt-role-test-route-$$"
+create_test_session "$role_test_session_id" 5 1 1 1
+role_test_users_status=$(request -o /dev/null -w '%{http_code}' \
+    -H "Cookie: PHPSESSID=${role_test_session_id}" \
+    "${base_url}/users.php?lang=en")
+if [[ "$role_test_users_status" != "302" ]]; then
+    printf 'FAIL: role-tested superadmin reached users route (HTTP %s)\n' "$role_test_users_status" >&2
+    exit 1
+fi
+printf 'PASS: role-tested superadmin is denied users route\n'
+
+legacy_session_id="rmt-legacy-role-route-$$"
+create_test_session "$legacy_session_id" 1 0 0 0
+legacy_users_status=$(request -o /dev/null -w '%{http_code}' \
+    -H "Cookie: PHPSESSID=${legacy_session_id}" \
+    "${base_url}/users.php?lang=en")
+if [[ "$legacy_users_status" != "302" ]]; then
+    printf 'FAIL: legacy atype-only session reached users route (HTTP %s)\n' "$legacy_users_status" >&2
+    exit 1
+fi
+printf 'PASS: atype=1 without privilege flags is denied users route\n'
 
 protected_file_code=$(db_query 'SELECT code FROM tblfiles ORDER BY id LIMIT 1')
 if [[ -n "$protected_file_code" ]]; then
@@ -414,8 +485,8 @@ docker compose exec -T web php -r '
     require "/var/www/html/includes/session_start.php";
     $_SESSION = [
         "pid" => 8,
-        "atype" => 1,
-        "primary_atype" => 1,
+        "atype" => 3,
+        "primary_atype" => 3,
         "is_superuser" => 1,
         "is_admin" => 1,
         "email" => "edit-http@example.invalid",
@@ -656,8 +727,8 @@ docker compose exec -T web php -r '
     require "/var/www/html/includes/session_start.php";
     $_SESSION = [
         "pid" => 8,
-        "atype" => 1,
-        "primary_atype" => 1,
+        "atype" => 3,
+        "primary_atype" => 3,
         "is_superuser" => 1,
         "is_admin" => 1,
         "email" => "organization-http@example.invalid",

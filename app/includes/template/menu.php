@@ -21,11 +21,9 @@ $lang_code = $_SESSION['lang'] ?? 'en';
 // Resolve effective permissions for menu visibility
 // Use permission flags for admin access instead of account type
 $isTestingDifferentType = !empty($_SESSION['is_superuser']) && !empty($_SESSION['is_role_test_mode']);
-$isSuperAdmin = !$isTestingDifferentType && isset($_SESSION['is_superuser']) && $_SESSION['is_superuser'] == 1;
+$isSuperAdmin = rmt_has_superadmin_access();
 $effectiveAtype = (int)($_SESSION['atype'] ?? 0);
-$isAdminAccount = !$isTestingDifferentType && (
-	isset($_SESSION['is_admin']) && $_SESSION['is_admin'] == 1
-);
+$isAdminAccount = rmt_has_admin_access() && !$isSuperAdmin;
 $isDirector = !empty($_SESSION['pid']) && $effectiveAtype === 6;
 $isEmployee = !empty($_SESSION['pid']) && !$isAdminAccount && !$isSuperAdmin && $effectiveAtype === 5;
 $isTeamScopedAccount = !empty($_SESSION['pid']) && !$isAdminAccount && !$isSuperAdmin && in_array($effectiveAtype, [3, 4], true);

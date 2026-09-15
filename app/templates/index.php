@@ -9,7 +9,7 @@ require_once(__DIR__ . '/_preview-definitions.php');
 $lang = detectLanguage();
 $isFrench = ($lang === 'fr');
 
-if (!(($_SESSION['is_superuser'] ?? 0) || ($_SESSION['is_admin'] ?? 0))) {
+if (!rmt_has_admin_access()) {
     header("location:/settings.php?lang={$lang}&status=forbidden");
     exit();
 }

@@ -28,6 +28,30 @@ if (defined('RMT_SESSION_INITIALIZED')) {
 
 define('RMT_SESSION_INITIALIZED', true);
 
+if (!function_exists('rmt_is_superadmin_identity')) {
+    function rmt_is_superadmin_identity(): bool
+    {
+        return (int) ($_SESSION['is_superuser'] ?? 0) === 1;
+    }
+}
+
+if (!function_exists('rmt_has_superadmin_access')) {
+    function rmt_has_superadmin_access(): bool
+    {
+        return empty($_SESSION['is_role_test_mode'])
+            && (int) ($_SESSION['is_superuser'] ?? 0) === 1;
+    }
+}
+
+if (!function_exists('rmt_has_admin_access')) {
+    function rmt_has_admin_access(): bool
+    {
+        return empty($_SESSION['is_role_test_mode'])
+            && ((int) ($_SESSION['is_superuser'] ?? 0) === 1
+                || (int) ($_SESSION['is_admin'] ?? 0) === 1);
+    }
+}
+
 if (!function_exists('rmt_session_bootstrap_fail')) {
     /**
      * Handle fatal/non-fatal bootstrap failures by environment.

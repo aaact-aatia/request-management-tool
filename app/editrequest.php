@@ -421,7 +421,7 @@ include 'includes/template/head.php';
 
 			<?php
 			$inTestMode = isRoleTestMode();
-			$canFullFieldEdit = !$inTestMode && (!empty($_SESSION['is_superuser']) || !empty($_SESSION['is_admin']));
+			$canFullFieldEdit = rmt_has_admin_access();
 			$isManagerAccount = ((int)($_SESSION['atype'] ?? 0) === 3);
 			$isTeamLeadAccount = ((int)($_SESSION['atype'] ?? 0) === 4);
 			$canEditStatusAndWorker = canEditRequests();
