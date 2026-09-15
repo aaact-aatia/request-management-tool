@@ -527,6 +527,8 @@ request \
     "${base_url}/editrequest.php?lang=en&id=${review_created_id}" > "$work_dir/edit-request-review.html"
 assert_control_contains "$work_dir/edit-request-review.html" 'departmentagency' 'value="External organization not in directory"' \
     'staff edit form preserves an unrecognized department value'
+assert_control_contains "$work_dir/edit-request-review.html" 'departmentagency' 'aria-describedby="departmentagency-hint departmentagency-review"' \
+    'staff edit form associates the department input with its review warning'
 assert_control_contains "$work_dir/edit-request-review.html" 'departmentagency-review' 'Review needed:' \
     'staff edit form flags an unrecognized department for review'
 assert_control_contains "$work_dir/edit-request-review.html" 'departmentagency-review' 'role="status"' \
