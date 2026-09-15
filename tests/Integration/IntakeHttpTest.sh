@@ -4,6 +4,7 @@ set -euo pipefail
 base_url="${RMT_BASE_URL:-http://localhost:8080}"
 work_dir=$(mktemp -d)
 created_id=""
+review_created_id=""
 organization_created_id=""
 organization_session_id=""
 edit_session_id=""
@@ -25,6 +26,9 @@ cleanup() {
     fi
     if [[ -n "$created_id" ]]; then
         db_query "DELETE FROM RequestFieldHistory WHERE requestID = (SELECT requestid FROM tbltriage WHERE id = ${created_id}); DELETE FROM tbladminlog WHERE triageid = ${created_id}; DELETE FROM tblcommlog WHERE triageid = ${created_id}; DELETE FROM tblfiles WHERE requestid = (SELECT requestid FROM tbltriage WHERE id = ${created_id}); DELETE FROM tbltriage WHERE id = ${created_id};" >/dev/null || true
+    fi
+    if [[ -n "$review_created_id" ]]; then
+        db_query "DELETE FROM RequestFieldHistory WHERE requestID = (SELECT requestid FROM tbltriage WHERE id = ${review_created_id}); DELETE FROM tbladminlog WHERE triageid = ${review_created_id}; DELETE FROM tblcommlog WHERE triageid = ${review_created_id}; DELETE FROM tblfiles WHERE requestid = (SELECT requestid FROM tbltriage WHERE id = ${review_created_id}); DELETE FROM tbltriage WHERE id = ${review_created_id};" >/dev/null || true
     fi
     if [[ -n "$organization_created_id" ]]; then
         db_query "DELETE FROM tblorganizations WHERE id = ${organization_created_id};" >/dev/null || true
@@ -496,6 +500,39 @@ docker compose exec -T web php -r '
     ];
     session_write_close();
 ' "$edit_session_id"
+
+review_email="unrecognized-department-$$@example.com"
+request -D "$work_dir/review-headers.txt" -o /dev/null -X POST \
+    --data-urlencode "catalogueid=${terminal_catalogue_id}" \
+    --data 'serviceid=0' \
+    --data 'subserviceid=0' \
+    --data-urlencode 'request_subject=Unrecognized department review' \
+    --data 'clientfname=Review' \
+    --data 'clientlname=Required' \
+    --data-urlencode "clientemail=${review_email}" \
+    --data-urlencode 'departmentagency=External organization not in directory' \
+    --data 'notification=N' \
+    "${base_url}/openrequest3.php?lang=en"
+
+review_created_id=$(db_query "SELECT id FROM tbltriage WHERE clientemail = '${review_email}' ORDER BY id DESC LIMIT 1")
+if [[ -z "${review_created_id:-}" ]]; then
+    cat "$work_dir/review-headers.txt" >&2
+    printf 'FAIL: intake did not preserve an unrecognized department for review\n' >&2
+    exit 1
+fi
+printf 'PASS: intake preserves an unrecognized department for review\n'
+
+request \
+    -H "Cookie: PHPSESSID=${edit_session_id}" \
+    "${base_url}/editrequest.php?lang=en&id=${review_created_id}" > "$work_dir/edit-request-review.html"
+assert_control_contains "$work_dir/edit-request-review.html" 'departmentagency' 'value="External organization not in directory"' \
+    'staff edit form preserves an unrecognized department value'
+assert_control_contains "$work_dir/edit-request-review.html" 'departmentagency' 'aria-describedby="departmentagency-hint departmentagency-review"' \
+    'staff edit form associates the department input with its review warning'
+assert_control_contains "$work_dir/edit-request-review.html" 'departmentagency-review' 'Review needed:' \
+    'staff edit form flags an unrecognized department for review'
+assert_control_contains "$work_dir/edit-request-review.html" 'departmentagency-review' 'role="status"' \
+    'department review warning is announced to assistive technology'
 
 request \
     -H "Cookie: PHPSESSID=${edit_session_id}" \
