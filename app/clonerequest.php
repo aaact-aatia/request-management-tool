@@ -101,7 +101,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST'){
 		. $sourceRequest['requestid'];
 	$cloneLogStatement = rmt_db_execute(
 		$link,
-		'INSERT INTO tblcommlog (triageid, dateadded, notes, creatorid, status) VALUES (?, CURDATE(), ?, ?, 1)',
+			   'INSERT INTO tblcommlog (triageid, dateadded, timeadded, notes, creatorid, status) VALUES (?, CURDATE(), NOW(), ?, ?, 1)',
 		'isi',
 		[(int) $newRequestId, $cloneLogNote, (int) ($_SESSION['pid'] ?? 0)]
 	);

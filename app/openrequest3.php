@@ -245,8 +245,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (hasValue($clientnotes)) {
         $statement = rmt_db_execute(
             $link,
-            'INSERT INTO tblcommlog (`triageid`, `dateadded`, `notes`, `creatorid`, `status`)
-             VALUES (?, ?, ?, ?, ?)',
+            'INSERT INTO tblcommlog (`triageid`, `dateadded`, `timeadded`, `notes`, `creatorid`, `status`)
+             VALUES (?, ?, NOW(), ?, ?, ?)',
             'issii',
             [$latestid, $datereceived, $clientnotes, $creatorid, $status]
         );
@@ -256,8 +256,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (hasValue($departmentCommsNote)) {
         $statement = rmt_db_execute(
             $link,
-            'INSERT INTO tblcommlog (`triageid`, `dateadded`, `notes`, `creatorid`, `status`)
-             VALUES (?, ?, ?, ?, ?)',
+            'INSERT INTO tblcommlog (`triageid`, `dateadded`, `timeadded`, `notes`, `creatorid`, `status`)
+             VALUES (?, ?, NOW(), ?, ?, ?)',
             'issii',
             [$latestid, $datereceived, $departmentCommsNote, $creatorid, $status]
         );

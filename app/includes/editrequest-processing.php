@@ -444,7 +444,7 @@ if ($formAction === 'add_log') {
     }
 
     $safeAdminNotes = mysqli_real_escape_string($link, $adminnotesTrimmed);
-    $sql = "INSERT INTO tbladminlog(`triageid`, `dateadded`, `notes`, `creatorid`, `status`) VALUES ('$requestuid', '$todaydate', '$safeAdminNotes', '$updaterid', '1')";
+    $sql = "INSERT INTO tbladminlog(`triageid`, `dateadded`, `timeadded`, `notes`, `creatorid`, `status`) VALUES ('$requestuid', '$todaydate', NOW(), '$safeAdminNotes', '$updaterid', '1')";
     mysqli_query($link, $sql);
 
     $touchDateUpdated = mysqli_real_escape_string($link, getTodayDate());
@@ -876,8 +876,8 @@ if ($canFullFieldEdit) {
         $safeDepartmentNotes = mysqli_real_escape_string($link, $departmentNotes);
         mysqli_query(
             $link,
-            "INSERT INTO tblcommlog(`triageid`, `dateadded`, `notes`, `creatorid`, `status`)
-             VALUES ('$requestuid', '$todaydate', '$safeDepartmentNotes', '$updaterid', '1')"
+            "INSERT INTO tblcommlog(`triageid`, `dateadded`, `timeadded`, `notes`, `creatorid`, `status`)
+             VALUES ('$requestuid', '$todaydate', NOW(), '$safeDepartmentNotes', '$updaterid', '1')"
         );
     }
 }
@@ -887,8 +887,8 @@ if ($canEditCommunicationLogs && !empty($adminnotes)) {
     if ($requestFieldHistoryEnabled) {
         rmt_append_request_change($generalRequestChanges, 'staff_note_added', null, $adminnotes);
     }
-    $sql = "INSERT INTO tbladminlog(`triageid`, `dateadded`, `notes`, `creatorid`, `status`) 
-            VALUES ('$requestuid', '$todaydate', '$adminnotes', '$updaterid', '1')";
+        $sql = "INSERT INTO tbladminlog(`triageid`, `dateadded`, `timeadded`, `notes`, `creatorid`, `status`)
+            VALUES ('$requestuid', '$todaydate', NOW(), '$adminnotes', '$updaterid', '1')";
     mysqli_query($link, $sql);
 }
 

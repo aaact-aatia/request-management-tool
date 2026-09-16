@@ -10,6 +10,8 @@ organization_session_id=""
 edit_session_id=""
 employee_edit_session_id=""
 admin_session_id=""
+log_team_lead_session_id=""
+unauthorized_log_session_id=""
 role_test_session_id=""
 legacy_session_id=""
 terminal_subject_type=""
@@ -45,6 +47,12 @@ cleanup() {
     if [[ -n "$admin_session_id" ]]; then
         db_query "DELETE FROM tblphp_sessions WHERE id = '${admin_session_id}';" >/dev/null || true
     fi
+    if [[ -n "$log_team_lead_session_id" ]]; then
+        db_query "DELETE FROM tblphp_sessions WHERE id = '${log_team_lead_session_id}';" >/dev/null || true
+    fi
+    if [[ -n "$unauthorized_log_session_id" ]]; then
+        db_query "DELETE FROM tblphp_sessions WHERE id = '${unauthorized_log_session_id}';" >/dev/null || true
+    fi
     if [[ -n "$role_test_session_id" ]]; then
         db_query "DELETE FROM tblphp_sessions WHERE id = '${role_test_session_id}';" >/dev/null || true
     fi
@@ -78,12 +86,13 @@ create_test_session() {
     local is_superuser=$3
     local is_admin=$4
     local is_role_test_mode=$5
+    local user_id=${6:-1}
 
     docker compose exec -T web php -r '
         session_id($argv[1]);
         require "/var/www/html/includes/session_start.php";
         $_SESSION = [
-            "pid" => 1,
+            "pid" => (int) $argv[6],
             "atype" => (int) $argv[2],
             "primary_atype" => (int) $argv[2],
             "is_superuser" => (int) $argv[3],
@@ -95,7 +104,7 @@ create_test_session() {
             "lang" => "en",
         ];
         session_write_close();
-    ' "$session_id" "$account_type" "$is_superuser" "$is_admin" "$is_role_test_mode"
+    ' "$session_id" "$account_type" "$is_superuser" "$is_admin" "$is_role_test_mode" "$user_id"
 }
 
 assert_contains() {
@@ -665,6 +674,95 @@ if [[ "$subject_history" != 'GC Accessibility Conformance Testing Tool|Corrected
     exit 1
 fi
 printf 'PASS: subject correction records old and new values in field history\n'
+
+request -o /dev/null -X POST \
+    -H "Cookie: PHPSESSID=${edit_session_id}" \
+    --data 'form_action=add_log' \
+    --data-urlencode 'adminnotes=Request log integration test staff note' \
+    "${base_url}/editrequest.php?lang=en&id=${created_id}"
+
+request \
+    -H "Cookie: PHPSESSID=${edit_session_id}" \
+    "${base_url}/viewrequest.php?lang=en&rid=${created_id}" > "$work_dir/view-request-log.html"
+assert_contains "$work_dir/view-request-log.html" '<caption>Request change log</caption>' \
+    'request change log table has an accessible caption'
+assert_not_contains "$work_dir/view-request-log.html" '<th scope="col">Details</th>' \
+    'request change log table removes its Details column'
+assert_contains "$work_dir/view-request-log.html" 'Corrected accessibility testing tool' \
+    'request change log table includes request field history details'
+assert_contains "$work_dir/view-request-log.html" 'From:' \
+    'request change log table labels previous field values inline'
+assignment_history_count=$(db_query "SELECT COUNT(*) FROM StatusHistory WHERE requestID = '${request_id}' AND changeType IN ('assignment_change', 'status_and_assignment_change')")
+if [[ "$assignment_history_count" != '0' ]]; then
+    assert_not_contains "$work_dir/view-request-log.html" '>Assigned AAACT team member</td>' \
+        'assignment changes are not duplicated by field history'
+    assert_contains "$work_dir/view-request-log.html" 'From:' \
+        'assignment details identify the previous owner'
+    assert_contains "$work_dir/view-request-log.html" 'To:' \
+        'assignment details identify the new owner'
+fi
+assert_contains "$work_dir/view-request-log.html" 'Request log integration test staff note' \
+    'request change log table includes staff note details'
+staff_log_time=$(db_query "SELECT timeadded FROM tbladminlog WHERE triageid = ${created_id} AND notes = 'Request log integration test staff note' ORDER BY id DESC LIMIT 1")
+if [[ -z "$staff_log_time" ]] || ! grep -Fq "$staff_log_time" "$work_dir/view-request-log.html"; then
+    printf 'FAIL: staff log timestamp was not stored and displayed\n' >&2
+    exit 1
+fi
+printf 'PASS: staff log timestamp is stored and displayed\n'
+assert_contains "$work_dir/view-request-log.html" 'Department/agency: Treasury Board of Canada Secretariat' \
+    'request change log table includes client communication details'
+department_log_time=$(db_query "SELECT timeadded FROM tblcommlog WHERE triageid = ${created_id} AND notes = 'Department/agency: Treasury Board of Canada Secretariat' ORDER BY id ASC LIMIT 1")
+if [[ -z "$department_log_time" ]] || ! grep -Fq "$department_log_time" "$work_dir/view-request-log.html"; then
+    printf 'FAIL: department log timestamp was not stored and displayed\n' >&2
+    exit 1
+fi
+printf 'PASS: department log timestamp is stored and displayed\n'
+assert_contains "$work_dir/view-request-log.html" '>Department/agency</td>' \
+    'department communication rows use the department change type'
+assert_not_contains "$work_dir/view-request-log.html" 'includes/request-log.php' \
+    'request detail view does not use a separate request log modal'
+assert_contains "$work_dir/view-request-log.html" 'href="#field-change-' \
+    'request change log makes the Changed on value the field Details link'
+assert_contains "$work_dir/view-request-log.html" 'class="wb-lbx lbx-modal"' \
+    'request change log includes WET Details links'
+assert_contains "$work_dir/view-request-log.html" 'popup-modal-dismiss' \
+    'request change log dialogs provide an explicit body close button'
+assert_contains "$work_dir/view-request-log.html" 'Close details' \
+    'request change log dialogs label the close button'
+log_team_lead_session_id="rmt-log-team-lead-http-$$"
+create_test_session "$log_team_lead_session_id" 4 0 0 0 21
+request \
+    -H "Cookie: PHPSESSID=${log_team_lead_session_id}" \
+    "${base_url}/viewrequest.php?lang=en&rid=${created_id}" > "$work_dir/view-request-log-team-lead.html"
+assert_contains "$work_dir/view-request-log-team-lead.html" '<caption>Request change log</caption>' \
+    'authorized team lead can view the unified request change log'
+
+unauthorized_log_session_id="rmt-unauthorized-log-http-$$"
+create_test_session "$unauthorized_log_session_id" 5 0 0 0 8
+unauthorized_log_status=$(request -o /dev/null -w '%{http_code}' \
+    -H "Cookie: PHPSESSID=${unauthorized_log_session_id}" \
+    "${base_url}/viewrequest.php?lang=en&rid=${created_id}")
+if [[ "$unauthorized_log_status" != "302" ]]; then
+    printf 'FAIL: unauthorized employee request log access returned HTTP %s\n' "$unauthorized_log_status" >&2
+    exit 1
+fi
+printf 'PASS: unauthorized employees cannot view the request change log\n'
+
+request \
+    -H "Cookie: PHPSESSID=${edit_session_id}" \
+    "${base_url}/viewrequest.php?lang=fr&rid=${created_id}" > "$work_dir/view-request-log-fr.html"
+assert_contains "$work_dir/view-request-log-fr.html" 'Objet de la demande' \
+    'French request change log labels request subject history'
+assert_contains "$work_dir/view-request-log-fr.html" 'De:' \
+    'French request change log labels previous field values inline'
+
+anonymous_view_status=$(request -o /dev/null -w '%{http_code}' \
+    "${base_url}/viewrequest.php?lang=en&rid=${created_id}")
+if [[ "$anonymous_view_status" != "302" ]]; then
+    printf 'FAIL: anonymous request detail access returned HTTP %s\n' "$anonymous_view_status" >&2
+    exit 1
+fi
+printf 'PASS: request change log remains behind request authentication\n'
 
 localized_department_note=$(db_query "SELECT notes FROM tblcommlog WHERE triageid = ${created_id} AND notes LIKE 'Department/agency:%' ORDER BY id ASC LIMIT 1")
 localized_department_history_count=$(db_query "SELECT COUNT(*) FROM RequestFieldHistory WHERE requestID = '${request_id}' AND fieldName = 'department_agency'")

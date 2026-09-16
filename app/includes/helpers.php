@@ -957,8 +957,8 @@ function rmt_save_request_language_metadata($link, int $triageId, string $langua
     // Store with status=0 to keep this internal metadata hidden from normal admin log views.
     $statement = rmt_db_execute(
         $link,
-        'INSERT INTO tbladminlog (`triageid`, `dateadded`, `notes`, `creatorid`, `status`)
-         VALUES (?, ?, ?, ?, 0)',
+        'INSERT INTO tbladminlog (`triageid`, `dateadded`, `timeadded`, `notes`, `creatorid`, `status`)
+         VALUES (?, ?, NOW(), ?, ?, 0)',
         'issi',
         [$triageId, date('Y-m-d'), $note, $creatorId]
     );
@@ -1038,7 +1038,7 @@ function rmt_mark_resolved_email_sent($link, int $triageId, int $creatorId = 0):
     $note = mysqli_real_escape_string($link, '__rmt_resolved_email_sent');
 
     // Keep metadata hidden from normal staff communications by storing status=0.
-    $insertSql = "INSERT INTO tbladminlog(`triageid`, `dateadded`, `notes`, `creatorid`, `status`) VALUES ('$triageIdEscaped', '$today', '$note', '$creatorIdEscaped', '0')";
+    $insertSql = "INSERT INTO tbladminlog(`triageid`, `dateadded`, `timeadded`, `notes`, `creatorid`, `status`) VALUES ('$triageIdEscaped', '$today', NOW(), '$note', '$creatorIdEscaped', '0')";
     mysqli_query($link, $insertSql);
 }
 
@@ -1056,7 +1056,7 @@ function rmt_log_client_survey_sent($link, int $triageId, int $creatorId, int $s
         : "Client survey link resent at $sentAt (send #$sendNumber).";
     $note = mysqli_real_escape_string($link, $noteText);
 
-    $insertSql = "INSERT INTO tbladminlog(`triageid`, `dateadded`, `notes`, `creatorid`, `status`) VALUES ('$triageIdEscaped', '$today', '$note', '$creatorIdEscaped', '1')";
+    $insertSql = "INSERT INTO tbladminlog(`triageid`, `dateadded`, `timeadded`, `notes`, `creatorid`, `status`) VALUES ('$triageIdEscaped', '$today', NOW(), '$note', '$creatorIdEscaped', '1')";
     mysqli_query($link, $insertSql);
 
     if (rmt_table_has_column($link, 'RequestFieldHistory', 'requestID')) {
