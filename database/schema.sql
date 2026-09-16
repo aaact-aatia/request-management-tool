@@ -183,6 +183,7 @@ CREATE TABLE IF NOT EXISTS `tbladminlog` (
   `dateadded` date NOT NULL,
   `timeadded` datetime DEFAULT NULL,
   `notes` text,
+  `language_code` varchar(2) DEFAULT NULL,
   `creatorid` int(11) NOT NULL,
   `status` tinyint(1) DEFAULT 1,
   PRIMARY KEY (`id`),
