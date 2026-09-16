@@ -93,12 +93,12 @@ $translations = [
 		'select_audience' => 'Select an audience type',
 		'no' => 'No',
 		'yes' => 'Yes',
-		'catalogue_name' => 'Catalogue name',
-		'select_catalogue' => 'Select a catalogue name',
-		'service_name' => 'Service name',
-		'select_service' => 'Select a service name',
-		'subservice_name' => 'Sub-service name',
-		'select_subservice' => 'Select a sub-service name',
+		'catalogue_name' => 'Service area',
+		'select_catalogue' => 'Select a service area',
+		'service_name' => 'Service',
+		'select_service' => 'Select a service',
+		'subservice_name' => 'Specific need',
+		'select_subservice' => 'Select a specific need',
 		'attachments_heading' => 'Attachments',
 		'attachment' => 'Attachment',
 		'url_only' => 'URL only',
@@ -192,12 +192,12 @@ $translations = [
 		'select_audience' => 'Sélectionnez un type de public',
 		'no' => 'Non',
 		'yes' => 'Oui',
-		'catalogue_name' => 'Nom du catalogue',
-		'select_catalogue' => 'Sélectionnez un nom de catalogue',
-		'service_name' => 'Nom du service',
-		'select_service' => 'Sélectionnez un nom de service',
-		'subservice_name' => 'Nom du sous-service',
-		'select_subservice' => 'Sélectionnez un nom de sous-service',
+		'catalogue_name' => 'Domaine de service',
+		'select_catalogue' => 'Sélectionnez un domaine de service',
+		'service_name' => 'Service',
+		'select_service' => 'Sélectionnez un service',
+		'subservice_name' => 'Besoin précis',
+		'select_subservice' => 'Sélectionnez un besoin précis',
 		'attachments_heading' => 'Pièces jointes',
 		'attachment' => 'Pièce jointe',
 		'url_only' => 'URL uniquement',
@@ -515,7 +515,7 @@ include 'includes/template/head.php';
 					<div class="col-md-6">
 						<div class="form-group">
 							<label for="catalogueid"><span class="field-name"><?php echo $t['catalogue_name']; ?>: <strong>(<?php echo $t['required']; ?>)</strong></span></label>
-							<select class="form-control full-width" id="catalogueid" name="catalogueid" onchange="ajax1(this.value)" required <?php echo $readonly ? 'disabled="disabled"' : ''; ?>>
+							<select class="form-control full-width" id="catalogueid" name="catalogueid" onchange="ajax1(this.value, 'edit')" required <?php echo $readonly ? 'disabled="disabled"' : ''; ?>>
 								<option value=""><?php echo $t['select_catalogue']; ?></option>
 								<?php foreach ($catalogueOptions as $option): ?>
 									<option value="<?php echo $option['id']; ?>" <?php echo ($row['catalogueid'] == $option['id']) ? 'selected' : ''; ?>>
@@ -531,7 +531,7 @@ include 'includes/template/head.php';
 							<?php if (mysqli_num_rows($services) > 0): ?>
 							<div class="form-group divservice">
 								<label for="serviceid"><span class="field-name"><?php echo $t['service_name']; ?>:</span></label>
-								<select class="form-control full-width" id="serviceid" name="serviceid" onchange="ajax2(this.value)" <?php echo $readonly ? 'disabled="disabled"' : ''; ?>>
+								<select class="form-control full-width" id="serviceid" name="serviceid" onchange="ajax2(this.value, 'edit')" <?php echo $readonly ? 'disabled="disabled"' : ''; ?>>
 									<option value=""><?php echo $t['select_service']; ?></option>
 									<?php while ($service = mysqli_fetch_assoc($services)): ?>
 										<option value="<?php echo $service['id']; ?>" <?php echo ($row['serviceid'] == $service['id']) ? 'selected' : ''; ?>>

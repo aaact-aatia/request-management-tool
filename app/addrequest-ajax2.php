@@ -13,6 +13,10 @@ $orderBy = ($lang === 'fr') ? 'namefr' : 'nameen';
 
 // Load language file for translations
 $translations = require("lang/{$lang}.php");
+$context = $_GET['context'] ?? '';
+$isClientFriendlyContext = in_array($context, ['edit', 'search'], true);
+$subserviceLabel = $isClientFriendlyContext ? ($context === 'search' ? $translations['asearch_specific_need'] : $translations['edit_specific_need']) : ($translations['subservice_name'] ?? 'Sub-service name:');
+$selectSubserviceLabel = $isClientFriendlyContext ? ($context === 'search' ? $translations['asearch_select_specific_need'] : $translations['edit_select_specific_need']) : ($translations['select_subservice'] ?? 'Select a sub-service name');
 
 // Grab the service id
 if(!empty($_GET['v1']))
@@ -40,9 +44,9 @@ $result = mysqli_query($link,$sql);
 //List it
 if(mysqli_num_rows($result)>0){
 ?>
-				<label for="subserviceid"><span class="field-name"><?= htmlspecialchars($translations['subservice_name'] ?? 'Sub-service name:') ?></span></label>
+				<label for="subserviceid"><span class="field-name"><?= htmlspecialchars($subserviceLabel) ?></span></label>
 				<select class="form-control full-width" id="subserviceid" name="subserviceid">
-					<option value=""><?= htmlspecialchars($translations['select_subservice'] ?? 'Select a sub-service name') ?></option>
+					<option value=""><?= htmlspecialchars($selectSubserviceLabel) ?></option>
 					<?php 
 					$sql2 = $sql;
 					$result2 = mysqli_query($link,$sql2);	

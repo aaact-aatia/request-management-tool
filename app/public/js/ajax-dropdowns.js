@@ -1,10 +1,10 @@
 /**
- * Ajax cascade dropdowns for addrequest pages.
- * Used by: addrequest.php, asearch.php, clonerequest.php
+ * Ajax cascade dropdowns for request hierarchy fields.
+ * Used by: addrequest.php, asearch.php, clonerequest.php, editrequest.php
  */
-function ajax1(val1) {
+function ajax1(val1, context) {
 	$.ajax({
-		url: "addrequest-ajax1.php?v1=" + val1,
+		url: "addrequest-ajax1.php?v1=" + val1 + "&context=" + encodeURIComponent(context || ''),
 		success: function(result) {
 			$(".divservice").html(result);
 			$(".divservice").toggle($.trim(result) !== "");
@@ -13,9 +13,9 @@ function ajax1(val1) {
 	$(".divsubservice").empty().hide();
 }
 
-function ajax2(val1) {
+function ajax2(val1, context) {
 	$.ajax({
-		url: "addrequest-ajax2.php?v1=" + val1,
+		url: "addrequest-ajax2.php?v1=" + val1 + "&context=" + encodeURIComponent(context || ''),
 		success: function(result) {
 			$(".divsubservice").html(result);
 			$(".divsubservice").toggle($.trim(result) !== "");

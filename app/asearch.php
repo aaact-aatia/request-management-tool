@@ -290,9 +290,9 @@ $lookupSearchName = static function (string $table, $id) use ($link, $nameField)
 	return (string) ($row[$nameField] ?? $id);
 };
 $addSearchCriterion($langFile['status'], !empty($_GET['statusid']) ? $lookupSearchName('tblstatus', $_GET['statusid']) : '');
-$addSearchCriterion($langFile['catalogue_name'], !empty($_GET['catalogueid']) ? $lookupSearchName('tblcatalogue', $_GET['catalogueid']) : '');
-$addSearchCriterion($langFile['service_name'], !empty($_GET['serviceid']) ? $lookupSearchName('tblservices', $_GET['serviceid']) : '');
-$addSearchCriterion($langFile['subservice_name'], !empty($_GET['subserviceid']) ? $lookupSearchName('tblsubservices', $_GET['subserviceid']) : '');
+$addSearchCriterion($langFile['asearch_service_area'], !empty($_GET['catalogueid']) ? $lookupSearchName('tblcatalogue', $_GET['catalogueid']) : '');
+$addSearchCriterion($langFile['asearch_service'], !empty($_GET['serviceid']) ? $lookupSearchName('tblservices', $_GET['serviceid']) : '');
+$addSearchCriterion($langFile['asearch_specific_need'], !empty($_GET['subserviceid']) ? $lookupSearchName('tblsubservices', $_GET['subserviceid']) : '');
 $searchModifyQuery = $_GET;
 unset($searchModifyQuery['searchsubmitted']);
 $searchModifyQuery['modify'] = '1';
@@ -373,9 +373,9 @@ include 'includes/template/head.php';
 			<div class="row">
 				<div class="col-xs-12">
 					<div class="form-group">
-						<label for="catalogueid"><span class="field-name"><?= htmlspecialchars($langFile['catalogue_name']) ?></span></label>
-						<select class="form-control" id="catalogueid" name="catalogueid" onchange="ajax1(this.value)">
-							<option value=""><?= htmlspecialchars($langFile['select_catalogue']) ?></option>
+						<label for="catalogueid"><span class="field-name"><?= htmlspecialchars($langFile['asearch_service_area']) ?></span></label>
+						<select class="form-control" id="catalogueid" name="catalogueid" onchange="ajax1(this.value, 'search')">
+							<option value=""><?= htmlspecialchars($langFile['asearch_select_service_area']) ?></option>
 							<?php
 							$catalogueScopeFilter = '';
 							if ($isEmployeeAccount) {
