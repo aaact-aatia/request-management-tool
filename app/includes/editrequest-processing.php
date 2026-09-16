@@ -93,10 +93,19 @@ $sprintdefects = getPostValue('sprintdefects');
 $sprintschedule = getPostValue('sprintschedule');
 $firstsprintstartdate = getPostValue('firstsprintstartdate');
 $firstsprintenddate = getPostValue('firstsprintenddate');
-$adminnotes = getPostValue('adminnotes');
+$adminnotes = isset($_POST['adminnotes']) && is_string($_POST['adminnotes'])
+    ? $_POST['adminnotes']
+    : '';
+$communicationLogAdded = false;
 $updaterid = $_SESSION['pid'];
 $todaydate = getTodayDate();
 $lang = $_SESSION['lang'] ?? 'en';
+$communicationLanguage = isset($_POST['communication_language']) && is_string($_POST['communication_language'])
+    ? $_POST['communication_language']
+    : $lang;
+if (!in_array($communicationLanguage, ['en', 'fr'], true)) {
+    $communicationLanguage = $lang;
+}
 $requestlang = app_normalize_language($lang);
 $requestuidInt = (int) $requestuid;
 $postedRequestLang = app_normalize_language(getPostValue('requestlang', ''), '');
@@ -432,19 +441,20 @@ if ($formAction === 'upload_files') {
 if ($formAction === 'add_log') {
     if (!$canEditCommunicationLogs) {
         $_SESSION['edit_section_status'] = ['status' => 'logfailed', 'focus' => 'log'];
-        header("location:/editrequest.php?lang=$lang&id=$requestuid&status=logfailed&focus=log");
+        header("location:/editrequest.php?lang=$lang&id=$requestuid&status=logfailed&focus=log#communications");
         exit();
     }
 
     $adminnotesTrimmed = trim((string) $adminnotes);
     if ($adminnotesTrimmed === '') {
         $_SESSION['edit_section_status'] = ['status' => 'logfailed', 'focus' => 'log'];
-        header("location:/editrequest.php?lang=$lang&id=$requestuid&status=logfailed&focus=log");
+        header("location:/editrequest.php?lang=$lang&id=$requestuid&status=logfailed&focus=log#communications");
         exit();
     }
 
     $safeAdminNotes = mysqli_real_escape_string($link, $adminnotesTrimmed);
-    $sql = "INSERT INTO tbladminlog(`triageid`, `dateadded`, `timeadded`, `notes`, `creatorid`, `status`) VALUES ('$requestuid', '$todaydate', NOW(), '$safeAdminNotes', '$updaterid', '1')";
+    $safeCommunicationLanguage = mysqli_real_escape_string($link, $communicationLanguage);
+    $sql = "INSERT INTO tbladminlog(`triageid`, `dateadded`, `timeadded`, `notes`, `language_code`, `creatorid`, `status`) VALUES ('$requestuid', '$todaydate', NOW(), '$safeAdminNotes', '$safeCommunicationLanguage', '$updaterid', '1')";
     mysqli_query($link, $sql);
 
     $touchDateUpdated = mysqli_real_escape_string($link, getTodayDate());
@@ -460,7 +470,7 @@ if ($formAction === 'add_log') {
     }
 
     $_SESSION['edit_section_status'] = ['status' => 'logsuccess', 'focus' => 'log'];
-    header("location:/editrequest.php?lang=$lang&id=$requestuid&status=logsuccess&focus=log");
+    header("location:/editrequest.php?lang=$lang&id=$requestuid&status=logsuccess&focus=log#communications");
     exit();
 }
 
@@ -497,10 +507,10 @@ if ($contactid > 0) {
     $result = mysqli_query($link, "SELECT * FROM tblteams WHERE id = '$contactid'");
     $row = mysqli_fetch_assoc($result);
     if ($row) {
-        $teamname = $row['nameen'];
-        $teamemail = $row['email'];
-        $contactname = $row['contactname'];
-        $contactemail = $row['contactemail'];
+        $teamname = (string)($row['nameen'] ?? '');
+        $teamemail = (string)($row['email'] ?? '');
+        $contactname = (string)($row['contactname'] ?? '');
+        $contactemail = (string)($row['contactemail'] ?? '');
     }
 } else {
     // Default to AAACT Triage
@@ -887,9 +897,12 @@ if ($canEditCommunicationLogs && !empty($adminnotes)) {
     if ($requestFieldHistoryEnabled) {
         rmt_append_request_change($generalRequestChanges, 'staff_note_added', null, $adminnotes);
     }
-        $sql = "INSERT INTO tbladminlog(`triageid`, `dateadded`, `timeadded`, `notes`, `creatorid`, `status`)
-            VALUES ('$requestuid', '$todaydate', NOW(), '$adminnotes', '$updaterid', '1')";
+    $safeAdminNotes = mysqli_real_escape_string($link, trim((string)$adminnotes));
+    $safeCommunicationLanguage = mysqli_real_escape_string($link, $communicationLanguage);
+        $sql = "INSERT INTO tbladminlog(`triageid`, `dateadded`, `timeadded`, `notes`, `language_code`, `creatorid`, `status`)
+            VALUES ('$requestuid', '$todaydate', NOW(), '$safeAdminNotes', '$safeCommunicationLanguage', '$updaterid', '1')";
     mysqli_query($link, $sql);
+    $communicationLogAdded = true;
 }
 
 // Set NULL for empty dates
@@ -1140,6 +1153,12 @@ if ($requestFieldHistoryEnabled && !empty($generalRequestChanges)) {
 // When a request is newly resolved, send staff directly to manual survey links.
 if (!$isCurrentResolved && $isTargetResolved) {
     header("location:/client-survey-link.php?lang=$lang&erid=$redirectid");
+    exit();
+}
+
+if ($communicationLogAdded) {
+    $_SESSION['edit_section_status'] = ['status' => 'logsuccess', 'focus' => 'log'];
+    header("location:/editrequest.php?lang=$lang&id=$requestuid&status=logsuccess&focus=log#communications");
     exit();
 }
 
