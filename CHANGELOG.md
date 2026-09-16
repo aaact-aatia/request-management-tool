@@ -175,6 +175,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Show client request details after submission ([2a92dec](https://github.com/aaact-aatia/request-management-tool/commit/2a92decb73c257686ef9a9cf8fbb383ad1231372))
 
+- Unify request change log history ([a23f9d9](https://github.com/aaact-aatia/request-management-tool/commit/a23f9d95c9dd1ae12b3372cd9be5bb0a3091eb8a))
+
 
 ### Build
 
@@ -384,6 +386,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 - Regenerate CHANGELOG.md [skip ci] ([cc9bd89](https://github.com/aaact-aatia/request-management-tool/commit/cc9bd893fea70e1a2420ae0be4a8253ee8123bc2))
 
 - Regenerate CHANGELOG.md [skip ci] ([024b5b5](https://github.com/aaact-aatia/request-management-tool/commit/024b5b521be12895507929af01a32ecda48377de))
+
+- Regenerate CHANGELOG.md [skip ci] ([038b7d0](https://github.com/aaact-aatia/request-management-tool/commit/038b7d0790eafbe06b4843a43c689a3b3cd78973))
 
 
 ### Fixed
