@@ -234,13 +234,13 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	
 	// Check if notes has anything and add to table
 	if ($clientnotes!="") {
-		$sql = "INSERT INTO tblcommlog(`triageid`, `dateadded`, `notes`, `creatorid`, `status`) VALUES ('$latestid', '$datereceived', '$clientnotes', '$creatorid', '$status')";
+		$sql = "INSERT INTO tblcommlog(`triageid`, `dateadded`, `timeadded`, `notes`, `creatorid`, `status`) VALUES ('$latestid', '$datereceived', NOW(), '$clientnotes', '$creatorid', '$status')";
 		mysqli_query($link,$sql);
 	}
 	
 	// Check if notes has anything and add to table
 	if ($adminnotes!="") {
-		$sql = "INSERT INTO tbladminlog(`triageid`, `dateadded`, `notes`, `creatorid`, `status`) VALUES ('$latestid', '$datereceived', '$adminnotes', '$creatorid', '$status')";
+		$sql = "INSERT INTO tbladminlog(`triageid`, `dateadded`, `timeadded`, `notes`, `creatorid`, `status`) VALUES ('$latestid', '$datereceived', NOW(), '$adminnotes', '$creatorid', '$status')";
 		mysqli_query($link,$sql);
 	}
 	

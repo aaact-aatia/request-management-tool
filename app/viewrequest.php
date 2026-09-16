@@ -102,7 +102,6 @@ $translations = [
 		'attachment_url' => 'Attachment',
 		'delete_comment' => 'Delete comment',
 		'no_comms' => 'No communications available!',
-		'staff_comms' => 'AAACT communications log',
 		'status_change_log' => 'Status change log',
 		'status_change_previous' => 'Previous status',
 		'status_change_new' => 'New status',
@@ -130,14 +129,18 @@ $translations = [
 		'other_change_survey_link_sent' => 'Client survey link',
 		'other_change_survey_sent_value' => 'Sent (send #%d)',
 		'other_change_survey_resent_value' => 'Resent (send #%d)',
+		'change_log_staff_note' => 'Staff note',
+		'change_log_client_communication' => 'Client communication',
 		'change_log' => 'Request change log',
 		'change_log_type_other' => 'Request information update',
 		'change_log_summary' => 'Change',
-		'change_log_previous' => 'Previous field/status',
-		'change_log_new' => 'New value/status',
+		'change_log_previous' => 'From',
+		'change_log_new' => 'To',
+		'change_log_from' => 'From',
+		'change_log_to' => 'To',
+		'unassigned' => 'Unassigned',
 		'change_log_details' => 'Details',
-		'change_log_details_title' => 'Change details',
-		'change_log_details_sr' => 'Details for %s on %s',
+		'change_log_details_close' => 'Close details',
 		'unknown_user' => 'Unknown user',
 		'not_found_title' => 'Request not found!',
 		'not_found_msg' => 'Sorry something went wrong with your request, please try again!',
@@ -239,7 +242,6 @@ $translations = [
 		'attachment_url' => 'Pièce jointe',
 		'delete_comment' => 'Supprimer le commentaire',
 		'no_comms' => 'Aucune communication disponible!',
-		'staff_comms' => 'Journal des communications du AATIA',
 		'status_change_log' => 'Journal des changements de statut',
 		'status_change_previous' => 'Statut precedent',
 		'status_change_new' => 'Nouveau statut',
@@ -267,14 +269,18 @@ $translations = [
 		'other_change_survey_link_sent' => 'Lien du sondage client',
 		'other_change_survey_sent_value' => 'Envoye (envoi no %d)',
 		'other_change_survey_resent_value' => 'Renvoye (envoi no %d)',
+		'change_log_staff_note' => 'Note du personnel',
+		'change_log_client_communication' => 'Communication avec le client',
 		'change_log' => 'Journal des changements de la demande',
 		'change_log_type_other' => 'Mise a jour des informations de la demande',
 		'change_log_summary' => 'Changement',
-		'change_log_previous' => 'Champ/statut precedent',
-		'change_log_new' => 'Nouvelle valeur/statut',
+		'change_log_previous' => 'De',
+		'change_log_new' => 'À',
+		'change_log_from' => 'De',
+		'change_log_to' => 'À',
+		'unassigned' => 'Non assigné',
 		'change_log_details' => 'Details',
-		'change_log_details_title' => 'Details du changement',
-		'change_log_details_sr' => 'Details pour %s le %s',
+		'change_log_details_close' => 'Fermer les détails',
 		'unknown_user' => 'Utilisateur inconnu',
 		'not_found_title' => 'Demande introuvable!',
 		'not_found_msg' => 'Désolé, quelque chose s\'est mal passé avec votre demande, veuillez réessayer!',
@@ -395,6 +401,16 @@ if ($isClientSubmissionView) {
 	}
 }
 
+$triageid = (int) filter_var($triageid, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'default' => 0]]);
+if ($triageid <= 0) {
+	if ($isClientSubmissionView) {
+		header("Location: /openrequest.php?lang={$lang}&status=failed");
+	} else {
+		header("Location: /requests.php?lang={$lang}&status=wrongid");
+	}
+	exit();
+}
+
 // Create encoded request ID
 $nrequestid = base64_encode($triageid);
 
@@ -407,7 +423,7 @@ else{
 }
 		
 // Construct SQL statement
-$sql = "SELECT * FROM tbltriage WHERE id='$triageid'";
+$sql = "SELECT * FROM tbltriage WHERE id=$triageid";
 
 $result = mysqli_query($link,$sql);
 if ($isClientSubmissionView && (!$result || mysqli_num_rows($result) === 0)) {
@@ -417,6 +433,10 @@ if ($isClientSubmissionView && (!$result || mysqli_num_rows($result) === 0)) {
 //List it
 if(mysqli_num_rows($result)>0){
 	while($row = mysqli_fetch_array($result)){
+		if (!$isClientSubmissionView && !rmt_can_access_request($link, $row)) {
+			header("location:/requests.php?lang=$lang&status=accessdenied");
+			exit();
+		}
 		
 		// We need to calculate if ticket is close to SLA (or on the date) or if past SLA and grab the names
 		$subserviceid = $row['subserviceid'];
@@ -1289,6 +1309,7 @@ require_once __DIR__ . '/includes/csrf.php';
 				}
 				$userNameCache = [];
 				$changeLogRows = [];
+				$assignmentHistoryKeys = [];
 			?>
 			<?php if ($statusHistoryResult && mysqli_num_rows($statusHistoryResult) > 0) {
 				while ($historyRow = mysqli_fetch_assoc($statusHistoryResult)) {
@@ -1320,8 +1341,8 @@ require_once __DIR__ . '/includes/csrf.php';
 
 						$previousWorkerId = (int)($historyRow['previousWorkerID'] ?? 0);
 						$newWorkerId = (int)($historyRow['newWorkerID'] ?? 0);
-						$previousWorkerLabel = $t['na'];
-						$newWorkerLabel = $t['na'];
+						$previousWorkerLabel = $t['unassigned'];
+						$newWorkerLabel = $t['unassigned'];
 						if ($previousWorkerId > 0) {
 							if (!isset($userNameCache[$previousWorkerId])) {
 								$previousWorkerEscaped = mysqli_real_escape_string($link, (string)$previousWorkerId);
@@ -1347,27 +1368,91 @@ require_once __DIR__ . '/includes/csrf.php';
 						$slaElapsedLabel = isset($historyRow['slaElapsedBusinessDays']) && $historyRow['slaElapsedBusinessDays'] !== null
 							? (int)$historyRow['slaElapsedBusinessDays'] . ' ' . $t['business_days']
 							: $t['na'];
-						$changeLogRows[] = [
+						$isAssignmentChange = in_array($changeTypeRaw, ['assignment_change', 'status_and_assignment_change'], true);
+						if ($isAssignmentChange) {
+							$assignmentHistoryKeys[
+								implode('|', [
+									$previousWorkerId,
+									$newWorkerId,
+									$actorUserId,
+									substr((string)$historyRow['changeTimeStamp'], 0, 10),
+								])
+							] = true;
+						}
+						$assignmentDetails = $t['status_change_type_assignment'] . ";\n"
+							. $t['change_log_from'] . ': ' . $previousWorkerLabel . ";\n"
+							. $t['change_log_to'] . ': ' . $newWorkerLabel;
+						$statusDetails = $isAssignmentChange
+							? $assignmentDetails
+							: implode('; ', [
+								$t['change_log_previous'] . ': ' . $previousStatusLabel,
+								$t['change_log_new'] . ': ' . $newStatusLabel,
+								$t['status_change_assignment_from'] . ': ' . $previousWorkerLabel,
+								$t['status_change_assignment_to'] . ': ' . $newWorkerLabel,
+								$t['status_change_sla_due'] . ': ' . $slaDueDateLabel,
+								$t['status_change_sla_elapsed'] . ': ' . $slaElapsedLabel,
+							]);
+						$statusChangedOn = (string)$historyRow['changeTimeStamp'];
+						$statusEventId = (int)$historyRow['id'];
+						$statusRow = [
+							'log_id' => 'status:#' . $statusEventId,
 							'type' => $changeTypeLabel,
 							'previous' => $previousStatusLabel,
 							'new' => $newStatusLabel,
+							'summary' => $isAssignmentChange ? $previousWorkerLabel . ' / ' . $newWorkerLabel : $previousStatusLabel . ' / ' . $newStatusLabel,
+							'details' => $statusDetails,
 							'assignment_from' => $previousWorkerLabel,
 							'assignment_to' => $newWorkerLabel,
-							'changed_on' => (string)$historyRow['changeTimeStamp'],
+							'changed_on' => $statusChangedOn,
 							'actor' => $actorLabel,
 							'sla_due' => $slaDueDateLabel,
 							'sla_elapsed' => $slaElapsedLabel,
-							'event_id' => (int)$historyRow['id'],
-							'details_id' => 'status-change-' . (int)$historyRow['id'],
+							'event_id' => $statusEventId,
+							'details_id' => 'status-change-' . $statusEventId,
 						];
+						if ($changeTypeRaw === 'status_and_assignment_change') {
+							$assignmentRow = $statusRow;
+							$assignmentRow['type'] = $t['status_change_type_assignment'];
+							$assignmentRow['summary'] = $previousWorkerLabel . ' / ' . $newWorkerLabel;
+							$assignmentRow['details'] = $assignmentDetails;
+							$assignmentRow['event_id'] = $statusEventId * 2;
+							$assignmentRow['details_id'] = 'status-change-' . $statusEventId . '-assignment';
+							$statusRow['type'] = $t['status_change_type_status'];
+							$statusRow['summary'] = $previousStatusLabel . ' / ' . $newStatusLabel;
+							$statusRow['details'] = implode('; ', [
+								$t['change_log_previous'] . ': ' . $previousStatusLabel,
+								$t['change_log_new'] . ': ' . $newStatusLabel,
+								$t['status_change_sla_due'] . ': ' . $slaDueDateLabel,
+								$t['status_change_sla_elapsed'] . ': ' . $slaElapsedLabel,
+							]);
+							$statusRow['event_id'] = ($statusEventId * 2) + 1;
+							$statusRow['details_id'] = 'status-change-' . $statusEventId . '-status';
+							$changeLogRows[] = $assignmentRow;
+							$changeLogRows[] = $statusRow;
+						} else {
+							$changeLogRows[] = $statusRow;
+						}
 					}
 			}
 			if ($hasRequestFieldHistoryTable) {
 				$triageIdEscaped = mysqli_real_escape_string($link, (string) $triageid);
-				$otherChangeSql = "SELECT id, fieldName, oldValue, newValue, actorUserID, changeTimeStamp FROM RequestFieldHistory WHERE requestID = '$requestIdEscaped' OR (fieldName = 'survey_link_sent' AND requestID = '$triageIdEscaped') ORDER BY id DESC";
+				$otherChangeSql = "SELECT rfh.id, rfh.fieldName, rfh.oldValue, rfh.newValue, rfh.actorUserID, rfh.changeTimeStamp
+					FROM RequestFieldHistory rfh
+					WHERE (rfh.requestID = '$requestIdEscaped' OR (rfh.fieldName = 'survey_link_sent' AND rfh.requestID = '$triageIdEscaped'))
+					  AND NOT (rfh.fieldName = 'staff_note_added' AND EXISTS (
+						  SELECT 1
+						  FROM tbladminlog staffLog
+						  INNER JOIN tbltriage staffRequest ON staffRequest.id = staffLog.triageid
+						  WHERE staffRequest.requestid = rfh.requestID
+							AND staffLog.status = '1'
+							AND staffLog.notes = rfh.newValue
+							AND staffLog.creatorid = rfh.actorUserID
+					  ))
+					ORDER BY rfh.id DESC";
 				$otherChangeResult = mysqli_query($link, $otherChangeSql);
 				if ($otherChangeResult && mysqli_num_rows($otherChangeResult) > 0) {
 					$otherChangeFieldMap = [
+						'request_subject' => $t['request_subject'],
 						'request_title' => $t['other_change_request_title'],
 						'client_last_name' => $t['last_name'],
 						'client_first_name' => $t['first_name'],
@@ -1468,6 +1553,17 @@ require_once __DIR__ . '/includes/csrf.php';
 					};
 				while ($otherRow = mysqli_fetch_assoc($otherChangeResult)) {
 						$fieldNameRaw = (string)($otherRow['fieldName'] ?? '');
+						if ($fieldNameRaw === 'assigned_team_member') {
+							$assignmentKey = implode('|', [
+								(int)($otherRow['oldValue'] ?? 0),
+								(int)($otherRow['newValue'] ?? 0),
+								(int)($otherRow['actorUserID'] ?? 0),
+								substr((string)($otherRow['changeTimeStamp'] ?? ''), 0, 10),
+							]);
+							if (isset($assignmentHistoryKeys[$assignmentKey])) {
+								continue;
+							}
+						}
 						$fieldNameLabel = $otherChangeFieldMap[$fieldNameRaw] ?? ($fieldNameRaw !== '' ? $fieldNameRaw : $t['na']);
 						$oldValueLabel = $resolveHistoryDisplayValue($fieldNameRaw, $otherRow['oldValue'] ?? null);
 						$newValueLabel = $resolveHistoryDisplayValue($fieldNameRaw, $otherRow['newValue'] ?? null);
@@ -1485,9 +1581,12 @@ require_once __DIR__ . '/includes/csrf.php';
 							$otherActorLabel = $userNameCache[$otherActorUserId];
 						}
 					$changeLogRows[] = [
+						'log_id' => 'field:#' . (int)$otherRow['id'],
 						'type' => $fieldNameLabel,
 						'previous' => $fieldNameLabel . ': ' . $oldValueLabel,
 						'new' => $newValueLabel,
+						'summary' => $oldValueLabel . ' / ' . $newValueLabel,
+						'details' => $fieldNameLabel . '; ' . $t['change_log_previous'] . ': ' . $oldValueLabel . '; ' . $t['change_log_new'] . ': ' . $newValueLabel,
 						'assignment_from' => $t['na'],
 						'assignment_to' => $t['na'],
 						'changed_on' => (string)($otherRow['changeTimeStamp'] ?? ''),
@@ -1495,7 +1594,91 @@ require_once __DIR__ . '/includes/csrf.php';
 						'sla_due' => $t['na'],
 						'sla_elapsed' => $t['na'],
 						'event_id' => (int)$otherRow['id'],
-						'details_id' => 'other-change-' . (int)$otherRow['id'],
+						'details_id' => 'field-change-' . (int)$otherRow['id'],
+					];
+				}
+			}
+
+			$canViewStaffLogs = rmt_has_admin_access() || in_array((int)($_SESSION['atype'] ?? 0), [3, 4, 6], true);
+			if ($canViewStaffLogs) {
+				$adminLogResult = mysqli_query(
+					$link,
+					"SELECT id, dateadded, timeadded, notes, creatorid
+					 FROM tbladminlog
+					 WHERE triageid = '$triageid' AND status = '1'
+					 ORDER BY id DESC"
+				);
+				while ($adminLogRow = $adminLogResult ? mysqli_fetch_assoc($adminLogResult) : null) {
+					$adminActorId = (int)($adminLogRow['creatorid'] ?? 0);
+					$adminActorLabel = $t['na'];
+					if ($adminActorId > 0) {
+						if (!isset($userNameCache[$adminActorId])) {
+							$adminActorEscaped = mysqli_real_escape_string($link, (string)$adminActorId);
+							$adminActorResult = mysqli_query($link, "SELECT firstname, lastname FROM tblusers WHERE id = '$adminActorEscaped' LIMIT 1");
+							$adminActorRow = $adminActorResult ? mysqli_fetch_assoc($adminActorResult) : null;
+							$adminActorName = trim(((string)($adminActorRow['firstname'] ?? '')) . ' ' . ((string)($adminActorRow['lastname'] ?? '')));
+							$userNameCache[$adminActorId] = $adminActorName !== '' ? $adminActorName : $t['unknown_user'];
+						}
+						$adminActorLabel = $userNameCache[$adminActorId];
+					}
+					$adminNotes = (string)($adminLogRow['notes'] ?? '');
+					$changeLogRows[] = [
+						'log_id' => 'staff:#' . (int)$adminLogRow['id'],
+						'type' => $t['change_log_staff_note'],
+						'previous' => $t['other_change_staff_note'],
+						'new' => $adminNotes,
+						'summary' => $t['other_change_staff_note'],
+						'details' => $adminNotes,
+						'assignment_from' => $t['na'],
+						'assignment_to' => $t['na'],
+							'changed_on' => (string)($adminLogRow['timeadded'] ?? $adminLogRow['dateadded'] ?? ''),
+						'actor' => $adminActorLabel,
+						'sla_due' => $t['na'],
+						'sla_elapsed' => $t['na'],
+						'event_id' => (int)$adminLogRow['id'],
+						'details_id' => 'staff-log-' . (int)$adminLogRow['id'],
+					];
+				}
+
+				$clientLogResult = mysqli_query(
+					$link,
+					"SELECT id, dateadded, timeadded, notes, creatorid
+					 FROM tblcommlog
+					 WHERE triageid = '$triageid' AND status = '1'
+					 ORDER BY id DESC"
+				);
+				while ($clientLogRow = $clientLogResult ? mysqli_fetch_assoc($clientLogResult) : null) {
+					$clientActorId = (int)($clientLogRow['creatorid'] ?? 0);
+					$clientActorLabel = $t['na'];
+					if ($clientActorId > 0) {
+						if (!isset($userNameCache[$clientActorId])) {
+							$clientActorEscaped = mysqli_real_escape_string($link, (string)$clientActorId);
+							$clientActorResult = mysqli_query($link, "SELECT firstname, lastname FROM tblusers WHERE id = '$clientActorEscaped' LIMIT 1");
+							$clientActorRow = $clientActorResult ? mysqli_fetch_assoc($clientActorResult) : null;
+							$clientActorName = trim(((string)($clientActorRow['firstname'] ?? '')) . ' ' . ((string)($clientActorRow['lastname'] ?? '')));
+							$userNameCache[$clientActorId] = $clientActorName !== '' ? $clientActorName : $t['unknown_user'];
+						}
+						$clientActorLabel = $userNameCache[$clientActorId];
+					}
+					$clientNotes = (string)($clientLogRow['notes'] ?? '');
+					$isDepartmentNote = preg_match('/^(Department\/agency|Ministère\/organisme):\s*/mi', $clientNotes) === 1;
+					$clientLogType = $isDepartmentNote ? $t['department_agency'] : $t['change_log_client_communication'];
+					$clientLogSummary = $isDepartmentNote ? $t['department_agency'] : $t['other_change_client_comms'];
+					$changeLogRows[] = [
+						'log_id' => 'client:#' . (int)$clientLogRow['id'],
+						'type' => $clientLogType,
+						'previous' => $t['other_change_client_comms'],
+						'new' => $clientNotes,
+						'summary' => $clientLogSummary,
+						'details' => $clientNotes,
+						'assignment_from' => $t['na'],
+						'assignment_to' => $t['na'],
+							'changed_on' => (string)($clientLogRow['timeadded'] ?? $clientLogRow['dateadded'] ?? ''),
+						'actor' => $clientActorLabel,
+						'sla_due' => $t['na'],
+						'sla_elapsed' => $t['na'],
+						'event_id' => (int)$clientLogRow['id'],
+						'details_id' => 'client-log-' . (int)$clientLogRow['id'],
 					];
 				}
 			}
@@ -1508,27 +1691,26 @@ require_once __DIR__ . '/includes/csrf.php';
 			?>
 			<h2><?= htmlspecialchars($t['change_log']) ?></h2>
 			<?php if (!empty($changeLogRows)) { ?>
-			<table class="wb-tables table table-striped" data-paging="false" data-order='[[2, "desc"]]'>
+			<table class="wb-tables table table-striped" data-paging="false" data-order='[[3, "desc"]]'>
+				<caption><?= htmlspecialchars($t['change_log']) ?></caption>
 				<thead>
 					<tr>
-						<th><?= htmlspecialchars($t['status_change_type']) ?></th>
-						<th><?= htmlspecialchars($t['change_log_summary']) ?></th>
-						<th><?= htmlspecialchars($t['status_change_changed_on']) ?></th>
-						<th><?= htmlspecialchars($t['status_change_actor']) ?></th>
-						<th><?= htmlspecialchars($t['change_log_details']) ?></th>
+						<th scope="col"><?= htmlspecialchars($t['status_change_type']) ?></th>
+						<th scope="col"><?= htmlspecialchars($t['change_log_summary']) ?></th>
+						<th scope="col"><?= htmlspecialchars($t['status_change_actor']) ?></th>
+						<th scope="col"><?= htmlspecialchars($t['status_change_changed_on']) ?></th>
 					</tr>
 				</thead>
 				<tbody>
 					<?php foreach ($changeLogRows as $changeLogRow) { ?>
 					<tr>
 						<td><?= htmlspecialchars($changeLogRow['type']) ?></td>
-						<td><?= htmlspecialchars($changeLogRow['previous'] . ' / ' . $changeLogRow['new']) ?></td>
-						<td><?= htmlspecialchars($changeLogRow['changed_on']) ?></td>
+						<td><?= htmlspecialchars($changeLogRow['summary'] ?? ($changeLogRow['previous'] . ' / ' . $changeLogRow['new'])) ?></td>
 						<td><?= htmlspecialchars($changeLogRow['actor']) ?></td>
 						<td>
 							<a href="#<?= htmlspecialchars($changeLogRow['details_id'], ENT_QUOTES, 'UTF-8') ?>" class="wb-lbx lbx-modal">
-								<?= htmlspecialchars($t['change_log_details']) ?>
-								<span class="wb-inv"> <?= htmlspecialchars(sprintf($t['change_log_details_sr'], $changeLogRow['type'], $changeLogRow['changed_on'])) ?></span>
+								<?= htmlspecialchars($changeLogRow['changed_on'], ENT_QUOTES, 'UTF-8') ?>
+								<span class="wb-inv"> - <?= htmlspecialchars($changeLogRow['type'] . ' ' . $t['change_log_details'], ENT_QUOTES, 'UTF-8') ?></span>
 							</a>
 						</td>
 					</tr>
@@ -1538,29 +1720,24 @@ require_once __DIR__ . '/includes/csrf.php';
 			<?php foreach ($changeLogRows as $changeLogRow) { ?>
 			<section id="<?= htmlspecialchars($changeLogRow['details_id'], ENT_QUOTES, 'UTF-8') ?>" class="mfp-hide modal-dialog modal-content overlay-def">
 				<header class="modal-header">
-					<h2 class="modal-title"><?= htmlspecialchars($t['change_log_details_title']) ?></h2>
+					<h2 class="modal-title"><?= htmlspecialchars($t['change_log_details'], ENT_QUOTES, 'UTF-8') ?></h2>
 				</header>
 				<div class="modal-body">
 					<dl>
 						<dt><?= htmlspecialchars($t['status_change_type']) ?></dt>
 						<dd><?= htmlspecialchars($changeLogRow['type']) ?></dd>
-						<dt><?= htmlspecialchars($t['change_log_previous']) ?></dt>
-						<dd><?= htmlspecialchars($changeLogRow['previous']) ?></dd>
-						<dt><?= htmlspecialchars($t['change_log_new']) ?></dt>
-						<dd><?= htmlspecialchars($changeLogRow['new']) ?></dd>
-						<dt><?= htmlspecialchars($t['status_change_assignment_from']) ?></dt>
-						<dd><?= htmlspecialchars($changeLogRow['assignment_from']) ?></dd>
-						<dt><?= htmlspecialchars($t['status_change_assignment_to']) ?></dt>
-						<dd><?= htmlspecialchars($changeLogRow['assignment_to']) ?></dd>
+						<dt><?= htmlspecialchars($t['change_log_summary']) ?></dt>
+						<dd><?= htmlspecialchars($changeLogRow['summary'] ?? '') ?></dd>
+						<dt><?= htmlspecialchars($t['change_log_details']) ?></dt>
+						<dd><?= nl2br(htmlspecialchars($changeLogRow['details'] ?? '', ENT_QUOTES, 'UTF-8')) ?></dd>
 						<dt><?= htmlspecialchars($t['status_change_changed_on']) ?></dt>
 						<dd><?= htmlspecialchars($changeLogRow['changed_on']) ?></dd>
 						<dt><?= htmlspecialchars($t['status_change_actor']) ?></dt>
 						<dd><?= htmlspecialchars($changeLogRow['actor']) ?></dd>
-						<dt><?= htmlspecialchars($t['status_change_sla_due']) ?></dt>
-						<dd><?= htmlspecialchars($changeLogRow['sla_due']) ?></dd>
-						<dt><?= htmlspecialchars($t['status_change_sla_elapsed']) ?></dt>
-						<dd><?= htmlspecialchars($changeLogRow['sla_elapsed']) ?></dd>
 					</dl>
+					<button type="button" class="btn btn-default popup-modal-dismiss">
+						<?= htmlspecialchars($t['change_log_details_close'], ENT_QUOTES, 'UTF-8') ?>
+					</button>
 				</div>
 			</section>
 			<?php } ?>
@@ -1570,43 +1747,6 @@ require_once __DIR__ . '/includes/csrf.php';
 			<?php } ?>
 			<?php } ?>
 			
-			<?php
-			// Check if the account is admin level to show this option 
-		if (rmt_has_admin_access() OR $_SESSION['atype']=='3' OR $_SESSION['atype']=='4' OR $_SESSION['atype'] == '6') {
-			?>			
-			<h2><?= htmlspecialchars($t['staff_comms']) ?></h2>
-			
-			<?php
-			// Construct SQL statement
-			$sql2 = "SELECT * FROM tbladminlog WHERE triageid = '$triageid' AND status = '1' ORDER BY id DESC";
-			//echo $sql;
-			
-			$result2 = mysqli_query($link,$sql2);
-			//List it
-			if(mysqli_num_rows($result2)>0) {
-			?>
-			<dl>
-				<?php
-				while($row2 = mysqli_fetch_array($result2)){
-					// Check if clientlname or clientfname is not empty
-					$dateadded = $row2['dateadded'];
-					$anotes = $row2['notes'];
-					$annotes = nl2br(htmlspecialchars($anotes));
-					$creatorid = $row2['creatorid'];
-					// Get the name of the user
-					$result3 = mysqli_query($link, "SELECT firstname, lastname FROM tblusers WHERE id = '$creatorid'");
-					$row3 = $result3 ? mysqli_fetch_assoc($result3) : null;
-					$cfname = $row3['firstname'] ?? '';
-					$clname = $row3['lastname'] ?? '';
-				?>
-				<dt><?php echo $dateadded ?><?php if($creatorid!=0 && ($cfname !== '' || $clname !== '')) {?> - <?php echo htmlspecialchars(trim($cfname . ' ' . $clname), ENT_QUOTES, 'UTF-8') ?><?php } ?><?php if ($canDeleteThisRequest) {?> <a class="wb-lbx lbx-modal" href="includes/delete-comms.php?t=a&id=<?php echo $row2['id'];?>&rid=<?php echo $triageid ?>"><span class="glyphicon glyphicon-trash"></span><span class="wb-inv"> <?= htmlspecialchars($t['delete_comment']) ?></span></a><?php } ?></dt>
-				<dd><?php echo $annotes ?></dd>
-				<?php } ?>
-			</dl>
-			<?php } else { ?>
-			<p><?= htmlspecialchars($t['no_comms']) ?></p>
-			<?php } ?>
-			<?php } ?>
 			<?php include 'includes/template/page-details.php'; ?>
 		</main>
 		<div class="image-preview" id="imagePreview" role="dialog" aria-modal="true" aria-labelledby="imagePreviewTitle" aria-hidden="true" data-opened-message="<?= htmlspecialchars($t['image_preview_opened'], ENT_QUOTES, 'UTF-8') ?>" style="display:none">
