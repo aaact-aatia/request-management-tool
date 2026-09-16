@@ -515,7 +515,7 @@ include 'includes/template/head.php';
 					<div class="col-md-6">
 						<div class="form-group">
 							<label for="catalogueid"><span class="field-name"><?php echo $t['catalogue_name']; ?>: <strong>(<?php echo $t['required']; ?>)</strong></span></label>
-							<select class="form-control full-width" id="catalogueid" name="catalogueid" onchange="ajax1(this.value)" required <?php echo $readonly ? 'disabled="disabled"' : ''; ?>>
+							<select class="form-control full-width" id="catalogueid" name="catalogueid" onchange="ajax1(this.value, 'edit')" required <?php echo $readonly ? 'disabled="disabled"' : ''; ?>>
 								<option value=""><?php echo $t['select_catalogue']; ?></option>
 								<?php foreach ($catalogueOptions as $option): ?>
 									<option value="<?php echo $option['id']; ?>" <?php echo ($row['catalogueid'] == $option['id']) ? 'selected' : ''; ?>>
@@ -531,7 +531,7 @@ include 'includes/template/head.php';
 							<?php if (mysqli_num_rows($services) > 0): ?>
 							<div class="form-group divservice">
 								<label for="serviceid"><span class="field-name"><?php echo $t['service_name']; ?>:</span></label>
-								<select class="form-control full-width" id="serviceid" name="serviceid" onchange="ajax2(this.value)" <?php echo $readonly ? 'disabled="disabled"' : ''; ?>>
+								<select class="form-control full-width" id="serviceid" name="serviceid" onchange="ajax2(this.value, 'edit')" <?php echo $readonly ? 'disabled="disabled"' : ''; ?>>
 									<option value=""><?php echo $t['select_service']; ?></option>
 									<?php while ($service = mysqli_fetch_assoc($services)): ?>
 										<option value="<?php echo $service['id']; ?>" <?php echo ($row['serviceid'] == $service['id']) ? 'selected' : ''; ?>>

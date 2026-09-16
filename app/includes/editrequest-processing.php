@@ -978,16 +978,16 @@ $feedbackFieldLabels = [
         'fr' => 'Membre assigne de l equipe AATIA',
     ],
     'catalogue_name' => [
-        'en' => 'Catalogue name',
-        'fr' => 'Nom du catalogue',
+        'en' => 'Service area',
+        'fr' => 'Domaine de service',
     ],
     'service_name' => [
-        'en' => 'Service name',
-        'fr' => 'Nom du service',
+        'en' => 'Service',
+        'fr' => 'Service',
     ],
     'subservice_name' => [
-        'en' => 'Sub-service name',
-        'fr' => 'Nom du sous-service',
+        'en' => 'Specific need',
+        'fr' => 'Besoin précis',
     ],
     'sprint_schedule' => [
         'en' => 'Sprint schedule',

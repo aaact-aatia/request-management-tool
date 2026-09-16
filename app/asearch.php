@@ -290,9 +290,9 @@ $lookupSearchName = static function (string $table, $id) use ($link, $nameField)
 	return (string) ($row[$nameField] ?? $id);
 };
 $addSearchCriterion($langFile['status'], !empty($_GET['statusid']) ? $lookupSearchName('tblstatus', $_GET['statusid']) : '');
-$addSearchCriterion($langFile['catalogue_name'], !empty($_GET['catalogueid']) ? $lookupSearchName('tblcatalogue', $_GET['catalogueid']) : '');
-$addSearchCriterion($langFile['service_name'], !empty($_GET['serviceid']) ? $lookupSearchName('tblservices', $_GET['serviceid']) : '');
-$addSearchCriterion($langFile['subservice_name'], !empty($_GET['subserviceid']) ? $lookupSearchName('tblsubservices', $_GET['subserviceid']) : '');
+$addSearchCriterion($langFile['asearch_service_area'], !empty($_GET['catalogueid']) ? $lookupSearchName('tblcatalogue', $_GET['catalogueid']) : '');
+$addSearchCriterion($langFile['asearch_service'], !empty($_GET['serviceid']) ? $lookupSearchName('tblservices', $_GET['serviceid']) : '');
+$addSearchCriterion($langFile['asearch_specific_need'], !empty($_GET['subserviceid']) ? $lookupSearchName('tblsubservices', $_GET['subserviceid']) : '');
 $searchModifyQuery = $_GET;
 unset($searchModifyQuery['searchsubmitted']);
 $searchModifyQuery['modify'] = '1';

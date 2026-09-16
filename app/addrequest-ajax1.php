@@ -13,9 +13,10 @@ $orderBy = ($lang === 'fr') ? 'namefr' : 'nameen';
 
 // Load language file for translations
 $translations = require("lang/{$lang}.php");
-$isSearchContext = ($_GET['context'] ?? '') === 'search';
-$serviceLabel = $isSearchContext ? $translations['asearch_service'] : ($translations['service_name'] ?? 'Service name:');
-$selectServiceLabel = $isSearchContext ? $translations['asearch_select_service'] : ($translations['select_service'] ?? 'Select a service name');
+$context = $_GET['context'] ?? '';
+$isClientFriendlyContext = in_array($context, ['edit', 'search'], true);
+$serviceLabel = $isClientFriendlyContext ? ($context === 'search' ? $translations['asearch_service'] : $translations['edit_service']) : ($translations['service_name'] ?? 'Service name:');
+$selectServiceLabel = $isClientFriendlyContext ? ($context === 'search' ? $translations['asearch_select_service'] : $translations['edit_select_service']) : ($translations['select_service'] ?? 'Select a service name');
 
 // Grab the catalogue id
 if(!empty($_GET['v1']))
@@ -41,7 +42,7 @@ else
 	if ($result && mysqli_num_rows($result) > 0) {
 	?>
 				<label for="serviceid"><span class="field-name"><?= htmlspecialchars($serviceLabel) ?></span></label>
-				<select class="form-control full-width" id="serviceid" name="serviceid" onchange="ajax2(this.value, '<?= $isSearchContext ? 'search' : '' ?>')">
+				<select class="form-control full-width" id="serviceid" name="serviceid" onchange="ajax2(this.value, '<?= htmlspecialchars($context, ENT_QUOTES, 'UTF-8') ?>')">
 					<option value=""><?= htmlspecialchars($selectServiceLabel) ?></option>
 					<?php 
 					while($row2 = mysqli_fetch_array($result)){

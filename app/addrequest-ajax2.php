@@ -13,9 +13,10 @@ $orderBy = ($lang === 'fr') ? 'namefr' : 'nameen';
 
 // Load language file for translations
 $translations = require("lang/{$lang}.php");
-$isSearchContext = ($_GET['context'] ?? '') === 'search';
-$subserviceLabel = $isSearchContext ? $translations['asearch_specific_need'] : ($translations['subservice_name'] ?? 'Sub-service name:');
-$selectSubserviceLabel = $isSearchContext ? $translations['asearch_select_specific_need'] : ($translations['select_subservice'] ?? 'Select a sub-service name');
+$context = $_GET['context'] ?? '';
+$isClientFriendlyContext = in_array($context, ['edit', 'search'], true);
+$subserviceLabel = $isClientFriendlyContext ? ($context === 'search' ? $translations['asearch_specific_need'] : $translations['edit_specific_need']) : ($translations['subservice_name'] ?? 'Sub-service name:');
+$selectSubserviceLabel = $isClientFriendlyContext ? ($context === 'search' ? $translations['asearch_select_specific_need'] : $translations['edit_select_specific_need']) : ($translations['select_subservice'] ?? 'Select a sub-service name');
 
 // Grab the service id
 if(!empty($_GET['v1']))
