@@ -45,12 +45,13 @@ require('includes/calculate-bdays.php');
 $nameColumn = ($_SESSION['lang'] === 'fr') ? 'namefr' : 'nameen';
 $effectiveAtype = (int)($_SESSION['atype'] ?? 0);
 $isAdministrativeAccount = rmt_has_admin_access();
+$isDirectorAccount = !$isAdministrativeAccount && $effectiveAtype === 6;
 $isEmployeeAccount = !$isAdministrativeAccount && $effectiveAtype === 5;
 $isTeamScopedAccount = !$isAdministrativeAccount && in_array($effectiveAtype, [3, 4], true);
 $showOtherTeamRequests = $isTeamScopedAccount && isset($_GET['show_other_team']) && $_GET['show_other_team'] === '1';
 $showTeamRequests = $isEmployeeAccount && isset($_GET['show_team']) && $_GET['show_team'] === '1';
-$showClosedRequests = ($isTeamScopedAccount || $isAdministrativeAccount || $isEmployeeAccount)
-	&& isset($_GET['show_closed']) && $_GET['show_closed'] === '1';
+$showClosedRequests = $isDirectorAccount || (($isTeamScopedAccount || $isAdministrativeAccount || $isEmployeeAccount)
+	&& isset($_GET['show_closed']) && $_GET['show_closed'] === '1');
 $selectedStatusValue = $_GET['status_filter_server'] ?? ($_GET['status_filter'] ?? '');
 $selectedStatus = 0;
 if (preg_match('/^status-(\d+)$/', (string)$selectedStatusValue, $statusMatch)) {
@@ -281,6 +282,7 @@ include 'includes/template/head.php';
 					
 					// Personal queues use the assigned worker; team queues use responsible team ownership.
 					$canViewRow = $isAdministrativeAccount
+						|| $isDirectorAccount
 						|| ($isTeamScopedAccount && ($showOtherTeamRequests || (!empty($tarraycontactid) && in_array((string)$tarraycontactid, $teamIds, true))))
 						|| ($isEmployeeAccount && ($showTeamRequests
 							? !empty($tarraycontactid) && in_array((string)$tarraycontactid, $teamIds, true)
