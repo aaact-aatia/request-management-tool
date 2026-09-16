@@ -183,6 +183,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Add default report dates ([142be99](https://github.com/aaact-aatia/request-management-tool/commit/142be9977ab272a297b3dfda7e73af7aa44cbee4))
 
+- Allow directors read-only request access ([9fbb057](https://github.com/aaact-aatia/request-management-tool/commit/9fbb05792612cf741d893790c7503e03470b20bb))
+
 
 ### Build
 
@@ -400,6 +402,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 - Regenerate CHANGELOG.md [skip ci] ([3c022c6](https://github.com/aaact-aatia/request-management-tool/commit/3c022c643317727fd2487a878c0f22f789d06503))
 
 - Regenerate CHANGELOG.md [skip ci] ([44df1e1](https://github.com/aaact-aatia/request-management-tool/commit/44df1e1f44e0a2bf94e0d1e940271546acbcb184))
+
+- Regenerate CHANGELOG.md [skip ci] ([e8a0eef](https://github.com/aaact-aatia/request-management-tool/commit/e8a0eefd07b27778255e881d17fabba360b0caef))
 
 
 ### Fixed
