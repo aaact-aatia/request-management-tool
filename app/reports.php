@@ -25,6 +25,9 @@ else{
 	$status = "";
 }
 
+$reportStartDate = date('Y-m-01');
+$reportEndDate = date('Y-m-d');
+
 // =============================================================================
 // PAGE FRONTMATTER - Define page metadata
 // =============================================================================
@@ -73,13 +76,13 @@ include 'includes/template/head.php';
 				<div class="col-xs-6">
 					<div class="form-group">
 						<label for="sdate"><span class="field-name"><?= htmlspecialchars($langFile['reports_start_date']) ?> <strong>(<?= htmlspecialchars($langFile['required']) ?>)</strong></span></label>
-						<input type="date" class="form-control" id="sdate" name="sdate" min="<?php echo date('Y-m-d', strtotime('-6 years'));?>" max="<?php echo date('Y-m-d');?>" required />
+						<input type="date" class="form-control" id="sdate" name="sdate" min="<?php echo date('Y-m-d', strtotime('-6 years'));?>" max="<?php echo date('Y-m-d');?>" value="<?= htmlspecialchars($reportStartDate) ?>" required />
 					</div>
 				</div>
 				<div class="col-xs-6">
 					<div class="form-group">
 						<label for="edate"><span class="field-name"><?= htmlspecialchars($langFile['reports_end_date']) ?> <strong>(<?= htmlspecialchars($langFile['required']) ?>)</strong></span></label>
-						<input type="date" class="form-control" id="edate" name="edate" min="<?php echo date('Y-m-d', strtotime('-6 years'));?>" max="<?php echo date('Y-m-d');?>" required />
+						<input type="date" class="form-control" id="edate" name="edate" min="<?php echo date('Y-m-d', strtotime('-6 years'));?>" max="<?php echo date('Y-m-d');?>" value="<?= htmlspecialchars($reportEndDate) ?>" required />
 					</div>
 				</div>
 			</div>
