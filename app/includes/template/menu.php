@@ -91,7 +91,7 @@ $menuLangStrings = $menu_text[$lang_code];
 			<ul class="list-inline menu" role="menubar">
 				<?php
 				if ($canSeeCoreNav) {
-					if ($isEmployee || $isTeamScopedAccount || $isGlobalOverviewAccount) { ?>
+					if ($isEmployee || $isTeamScopedAccount || $isGlobalOverviewAccount || $isDirector) { ?>
 						<li><a href="/requests.php?lang=<?= $lang_code ?>" class="item"><?= htmlspecialchars($menuLangStrings['overview']) ?></a></li>
 				<?php } else { ?>
 					<li><a href="#" class="item"><?= htmlspecialchars($menuLangStrings['overview']) ?></a>
