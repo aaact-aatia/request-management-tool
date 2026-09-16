@@ -179,6 +179,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Capture communication log language ([b429a62](https://github.com/aaact-aatia/request-management-tool/commit/b429a6259d37e4b9dfb0fb2ed6d33f39982e38de))
 
+- Clarify service hierarchy labels ([072df39](https://github.com/aaact-aatia/request-management-tool/commit/072df395577d0e5cb6f4574ce259a40800d48379))
+
 
 ### Build
 
@@ -392,6 +394,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 - Regenerate CHANGELOG.md [skip ci] ([038b7d0](https://github.com/aaact-aatia/request-management-tool/commit/038b7d0790eafbe06b4843a43c689a3b3cd78973))
 
 - Regenerate CHANGELOG.md [skip ci] ([68a9797](https://github.com/aaact-aatia/request-management-tool/commit/68a9797eef961a2c406ed4050292c2729a42e9ff))
+
+- Regenerate CHANGELOG.md [skip ci] ([3c022c6](https://github.com/aaact-aatia/request-management-tool/commit/3c022c643317727fd2487a878c0f22f789d06503))
 
 
 ### Fixed
@@ -615,6 +619,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 - Keep notification previews off CRUD success ([97a12d5](https://github.com/aaact-aatia/request-management-tool/commit/97a12d56c4c2d92ee016b2ba0ca61b4baad9668d))
 
 - Centralize privilege-based authorization ([fd9c488](https://github.com/aaact-aatia/request-management-tool/commit/fd9c48880efafae0189608569a177e457ee1b6f6))
+
+- Address service label review feedback ([87d4fb6](https://github.com/aaact-aatia/request-management-tool/commit/87d4fb6026353ece077e7d0fdec45badf53287a1))
 
 
 ### Other
