@@ -373,9 +373,9 @@ include 'includes/template/head.php';
 			<div class="row">
 				<div class="col-xs-12">
 					<div class="form-group">
-						<label for="catalogueid"><span class="field-name"><?= htmlspecialchars($langFile['catalogue_name']) ?></span></label>
-						<select class="form-control" id="catalogueid" name="catalogueid" onchange="ajax1(this.value)">
-							<option value=""><?= htmlspecialchars($langFile['select_catalogue']) ?></option>
+						<label for="catalogueid"><span class="field-name"><?= htmlspecialchars($langFile['asearch_service_area']) ?></span></label>
+						<select class="form-control" id="catalogueid" name="catalogueid" onchange="ajax1(this.value, 'search')">
+							<option value=""><?= htmlspecialchars($langFile['asearch_select_service_area']) ?></option>
 							<?php
 							$catalogueScopeFilter = '';
 							if ($isEmployeeAccount) {
