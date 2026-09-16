@@ -177,6 +177,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Unify request change log history ([a23f9d9](https://github.com/aaact-aatia/request-management-tool/commit/a23f9d95c9dd1ae12b3372cd9be5bb0a3091eb8a))
 
+- Capture communication log language ([b429a62](https://github.com/aaact-aatia/request-management-tool/commit/b429a6259d37e4b9dfb0fb2ed6d33f39982e38de))
+
 
 ### Build
 
@@ -388,6 +390,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 - Regenerate CHANGELOG.md [skip ci] ([024b5b5](https://github.com/aaact-aatia/request-management-tool/commit/024b5b521be12895507929af01a32ecda48377de))
 
 - Regenerate CHANGELOG.md [skip ci] ([038b7d0](https://github.com/aaact-aatia/request-management-tool/commit/038b7d0790eafbe06b4843a43c689a3b3cd78973))
+
+- Regenerate CHANGELOG.md [skip ci] ([68a9797](https://github.com/aaact-aatia/request-management-tool/commit/68a9797eef961a2c406ed4050292c2729a42e9ff))
 
 
 ### Fixed
