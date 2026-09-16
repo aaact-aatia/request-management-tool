@@ -181,6 +181,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Clarify service hierarchy labels ([072df39](https://github.com/aaact-aatia/request-management-tool/commit/072df395577d0e5cb6f4574ce259a40800d48379))
 
+- Add default report dates ([142be99](https://github.com/aaact-aatia/request-management-tool/commit/142be9977ab272a297b3dfda7e73af7aa44cbee4))
+
 
 ### Build
 
@@ -396,6 +398,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 - Regenerate CHANGELOG.md [skip ci] ([68a9797](https://github.com/aaact-aatia/request-management-tool/commit/68a9797eef961a2c406ed4050292c2729a42e9ff))
 
 - Regenerate CHANGELOG.md [skip ci] ([3c022c6](https://github.com/aaact-aatia/request-management-tool/commit/3c022c643317727fd2487a878c0f22f789d06503))
+
+- Regenerate CHANGELOG.md [skip ci] ([44df1e1](https://github.com/aaact-aatia/request-management-tool/commit/44df1e1f44e0a2bf94e0d1e940271546acbcb184))
 
 
 ### Fixed
