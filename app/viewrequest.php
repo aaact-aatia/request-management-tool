@@ -645,13 +645,18 @@ if(mysqli_num_rows($result)>0){
 		}
 ?>
 	<?php
-	$pageTitle = $t['page_title'] . $row['requestid'];
+		$requestDisplayTitle = implode(' - ', array_filter([
+			trim((string) ($row['requestid'] ?? '')),
+			trim((string) $servicename),
+			trim((string) ($row['title'] ?? '')),
+		], static fn (string $value): bool => $value !== ''));
+		$pageTitle = $requestDisplayTitle . $t['title_suffix'];
 	$pageDescription = '';
 	include 'includes/template/head.php';
 	include 'includes/template/header.php';
 	?>
 		<main role="main" property="mainContentOfPage" class="container">
-			<h1 property="name" id="wb-cont"><?= $t['page_title'] ?><?php echo $row['requestid'] ?></h1>
+				<h1 property="name" id="wb-cont"><?= htmlspecialchars($requestDisplayTitle, ENT_QUOTES, 'UTF-8') ?></h1>
 			
 			<?php 
 			if ($status == 'success') {
