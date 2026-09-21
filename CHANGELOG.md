@@ -407,6 +407,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Regenerate CHANGELOG.md [skip ci] ([385a28b](https://github.com/aaact-aatia/request-management-tool/commit/385a28b3a527eda0bb7f15b667471096f07d0a7f))
 
+- Regenerate CHANGELOG.md [skip ci] ([63b2a31](https://github.com/aaact-aatia/request-management-tool/commit/63b2a31adab4ff04a36559a8480877bbb044b4ee))
+
 
 ### Fixed
 
@@ -633,6 +635,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 - Address service label review feedback ([87d4fb6](https://github.com/aaact-aatia/request-management-tool/commit/87d4fb6026353ece077e7d0fdec45badf53287a1))
 
 - Include request title in details page heading ([2bc90a3](https://github.com/aaact-aatia/request-management-tool/commit/2bc90a3fed513a73527bd276320b35133a95bedd))
+
+- Allow future dates when resetting SLA timer ([7f67eb8](https://github.com/aaact-aatia/request-management-tool/commit/7f67eb8e8ba13650bee462ca6fdc8921fa5d28f5))
 
 
 ### Other
