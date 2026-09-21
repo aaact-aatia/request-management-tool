@@ -409,6 +409,10 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Regenerate CHANGELOG.md [skip ci] ([63b2a31](https://github.com/aaact-aatia/request-management-tool/commit/63b2a31adab4ff04a36559a8480877bbb044b4ee))
 
+- Regenerate CHANGELOG.md [skip ci] ([81fc845](https://github.com/aaact-aatia/request-management-tool/commit/81fc84514b87dffcb34be10e26f8dbe18a7ed33b))
+
+- Add manual smoke-test checklist (closes #80) ([3d4b940](https://github.com/aaact-aatia/request-management-tool/commit/3d4b940de47d57414fdc416fc3ab3ba8dc73a6da))
+
 
 ### Fixed
 
@@ -701,6 +705,8 @@ changes made to 1f25d2de91afa814dd49160085b2f76a39fa88a5. ([9bfaf79](https://git
 - Remove NSD/Smart IT ticket field and data ([a672b69](https://github.com/aaact-aatia/request-management-tool/commit/a672b6920dab93dc530917004a4e3e73902d2e3f))
 
 - Retire request source data ([4e8ff86](https://github.com/aaact-aatia/request-management-tool/commit/4e8ff860340dea6d92814076cb168153d0edcd52))
+
+- Retire unused request details endpoint (closes #83) ([560789f](https://github.com/aaact-aatia/request-management-tool/commit/560789fbbc478c3708d5d8c4fd1c5a1289cdf251))
 
 
 ### Testing
