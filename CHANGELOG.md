@@ -413,6 +413,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Add manual smoke-test checklist (closes #80) ([3d4b940](https://github.com/aaact-aatia/request-management-tool/commit/3d4b940de47d57414fdc416fc3ab3ba8dc73a6da))
 
+- Regenerate CHANGELOG.md [skip ci] ([0ef3efc](https://github.com/aaact-aatia/request-management-tool/commit/0ef3efc5f30460e3686a626c3588a1b40960fb5f))
+
 
 ### Fixed
 
@@ -641,6 +643,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 - Include request title in details page heading ([2bc90a3](https://github.com/aaact-aatia/request-management-tool/commit/2bc90a3fed513a73527bd276320b35133a95bedd))
 
 - Allow future dates when resetting SLA timer ([7f67eb8](https://github.com/aaact-aatia/request-management-tool/commit/7f67eb8e8ba13650bee462ca6fdc8921fa5d28f5))
+
+- Support team manager reporting ([eee6dda](https://github.com/aaact-aatia/request-management-tool/commit/eee6dda275aac6b0897b40c8444cc1b7f1b93f0a))
 
 
 ### Other
