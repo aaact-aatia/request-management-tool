@@ -405,6 +405,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Regenerate CHANGELOG.md [skip ci] ([e8a0eef](https://github.com/aaact-aatia/request-management-tool/commit/e8a0eefd07b27778255e881d17fabba360b0caef))
 
+- Regenerate CHANGELOG.md [skip ci] ([385a28b](https://github.com/aaact-aatia/request-management-tool/commit/385a28b3a527eda0bb7f15b667471096f07d0a7f))
+
 
 ### Fixed
 
@@ -629,6 +631,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 - Centralize privilege-based authorization ([fd9c488](https://github.com/aaact-aatia/request-management-tool/commit/fd9c48880efafae0189608569a177e457ee1b6f6))
 
 - Address service label review feedback ([87d4fb6](https://github.com/aaact-aatia/request-management-tool/commit/87d4fb6026353ece077e7d0fdec45badf53287a1))
+
+- Include request title in details page heading ([2bc90a3](https://github.com/aaact-aatia/request-management-tool/commit/2bc90a3fed513a73527bd276320b35133a95bedd))
 
 
 ### Other
