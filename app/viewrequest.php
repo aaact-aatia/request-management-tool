@@ -1174,7 +1174,7 @@ require_once __DIR__ . '/includes/csrf.php';
 						$sent = sendEmail($resolvedClientEmail, $templateId, json_encode($personalisation), ['recipientType' => 'client']);
 					}
 					// Internal notification to Lead and Manager
-					rmt_send_internal_notifications($link, (int) $triageid, (int) $tarraycontactid, (int) $serviceid, (int) $subserviceid, 'resolved', ['lead', 'manager'], $personalisation);
+					rmt_send_internal_notifications($link, (int) $triageid, (int) $tarraycontactid, (int) $serviceid, (int) $subserviceid, 'resolved', ['lead', 'manager'], $personalisation, (int) ($row['workerid'] ?? 0));
 					if ($sent) {
 						if ($surveyEnabled) {
 							$currentSurveySentCount = (int) ($row['cssurvey'] ?? 0);

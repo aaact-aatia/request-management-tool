@@ -575,12 +575,19 @@ function rmt_get_team_internal_recipients(mysqli $link, int $teamId, array $role
     }
 
     $leadId = (int) ($teamRow['team_lead_user_id'] ?? 0);
-    if (in_array('lead', $roles, true) && $leadId > 0) {
+
+    $employeeReportsToManager = false;
+    if ($workerId > 0) {
+        $workerReportingRow = rmt_db_fetch_one($link, 'SELECT manager_id FROM tblusers WHERE id = ? AND status = 1 LIMIT 1', 'i', [$workerId]);
+        $employeeReportsToManager = (int) ($workerReportingRow['manager_id'] ?? 0) > 0;
+    }
+
+    if (in_array('lead', $roles, true) && !$employeeReportsToManager && $leadId > 0) {
         $leadRow = rmt_db_fetch_one($link, "SELECT email FROM tblusers WHERE id = ? AND status = 1 LIMIT 1", 'i', [$leadId]);
         if (!empty($leadRow['email'])) {
             $emails[] = trim((string) $leadRow['email']);
         }
-    } elseif (in_array('lead', $roles, true)) {
+    } elseif (in_array('lead', $roles, true) && !$employeeReportsToManager) {
         $statement = rmt_db_execute($link, "SELECT email FROM tblusers WHERE atype = 4 AND status = 1 AND FIND_IN_SET(?, team) > 0", 'i', [$teamId]);
         $result = mysqli_stmt_get_result($statement);
         while ($leadRow = mysqli_fetch_assoc($result)) {

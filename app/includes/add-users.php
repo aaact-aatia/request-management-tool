@@ -33,6 +33,8 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	$email = strtolower(trim((string) ($_POST['email'] ?? '')));
 	$password = (string) ($_POST['password'] ?? '');
 	$accounttype = filter_var($_POST['accounttype'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 3, 'max_range' => 6]]);
+	$reportsToManager = !empty($_POST['reports_to_manager']);
+	$managerId = 0;
 	$isSuperuserRole = !empty($_POST['is_superuser_role']) ? 1 : 0;
 	$isAdminRole = !empty($_POST['is_admin_role']) ? 1 : 0;
 	if ($isSuperuserRole === 1) {
@@ -81,6 +83,20 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 		$noerror = true;
 	}
 
+	if ($accounttype !== 5) {
+		$reportsToManager = false;
+	} elseif ($reportsToManager) {
+		$teamId = (int) ($teamstring ?: 0);
+		$manager = $teamId > 0
+			? rmt_db_fetch_one($link, 'SELECT id FROM tblusers WHERE atype = 3 AND status = 1 AND FIND_IN_SET(?, team) > 0 ORDER BY firstname ASC, lastname ASC, id ASC LIMIT 1', 'i', [$teamId])
+			: null;
+		if ($manager === null) {
+			$noerror = true;
+		} else {
+			$managerId = (int) $manager['id'];
+		}
+	}
+
 	// If error detected send user back to modal dialog
 	if ($noerror) {
 		header("location:/users.php?lang={$lang_code}&status=failed"); 
@@ -101,9 +117,9 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	$hasAdminRoleColumn = rmt_db_column_exists($link, 'tblusers', 'is_admin');
 
 	$insertColumns = "firstname, lastname, email, password, atype, manager_id, team, status";
-	$placeholders = '?, ?, ?, ?, ?, NULL, ?, ?';
-	$types = 'ssssisi';
-	$params = [$firstname, $lastname, $email, $npassword, $accounttype, $teamstring, $status];
+	$placeholders = '?, ?, ?, ?, ?, ?, ?, ?';
+	$types = 'ssssiisi';
+	$params = [$firstname, $lastname, $email, $npassword, $accounttype, $managerId, $teamstring, $status];
 	if ($hasSuperRoleColumn) {
 		$insertColumns .= ', is_superuser';
 		$placeholders .= ', ?';
@@ -144,6 +160,8 @@ $translations = [
 		'email' => 'Email:',
 		'password' => 'Password:',
 		'account_type' => 'Role:',
+		'reports_to_manager' => 'Reports to manager',
+		'reports_to_manager_hint' => 'The employee reports to the manager assigned to their team. The team lead remains the fallback when this is not selected.',
 		'teams' => 'Team(s):',
 		'required' => '(required)',
 		'add_button' => 'Add',
@@ -165,6 +183,8 @@ $translations = [
 		'email' => 'Courriel:',
 		'password' => 'Mot de passe:',
 		'account_type' => 'Role:',
+		'reports_to_manager' => 'Relève du gestionnaire',
+		'reports_to_manager_hint' => 'L’employé relève du gestionnaire affecté à son équipe. Le chef d’équipe demeure la personne par défaut si cette option n’est pas sélectionnée.',
 		'teams' => 'Équipe(s):',
 		'required' => '(requis)',
 		'add_button' => 'Ajouter',
@@ -257,6 +277,13 @@ $t = $translations[$lang_code];
 				?>
 				</ul>
 			</fieldset>
+		</div>
+		<div class="form-group gc-chckbxrdio">
+			<div class="checkbox">
+				<input type="checkbox" id="reports-to-manager" name="reports_to_manager" value="1">
+				<label for="reports-to-manager"><?= htmlspecialchars($t['reports_to_manager']) ?></label>
+			</div>
+			<p class="small"><?= htmlspecialchars($t['reports_to_manager_hint']) ?></p>
 		</div>
 		<div class="form-group form-buttons">
 			<button type="submit" class="btn btn-default"><?= htmlspecialchars($t['add_button']) ?></button>
