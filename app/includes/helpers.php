@@ -552,6 +552,68 @@ function rmt_get_active_teams(mysqli $link): array {
  * @param int $workerId Optional worker/assignee user ID
  * @return array Array of unique, valid email addresses
  */
+function rmt_get_reporting_manager_email(mysqli $link, int $workerId, int $teamId = 0): ?string {
+    if ($workerId <= 0) {
+        return null;
+    }
+
+    $workerRow = rmt_db_fetch_one($link, 'SELECT manager_id, team FROM tblusers WHERE id = ? AND status = 1 LIMIT 1', 'i', [$workerId]);
+    if ($workerRow === null) {
+        return null;
+    }
+
+    $managerId = (int) ($workerRow['manager_id'] ?? 0);
+    if ($managerId <= 0) {
+        return null;
+    }
+
+    $effectiveTeamId = $teamId > 0 ? $teamId : (int) ($workerRow['team'] ?? 0);
+    if ($effectiveTeamId <= 0) {
+        return null;
+    }
+
+    $managerRow = rmt_db_fetch_one(
+        $link,
+        'SELECT email FROM tblusers WHERE id = ? AND atype = 3 AND status = 1 AND FIND_IN_SET(?, team) > 0 LIMIT 1',
+        'ii',
+        [$managerId, $effectiveTeamId]
+    );
+    if ($managerRow === null) {
+        return null;
+    }
+
+    $email = trim((string) ($managerRow['email'] ?? ''));
+    return $email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL) !== false ? $email : null;
+}
+
+function rmt_filter_notification_recipients_by_manager(array $recipients, array $managerEmails, bool $reportsToManager = false): array {
+    if (!$reportsToManager || empty($managerEmails)) {
+        return $recipients;
+    }
+
+    $allowed = [];
+    foreach ($managerEmails as $email) {
+        $normalized = strtolower(trim((string) $email));
+        if ($normalized !== '') {
+            $allowed[] = $normalized;
+        }
+    }
+
+    if ($allowed === []) {
+        return $recipients;
+    }
+
+    $filtered = [];
+    foreach ($recipients as $email) {
+        $candidate = strtolower(trim((string) $email));
+        if ($candidate !== '' && in_array($candidate, $allowed, true)) {
+            $filtered[] = $email;
+        }
+    }
+
+    return array_values(array_unique($filtered));
+}
+
 function rmt_get_team_internal_recipients(mysqli $link, int $teamId, array $roles = ['team', 'lead', 'manager'], int $workerId = 0): array {
     $emails = [];
 
@@ -575,12 +637,8 @@ function rmt_get_team_internal_recipients(mysqli $link, int $teamId, array $role
     }
 
     $leadId = (int) ($teamRow['team_lead_user_id'] ?? 0);
-
-    $employeeReportsToManager = false;
-    if ($workerId > 0) {
-        $workerReportingRow = rmt_db_fetch_one($link, 'SELECT manager_id FROM tblusers WHERE id = ? AND status = 1 LIMIT 1', 'i', [$workerId]);
-        $employeeReportsToManager = (int) ($workerReportingRow['manager_id'] ?? 0) > 0;
-    }
+    $reportingManagerEmail = rmt_get_reporting_manager_email($link, $workerId, $teamId);
+    $employeeReportsToManager = $reportingManagerEmail !== null;
 
     if (in_array('lead', $roles, true) && !$employeeReportsToManager && $leadId > 0) {
         $leadRow = rmt_db_fetch_one($link, "SELECT email FROM tblusers WHERE id = ? AND status = 1 LIMIT 1", 'i', [$leadId]);
@@ -599,28 +657,36 @@ function rmt_get_team_internal_recipients(mysqli $link, int $teamId, array $role
     }
 
     if (in_array('manager', $roles, true)) {
-        $statement = rmt_db_execute($link, "SELECT email FROM tblusers WHERE atype = 3 AND status = 1 AND FIND_IN_SET(?, team) > 0", 'i', [$teamId]);
-        $result = mysqli_stmt_get_result($statement);
-        while ($mgrRow = mysqli_fetch_assoc($result)) {
-            if (!empty($mgrRow['email'])) {
-                $emails[] = trim((string) $mgrRow['email']);
+        if ($employeeReportsToManager && $reportingManagerEmail !== null) {
+            $emails[] = trim((string) $reportingManagerEmail);
+        } else {
+            $statement = rmt_db_execute($link, "SELECT email FROM tblusers WHERE atype = 3 AND status = 1 AND FIND_IN_SET(?, team) > 0", 'i', [$teamId]);
+            $result = mysqli_stmt_get_result($statement);
+            while ($mgrRow = mysqli_fetch_assoc($result)) {
+                if (!empty($mgrRow['email'])) {
+                    $emails[] = trim((string) $mgrRow['email']);
+                }
             }
-        }
-        mysqli_stmt_close($statement);
+            mysqli_stmt_close($statement);
 
-        $targetUserIds = array_filter([$leadId, $workerId]);
-        foreach ($targetUserIds as $uId) {
-            if ($uId > 0) {
-                $uRow = rmt_db_fetch_one($link, "SELECT manager_id FROM tblusers WHERE id = ? AND status = 1 LIMIT 1", 'i', [$uId]);
-                $mgrId = (int) ($uRow['manager_id'] ?? 0);
-                if ($mgrId > 0) {
-                    $mgrUserRow = rmt_db_fetch_one($link, "SELECT email FROM tblusers WHERE id = ? AND status = 1 LIMIT 1", 'i', [$mgrId]);
-                    if (!empty($mgrUserRow['email'])) {
-                        $emails[] = trim((string) $mgrUserRow['email']);
+            $targetUserIds = array_filter([$leadId, $workerId]);
+            foreach ($targetUserIds as $uId) {
+                if ($uId > 0) {
+                    $uRow = rmt_db_fetch_one($link, "SELECT manager_id FROM tblusers WHERE id = ? AND status = 1 LIMIT 1", 'i', [$uId]);
+                    $mgrId = (int) ($uRow['manager_id'] ?? 0);
+                    if ($mgrId > 0) {
+                        $mgrUserRow = rmt_db_fetch_one($link, "SELECT email FROM tblusers WHERE id = ? AND status = 1 LIMIT 1", 'i', [$mgrId]);
+                        if (!empty($mgrUserRow['email'])) {
+                            $emails[] = trim((string) $mgrUserRow['email']);
+                        }
                     }
                 }
             }
         }
+    }
+
+    if ($employeeReportsToManager && $reportingManagerEmail !== null) {
+        $emails = rmt_filter_notification_recipients_by_manager($emails, [$reportingManagerEmail], true);
     }
 
     if (in_array('assignee', $roles, true) && $workerId > 0) {
