@@ -586,27 +586,35 @@ function rmt_get_reporting_manager_email(mysqli $link, int $workerId, int $teamI
     return $email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL) !== false ? $email : null;
 }
 
-function rmt_filter_notification_recipients_by_manager(array $recipients, array $managerEmails, bool $reportsToManager = false): array {
+function rmt_filter_notification_recipients_by_manager(array $recipients, array $managerEmails, array $nonManagerRecipients = [], bool $reportsToManager = false): array {
     if (!$reportsToManager || empty($managerEmails)) {
         return $recipients;
     }
 
-    $allowed = [];
+    $allowedManagerEmails = [];
     foreach ($managerEmails as $email) {
         $normalized = strtolower(trim((string) $email));
         if ($normalized !== '') {
-            $allowed[] = $normalized;
+            $allowedManagerEmails[$normalized] = true;
         }
     }
 
-    if ($allowed === []) {
-        return $recipients;
+    $allowedNonManagerEmails = [];
+    foreach ($nonManagerRecipients as $email) {
+        $normalized = strtolower(trim((string) $email));
+        if ($normalized !== '') {
+            $allowedNonManagerEmails[$normalized] = true;
+        }
     }
 
     $filtered = [];
     foreach ($recipients as $email) {
         $candidate = strtolower(trim((string) $email));
-        if ($candidate !== '' && in_array($candidate, $allowed, true)) {
+        if ($candidate === '') {
+            continue;
+        }
+
+        if (isset($allowedNonManagerEmails[$candidate]) || isset($allowedManagerEmails[$candidate])) {
             $filtered[] = $email;
         }
     }
@@ -686,7 +694,15 @@ function rmt_get_team_internal_recipients(mysqli $link, int $teamId, array $role
     }
 
     if ($employeeReportsToManager && $reportingManagerEmail !== null) {
-        $emails = rmt_filter_notification_recipients_by_manager($emails, [$reportingManagerEmail], true);
+        $preservedNonManagerRecipients = array_values(array_unique(array_filter($emails, static function ($email) use ($reportingManagerEmail) {
+            return strtolower(trim((string) $email)) !== strtolower(trim((string) $reportingManagerEmail));
+        })));
+        $emails = rmt_filter_notification_recipients_by_manager(
+            $emails,
+            [$reportingManagerEmail],
+            $preservedNonManagerRecipients,
+            true
+        );
     }
 
     if (in_array('assignee', $roles, true) && $workerId > 0) {

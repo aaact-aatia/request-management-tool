@@ -179,10 +179,11 @@ class HelpersTest extends TestCase
         $result = rmt_filter_notification_recipients_by_manager(
             ['lead@example.com', 'manager-one@example.com', 'manager-two@example.com'],
             ['manager-one@example.com'],
+            ['lead@example.com'],
             true
         );
 
-        $this->assertSame(['manager-one@example.com'], $result);
+        $this->assertSame(['lead@example.com', 'manager-one@example.com'], $result);
     }
 
     public function testManagerRecipientFilteringFallsBackToTeamRecipientsWhenNoValidManagerIsSet(): void
@@ -190,6 +191,7 @@ class HelpersTest extends TestCase
         $result = rmt_filter_notification_recipients_by_manager(
             ['lead@example.com', 'manager-one@example.com', 'manager-two@example.com'],
             [],
+            ['lead@example.com', 'manager-one@example.com', 'manager-two@example.com'],
             false
         );
 
