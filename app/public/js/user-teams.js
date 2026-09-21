@@ -5,7 +5,7 @@
 (function () {
 	var accountType = document.getElementById('accounttype');
 	var teamBoxes = document.querySelectorAll('.team-option');
-	var managerSelect = document.getElementById('manager_id');
+	var reportsToManager = document.getElementById('reports-to-manager');
 	var userForm = document.querySelector('form[action="/includes/add-users.php"]');
 	var submitButton = userForm ? userForm.querySelector('button[type="submit"]') : null;
 	var busyStatus = userForm ? userForm.querySelector('[data-add-user-status]') : null;
@@ -16,30 +16,22 @@
 		var role = accountType.value;
 		var noTeamRoles = ['1', '2', '6'];
 		var singleTeamRoles = ['5'];
-		var managerRoles = ['4'];
+		var managerRoles = ['5'];
 
 		if (noTeamRoles.indexOf(role) !== -1) {
 			teamBoxes.forEach(function (cb) {
 				cb.checked = false;
 				cb.disabled = true;
 			});
-			if (managerSelect) {
-				managerSelect.value = '';
-				managerSelect.disabled = true;
-				managerSelect.required = false;
+			if (reportsToManager) {
+				reportsToManager.checked = false;
+				reportsToManager.disabled = true;
 			}
 			return;
 		}
 
-		if (managerSelect) {
-			if (managerRoles.indexOf(role) !== -1) {
-				managerSelect.disabled = false;
-				managerSelect.required = true;
-			} else {
-				managerSelect.value = '';
-				managerSelect.disabled = true;
-				managerSelect.required = false;
-			}
+		if (reportsToManager) {
+			reportsToManager.disabled = managerRoles.indexOf(role) === -1;
 		}
 
 		teamBoxes.forEach(function (cb) {

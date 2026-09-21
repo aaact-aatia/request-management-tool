@@ -212,10 +212,21 @@ include 'includes/template/head.php';
 				$showRelationship = true;
 
 				if ($userTypeId === 5) {
-					$relationshipLabel = ($_SESSION['lang'] === 'fr') ? 'Chef d\'équipe' : 'Team Lead';
-					$employeeTeamId = (int)($row['team'] ?? 0);
+					$relationshipLabel = ($_SESSION['lang'] === 'fr') ? 'Gestionnaire' : 'Manager';
 					$relationshipName = $unassignedText;
-					if ($employeeTeamId > 0) {
+					$managerId = (int)($row['manager_id'] ?? 0);
+					if ($managerId > 0) {
+						$managerResult = mysqli_query($link, "SELECT firstname, lastname FROM tblusers WHERE id='" . $managerId . "' AND status='1' LIMIT 1");
+						$managerRow = mysqli_fetch_assoc($managerResult);
+						if (!empty($managerRow)) {
+							$relationshipName = $managerRow['firstname'] . ' ' . $managerRow['lastname'];
+						}
+					}
+					if ($relationshipName === $unassignedText) {
+						$relationshipLabel = ($_SESSION['lang'] === 'fr') ? 'Chef d\'équipe' : 'Team Lead';
+					}
+					$employeeTeamId = (int)($row['team'] ?? 0);
+					if ($managerId === 0 && $employeeTeamId > 0) {
 						$leadLookup = mysqli_query($link, "SELECT u.firstname, u.lastname
 							FROM tblteams t
 							LEFT JOIN tblusers u ON u.id = t.team_lead_user_id

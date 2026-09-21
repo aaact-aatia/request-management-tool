@@ -40,6 +40,8 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	$password = (string) ($_POST['password'] ?? '');
 	$password2 = (string) ($_POST['password2'] ?? '');
 	$accounttype = filter_var($_POST['accounttype'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 3, 'max_range' => 6]]);
+	$reportsToManager = !empty($_POST['reports_to_manager']);
+	$managerId = 0;
 	$isSuperuserRole = !empty($_POST['is_superuser_role']) ? 1 : 0;
 	$isAdminRole = !empty($_POST['is_admin_role']) ? 1 : 0;
 	if ($isSuperuserRole === 1) {
@@ -101,6 +103,20 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	} else {
 		$noerror = true;
 	}
+
+	if ($accounttype !== 5) {
+		$reportsToManager = false;
+	} elseif ($reportsToManager) {
+		$teamId = (int) ($teamstring ?: 0);
+		$manager = $teamId > 0
+			? rmt_db_fetch_one($link, 'SELECT id FROM tblusers WHERE atype = 3 AND status = 1 AND FIND_IN_SET(?, team) > 0 ORDER BY firstname ASC, lastname ASC, id ASC LIMIT 1', 'i', [$teamId])
+			: null;
+		if ($manager === null || (int) $manager['id'] === $userid) {
+			$noerror = true;
+		} else {
+			$managerId = (int) $manager['id'];
+		}
+	}
 	
 	// If error detected send user back to modal dialog
 	if ($noerror) {
@@ -112,16 +128,16 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	}
 	
 	// Create SQL statement
-	$managerClause = "";
-	if (in_array($accounttype, [3, 5, 6], true)) {
-		$managerClause = ", `manager_id` = NULL";
-	}
 	$hasSuperRoleColumn = rmt_db_column_exists($link, 'tblusers', 'is_superuser');
 	$hasAdminRoleColumn = rmt_db_column_exists($link, 'tblusers', 'is_admin');
 	$setClauses = ['firstname = ?', 'lastname = ?', 'email = ?', 'atype = ?', 'team = ?'];
 	$types = 'sss is';
 	$params = [$firstname, $lastname, $email, $accounttype, $teamstring];
-	if ($managerClause !== '') {
+	if ($accounttype === 5) {
+		$setClauses[] = 'manager_id = ?';
+		$types .= 'i';
+		$params[] = $managerId > 0 ? $managerId : null;
+	} elseif (in_array($accounttype, [3, 6], true)) {
 		$setClauses[] = 'manager_id = NULL';
 	}
 	if ($password !== '') {
@@ -239,6 +255,13 @@ if ($existingUser) {
 					</li>
 				</ul>
 			</fieldset>
+		</div>
+		<div class="form-group gc-chckbxrdio">
+			<div class="checkbox">
+				<input type="checkbox" id="reports-to-manager" name="reports_to_manager" value="1"<?php echo !empty($row2['manager_id']) ? ' checked="checked"' : ''; ?> />
+				<label for="reports-to-manager"><?php echo htmlspecialchars($is_french ? 'Relève du gestionnaire' : 'Reports to manager'); ?></label>
+			</div>
+			<p class="small"><?php echo htmlspecialchars($is_french ? 'L’employé relève du gestionnaire affecté à son équipe. Le chef d’équipe demeure la personne par défaut si cette option n’est pas sélectionnée.' : 'The employee reports to the manager assigned to their team. The team lead remains the fallback when this is not selected.'); ?></p>
 		</div>
 		<div class="form-group">
 			<fieldset class="gc-chckbxrdio">
