@@ -725,7 +725,7 @@ include 'includes/template/head.php';
 								<label for="slatimer"><span class="field-name"><?php echo $t['reset_sla_timer']; ?>:</span></label>
 								<input type="date" class="form-control" id="slatimer" name="slatimer"
 									min="<?php echo date('Y-m-d', strtotime('-1 years')); ?>"
-									max="<?php echo date('Y-m-d'); ?>"
+									max="<?php echo date('Y-m-d', strtotime('+1 years')); ?>"
 									value="<?php echo htmlspecialchars($slatimerValue, ENT_QUOTES, 'UTF-8'); ?>" required />
 							</div>
 						<?php } else { ?>
