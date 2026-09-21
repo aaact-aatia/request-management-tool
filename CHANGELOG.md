@@ -415,6 +415,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Regenerate CHANGELOG.md [skip ci] ([0ef3efc](https://github.com/aaact-aatia/request-management-tool/commit/0ef3efc5f30460e3686a626c3588a1b40960fb5f))
 
+- Regenerate CHANGELOG.md [skip ci] ([dc28338](https://github.com/aaact-aatia/request-management-tool/commit/dc2833873b4276b7fe815f6b92f144aa09382eca))
+
 
 ### Fixed
 
@@ -645,6 +647,10 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 - Allow future dates when resetting SLA timer ([7f67eb8](https://github.com/aaact-aatia/request-management-tool/commit/7f67eb8e8ba13650bee462ca6fdc8921fa5d28f5))
 
 - Support team manager reporting ([eee6dda](https://github.com/aaact-aatia/request-management-tool/commit/eee6dda275aac6b0897b40c8444cc1b7f1b93f0a))
+
+- Preserve team lead fallback and limit manager notifications ([709d3ed](https://github.com/aaact-aatia/request-management-tool/commit/709d3ed7ff562e09c24f1482cdfbb1973b7a14a6))
+
+- Preserve explicit non-manager recipients ([688974e](https://github.com/aaact-aatia/request-management-tool/commit/688974ec1a85d90041d1eb5824b747d48226222a))
 
 
 ### Other
