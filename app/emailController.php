@@ -153,7 +153,6 @@ function sendEmail($emailAddress, $templateId, $personalisation, array $options 
 			CURLOPT_RETURNTRANSFER => true,
 			CURLOPT_ENCODING => '',
 			CURLOPT_MAXREDIRS => 10,
-			CURLOPT_TIMEOUT => 0,
 			CURLOPT_FOLLOWLOCATION => true,
 			CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
 			CURLOPT_CUSTOMREQUEST => 'POST',
@@ -164,7 +163,7 @@ function sendEmail($emailAddress, $templateId, $personalisation, array $options 
 			],
 		];
 
-		$curlOptions = array_replace($curlOptions, app_gcnotify_curl_tls_options());
+		$curlOptions = array_replace($curlOptions, app_gcnotify_curl_timeout_options(), app_gcnotify_curl_tls_options());
 
 		$curl = curl_init();
 		curl_setopt_array($curl, $curlOptions);
