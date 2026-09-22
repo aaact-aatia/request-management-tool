@@ -513,6 +513,7 @@ return [
     'notification_templates_event_request_aaact' => 'Needs AAACT triage',
     'notification_templates_event_status_changed' => 'Status/details updated',
     'notification_templates_event_reassigned' => 'Assigned',
+    'notification_templates_event_ownership_changed' => 'Team ownership updated',
     'notification_templates_event_resolved' => 'Resolved / closed',
     'notification_templates_edit_heading' => 'Edit notification template',
     'notification_templates_prefill_global_note' => 'This team has no override yet - showing the global default as a starting point. Saving will create a template specific to this team.',
