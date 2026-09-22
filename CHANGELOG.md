@@ -427,6 +427,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Regenerate CHANGELOG.md [skip ci] ([9e75b99](https://github.com/aaact-aatia/request-management-tool/commit/9e75b99c397748d870532bb6693744064f89fff2))
 
+- Regenerate CHANGELOG.md [skip ci] ([93af758](https://github.com/aaact-aatia/request-management-tool/commit/93af75806cf16b656fb5242dc42b5c66f365c86e))
+
 
 ### Fixed
 
@@ -673,6 +675,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 - Enforce a finite timeout on GC Notify requests (closes #153) ([5a507dc](https://github.com/aaact-aatia/request-management-tool/commit/5a507dc7b8268d403a04b6a2413e87b59a749463))
 
 - Pass GC Notify timeout variables into the web container ([bc192c3](https://github.com/aaact-aatia/request-management-tool/commit/bc192c3442af9dd838493efa0c7193fbb066391b))
+
+- Run PHPUnit suites through phpunit in run-tests.sh (closes #156) ([b00c0a7](https://github.com/aaact-aatia/request-management-tool/commit/b00c0a710684ce8cdf7295f8973e866b83df336f))
 
 
 ### Other
