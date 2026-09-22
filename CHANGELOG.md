@@ -185,6 +185,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Allow directors read-only request access ([9fbb057](https://github.com/aaact-aatia/request-management-tool/commit/9fbb05792612cf741d893790c7503e03470b20bb))
 
+- Notify team, lead, and manager when a client completes the survey ([c44263f](https://github.com/aaact-aatia/request-management-tool/commit/c44263ff9194e20c19c295f86099e97f03785ca4))
+
 
 ### Build
 
@@ -420,6 +422,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 - Regenerate CHANGELOG.md [skip ci] ([9ed13c4](https://github.com/aaact-aatia/request-management-tool/commit/9ed13c4b202a4b22349f330139db789c77c9f824))
 
 - Regenerate CHANGELOG.md [skip ci] ([6dd8fb6](https://github.com/aaact-aatia/request-management-tool/commit/6dd8fb66737dc4c2360e17c7920322bcd66481a4))
+
+- Regenerate CHANGELOG.md [skip ci] ([e4d29b9](https://github.com/aaact-aatia/request-management-tool/commit/e4d29b92d0cdcb3fd56a96501e718593970213d2))
 
 
 ### Fixed
@@ -659,6 +663,10 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 - Refine notification templates and recipients ([c3009f7](https://github.com/aaact-aatia/request-management-tool/commit/c3009f7b8e473f8d73adaca325323c44d47305cf))
 
 - Address notification review findings ([5a1d17e](https://github.com/aaact-aatia/request-management-tool/commit/5a1d17ea2e6dce6886c5d3d1aac5f85e451b1a75))
+
+- Omit survey paragraph when no survey link is available (closes #149) ([fe0585c](https://github.com/aaact-aatia/request-management-tool/commit/fe0585c6a6af06bcca505ab24ab254d059b388c5))
+
+- Keep team lead on survey completion notifications ([821392f](https://github.com/aaact-aatia/request-management-tool/commit/821392f888accc2e4c1466e8930d2f2905a33424))
 
 
 ### Other
