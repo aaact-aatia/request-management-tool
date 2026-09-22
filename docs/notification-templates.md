@@ -130,7 +130,7 @@ Transformation numérique Canada
 
 Employee messages include the request link so internal recipients can open the request after signing in.
 
-Assignment notifications are sent to the assigned employee and also produce a details-updated notification for the responsible team lead and manager. Status, resolved, closed, and cancelled updates are sent to the responsible team lead and manager.
+Assignment notifications are sent to the assigned employee and also produce a details-updated notification for the responsible team lead and manager. Status, resolved, closed, and cancelled updates are sent to the responsible team lead and manager. Resolved/closed notifications are also sent to the responsible team's email address.
 
 ### Request Created
 
@@ -210,13 +210,11 @@ Outil de gestion des demandes (OGD)
 
 ##### Subject
 
-Accessibility request `{{requestid}}` details updated
+Accessibility request `{{requestid}}` assigned to one of your staff
 
 ##### Message
 
-Details for accessibility request `{{requestid}}` have been updated.
-
-Please review the latest request details using the request link below.
+`{{requesttitle}}` has been assigned to `{{assignee}}` by `{{assigned_by}}`.
 
 View request: `{{url}}`
 
@@ -274,11 +272,11 @@ Outil de gestion des demandes (OGD)
 
 ##### Subject
 
-Status update for accessibility request `{{requestid}}`
+Status update for `{{requesttitle}}`
 
 ##### Message
 
-The status of request `{{requestid}}` has changed to `{{status_label}}`.
+The status of `{{requesttitle}}` has changed from `{{status_from}}` to `{{status_to}}` by `{{changed_by}}`.
 
 Please review the latest details using the request link below.
 
