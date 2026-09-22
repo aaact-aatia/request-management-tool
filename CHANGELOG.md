@@ -397,6 +397,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Regenerate CHANGELOG.md [skip ci] ([024b5b5](https://github.com/aaact-aatia/request-management-tool/commit/024b5b521be12895507929af01a32ecda48377de))
 
+- Add manual smoke-test checklist (closes #80) ([3d4b940](https://github.com/aaact-aatia/request-management-tool/commit/3d4b940de47d57414fdc416fc3ab3ba8dc73a6da))
+
 - Regenerate CHANGELOG.md [skip ci] ([038b7d0](https://github.com/aaact-aatia/request-management-tool/commit/038b7d0790eafbe06b4843a43c689a3b3cd78973))
 
 - Regenerate CHANGELOG.md [skip ci] ([68a9797](https://github.com/aaact-aatia/request-management-tool/commit/68a9797eef961a2c406ed4050292c2729a42e9ff))
@@ -413,8 +415,6 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Regenerate CHANGELOG.md [skip ci] ([81fc845](https://github.com/aaact-aatia/request-management-tool/commit/81fc84514b87dffcb34be10e26f8dbe18a7ed33b))
 
-- Add manual smoke-test checklist (closes #80) ([3d4b940](https://github.com/aaact-aatia/request-management-tool/commit/3d4b940de47d57414fdc416fc3ab3ba8dc73a6da))
-
 - Regenerate CHANGELOG.md [skip ci] ([0ef3efc](https://github.com/aaact-aatia/request-management-tool/commit/0ef3efc5f30460e3686a626c3588a1b40960fb5f))
 
 - Regenerate CHANGELOG.md [skip ci] ([dc28338](https://github.com/aaact-aatia/request-management-tool/commit/dc2833873b4276b7fe815f6b92f144aa09382eca))
@@ -424,6 +424,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 - Regenerate CHANGELOG.md [skip ci] ([6dd8fb6](https://github.com/aaact-aatia/request-management-tool/commit/6dd8fb66737dc4c2360e17c7920322bcd66481a4))
 
 - Regenerate CHANGELOG.md [skip ci] ([e4d29b9](https://github.com/aaact-aatia/request-management-tool/commit/e4d29b92d0cdcb3fd56a96501e718593970213d2))
+
+- Regenerate CHANGELOG.md [skip ci] ([9e75b99](https://github.com/aaact-aatia/request-management-tool/commit/9e75b99c397748d870532bb6693744064f89fff2))
 
 
 ### Fixed
@@ -668,6 +670,10 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Keep team lead on survey completion notifications ([821392f](https://github.com/aaact-aatia/request-management-tool/commit/821392f888accc2e4c1466e8930d2f2905a33424))
 
+- Enforce a finite timeout on GC Notify requests (closes #153) ([5a507dc](https://github.com/aaact-aatia/request-management-tool/commit/5a507dc7b8268d403a04b6a2413e87b59a749463))
+
+- Pass GC Notify timeout variables into the web container ([bc192c3](https://github.com/aaact-aatia/request-management-tool/commit/bc192c3442af9dd838493efa0c7193fbb066391b))
+
 
 ### Other
 
@@ -722,6 +728,8 @@ changes made to 1f25d2de91afa814dd49160085b2f76a39fa88a5. ([9bfaf79](https://git
 - Compact request change log details ([2ef5c9a](https://github.com/aaact-aatia/request-management-tool/commit/2ef5c9a91c074ffd50e48f32bcc00c0b2aebfde5))
 
 - Remove quick test request utility ([6ff0bc9](https://github.com/aaact-aatia/request-management-tool/commit/6ff0bc9ca02d2440459f9b7f3e2461f655e434d6))
+
+- Merge remote-tracking branch 'origin/main' into dev ([bc44cc7](https://github.com/aaact-aatia/request-management-tool/commit/bc44cc7e2e165d679d068c0fbcd8be2fdb11bbbc))
 
 
 ### Removed
