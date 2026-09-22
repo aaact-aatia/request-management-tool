@@ -175,6 +175,18 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Show client request details after submission ([2a92dec](https://github.com/aaact-aatia/request-management-tool/commit/2a92decb73c257686ef9a9cf8fbb383ad1231372))
 
+- Unify request change log history ([a23f9d9](https://github.com/aaact-aatia/request-management-tool/commit/a23f9d95c9dd1ae12b3372cd9be5bb0a3091eb8a))
+
+- Capture communication log language ([b429a62](https://github.com/aaact-aatia/request-management-tool/commit/b429a6259d37e4b9dfb0fb2ed6d33f39982e38de))
+
+- Clarify service hierarchy labels ([072df39](https://github.com/aaact-aatia/request-management-tool/commit/072df395577d0e5cb6f4574ce259a40800d48379))
+
+- Add default report dates ([142be99](https://github.com/aaact-aatia/request-management-tool/commit/142be9977ab272a297b3dfda7e73af7aa44cbee4))
+
+- Allow directors read-only request access ([9fbb057](https://github.com/aaact-aatia/request-management-tool/commit/9fbb05792612cf741d893790c7503e03470b20bb))
+
+- Notify team, lead, and manager when a client completes the survey ([c44263f](https://github.com/aaact-aatia/request-management-tool/commit/c44263ff9194e20c19c295f86099e97f03785ca4))
+
 
 ### Build
 
@@ -382,6 +394,36 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 - Regenerate CHANGELOG.md [skip ci] ([5431bff](https://github.com/aaact-aatia/request-management-tool/commit/5431bff5a74d4c170e6bfffcbb6fda14e17a5eec))
 
 - Regenerate CHANGELOG.md [skip ci] ([cc9bd89](https://github.com/aaact-aatia/request-management-tool/commit/cc9bd893fea70e1a2420ae0be4a8253ee8123bc2))
+
+- Regenerate CHANGELOG.md [skip ci] ([024b5b5](https://github.com/aaact-aatia/request-management-tool/commit/024b5b521be12895507929af01a32ecda48377de))
+
+- Regenerate CHANGELOG.md [skip ci] ([038b7d0](https://github.com/aaact-aatia/request-management-tool/commit/038b7d0790eafbe06b4843a43c689a3b3cd78973))
+
+- Regenerate CHANGELOG.md [skip ci] ([68a9797](https://github.com/aaact-aatia/request-management-tool/commit/68a9797eef961a2c406ed4050292c2729a42e9ff))
+
+- Regenerate CHANGELOG.md [skip ci] ([3c022c6](https://github.com/aaact-aatia/request-management-tool/commit/3c022c643317727fd2487a878c0f22f789d06503))
+
+- Regenerate CHANGELOG.md [skip ci] ([44df1e1](https://github.com/aaact-aatia/request-management-tool/commit/44df1e1f44e0a2bf94e0d1e940271546acbcb184))
+
+- Regenerate CHANGELOG.md [skip ci] ([e8a0eef](https://github.com/aaact-aatia/request-management-tool/commit/e8a0eefd07b27778255e881d17fabba360b0caef))
+
+- Regenerate CHANGELOG.md [skip ci] ([385a28b](https://github.com/aaact-aatia/request-management-tool/commit/385a28b3a527eda0bb7f15b667471096f07d0a7f))
+
+- Regenerate CHANGELOG.md [skip ci] ([63b2a31](https://github.com/aaact-aatia/request-management-tool/commit/63b2a31adab4ff04a36559a8480877bbb044b4ee))
+
+- Regenerate CHANGELOG.md [skip ci] ([81fc845](https://github.com/aaact-aatia/request-management-tool/commit/81fc84514b87dffcb34be10e26f8dbe18a7ed33b))
+
+- Add manual smoke-test checklist (closes #80) ([3d4b940](https://github.com/aaact-aatia/request-management-tool/commit/3d4b940de47d57414fdc416fc3ab3ba8dc73a6da))
+
+- Regenerate CHANGELOG.md [skip ci] ([0ef3efc](https://github.com/aaact-aatia/request-management-tool/commit/0ef3efc5f30460e3686a626c3588a1b40960fb5f))
+
+- Regenerate CHANGELOG.md [skip ci] ([dc28338](https://github.com/aaact-aatia/request-management-tool/commit/dc2833873b4276b7fe815f6b92f144aa09382eca))
+
+- Regenerate CHANGELOG.md [skip ci] ([9ed13c4](https://github.com/aaact-aatia/request-management-tool/commit/9ed13c4b202a4b22349f330139db789c77c9f824))
+
+- Regenerate CHANGELOG.md [skip ci] ([6dd8fb6](https://github.com/aaact-aatia/request-management-tool/commit/6dd8fb66737dc4c2360e17c7920322bcd66481a4))
+
+- Regenerate CHANGELOG.md [skip ci] ([e4d29b9](https://github.com/aaact-aatia/request-management-tool/commit/e4d29b92d0cdcb3fd56a96501e718593970213d2))
 
 
 ### Fixed
@@ -606,6 +648,26 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Centralize privilege-based authorization ([fd9c488](https://github.com/aaact-aatia/request-management-tool/commit/fd9c48880efafae0189608569a177e457ee1b6f6))
 
+- Address service label review feedback ([87d4fb6](https://github.com/aaact-aatia/request-management-tool/commit/87d4fb6026353ece077e7d0fdec45badf53287a1))
+
+- Include request title in details page heading ([2bc90a3](https://github.com/aaact-aatia/request-management-tool/commit/2bc90a3fed513a73527bd276320b35133a95bedd))
+
+- Allow future dates when resetting SLA timer ([7f67eb8](https://github.com/aaact-aatia/request-management-tool/commit/7f67eb8e8ba13650bee462ca6fdc8921fa5d28f5))
+
+- Support team manager reporting ([eee6dda](https://github.com/aaact-aatia/request-management-tool/commit/eee6dda275aac6b0897b40c8444cc1b7f1b93f0a))
+
+- Preserve team lead fallback and limit manager notifications ([709d3ed](https://github.com/aaact-aatia/request-management-tool/commit/709d3ed7ff562e09c24f1482cdfbb1973b7a14a6))
+
+- Preserve explicit non-manager recipients ([688974e](https://github.com/aaact-aatia/request-management-tool/commit/688974ec1a85d90041d1eb5824b747d48226222a))
+
+- Refine notification templates and recipients ([c3009f7](https://github.com/aaact-aatia/request-management-tool/commit/c3009f7b8e473f8d73adaca325323c44d47305cf))
+
+- Address notification review findings ([5a1d17e](https://github.com/aaact-aatia/request-management-tool/commit/5a1d17ea2e6dce6886c5d3d1aac5f85e451b1a75))
+
+- Omit survey paragraph when no survey link is available (closes #149) ([fe0585c](https://github.com/aaact-aatia/request-management-tool/commit/fe0585c6a6af06bcca505ab24ab254d059b388c5))
+
+- Keep team lead on survey completion notifications ([821392f](https://github.com/aaact-aatia/request-management-tool/commit/821392f888accc2e4c1466e8930d2f2905a33424))
+
 
 ### Other
 
@@ -670,6 +732,8 @@ changes made to 1f25d2de91afa814dd49160085b2f76a39fa88a5. ([9bfaf79](https://git
 
 - Retire request source data ([4e8ff86](https://github.com/aaact-aatia/request-management-tool/commit/4e8ff860340dea6d92814076cb168153d0edcd52))
 
+- Retire unused request details endpoint (closes #83) ([560789f](https://github.com/aaact-aatia/request-management-tool/commit/560789fbbc478c3708d5d8c4fd1c5a1289cdf251))
+
 
 ### Testing
 
@@ -680,5 +744,9 @@ changes made to 1f25d2de91afa814dd49160085b2f76a39fa88a5. ([9bfaf79](https://git
 - Align helpers with unified bilingual routes ([c58da19](https://github.com/aaact-aatia/request-management-tool/commit/c58da19ed2d7c0aa692ec452b48a48acb1713eaa))
 
 - Enforce explicit employee role-test access ([3648f06](https://github.com/aaact-aatia/request-management-tool/commit/3648f069a97631fa82f82416faa42abb519ddf34))
+
+- Cover unrecognized intake departments ([46dc2b3](https://github.com/aaact-aatia/request-management-tool/commit/46dc2b3b44c7cd2eef1cff09962b0b4130a0d05d))
+
+- Assert intake review warning association ([418b026](https://github.com/aaact-aatia/request-management-tool/commit/418b026d206428bec4aa909e402c28f0e6da790d))
 
 
