@@ -204,6 +204,36 @@ Voir la demande : `{{url}}`
 
 Outil de gestion des demandes (OGD)
 
+### Ownership Updated
+
+#### English
+
+##### Subject
+
+Responsible team updated for accessibility request `{{requestid}}`
+
+##### Message
+
+The responsible team for accessibility request `{{requestid}}` has been updated.
+
+View request: `{{url}}`
+
+Request Management Tool (RMT)
+
+#### French
+
+##### Subject
+
+Équipe responsable mise à jour pour la demande d'accessibilité `{{requestid}}`
+
+##### Message
+
+L'équipe responsable de la demande d'accessibilité `{{requestid}}` a été mise à jour.
+
+Voir la demande : `{{url}}`
+
+Outil de gestion des demandes (OGD)
+
 ### Details Updated
 
 #### English
@@ -288,11 +318,11 @@ Request Management Tool (RMT)
 
 ##### Subject
 
-Mise à jour du statut de la demande `{{requestid}}`
+Mise à jour du statut de la demande `{{requesttitle}}`
 
 ##### Message
 
-Le statut de la demande `{{requestid}}` a changé pour `{{status_label}}`.
+Le statut de `{{requesttitle}}` est passé de `{{status_from}}` à `{{status_to}}`, par `{{changed_by}}`.
 
 Veuillez consulter les derniers détails en utilisant le lien ci-dessous.
 
@@ -395,6 +425,9 @@ Outil de gestion des demandes (OGD)
 - `{{catalogue_name}}`: Catalogue or topic name
 - `{{service_name}}`: Service name
 - `{{status_label}}`: Current status label
+- `{{status_from}}`: Previous status label
+- `{{status_to}}`: New status label
+- `{{changed_by}}`: Person who changed the status
 - `{{client_fname}}`: Client first name
 - `{{client_lname}}`: Client last name
 - `{{url}}`: Employee request link

@@ -70,6 +70,7 @@ const EXPECTED_TEMPLATES = [
     'employee' => [
         'request_created' => ['en', 'fr'],
         'details_updated' => ['en', 'fr'],
+        'ownership_changed' => ['en', 'fr'],
         'reassigned' => ['en', 'fr'],
         'resolved' => ['en', 'fr'],
         'status_changed' => ['en', 'fr'],
@@ -83,6 +84,7 @@ const EVENT_MAP = [
     'assigned' => 'reassigned',
     'reassigned' => 'reassigned',
     'details updated' => 'details_updated',
+    'ownership updated' => 'ownership_changed',
     'status / details updated' => 'status_changed',
 ];
 

@@ -1309,6 +1309,7 @@ function rmt_notification_template_category(string $event): array {
         case 'status_changed':
         case 'resolved':
         case 'reassigned':
+        case 'ownership_changed':
             return [
                 'id' => '55eb1137-6dc6-4094-9031-f61124a279dc', // Status update
                 'name_en' => 'Status update',
@@ -1378,6 +1379,11 @@ function rmt_notification_subject_single_language(string $event, string $recipie
             return $subjectPrefix . ($isFrench
                 ? 'Mise à jour du statut de la demande ' . $requestId . (!empty($statusLabel) ? ' - ' . $statusLabel : '')
                 : 'Status update for accessibility request ' . $requestId . (!empty($statusLabel) ? ' - ' . $statusLabel : ''));
+
+        case 'ownership_changed':
+            return $subjectPrefix . ($isFrench
+                ? 'Équipe responsable mise à jour pour la demande d\'accessibilité ' . $requestId
+                : 'Responsible team updated for accessibility request ' . $requestId);
 
         case 'reassigned':
             if ($isClient) {
