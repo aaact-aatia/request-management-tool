@@ -198,6 +198,24 @@ class HelpersTest extends TestCase
         $this->assertSame(['lead@example.com', 'manager-one@example.com', 'manager-two@example.com'], $result);
     }
 
+    public function testResolvedTemplateOmitsSurveyParagraphWhenNoSurveyLinkIsAvailable(): void
+    {
+        $template = "Request resolved.\n\nPlease complete the survey: {{survey_link_en}}\n\nThank you.";
+
+        $rendered = rmt_notification_render_template($template, [], 'en', 'client');
+
+        $this->assertSame("Request resolved.\n\nThank you.", $rendered);
+    }
+
+    public function testResolvedTemplateKeepsSurveyParagraphWhenSurveyLinkIsAvailable(): void
+    {
+        $template = "Request resolved.\n\nPlease complete the survey: {{survey_link_en}}\n\nThank you.";
+
+        $rendered = rmt_notification_render_template($template, ['survey_link_en' => 'https://example.test/survey'], 'en', 'client');
+
+        $this->assertSame("Request resolved.\n\nPlease complete the survey: https://example.test/survey\n\nThank you.", $rendered);
+    }
+
     // ========================================================================
     // DATE HELPER TESTS
     // ========================================================================

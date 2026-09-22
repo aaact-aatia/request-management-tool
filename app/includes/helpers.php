@@ -1310,6 +1310,7 @@ function rmt_notification_template_category(string $event): array {
         case 'resolved':
         case 'reassigned':
         case 'ownership_changed':
+        case 'survey_completed':
             return [
                 'id' => '55eb1137-6dc6-4094-9031-f61124a279dc', // Status update
                 'name_en' => 'Status update',
@@ -1385,6 +1386,11 @@ function rmt_notification_subject_single_language(string $event, string $recipie
                 ? 'Équipe responsable mise à jour pour la demande d\'accessibilité ' . $requestId
                 : 'Responsible team updated for accessibility request ' . $requestId);
 
+        case 'survey_completed':
+            return $subjectPrefix . ($isFrench
+                ? 'Réponse au sondage reçue pour la demande d\'accessibilité ' . $requestId
+                : 'Survey response received for accessibility request ' . $requestId);
+
         case 'reassigned':
             if ($isClient) {
                 return $subjectPrefix . ($isFrench
@@ -1437,6 +1443,8 @@ function rmt_notification_message_single_language(string $event, string $recipie
         ? ($context['status_fr'] ?? ($context['status_label'] ?? ''))
         : ($context['status_en'] ?? ($context['status_label'] ?? ''));
     $statusLabel = rmt_notification_escape((string) $statusLabelRaw);
+    $surveyOverall = rmt_notification_escape((string) ($context['survey_overall'] ?? ''));
+    $surveyResponse = rmt_notification_escape((string) ($context['survey_response'] ?? ''));
     $recipientPrefix = '';
     $requestUrl = trim((string) ($context['url'] ?? ''));
     $surveyLink = trim((string) ($isFrench ? ($context['survey_link_fr'] ?? '') : ($context['survey_link_en'] ?? '')));
@@ -1562,6 +1570,24 @@ function rmt_notification_message_single_language(string $event, string $recipie
             ] : [
                 $recipientPrefix . 'The status of request ' . $requestId . ' has changed to ' . $statusLabel . '.',
                 'Please review the latest details using the request link below.',
+            ]);
+
+        case 'ownership_changed':
+            return $withLink($isFrench ? [
+                $recipientPrefix . 'L\'équipe responsable de la demande d\'accessibilité ' . $requestId . ' a été mise à jour.',
+            ] : [
+                $recipientPrefix . 'The responsible team for accessibility request ' . $requestId . ' has been updated.',
+            ]);
+
+        case 'survey_completed':
+            return $withLink($isFrench ? [
+                $recipientPrefix . 'Un client a rempli le sondage de satisfaction pour la demande d\'accessibilité ' . $requestId . '.',
+                'Satisfaction globale : ' . $surveyOverall . ' sur 10',
+                'Délai de réponse : ' . $surveyResponse . ' sur 10',
+            ] : [
+                $recipientPrefix . 'A client has completed the satisfaction survey for accessibility request ' . $requestId . '.',
+                'Overall satisfaction: ' . $surveyOverall . ' out of 10',
+                'Response time: ' . $surveyResponse . ' out of 10',
             ]);
 
         case 'reassigned':

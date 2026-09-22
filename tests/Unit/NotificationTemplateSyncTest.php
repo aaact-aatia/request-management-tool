@@ -58,7 +58,7 @@ class NotificationTemplateSyncTest extends TestCase
         $validation = validate_templates($templates);
 
         $this->assertTrue($validation['valid'], 'Validation failed with errors: ' . implode(', ', $validation['errors']));
-        $this->assertEquals(14, $validation['total']);
+        $this->assertEquals(18, $validation['total']);
         $this->assertEmpty($validation['errors']);
     }
 

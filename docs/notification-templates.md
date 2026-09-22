@@ -130,7 +130,7 @@ Transformation numérique Canada
 
 Employee messages include the request link so internal recipients can open the request after signing in.
 
-Assignment notifications are sent to the assigned employee and also produce a details-updated notification for the responsible team lead and manager. Status, resolved, closed, and cancelled updates are sent to the responsible team lead and manager. Resolved/closed notifications are also sent to the responsible team's email address.
+Assignment notifications are sent to the assigned employee and also produce a details-updated notification for the responsible team lead and manager. Status, resolved, closed, and cancelled updates are sent to the responsible team lead and manager. Resolved/closed notifications are also sent to the responsible team's email address. When a client submits the satisfaction survey, a survey-completed notification is sent to the responsible team's email address, team lead, and manager.
 
 ### Request Created
 
@@ -330,6 +330,42 @@ Voir la demande : `{{url}}`
 
 Outil de gestion des demandes (OGD)
 
+### Survey Completed
+
+#### English
+
+##### Subject
+
+Survey response received for `{{requesttitle}}`
+
+##### Message
+
+A client has completed the satisfaction survey for accessibility request `{{requestid}}`.
+
+Overall satisfaction: `{{survey_overall}}` out of 10
+Response time: `{{survey_response}}` out of 10
+
+View request: `{{url}}`
+
+Request Management Tool (RMT)
+
+#### French
+
+##### Subject
+
+Réponse au sondage reçue pour `{{requesttitle}}`
+
+##### Message
+
+Un client a rempli le sondage de satisfaction pour la demande d'accessibilité `{{requestid}}`.
+
+Satisfaction globale : `{{survey_overall}}` sur 10
+Délai de réponse : `{{survey_response}}` sur 10
+
+Voir la demande : `{{url}}`
+
+Outil de gestion des demandes (OGD)
+
 ## Special Internal Routing Messages
 
 These messages are internal routing notifications. They are not part of the editable client and employee template set.
@@ -428,6 +464,8 @@ Outil de gestion des demandes (OGD)
 - `{{status_from}}`: Previous status label
 - `{{status_to}}`: New status label
 - `{{changed_by}}`: Person who changed the status
+- `{{survey_overall}}`: Survey overall satisfaction rating out of 10
+- `{{survey_response}}`: Survey response time rating out of 10
 - `{{client_fname}}`: Client first name
 - `{{client_lname}}`: Client last name
 - `{{url}}`: Employee request link

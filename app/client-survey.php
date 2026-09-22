@@ -7,6 +7,8 @@
 // Grab MySQL connection (includes session management)
 require('sql.php');
 /** @var mysqli $link */
+require('includes/helpers.php');
+require('emailController.php');
 
 // Handle language from query string or session
 if (isset($_GET['lang']) && in_array($_GET['lang'], ['en', 'fr'])) {
@@ -78,6 +80,51 @@ function rmt_get_survey_team_contact(mysqli $link, int $requestId, string $langu
 	return $fallback;
 }
 
+/**
+ * Notify the responsible team, lead, and manager that a client completed the survey.
+ */
+function rmt_notify_survey_completed(mysqli $link, int $requestId, int $overall, int $responseRating): void {
+	$request = rmt_db_fetch_one(
+		$link,
+		'SELECT requestid, title, catalogueid, serviceid, subserviceid, requestlang FROM tbltriage WHERE id = ? LIMIT 1',
+		'i',
+		[$requestId]
+	);
+	if ($request === null) {
+		return;
+	}
+
+	$publicRequestId = (string) ($request['requestid'] ?? '');
+	$requestLanguage = app_normalize_language((string) ($request['requestlang'] ?? 'en'));
+	$teamId = rmt_resolve_responsible_team_id(
+		$link,
+		(int) ($request['catalogueid'] ?? 0),
+		(int) ($request['serviceid'] ?? 0),
+		(int) ($request['subserviceid'] ?? 0)
+	);
+
+	$personalisation = [
+		'requestid' => $publicRequestId,
+		'requesttitle' => (string) ($request['title'] ?? ''),
+		'survey_overall' => (string) $overall,
+		'survey_response' => (string) $responseRating,
+		'url' => app_url('viewrequest.php?lang=' . $requestLanguage . '&erid=' . base64_encode((string) $requestId) . '&reqid=' . urlencode('a11y-' . $publicRequestId)),
+	];
+
+	rmt_send_internal_notifications(
+		$link,
+		$requestId,
+		$teamId,
+		(int) ($request['serviceid'] ?? 0),
+		(int) ($request['subserviceid'] ?? 0),
+		'survey_completed',
+		['team', 'lead', 'manager'],
+		$personalisation,
+		// A worker ID would route to that worker's reporting manager and drop the team lead.
+		0
+	);
+}
+
 // Process the add product form
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
@@ -138,6 +185,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 		}
 
 		mysqli_commit($link);
+
+		// A notification failure must not block the client's confirmation page.
+		try {
+			rmt_notify_survey_completed($link, $requestid, (int) $overall, (int) $response);
+		} catch (Throwable $notificationError) {
+			error_log('Survey completion notification failed: ' . $notificationError->getMessage());
+		}
+
 		header('Location: ' . app_url('client-survey-thank-you.php?lang=' . urlencode($_SESSION['lang'])));
 		exit();
 	} catch (Throwable $e) {

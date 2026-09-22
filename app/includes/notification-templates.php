@@ -22,7 +22,7 @@ function rmt_notification_events_for_audience(string $audience): array {
     }
 
     if ($audience === 'employee') {
-        return ['request_created', 'details_updated', 'ownership_changed', 'status_changed', 'reassigned', 'resolved'];
+        return ['request_created', 'details_updated', 'ownership_changed', 'status_changed', 'reassigned', 'resolved', 'survey_completed'];
     }
 
     return [];
@@ -111,6 +111,8 @@ function rmt_notification_placeholder_catalog(): array {
         ['token' => 'status_label', 'en' => 'Status label', 'fr' => 'Libelle du statut'],
         ['token' => 'status_from', 'en' => 'Previous status', 'fr' => 'Statut precedent'],
         ['token' => 'status_to', 'en' => 'New status', 'fr' => 'Nouveau statut'],
+        ['token' => 'survey_overall', 'en' => 'Survey overall satisfaction rating', 'fr' => 'Note de satisfaction globale du sondage'],
+        ['token' => 'survey_response', 'en' => 'Survey response time rating', 'fr' => 'Note du delai de reponse du sondage'],
         ['token' => 'client_fname', 'en' => 'Client first name', 'fr' => 'Prenom du client'],
         ['token' => 'client_lname', 'en' => 'Client last name', 'fr' => 'Nom de famille du client'],
         ['token' => 'url', 'en' => 'Link to the request', 'fr' => 'Lien vers la demande'],
@@ -124,6 +126,25 @@ function rmt_notification_placeholder_catalog(): array {
  */
 function rmt_notification_render_template(string $template, array $context, string $language, string $recipientType = 'general'): string {
     $language = app_normalize_language($language);
+
+    $paragraphs = preg_split('/\n\s*\n/', $template);
+    if (is_array($paragraphs)) {
+        $availableSurveyTokens = [];
+        foreach (['en', 'fr'] as $surveyLanguage) {
+            $surveyToken = 'survey_link_' . $surveyLanguage;
+            if (!empty($context[$surveyToken])) {
+                $availableSurveyTokens[] = $surveyToken;
+            }
+        }
+
+        $template = implode("\n\n", array_values(array_filter($paragraphs, static function (string $paragraph) use ($availableSurveyTokens): bool {
+            if (!preg_match('/\{\{\s*(survey_link_en|survey_link_fr)\s*\}\}/i', $paragraph, $matches)) {
+                return true;
+            }
+
+            return in_array(strtolower($matches[1]), $availableSurveyTokens, true);
+        })));
+    }
 
     return preg_replace_callback('/\{\{\s*([a-z_]+)\s*\}\}/i', static function (array $matches) use ($context, $language): string {
         $token = strtolower($matches[1]);
