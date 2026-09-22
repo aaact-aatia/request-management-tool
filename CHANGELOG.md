@@ -419,6 +419,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Regenerate CHANGELOG.md [skip ci] ([9ed13c4](https://github.com/aaact-aatia/request-management-tool/commit/9ed13c4b202a4b22349f330139db789c77c9f824))
 
+- Regenerate CHANGELOG.md [skip ci] ([6dd8fb6](https://github.com/aaact-aatia/request-management-tool/commit/6dd8fb66737dc4c2360e17c7920322bcd66481a4))
+
 
 ### Fixed
 
@@ -655,6 +657,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 - Preserve explicit non-manager recipients ([688974e](https://github.com/aaact-aatia/request-management-tool/commit/688974ec1a85d90041d1eb5824b747d48226222a))
 
 - Refine notification templates and recipients ([c3009f7](https://github.com/aaact-aatia/request-management-tool/commit/c3009f7b8e473f8d73adaca325323c44d47305cf))
+
+- Address notification review findings ([5a1d17e](https://github.com/aaact-aatia/request-management-tool/commit/5a1d17ea2e6dce6886c5d3d1aac5f85e451b1a75))
 
 
 ### Other
