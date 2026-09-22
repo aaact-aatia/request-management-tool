@@ -221,6 +221,17 @@ class HelpersTest extends TestCase
         $this->assertSame("Request resolved.\n\nPlease complete the survey: https://example.test/survey\n\nThank you.", $rendered);
     }
 
+    public function testResolvedNotificationsUseTheRequestLanguage(): void
+    {
+        $context = ['requestid' => 'a11y-123'];
+
+        $subject = rmt_notification_subject('resolved', 'client', 'fr', $context);
+        $message = rmt_notification_message('resolved', 'client', 'fr', $context);
+
+        $this->assertStringContainsString('Votre demande d\'accessibilité a11y-123 a été résolue', $subject);
+        $this->assertStringContainsString('Votre demande a11y-123 a été résolue', $message);
+    }
+
     public function testGcNotifyTimeoutOptionsUseFiniteDefaults(): void
     {
         $options = app_gcnotify_curl_timeout_options();
