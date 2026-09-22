@@ -38,8 +38,8 @@ VALUES
  1),
 
 (0, 0, 0, 'employee', 'details_updated', 'en',
- 'Accessibility request {{requestid}} details updated',
- 'Details for accessibility request {{requestid}} have been updated.\n\nPlease review the latest request details using the request link below.\n\nView request: {{url}}\n\nRequest Management Tool (RMT)',
+ 'Accessibility request {{requestid}} assigned to one of your staff',
+ '{{requesttitle}} has been assigned to {{assignee}} by {{assigned_by}}.\n\nView request: {{url}}\n\nRequest Management Tool (RMT)',
  1),
 
 (0, 0, 0, 'employee', 'details_updated', 'fr',
@@ -68,8 +68,8 @@ VALUES
  1),
 
 (0, 0, 0, 'employee', 'status_changed', 'en',
- 'Status update for accessibility request {{requestid}}',
- 'The status of request {{requestid}} has changed to {{status_label}}.\n\nPlease review the latest details using the request link below.\n\nView request: {{url}}\n\nRequest Management Tool (RMT)',
+ 'Status update for {{requesttitle}}',
+ 'The status of {{requesttitle}} has changed from {{status_from}} to {{status_to}} by {{changed_by}}.\n\nPlease review the latest details using the request link below.\n\nView request: {{url}}\n\nRequest Management Tool (RMT)',
  1),
 
 (0, 0, 0, 'employee', 'status_changed', 'fr',

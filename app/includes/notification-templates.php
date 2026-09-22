@@ -103,11 +103,14 @@ function rmt_notification_placeholder_catalog(): array {
         ['token' => 'requesttitle', 'en' => 'Request title', 'fr' => 'Titre de la demande'],
         ['token' => 'assignee', 'en' => 'Assigned employee name', 'fr' => 'Nom de la personne assignee'],
         ['token' => 'assigned_by', 'en' => 'Assigned by (person who made assignment)', 'fr' => 'Assignee par (personne ayant fait l\'assignation)'],
+        ['token' => 'changed_by', 'en' => 'Status changed by', 'fr' => 'Statut modifie par'],
         ['token' => 'teamname', 'en' => 'Team name', 'fr' => 'Nom de l\'equipe'],
         ['token' => 'teamemail', 'en' => 'Team email address', 'fr' => 'Adresse courriel de l\'equipe'],
         ['token' => 'catalogue_name', 'en' => 'Catalogue/topic name', 'fr' => 'Nom du catalogue'],
         ['token' => 'service_name', 'en' => 'Service name', 'fr' => 'Nom du service'],
         ['token' => 'status_label', 'en' => 'Status label', 'fr' => 'Libelle du statut'],
+        ['token' => 'status_from', 'en' => 'Previous status', 'fr' => 'Statut precedent'],
+        ['token' => 'status_to', 'en' => 'New status', 'fr' => 'Nouveau statut'],
         ['token' => 'client_fname', 'en' => 'Client first name', 'fr' => 'Prenom du client'],
         ['token' => 'client_lname', 'en' => 'Client last name', 'fr' => 'Nom de famille du client'],
         ['token' => 'url', 'en' => 'Link to the request', 'fr' => 'Lien vers la demande'],
@@ -120,10 +123,16 @@ function rmt_notification_placeholder_catalog(): array {
  * Replace {{token}} placeholders in editor-authored subject/body text with values from $context.
  */
 function rmt_notification_render_template(string $template, array $context, string $language, string $recipientType = 'general'): string {
-    return preg_replace_callback('/\{\{\s*([a-z_]+)\s*\}\}/i', static function (array $matches) use ($context): string {
-        $token = strtolower($matches[1]);
+    $language = app_normalize_language($language);
 
-        return rmt_notification_escape((string) ($context[$token] ?? ''));
+    return preg_replace_callback('/\{\{\s*([a-z_]+)\s*\}\}/i', static function (array $matches) use ($context, $language): string {
+        $token = strtolower($matches[1]);
+        $localizedToken = $token . '_' . $language;
+        $value = array_key_exists($localizedToken, $context)
+            ? $context[$localizedToken]
+            : ($context[$token] ?? '');
+
+        return rmt_notification_escape((string) $value);
     }, $template);
 }
 

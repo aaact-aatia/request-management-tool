@@ -537,6 +537,14 @@ $result = mysqli_query($link, "SELECT nameen, namefr FROM tblstatus WHERE id='$s
 $row = mysqli_fetch_assoc($result);
 $statusEn = $row ? $row['nameen'] : "";
 $statusFr = $row ? $row['namefr'] : "";
+$previousStatusEn = "";
+$previousStatusFr = "";
+if ((int) $cstatusid > 0) {
+    $result = mysqli_query($link, "SELECT nameen, namefr FROM tblstatus WHERE id='" . (int) $cstatusid . "'");
+    $row = mysqli_fetch_assoc($result);
+    $previousStatusEn = $row ? $row['nameen'] : "";
+    $previousStatusFr = $row ? $row['namefr'] : "";
+}
 
 $domain = app_base_url();
 $nrequestemailid = base64_encode($requestuid);
@@ -555,6 +563,7 @@ $personalisation = [
     "teamname" => $teamname,
     "team_email" => $teamemail,
     "assigned_by" => $assignedByName,
+    "changed_by" => $assignedByName,
     "requesttitle" => $requesttitle,
     "nrequestemailid" => $nrequestemailid,
     "nrequestemail" => $clientemail,
@@ -567,6 +576,10 @@ $personalisation = [
     "service_name" => $servicename,
     "status_en" => $statusEn,
     "status_fr" => $statusFr,
+    "status_from_en" => $previousStatusEn,
+    "status_from_fr" => $previousStatusFr,
+    "status_to_en" => $statusEn,
+    "status_to_fr" => $statusFr,
     "url" => app_url("viewrequest.php?lang=" . $requestlang . "&erid=" . $nrequestemailid . "&reqid=" . urlencode("a11y-" . $requestid))
 ];
 
@@ -845,7 +858,7 @@ if (!$updateSucceeded) {
 
 $leadManagerNotificationSent = false;
 if (!$isCurrentResolved && $isTargetResolved) {
-    rmt_send_internal_notifications($link, $requestuidInt, $contactid, (int) $serviceid, (int) $subserviceid, 'resolved', ['lead', 'manager'], $personalisation, $workerIdInt);
+    rmt_send_internal_notifications($link, $requestuidInt, $contactid, (int) $serviceid, (int) $subserviceid, 'resolved', ['team', 'lead', 'manager'], $personalisation, $workerIdInt);
     $leadManagerNotificationSent = true;
 } elseif ($ownershipChanged) {
     rmt_send_internal_notifications($link, $requestuidInt, $contactid, (int) $serviceid, (int) $subserviceid, 'details_updated', ['lead', 'manager'], $personalisation, $workerIdInt);
