@@ -1125,7 +1125,7 @@ function rmt_mark_resolved_email_sent($link, int $triageId, int $creatorId = 0):
     $creatorIdEscaped = (int) $creatorId;
     $today = mysqli_real_escape_string($link, date('Y-m-d'));
     $note = mysqli_real_escape_string($link, '__rmt_resolved_email_sent');
-    $languageCode = mysqli_real_escape_string($link, app_normalize_language($_SESSION['lang'] ?? 'en'));
+    $languageCode = 'en';
 
     // Keep metadata hidden from normal staff communications by storing status=0.
     $insertSql = "INSERT INTO tbladminlog(`triageid`, `dateadded`, `timeadded`, `notes`, `language_code`, `creatorid`, `status`) VALUES ('$triageIdEscaped', '$today', NOW(), '$note', '$languageCode', '$creatorIdEscaped', '0')";
