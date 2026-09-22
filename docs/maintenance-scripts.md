@@ -1,38 +1,31 @@
 # Maintenance & Utility Scripts
 
-One-off scripts that perform bulk data operations. These are **not accessible from the UI** (menu links are commented out) and should be run deliberately with care, as they make irreversible database changes.
+Maintenance operations that perform bulk data changes should be run deliberately with care, as they make irreversible database changes.
 
 ---
 
-## `batch-ace-info.php`
+## Bulk anonymization
 
-**Purpose:** Bulk anonymizes client information on ACE (Accessibility, Accommodation and Adaptive Computer Technology) triage records.
+**Purpose:** Bulk anonymizes client information on selected triage records.
+
+The controlled UI is intentionally hidden from routine navigation. Superadministrators can access it directly at `/bulk-anonymize.php` when an approved anonymization operation is required.
 
 **What it does:**
 
-1. Queries all records in `tbltriage` belonging to catalogue IDs 1–4 (ACE service categories)
-2. Skips records for service ID 46 (WS CoE services)
-3. For each remaining record:
+1. Lets the superadministrator choose catalogue IDs and excluded service IDs
+2. Previews the number of matching records without writing changes
+3. Requires an explicit confirmation before execution
+4. For each matching record:
    - Overwrites `clientlname`, `clientfname`, `clientemail`, `clientphone` in `tbltriage` with generic AAACT contact details
-   - Replaces the original description in `tblcommlog` with a generic placeholder string (`batch_ace_no_details` from the lang file)
-4. Redirects to the index page with `?status=batchsuccess`
+   - Replaces the original description in `tblcommlog` with a generic placeholder string from the language file
+5. Records the criteria, actor, language, and number of affected records in `tbladminlog`
 
-**When to use:** Before sharing or archiving a dataset — strips personally identifiable client information from a bulk set of ACE requests.
-
-**Future plan:** This script will be replaced by a configurable superadmin UI tool. See [docs/future/008-superadmin-bulk-anonymize.md](future/008-superadmin-bulk-anonymize.md).
+**When to use:** Before sharing or archiving an approved dataset when personally identifiable client information must be removed from a selected set of requests.
 
 **Caution:**
 - **Irreversible** — there is no undo. Back up the database first.
-- The menu link is intentionally commented out in `appmenu.php` and `template/menu.php` to prevent accidental execution.
-- Contains a **SQL injection vulnerability** (`$requestid` is interpolated directly into UPDATE queries). Do not expose this endpoint publicly. See [docs/future/005-code-quality-refactoring.md](future/005-code-quality-refactoring.md) for the remediation plan.
-
-**How to run (deliberately):**
-
-Temporarily uncomment the menu link in `appmenu.php`, or navigate directly:
-
-```
-https://<your-domain>/batch-ace-info.php?lang=en
-```
+- Access is restricted to superadministrators and all reads and writes use prepared statements.
+- Verify the preview criteria carefully before confirming the operation.
 
 ---
 

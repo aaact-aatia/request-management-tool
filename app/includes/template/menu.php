@@ -114,12 +114,6 @@ $menuLangStrings = $menu_text[$lang_code];
 				<?php if ($canSeeCoreNav && !$isEmployee) { ?>
 					<li><a href="/reports.php?lang=<?= $lang_code ?>" class="item"><?= htmlspecialchars($menuLangStrings['reports']) ?></a></li>
 				<?php
-				// Only Super admins can access this option
-				if ($isSuperAdmin) {
-				?>
-					<!-- <li><a href="/batch-ace-info.php?lang=<?= $lang_code ?>">Update (batch) AAACT tickets</a></li> -->
-				<?php
-				}
 				// Administration menu is restricted to admin/superadmin.
 				if ($isAdminAccount || $isSuperAdmin) {
 				?>
@@ -141,7 +135,6 @@ $menuLangStrings = $menu_text[$lang_code];
 							// Only Super admins can access this option
 						if ($isSuperAdmin) {
 							?>
-								<!-- <li><a href="/batch-ace-info.php?lang=<?= $lang_code ?>">Update (batch) AAACT tickets</a></li> -->
 								<li><a href="/users.php?lang=<?= $lang_code ?>"><?= htmlspecialchars($menuLangStrings['users']) ?></a></li>
 							<?php } ?>
 						</ul>

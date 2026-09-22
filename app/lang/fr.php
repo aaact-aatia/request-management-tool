@@ -327,9 +327,27 @@ return [
     'client_survey_link_survey_status_enabled' => 'Oui',
     'client_survey_link_survey_status_disabled' => 'Non',
     
-    // Batch AAACT Info page (batch-ace-info.php)
-    'batch_ace_no_details' => 'Aucun détail disponible',
-    'batch_ace_for_details' => ' pour les détails',
+    // Page d’anonymisation en lot (bulk-anonymize.php)
+    'bulk_anon_no_details' => 'Aucun détail disponible',
+
+    // Page d'anonymisation en lot pour superadministrateurs (bulk-anonymize.php)
+    'bulk_anon_title' => 'Anonymiser des demandes en lot',
+    'bulk_anon_intro' => 'Sélectionnez les catalogues de services à anonymiser et excluez facultativement des identifiants de service. Prévisualisez les demandes touchées avant d’exécuter l’opération.',
+    'bulk_anon_warning_heading' => 'Avant de continuer',
+    'bulk_anon_warning' => 'Cette action remplace définitivement les coordonnées des clients et les notes de communication. Vérifiez les critères de prévisualisation avant de l’exécuter.',
+    'bulk_anon_select_catalogues' => 'Catalogues à inclure',
+    'bulk_anon_exclude_services' => 'Identifiants de service à exclure (séparés par des virgules)',
+    'bulk_anon_preview_btn' => 'Prévisualiser les demandes touchées',
+    'bulk_anon_preview_heading' => 'Prévisualisation',
+    'bulk_anon_preview_result' => '%d demande(s) seront anonymisées.',
+    'bulk_anon_run_btn' => 'Exécuter l’anonymisation',
+    'bulk_anon_confirm' => 'Cette action anonymisera définitivement les demandes prévisualisées. Continuer?',
+    'bulk_anon_success_heading' => 'Anonymisation terminée',
+    'bulk_anon_success' => '%d demande(s) ont été anonymisées.',
+    'bulk_anon_error_heading' => 'L’anonymisation n’a pas été exécutée',
+    'bulk_anon_invalid_request' => 'La demande a expiré ou était invalide. Examinez le formulaire et réessayez.',
+    'bulk_anon_select_catalogue_error' => 'Sélectionnez au moins un catalogue.',
+    'bulk_anon_preview_required' => 'Créez une nouvelle prévisualisation et confirmez-la avant d’anonymiser les demandes.',
     
     // Change of Domain page (changeofdomain.php)
     'changeofdomain_page_title' => 'Avis de désactivation - Outil de gestion des demandes - Accessibilité, adaptation et technologie informatique adaptée (AATIA)',
