@@ -125,6 +125,25 @@ function rmt_notification_placeholder_catalog(): array {
 function rmt_notification_render_template(string $template, array $context, string $language, string $recipientType = 'general'): string {
     $language = app_normalize_language($language);
 
+    $paragraphs = preg_split('/\n\s*\n/', $template);
+    if (is_array($paragraphs)) {
+        $availableSurveyTokens = [];
+        foreach (['en', 'fr'] as $surveyLanguage) {
+            $surveyToken = 'survey_link_' . $surveyLanguage;
+            if (!empty($context[$surveyToken])) {
+                $availableSurveyTokens[] = $surveyToken;
+            }
+        }
+
+        $template = implode("\n\n", array_values(array_filter($paragraphs, static function (string $paragraph) use ($availableSurveyTokens): bool {
+            if (!preg_match('/\{\{\s*(survey_link_en|survey_link_fr)\s*\}\}/i', $paragraph, $matches)) {
+                return true;
+            }
+
+            return in_array(strtolower($matches[1]), $availableSurveyTokens, true);
+        })));
+    }
+
     return preg_replace_callback('/\{\{\s*([a-z_]+)\s*\}\}/i', static function (array $matches) use ($context, $language): string {
         $token = strtolower($matches[1]);
         $localizedToken = $token . '_' . $language;
