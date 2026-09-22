@@ -431,6 +431,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Regenerate CHANGELOG.md [skip ci] ([a44dd79](https://github.com/aaact-aatia/request-management-tool/commit/a44dd79b38175bd1725a17a833f0a0f03f72aa74))
 
+- Regenerate CHANGELOG.md [skip ci] ([83808ee](https://github.com/aaact-aatia/request-management-tool/commit/83808ee0db19d74c3bbc5aa17725b4642df2bd1a))
+
 
 ### Fixed
 
@@ -683,6 +685,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 - Add language metadata to admin logs ([136802c](https://github.com/aaact-aatia/request-management-tool/commit/136802cf5ea60ec01cb568dd4d31af0825166607))
 
 - Mark survey audit notes as English ([001bd92](https://github.com/aaact-aatia/request-management-tool/commit/001bd92786a6ed43ed83dd8859eb13b044b33641))
+
+- Use request language for resolved emails ([8581a4c](https://github.com/aaact-aatia/request-management-tool/commit/8581a4c4afd109f3613b64a0ed56170108c8356a))
 
 
 ### Other
