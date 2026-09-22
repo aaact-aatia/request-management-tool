@@ -22,7 +22,7 @@ function rmt_notification_events_for_audience(string $audience): array {
     }
 
     if ($audience === 'employee') {
-        return ['request_created', 'details_updated', 'ownership_changed', 'status_changed', 'reassigned', 'resolved'];
+        return ['request_created', 'details_updated', 'ownership_changed', 'status_changed', 'reassigned', 'resolved', 'survey_completed'];
     }
 
     return [];
@@ -111,6 +111,8 @@ function rmt_notification_placeholder_catalog(): array {
         ['token' => 'status_label', 'en' => 'Status label', 'fr' => 'Libelle du statut'],
         ['token' => 'status_from', 'en' => 'Previous status', 'fr' => 'Statut precedent'],
         ['token' => 'status_to', 'en' => 'New status', 'fr' => 'Nouveau statut'],
+        ['token' => 'survey_overall', 'en' => 'Survey overall satisfaction rating', 'fr' => 'Note de satisfaction globale du sondage'],
+        ['token' => 'survey_response', 'en' => 'Survey response time rating', 'fr' => 'Note du delai de reponse du sondage'],
         ['token' => 'client_fname', 'en' => 'Client first name', 'fr' => 'Prenom du client'],
         ['token' => 'client_lname', 'en' => 'Client last name', 'fr' => 'Nom de famille du client'],
         ['token' => 'url', 'en' => 'Link to the request', 'fr' => 'Lien vers la demande'],

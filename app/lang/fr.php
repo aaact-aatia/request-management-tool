@@ -513,6 +513,7 @@ return [
     'notification_templates_event_status_changed' => 'Statut/details mis a jour',
     'notification_templates_event_reassigned' => 'Assignee',
     'notification_templates_event_ownership_changed' => 'Responsabilite de l equipe mise a jour',
+    'notification_templates_event_survey_completed' => 'Sondage client rempli',
     'notification_templates_event_resolved' => 'Resolue / fermee',
     'notification_templates_edit_heading' => 'Modifier le modele de notification',
     'notification_templates_prefill_global_note' => 'Cette equipe n\'a pas encore de modele personnalise - le modele global par defaut est affiche comme point de depart. L\'enregistrement creera un modele propre a cette equipe.',

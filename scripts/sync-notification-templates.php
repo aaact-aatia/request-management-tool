@@ -54,6 +54,8 @@ const ALLOWED_PLACEHOLDERS = [
     'status_label',
     'status_from',
     'status_to',
+    'survey_overall',
+    'survey_response',
     'client_fname',
     'client_lname',
     'url',
@@ -74,6 +76,7 @@ const EXPECTED_TEMPLATES = [
         'reassigned' => ['en', 'fr'],
         'resolved' => ['en', 'fr'],
         'status_changed' => ['en', 'fr'],
+        'survey_completed' => ['en', 'fr'],
     ],
 ];
 
@@ -86,6 +89,7 @@ const EVENT_MAP = [
     'details updated' => 'details_updated',
     'ownership updated' => 'ownership_changed',
     'status / details updated' => 'status_changed',
+    'survey completed' => 'survey_completed',
 ];
 
 /**
