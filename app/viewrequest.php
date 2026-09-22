@@ -1608,7 +1608,7 @@ require_once __DIR__ . '/includes/csrf.php';
 			if ($canViewStaffLogs) {
 				$adminLogResult = mysqli_query(
 					$link,
-					"SELECT id, dateadded, timeadded, notes, creatorid
+					"SELECT id, dateadded, timeadded, notes, language_code, creatorid
 					 FROM tbladminlog
 					 WHERE triageid = '$triageid' AND status = '1'
 					 ORDER BY id DESC"
@@ -1627,6 +1627,9 @@ require_once __DIR__ . '/includes/csrf.php';
 						$adminActorLabel = $userNameCache[$adminActorId];
 					}
 					$adminNotes = (string)($adminLogRow['notes'] ?? '');
+					$adminEntryLanguage = in_array((string)($adminLogRow['language_code'] ?? ''), ['en', 'fr'], true)
+						? (string)$adminLogRow['language_code']
+						: '';
 					$changeLogRows[] = [
 						'log_id' => 'staff:#' . (int)$adminLogRow['id'],
 						'type' => $t['change_log_staff_note'],
@@ -1634,6 +1637,7 @@ require_once __DIR__ . '/includes/csrf.php';
 						'new' => $adminNotes,
 						'summary' => $t['other_change_staff_note'],
 						'details' => $adminNotes,
+						'language_code' => $adminEntryLanguage,
 						'assignment_from' => $t['na'],
 						'assignment_to' => $t['na'],
 							'changed_on' => (string)($adminLogRow['timeadded'] ?? $adminLogRow['dateadded'] ?? ''),
@@ -1734,7 +1738,15 @@ require_once __DIR__ . '/includes/csrf.php';
 						<dt><?= htmlspecialchars($t['change_log_summary']) ?></dt>
 						<dd><?= htmlspecialchars($changeLogRow['summary'] ?? '') ?></dd>
 						<dt><?= htmlspecialchars($t['change_log_details']) ?></dt>
-						<dd><?= nl2br(htmlspecialchars($changeLogRow['details'] ?? '', ENT_QUOTES, 'UTF-8')) ?></dd>
+						<?php
+						$logLanguage = in_array((string)($changeLogRow['language_code'] ?? ''), ['en', 'fr'], true)
+							? (string)$changeLogRow['language_code']
+							: '';
+						$logLanguageAttribute = $logLanguage !== '' && $logLanguage !== $lang
+							? ' lang="' . htmlspecialchars($logLanguage, ENT_QUOTES, 'UTF-8') . '"'
+							: '';
+						?>
+						<dd<?= $logLanguageAttribute ?>><?= nl2br(htmlspecialchars($changeLogRow['details'] ?? '', ENT_QUOTES, 'UTF-8')) ?></dd>
 						<dt><?= htmlspecialchars($t['status_change_changed_on']) ?></dt>
 						<dd><?= htmlspecialchars($changeLogRow['changed_on']) ?></dd>
 						<dt><?= htmlspecialchars($t['status_change_actor']) ?></dt>

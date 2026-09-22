@@ -35,6 +35,12 @@ if (!empty($triageid)) {
 				$dateadded = $row2['dateadded'];
 				$anotes = $row2['notes'];
 				$annotes = nl2br(htmlspecialchars($anotes));
+				$entryLanguage = in_array((string)($row2['language_code'] ?? ''), ['en', 'fr'], true)
+					? (string)$row2['language_code']
+					: '';
+				$languageAttribute = $entryLanguage !== '' && $entryLanguage !== $lang
+					? ' lang="' . htmlspecialchars($entryLanguage, ENT_QUOTES, 'UTF-8') . '"'
+					: '';
 				$creatorid = $row2['creatorid'];
 				// Get the name of the user
 				$result3 = mysqli_query($link, "SELECT firstname, lastname FROM tblusers WHERE id = '$creatorid'");
@@ -43,7 +49,7 @@ if (!empty($triageid)) {
 				$clname = htmlspecialchars($row3['lastname']);
 			?>
 			<dt><?php echo $dateadded ?><?php if($creatorid!=0) {?> - <?php echo $cfname ?> <?php echo $clname ?><?php } ?></dt>
-			<dd><?php echo ($annotes) ?></dd>
+			<dd<?php echo $languageAttribute; ?>><?php echo ($annotes) ?></dd>
 			<?php } ?>
 		</dl>
 		<?php } else { ?>
