@@ -323,6 +323,21 @@ function app_gcnotify_curl_tls_options(): array
     return $options;
 }
 
+function app_gcnotify_curl_timeout_options(): array
+{
+    // cURL treats 0 or negative as "wait forever", so those fall back to the default.
+    $seconds = static function (string $key, int $default): int {
+        $value = (int) app_setting($key, (string) $default);
+
+        return $value > 0 ? $value : $default;
+    };
+
+    return [
+        CURLOPT_CONNECTTIMEOUT => $seconds('GCNOTIFY_CURL_CONNECT_TIMEOUT', 5),
+        CURLOPT_TIMEOUT => $seconds('GCNOTIFY_CURL_TIMEOUT', 15),
+    ];
+}
+
 function app_dev_notification_preview_enabled(): bool
 {
     if (app_is_production()) {

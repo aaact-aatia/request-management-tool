@@ -19,6 +19,11 @@ class HelpersTest extends TestCase
             'is_admin' => 0,
             'pid' => 1
         ];
+
+        foreach (['GCNOTIFY_CURL_CONNECT_TIMEOUT', 'GCNOTIFY_CURL_TIMEOUT'] as $timeoutKey) {
+            putenv($timeoutKey);
+            unset($_SERVER[$timeoutKey], $_ENV[$timeoutKey]);
+        }
     }
 
     // ========================================================================
@@ -214,6 +219,48 @@ class HelpersTest extends TestCase
         $rendered = rmt_notification_render_template($template, ['survey_link_en' => 'https://example.test/survey'], 'en', 'client');
 
         $this->assertSame("Request resolved.\n\nPlease complete the survey: https://example.test/survey\n\nThank you.", $rendered);
+    }
+
+    public function testGcNotifyTimeoutOptionsUseFiniteDefaults(): void
+    {
+        $options = app_gcnotify_curl_timeout_options();
+
+        $this->assertSame(5, $options[CURLOPT_CONNECTTIMEOUT]);
+        $this->assertSame(15, $options[CURLOPT_TIMEOUT]);
+    }
+
+    public function testGcNotifyTimeoutOptionsHonourConfiguredValues(): void
+    {
+        putenv('GCNOTIFY_CURL_CONNECT_TIMEOUT=3');
+        putenv('GCNOTIFY_CURL_TIMEOUT=30');
+
+        $options = app_gcnotify_curl_timeout_options();
+
+        $this->assertSame(3, $options[CURLOPT_CONNECTTIMEOUT]);
+        $this->assertSame(30, $options[CURLOPT_TIMEOUT]);
+    }
+
+    /**
+     * @dataProvider nonPositiveTimeoutCases
+     */
+    public function testGcNotifyTimeoutOptionsRejectNonPositiveValues(string $configuredValue): void
+    {
+        putenv('GCNOTIFY_CURL_CONNECT_TIMEOUT=' . $configuredValue);
+        putenv('GCNOTIFY_CURL_TIMEOUT=' . $configuredValue);
+
+        $options = app_gcnotify_curl_timeout_options();
+
+        $this->assertSame(5, $options[CURLOPT_CONNECTTIMEOUT]);
+        $this->assertSame(15, $options[CURLOPT_TIMEOUT]);
+    }
+
+    public static function nonPositiveTimeoutCases(): array
+    {
+        return [
+            'zero means wait forever' => ['0'],
+            'negative value' => ['-1'],
+            'non-numeric value' => ['abc'],
+        ];
     }
 
     // ========================================================================
