@@ -86,7 +86,7 @@ function rmt_get_survey_team_contact(mysqli $link, int $requestId, string $langu
 function rmt_notify_survey_completed(mysqli $link, int $requestId, int $overall, int $responseRating): void {
 	$request = rmt_db_fetch_one(
 		$link,
-		'SELECT requestid, title, catalogueid, serviceid, subserviceid, workerid, requestlang FROM tbltriage WHERE id = ? LIMIT 1',
+		'SELECT requestid, title, catalogueid, serviceid, subserviceid, requestlang FROM tbltriage WHERE id = ? LIMIT 1',
 		'i',
 		[$requestId]
 	);
@@ -120,7 +120,8 @@ function rmt_notify_survey_completed(mysqli $link, int $requestId, int $overall,
 		'survey_completed',
 		['team', 'lead', 'manager'],
 		$personalisation,
-		(int) ($request['workerid'] ?? 0)
+		// A worker ID would route to that worker's reporting manager and drop the team lead.
+		0
 	);
 }
 
