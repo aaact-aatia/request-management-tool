@@ -429,6 +429,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Regenerate CHANGELOG.md [skip ci] ([93af758](https://github.com/aaact-aatia/request-management-tool/commit/93af75806cf16b656fb5242dc42b5c66f365c86e))
 
+- Regenerate CHANGELOG.md [skip ci] ([a44dd79](https://github.com/aaact-aatia/request-management-tool/commit/a44dd79b38175bd1725a17a833f0a0f03f72aa74))
+
 
 ### Fixed
 
@@ -677,6 +679,10 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 - Pass GC Notify timeout variables into the web container ([bc192c3](https://github.com/aaact-aatia/request-management-tool/commit/bc192c3442af9dd838493efa0c7193fbb066391b))
 
 - Run PHPUnit suites through phpunit in run-tests.sh (closes #156) ([b00c0a7](https://github.com/aaact-aatia/request-management-tool/commit/b00c0a710684ce8cdf7295f8973e866b83df336f))
+
+- Add language metadata to admin logs ([136802c](https://github.com/aaact-aatia/request-management-tool/commit/136802cf5ea60ec01cb568dd4d31af0825166607))
+
+- Mark survey audit notes as English ([001bd92](https://github.com/aaact-aatia/request-management-tool/commit/001bd92786a6ed43ed83dd8859eb13b044b33641))
 
 
 ### Other
