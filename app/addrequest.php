@@ -240,7 +240,7 @@ if ($_SERVER['REQUEST_METHOD']=='POST'){
 	
 	// Check if notes has anything and add to table
 	if ($adminnotes!="") {
-		$sql = "INSERT INTO tbladminlog(`triageid`, `dateadded`, `timeadded`, `notes`, `creatorid`, `status`) VALUES ('$latestid', '$datereceived', NOW(), '$adminnotes', '$creatorid', '$status')";
+		$sql = "INSERT INTO tbladminlog(`triageid`, `dateadded`, `timeadded`, `notes`, `language_code`, `creatorid`, `status`) VALUES ('$latestid', '$datereceived', NOW(), '$adminnotes', '$requestlang', '$creatorid', '$status')";
 		mysqli_query($link,$sql);
 	}
 	

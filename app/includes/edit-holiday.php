@@ -89,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 	// Log admin action
 	$adminNote = ($lang == 'fr' ? "Mis à jour le jour férié : " : "Updated holiday: ") . "$name_en / $name_fr " . ($lang == 'fr' ? "le " : "on ") . "$holiday_date";
 	$userId = (int) ($_SESSION['pid'] ?? 0);
-	$logStatement = rmt_db_execute($link, 'INSERT INTO tbladminlog (triageid, dateadded, notes, creatorid, status) VALUES (0, NOW(), ?, ?, 1)', 'si', [$adminNote, $userId]);
+	$logStatement = rmt_db_execute($link, 'INSERT INTO tbladminlog (triageid, dateadded, notes, language_code, creatorid, status) VALUES (0, NOW(), ?, ?, ?, 1)', 'ssi', [$adminNote, $lang, $userId]);
 	mysqli_stmt_close($logStatement);
 
 	echo '<script>window.parent.location.href = "../holidays-mgmt.php?lang=' . $lang . '&status=updated";</script>';

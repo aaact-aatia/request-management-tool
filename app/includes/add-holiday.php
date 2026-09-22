@@ -17,7 +17,7 @@ require_once('helpers.php');
 require_once('csrf.php');
 
 // Get language
-$lang = isset($_POST['lang']) ? $_POST['lang'] : 'en';
+$lang = isset($_POST['lang']) && in_array($_POST['lang'], ['en', 'fr'], true) ? $_POST['lang'] : 'en';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (!rmt_csrf_token_is_valid('holidays', (string) ($_POST['csrf_token'] ?? ''))) {
@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Log admin action
     $adminNote = "Added holiday: $name_en / $name_fr on $holiday_date";
     $userId = (int) ($_SESSION['pid'] ?? 0);
-    $logStatement = rmt_db_execute($link, 'INSERT INTO tbladminlog (triageid, dateadded, notes, creatorid, status) VALUES (0, NOW(), ?, ?, 1)', 'si', [$adminNote, $userId]);
+    $logStatement = rmt_db_execute($link, 'INSERT INTO tbladminlog (triageid, dateadded, notes, language_code, creatorid, status) VALUES (0, NOW(), ?, ?, ?, 1)', 'ssi', [$adminNote, $lang, $userId]);
     mysqli_stmt_close($logStatement);
 
     header("Location: ../holidays-mgmt.php?lang=$lang&status=added");
