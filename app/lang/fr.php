@@ -348,6 +348,7 @@ return [
     'bulk_anon_invalid_request' => 'La demande a expiré ou était invalide. Examinez le formulaire et réessayez.',
     'bulk_anon_select_catalogue_error' => 'Sélectionnez au moins un catalogue.',
     'bulk_anon_preview_required' => 'Créez une nouvelle prévisualisation et confirmez-la avant d’anonymiser les demandes.',
+    'bulk_anon_preview_changed' => 'Les demandes correspondantes ont changé après la prévisualisation. Créez une nouvelle prévisualisation avant de les anonymiser.',
     
     // Change of Domain page (changeofdomain.php)
     'changeofdomain_page_title' => 'Avis de désactivation - Outil de gestion des demandes - Accessibilité, adaptation et technologie informatique adaptée (AATIA)',

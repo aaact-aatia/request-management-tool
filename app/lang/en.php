@@ -350,6 +350,7 @@ return [
     'bulk_anon_invalid_request' => 'The request expired or was invalid. Review the form and try again.',
     'bulk_anon_select_catalogue_error' => 'Select at least one catalogue.',
     'bulk_anon_preview_required' => 'Run a new preview and confirm it before anonymizing requests.',
+    'bulk_anon_preview_changed' => 'The matching requests changed after the preview. Run a new preview before anonymizing requests.',
     
     // Change of Domain page (changeofdomain.php)
     'changeofdomain_page_title' => 'Decommission Notice - Request Management Tool - Accessibility, Accommodation and Adaptive Computer Technology (AAACT)',

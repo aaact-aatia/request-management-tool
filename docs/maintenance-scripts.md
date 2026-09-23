@@ -17,6 +17,7 @@ The controlled UI is intentionally hidden from routine navigation. Superadminist
 3. Requires an explicit confirmation before execution
 4. For each matching record:
    - Overwrites `clientlname`, `clientfname`, `clientemail`, `clientphone` in `tbltriage` with generic AAACT contact details
+   - Clears the client-entered `additionalinfo` intake details in `tbltriage`
    - Replaces the original description in `tblcommlog` with a generic placeholder string from the language file
 5. Records the criteria, actor, language, and number of affected records in `tbladminlog`
 

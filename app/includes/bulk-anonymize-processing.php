@@ -53,35 +53,42 @@ function rmt_bulk_anonymize_matching_where(array $catalogueIds, array $excludedS
 
 function rmt_bulk_anonymize_count(mysqli $link, array $catalogueIds, array $excludedServiceIds): int
 {
-    [$where, $types, $params] = rmt_bulk_anonymize_matching_where($catalogueIds, $excludedServiceIds);
-    $statement = rmt_db_execute($link, "SELECT COUNT(*) AS record_count FROM tbltriage WHERE {$where}", $types, $params);
-    $row = mysqli_fetch_assoc(mysqli_stmt_get_result($statement));
-    mysqli_stmt_close($statement);
-
-    return (int) ($row['record_count'] ?? 0);
+    return count(rmt_bulk_anonymize_matching_ids($link, $catalogueIds, $excludedServiceIds));
 }
 
-function rmt_bulk_anonymize_run(mysqli $link, array $catalogueIds, array $excludedServiceIds, string $notes, string $auditNotes, string $language, int $creatorId): array
+function rmt_bulk_anonymize_matching_ids(mysqli $link, array $catalogueIds, array $excludedServiceIds, bool $forUpdate = false): array
+{
+    [$where, $types, $params] = rmt_bulk_anonymize_matching_where($catalogueIds, $excludedServiceIds);
+    $lockClause = $forUpdate ? ' FOR UPDATE' : '';
+    $statement = rmt_db_execute($link, "SELECT id FROM tbltriage WHERE {$where} ORDER BY id{$lockClause}", $types, $params);
+    $requestIds = [];
+    $result = mysqli_stmt_get_result($statement);
+    while ($row = mysqli_fetch_assoc($result)) {
+        $requestIds[] = (int) $row['id'];
+    }
+    mysqli_stmt_close($statement);
+
+    return $requestIds;
+}
+
+function rmt_bulk_anonymize_run(mysqli $link, array $catalogueIds, array $excludedServiceIds, array $previewedRequestIds, string $notes, string $auditNotes, string $language, int $creatorId): array
 {
     if (!function_exists('isSuperAdmin') || !isSuperAdmin()) {
         throw new RuntimeException('Superadmin access is required for bulk anonymization.');
     }
 
-    [$where, $types, $params] = rmt_bulk_anonymize_matching_where($catalogueIds, $excludedServiceIds);
     mysqli_begin_transaction($link);
 
     try {
-        $selectStatement = rmt_db_execute($link, "SELECT id FROM tbltriage WHERE {$where} FOR UPDATE", $types, $params);
-        $requestIds = [];
-        $result = mysqli_stmt_get_result($selectStatement);
-        while ($row = mysqli_fetch_assoc($result)) {
-            $requestIds[] = (int) $row['id'];
+        $requestIds = rmt_bulk_anonymize_matching_ids($link, $catalogueIds, $excludedServiceIds, true);
+        $expectedRequestIds = rmt_bulk_anonymize_normalize_ids($previewedRequestIds);
+        if ($requestIds !== $expectedRequestIds) {
+            throw new RuntimeException('The previewed request set changed. A new preview is required.');
         }
-        mysqli_stmt_close($selectStatement);
 
         $triageStatement = mysqli_prepare(
             $link,
-            'UPDATE tbltriage SET clientlname = ?, clientfname = ?, clientemail = ?, clientphone = ? WHERE id = ?'
+            'UPDATE tbltriage SET clientlname = ?, clientfname = ?, clientemail = ?, clientphone = ?, additionalinfo = ? WHERE id = ?'
         );
         $commlogStatement = mysqli_prepare($link, 'UPDATE tblcommlog SET notes = ? WHERE triageid = ?');
         $clientLastName = 'CLIENT';
@@ -89,7 +96,7 @@ function rmt_bulk_anonymize_run(mysqli $link, array $catalogueIds, array $exclud
         $clientEmail = 'daiu-anci@ssc-spc.gc.ca';
         $clientPhone = '';
         foreach ($requestIds as $requestId) {
-            mysqli_stmt_bind_param($triageStatement, 'ssssi', $clientLastName, $clientFirstName, $clientEmail, $clientPhone, $requestId);
+            mysqli_stmt_bind_param($triageStatement, 'sssssi', $clientLastName, $clientFirstName, $clientEmail, $clientPhone, $notes, $requestId);
             mysqli_stmt_execute($triageStatement);
             mysqli_stmt_bind_param($commlogStatement, 'si', $notes, $requestId);
             mysqli_stmt_execute($commlogStatement);

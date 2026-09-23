@@ -18,7 +18,7 @@ if (empty($_SESSION['bulk_anonymize_token'])) {
     $_SESSION['bulk_anonymize_token'] = bin2hex(random_bytes(32));
 }
 
-$catalogueStatement = rmt_db_execute($link, 'SELECT id, nameen, namefr FROM tblcatalogue WHERE status = 1 ORDER BY nameen ASC');
+$catalogueStatement = rmt_db_execute($link, 'SELECT id, nameen, namefr, status FROM tblcatalogue ORDER BY nameen ASC');
 $catalogues = [];
 $catalogueResult = mysqli_stmt_get_result($catalogueStatement);
 while ($catalogue = mysqli_fetch_assoc($catalogueResult)) {
@@ -50,6 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $criteriaHash = rmt_bulk_anonymize_criteria_hash($selectedCatalogueIds, $excludedServiceIds);
             if ($_POST['action'] === 'preview') {
                 $previewCount = rmt_bulk_anonymize_count($link, $selectedCatalogueIds, $excludedServiceIds);
+                $_SESSION['bulk_anonymize_preview_ids'] = rmt_bulk_anonymize_matching_ids($link, $selectedCatalogueIds, $excludedServiceIds);
                 $previewToken = bin2hex(random_bytes(32));
                 $_SESSION['bulk_anonymize_preview'] = $criteriaHash;
                 $_SESSION['bulk_anonymize_preview_token'] = $previewToken;
@@ -58,18 +59,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 && hash_equals((string) ($_SESSION['bulk_anonymize_preview'] ?? ''), $criteriaHash)
                 && hash_equals((string) ($_SESSION['bulk_anonymize_preview_token'] ?? ''), (string) ($_POST['preview_token'] ?? ''))
             ) {
-                $runCount = rmt_bulk_anonymize_count($link, $selectedCatalogueIds, $excludedServiceIds);
+                $previewedRequestIds = rmt_bulk_anonymize_normalize_ids((array) ($_SESSION['bulk_anonymize_preview_ids'] ?? []));
+                $runCount = count($previewedRequestIds);
                 $auditNotes = sprintf(
                     'Bulk anonymization: catalogues=%s; excluded_service_ids=%s; records=%d',
                     implode(',', $selectedCatalogueIds),
                     $excludedServiceIds === [] ? 'none' : implode(',', $excludedServiceIds),
                     $runCount
                 );
-                $result = rmt_bulk_anonymize_run($link, $selectedCatalogueIds, $excludedServiceIds, $t['bulk_anon_no_details'], $auditNotes, $lang, (int) $_SESSION['pid']);
-                unset($_SESSION['bulk_anonymize_preview'], $_SESSION['bulk_anonymize_preview_token']);
-                $_SESSION['bulk_anonymize_token'] = bin2hex(random_bytes(32));
-                header("location:/bulk-anonymize.php?lang={$lang}&status=success&count={$result['request_count']}");
-                exit();
+                try {
+                    $result = rmt_bulk_anonymize_run($link, $selectedCatalogueIds, $excludedServiceIds, $previewedRequestIds, $t['bulk_anon_no_details'], $auditNotes, $lang, (int) $_SESSION['pid']);
+                    unset($_SESSION['bulk_anonymize_preview'], $_SESSION['bulk_anonymize_preview_token'], $_SESSION['bulk_anonymize_preview_ids']);
+                    $_SESSION['bulk_anonymize_token'] = bin2hex(random_bytes(32));
+                    header("location:/bulk-anonymize.php?lang={$lang}&status=success&count={$result['request_count']}");
+                    exit();
+                } catch (RuntimeException $exception) {
+                    $errorMessage = $t['bulk_anon_preview_changed'];
+                }
             } else {
                 $errorMessage = $t['bulk_anon_preview_required'];
             }
@@ -110,6 +116,7 @@ include 'includes/template/header.php';
                 <label class="checkbox-inline mrgn-rght-md">
                     <input type="checkbox" name="catalogue_ids[]" value="<?= $catalogueId ?>" <?= in_array($catalogueId, $selectedCatalogueIds, true) ? 'checked' : '' ?>>
                     <?= htmlspecialchars($catalogue[$lang === 'fr' ? 'namefr' : 'nameen']) ?>
+                    (<?= htmlspecialchars((int) $catalogue['status'] === 1 ? $t['active_label'] : $t['inactive_label']) ?>)
                 </label>
             <?php endforeach; ?>
         </fieldset>
