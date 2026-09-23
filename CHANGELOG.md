@@ -187,6 +187,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Notify team, lead, and manager when a client completes the survey ([c44263f](https://github.com/aaact-aatia/request-management-tool/commit/c44263ff9194e20c19c295f86099e97f03785ca4))
 
+- Add protected bulk anonymization tool ([3d679be](https://github.com/aaact-aatia/request-management-tool/commit/3d679be49dbee54cb4427a3cee1e56ada8489915))
+
 
 ### Build
 
@@ -432,6 +434,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 - Regenerate CHANGELOG.md [skip ci] ([a44dd79](https://github.com/aaact-aatia/request-management-tool/commit/a44dd79b38175bd1725a17a833f0a0f03f72aa74))
 
 - Regenerate CHANGELOG.md [skip ci] ([83808ee](https://github.com/aaact-aatia/request-management-tool/commit/83808ee0db19d74c3bbc5aa17725b4642df2bd1a))
+
+- Regenerate CHANGELOG.md [skip ci] ([343b70a](https://github.com/aaact-aatia/request-management-tool/commit/343b70a7fa67a9933b21bb68012673fab7ca50d3))
 
 
 ### Fixed
@@ -687,6 +691,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 - Mark survey audit notes as English ([001bd92](https://github.com/aaact-aatia/request-management-tool/commit/001bd92786a6ed43ed83dd8859eb13b044b33641))
 
 - Use request language for resolved emails ([8581a4c](https://github.com/aaact-aatia/request-management-tool/commit/8581a4c4afd109f3613b64a0ed56170108c8356a))
+
+- Address bulk anonymization review feedback ([b6a1b5a](https://github.com/aaact-aatia/request-management-tool/commit/b6a1b5a9f758d3531480b1824189f4e2ed765cfa))
 
 
 ### Other
