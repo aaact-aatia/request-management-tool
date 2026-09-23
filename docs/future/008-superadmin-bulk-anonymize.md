@@ -1,22 +1,22 @@
 # Future Plan 008: Superadmin Configurable Bulk Anonymization
 
-**Status**: Planned — Future Work  
+**Status**: Implemented  
 **Date Planned**: 2026-06-16  
 **Estimated Effort**: 1–2 days  
 
 ## Overview
 
-Replace the one-off `batch-ace-info.php` script (inherited from the old team, currently inaccessible from the UI) with a proper superadmin tool that lets an authorized user configure and run bulk anonymization from the admin panel safely.
+Replace the one-off `batch-ace-info.php` script with a proper superadmin tool that lets an authorized user configure and run bulk anonymization from the admin panel safely.
 
 The script itself is documented in [docs/maintenance-scripts.md](../maintenance-scripts.md).
 
-## Current State
+## Delivered State
 
-- `app/batch-ace-info.php` is a hardcoded script that anonymizes client details on catalogue IDs 1–4, excluding service ID 46
-- Catalogue IDs and the service exclusion are baked into the SQL — not configurable
-- The menu links in `appmenu.php` and `template/menu.php` are commented out
-- The script has a SQL injection vulnerability (`$requestid` is interpolated directly into UPDATE queries)
-- There is no confirmation step, no audit log entry, and no dry-run option
+- `app/bulk-anonymize.php` provides a superadmin-only configurable workflow and is intentionally hidden from routine navigation
+- Catalogue IDs and excluded service IDs are selected at runtime
+- Preview mode performs a count only; execution requires a fresh preview token and explicit confirmation
+- All dynamic database values use prepared statements and execution is transactional
+- Each run is recorded in `tbladminlog`
 
 ## Goals
 
@@ -78,13 +78,13 @@ Keys needed (approximate):
 - `bulk_anon_confirm`
 - `bulk_anon_success`
 
-### 4. Add menu link in admin section of `appmenu.php` / `template/menu.php`
+### 4. Keep the tool out of routine navigation
 
-Visible only to superadmin (`isSuperAdmin()`).
+Completed: the direct route remains protected by `isSuperAdmin()`, but there is no menu link. Authorized operators use the documented direct URL when needed.
 
 ### 5. Deprecate / delete `batch-ace-info.php`
 
-Once the new UI is live, remove the old script and update [docs/maintenance-scripts.md](../maintenance-scripts.md).
+Completed: the legacy script was removed after the new UI was added, and [docs/maintenance-scripts.md](../maintenance-scripts.md) now documents the controlled workflow.
 
 ## Security Considerations
 

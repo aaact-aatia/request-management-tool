@@ -329,9 +329,28 @@ return [
     'client_survey_link_survey_status_enabled' => 'Yes',
     'client_survey_link_survey_status_disabled' => 'No',
     
-    // Batch AAACT Info page (batch-ace-info.php)
-    'batch_ace_no_details' => 'No details available',
-    'batch_ace_for_details' => ' for details',
+    // Bulk anonymization page (bulk-anonymize.php)
+    'bulk_anon_no_details' => 'No details available',
+
+    // Superadmin bulk anonymization page (bulk-anonymize.php)
+    'bulk_anon_title' => 'Bulk anonymize requests',
+    'bulk_anon_intro' => 'Select the service catalogues to anonymize and optionally exclude service IDs. Preview the affected requests before running the operation.',
+    'bulk_anon_warning_heading' => 'Before you continue',
+    'bulk_anon_warning' => 'This action permanently replaces client details and communication notes. Confirm that the preview criteria are correct before running it.',
+    'bulk_anon_select_catalogues' => 'Catalogues to include',
+    'bulk_anon_exclude_services' => 'Service IDs to exclude (comma-separated)',
+    'bulk_anon_preview_btn' => 'Preview affected requests',
+    'bulk_anon_preview_heading' => 'Preview',
+    'bulk_anon_preview_result' => '%d request(s) will be anonymized.',
+    'bulk_anon_run_btn' => 'Run anonymization',
+    'bulk_anon_confirm' => 'This permanently anonymizes the previewed requests. Continue?',
+    'bulk_anon_success_heading' => 'Anonymization complete',
+    'bulk_anon_success' => '%d request(s) were anonymized.',
+    'bulk_anon_error_heading' => 'Anonymization was not run',
+    'bulk_anon_invalid_request' => 'The request expired or was invalid. Review the form and try again.',
+    'bulk_anon_select_catalogue_error' => 'Select at least one catalogue.',
+    'bulk_anon_preview_required' => 'Run a new preview and confirm it before anonymizing requests.',
+    'bulk_anon_preview_changed' => 'The matching requests changed after the preview. Run a new preview before anonymizing requests.',
     
     // Change of Domain page (changeofdomain.php)
     'changeofdomain_page_title' => 'Decommission Notice - Request Management Tool - Accessibility, Accommodation and Adaptive Computer Technology (AAACT)',
