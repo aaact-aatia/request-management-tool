@@ -1,4 +1,4 @@
-ARG PHP_IMAGE=php:8.2-apache
+ARG PHP_IMAGE=php:8.5-apache
 
 FROM composer:2 AS vendor
 

@@ -10,7 +10,7 @@ Automated tests for the Request Management Tool refactoring project.
 ./run-tests.sh
 ```
 
-The runner starts a dedicated tmpfs MySQL database, waits for health, and executes the integration test inside a PHP 8.2 container. PHP is not required on the host. The test project is removed afterward and does not read from, write to, reset, or stop the development database.
+The runner starts a dedicated tmpfs MySQL database, waits for health, and executes the integration test inside a PHP 8.5 container. PHP is not required on the host. The test project is removed afterward and does not read from, write to, reset, or stop the development database.
 
 ### Unit Tests Only
 
