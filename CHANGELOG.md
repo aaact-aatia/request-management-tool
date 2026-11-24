@@ -194,6 +194,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 
 - Package app for azure container runtime ([b65c7c8](https://github.com/aaact-aatia/request-management-tool/commit/b65c7c86df88b2834dac27ab48d5c95873fa21c2))
 
+- Upgrade PHP runtime to 8.5 ([ad6715c](https://github.com/aaact-aatia/request-management-tool/commit/ad6715c291871c67025ef14ea7665d4be1fd5cc1))
+
 
 ### CI/CD
 
@@ -436,6 +438,8 @@ configs, reworked `database/seed.sql`, and added the `docs/future/*` and
 - Regenerate CHANGELOG.md [skip ci] ([83808ee](https://github.com/aaact-aatia/request-management-tool/commit/83808ee0db19d74c3bbc5aa17725b4642df2bd1a))
 
 - Regenerate CHANGELOG.md [skip ci] ([343b70a](https://github.com/aaact-aatia/request-management-tool/commit/343b70a7fa67a9933b21bb68012673fab7ca50d3))
+
+- Regenerate CHANGELOG.md [skip ci] ([f1f1a92](https://github.com/aaact-aatia/request-management-tool/commit/f1f1a92b39d69c046d98fefafcd30720cbe31d03))
 
 
 ### Fixed
