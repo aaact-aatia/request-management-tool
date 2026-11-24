@@ -32,7 +32,7 @@ EPMO
 
 
 ### Technologies
-1. PHP 8.2
+1. PHP 8.5
 2. JavaScript (jQuery)
 3. MySQL 5.7
 4. WET4 (Web Experience Toolkit)
@@ -82,7 +82,7 @@ The application is containerized using Docker for consistent development environ
    ```
 
    This command will:
-   - Build the PHP 8.2 Apache container
+   - Build the PHP 8.5 Apache container
    - Start a MySQL 5.7 database container
    - Run the app on the `PORT` value from `.env` (default `8080`)
    - Mount your local `app/` directory for live code updates
@@ -187,7 +187,7 @@ The `-v` flag permanently removes the `dbdata` volume. Back up any data that mus
 
 The `docker-compose.yml` defines two services:
 
-- **web**: PHP 8.2 with Apache, includes mysqli extension and Composer
+- **web**: PHP 8.5 with Apache, includes mysqli extension and Composer
 - **db**: MySQL 5.7 database with persistent volume storage
 
 ### Database Connection

@@ -52,7 +52,7 @@ services:
       args:
         COMPOSER_FILE: composer-test.json
         COMPOSER_INSTALL_FLAGS: --dev
-        PHP_IMAGE: php:8.3-apache
+        PHP_IMAGE: php:8.5-apache
     depends_on:
       test-db:
         condition: service_healthy
